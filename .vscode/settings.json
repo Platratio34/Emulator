@@ -8,6 +8,7 @@
         "Pntr",
         "syscall",
         "Syscalls",
+        "SYSD",
         "SYSRETURN"
     ],
     "java.configuration.updateBuildConfiguration": "automatic"

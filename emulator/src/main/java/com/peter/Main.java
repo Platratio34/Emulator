@@ -32,6 +32,7 @@ public class Main {
         kernal.addFile(ROOT_PATH.resolve("lang/kernal.el"));
         kernal.addFile(ROOT_PATH.resolve("lang/memory.el"));
         kernal.addFile(ROOT_PATH.resolve("lang/Console.el"));
+        kernal.addFiles(ROOT_PATH.resolve("lang/Kernal"));
 
         ProgramModule system = ls.addModule("System");
         system.addRefModule("SysD");

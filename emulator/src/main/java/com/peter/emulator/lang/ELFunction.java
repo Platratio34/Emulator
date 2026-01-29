@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
-import com.peter.emulator.lang.Token.AnnotationToken;
 import com.peter.emulator.lang.Token.BlockToken;
 import com.peter.emulator.lang.Token.IdentifierToken;
 import com.peter.emulator.lang.Token.OperatorToken;
@@ -232,7 +231,7 @@ public class ELFunction {
         if (ret != null)
             ret.analyze(errors, namespace, module);
         if (body == null && !(extern || abstractFunction)) {
-            errors.add(ELAnalysisError.error("Non-abstract or external functions must have a body", bodyLocation));
+            errors.add(ELAnalysisError.error("Non-abstract or external functions must have a body", startLocation));
         } else if (body != null && (extern || abstractFunction)) {
             errors.add(ELAnalysisError.error((extern ? "External" : "Abstract") + " functions must have a body",
                     bodyLocation));

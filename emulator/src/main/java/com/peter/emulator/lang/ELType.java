@@ -13,6 +13,7 @@ public class ELType {
     protected ArrayList<String> baseClassParents = new ArrayList<>();
     protected ArrayList<ELType> genericTypes = new ArrayList<>();
     protected boolean array;
+    protected int arraySize = 0;
     protected boolean pointer;
     protected boolean address;
     protected ELType subType = null;
@@ -249,6 +250,15 @@ public class ELType {
             baseSet = true;
         }
 
+        public Builder(ELType base) {
+            type.baseClass = base.baseClass;
+            if (base.baseClassParents.size() > 0) {
+                for(String p : base.baseClassParents)
+                    type.baseClassParents.add(p);
+            }
+            baseSet = true;
+        }
+
         public boolean ingest(Token token) {
             if (built)
                 throw new ELCompileException("Type builder ingest called after build");
@@ -337,6 +347,13 @@ public class ELType {
         public Builder array() {
             type = new ELType(type);
             type.array = true;
+            return this;
+        }
+
+        public Builder array(int size) {
+            type = new ELType(type);
+            type.array = true;
+            type.arraySize = size;
             return this;
         }
 
@@ -475,5 +492,9 @@ public class ELType {
         if (equals(target))
             return true;
         return false;
+    }
+
+    public Builder builder() {
+        return new Builder(this);
     }
 }

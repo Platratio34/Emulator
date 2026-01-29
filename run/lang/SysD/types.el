@@ -6,12 +6,17 @@ namespace SysD {
         public uint8 state;
     }
     
+    struct PeripheralDescriptorShort {
+        const uint32 deviceID;
+        const uint32 deviceType;
+    }
+
     struct PeripheralDescriptor {
-        const uint32 _ = 0x0;
+        const uint32 id;
         const uint32 type;
         const uint32[4] manufacturer;
         const uint32[4] serial;
-        const uint32[6] reserved;
+        const uint32[6] data;
     }
 
     extern const uint32 REG_PGM_PNTR;

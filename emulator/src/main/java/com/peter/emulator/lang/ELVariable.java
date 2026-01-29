@@ -99,4 +99,9 @@ public class ELVariable {
     public int getAddress() {
         return offset;
     }
+
+    public ELVariable setValue(int i) {
+        startingValue = new ELValue.ELNumberValue(type, i);
+        return this;
+    }
 }
