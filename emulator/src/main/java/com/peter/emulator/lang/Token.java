@@ -1,0 +1,533 @@
+package com.peter.emulator.lang;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+
+public abstract class Token {
+
+    public final Location startLocation;
+    public Location endLocation;
+    public ArrayList<Token> subTokens;
+
+    public abstract boolean ingest(char c, Location location);
+    
+    protected Token(Location location) {
+        startLocation = location;
+        endLocation = location;
+    }
+
+    public boolean hasSub() {
+        return subTokens != null && !subTokens.isEmpty();
+    }
+
+    public abstract String debugString();
+
+    public boolean wsBefore() {
+        return true;
+    }
+
+    public static class OperatorToken extends Token {
+        public Type type;
+        public boolean indexClosed;
+        protected Tokenizer tk;
+
+        public OperatorToken(char c, Location location) {
+            super(location);
+            type = Type.get(c + "");
+            if (type == Type.INDEX) {
+                tk = new Tokenizer("", location);
+                subTokens = tk.tokens;
+            }
+        }
+
+        @Override
+        public boolean ingest(char c, Location location) {
+            if (type == Type.INDEX && !indexClosed) {
+                if (tk.ingest(c, location))
+                    return true;
+                if (c == ']') {
+                    indexClosed = true;
+                    return true;
+                }
+                throw new TokenizerError("Found unexpected character in index: '" + c + "'");
+            } else if (c == '=') {
+                if (type == Type.ASSIGN) {
+                    type = Type.EQ2;
+                    return true;
+                } else if (type == Type.NOT) {
+                    type = Type.NEQ;
+                    return true;
+                } else if (type == Type.ANGLE_LEFT) {
+                    type = Type.LEQ;
+                    return true;
+                } else if (type == Type.ANGLE_RIGHT) {
+                    type = Type.GEQ;
+                    return true;
+                }
+            } else if (type == Type.BITWISE_AND && c == '&') {
+                type = Type.AND;
+                return true;
+            } else if (type == Type.BITWISE_OR && c == '|') {
+                type = Type.OR;
+                return true;
+            } else if (type == Type.ADD && c == '+') {
+                type = Type.INC;
+                return true;
+            } else if (type == Type.SUB && c == '-') {
+                type = Type.DEC;
+                return true;
+            } else if (type == Type.DIV && (c == '/' || c == '*')) {
+                type = c == '/' ? Type.COMMENT : Type.COMMENT_MULTILINE;
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public String toString() {
+            String out = "OperatorToken{";
+            if (type == Type.INDEX) {
+                out += "[";
+                if (indexClosed)
+                    out += "]";
+                out += ", numTokens=" + subTokens.size();
+            } else {
+                out += type.value;
+            }
+            out += ", " + startLocation;
+            return out + "}";
+        }
+        
+        @Override
+        public String debugString() {
+            if (type == Type.INDEX) {
+                String out = "[";
+                for (int i = 0; i < subTokens.size(); i++) {
+                    if (i > 0 && subTokens.get(i).wsBefore())
+                        out += " ";
+                    out += subTokens.get(i).debugString();
+                }
+                return out + "]";
+            }
+            return type.value;
+        }
+        
+        @Override
+        public boolean wsBefore() {
+            switch (type) {
+                case INDEX:
+                    return false;
+                case NOT:
+                    return false;
+                case SEMICOLON:
+                    return false;
+                case COMMA:
+                    return false;
+                case INC:
+                    return false;
+                case DEC:
+                    return false;
+                case POINTER:
+                    return false;
+            
+                default:
+                    return true;
+            }
+        }
+
+        public enum Type {
+            ASSIGN("="),
+            DOT("."),
+            POINTER("*"),
+            SEMICOLON(";"),
+            COMMA(","),
+            DESTRUCTOR("~"),
+            INDEX("["),
+            ARRAY("[]"),
+            ANGLE_LEFT("<"),
+            ANGLE_RIGHT(">"),
+            NOT("!"),
+            GEQ(">="),
+            LEQ("<="),
+            EQ2("=="),
+            NEQ("!="),
+            ADD("+"),
+            SUB("-"),
+            DIV("/"),
+            INC("++"),
+            DEC("--"),
+            BITWISE_NOR("^"),
+            BITWISE_AND("&"),
+            BITWISE_OR("|"),
+            AND("&&"),
+            OR("||"),
+            TERNARY("?"),
+            COLON(":"),
+            COMMENT("//"),
+            COMMENT_MULTILINE("/*"),
+            ;
+                
+            public final String value;
+            private static HashMap<String, Type> values;
+
+            private Type(String value) {
+                this.value = value;
+                add();
+            }
+
+            private void add() {
+                if (values == null)
+                    values = new HashMap<>();
+                values.put(value, this);
+            }
+
+            public static boolean contains(String c) {
+                return values.containsKey(c);
+            }
+
+            public static Type get(String c) {
+                return values.get(c);
+            }
+        }
+    }
+
+    public static class BlockToken extends Token {
+        public boolean closed = false;
+        protected Tokenizer tk;
+
+        public BlockToken(Location location) {
+            super(location);
+            tk = new Tokenizer("", location);
+            subTokens = tk.tokens;
+        }
+
+        @Override
+        public boolean ingest(char c, Location location) {
+            if (closed)
+                return false;
+            if (tk.ingest(c, location)) {
+                endLocation = location;
+                return true;
+            }
+            if (c == '}') {
+                endLocation = location;
+                closed = true;
+                return true;
+            }
+            throw new TokenizerError("Found unexpected character in block: '" + c + "'");
+        }
+
+        @Override
+        public String toString() {
+            return String.format("BlockToken{closed=%s, numTokens=%d, %s}", closed ? "true" : "false", subTokens == null ? 0 : subTokens.size(), startLocation);
+        }
+
+        @Override
+        public String debugString() {
+            String out = "{";
+            for (int i = 0; i < subTokens.size(); i++) {
+                if (i > 0 && subTokens.get(i).wsBefore())
+                    out += " ";
+                out += subTokens.get(i).debugString();
+            }
+            return out + "}";
+        }
+    }
+
+    public static class IdentifierToken extends Token {
+        public String value;
+
+        public IdentifierToken(char c, Location location) {
+            super(location);
+            value = c + "";
+        }
+
+        private boolean nextIsID = false;
+        private IdentifierToken nextId = null;
+        @Override
+        public boolean ingest(char c, Location location) {
+            if (nextId != null) {
+                if (nextId.ingest(c, location)) {
+                    endLocation = location;
+                    return true;
+                }
+                return false;
+            }
+            if (nextIsID) {
+                nextIsID = false;
+                if (validStart(c)) {
+                    nextId = new IdentifierToken(c, location);
+                    subTokens = new ArrayList<>();
+                    subTokens.add(nextId);
+                    endLocation = location;
+                    return true;
+                } else {
+                    throw new TokenizerError("Invalid identifier");
+                }
+            } else if (validStart(c) || Character.isDigit(c)) {
+                value += c;
+                endLocation = location;
+                return true;
+            } else if (c == '.') {
+                nextIsID = true;
+                endLocation = location;
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public String toString() {
+            String out = "IdentifierToken{value=\"";
+            out += value + "\"";
+            out += ", " + startLocation;
+            return out + "}";
+        }
+
+        @Override
+        public String debugString() {
+            String out = value;
+            if (subTokens != null) {
+                for (Token t : subTokens) {
+                    out += "." + ((IdentifierToken) t).value;
+                }
+            }
+            return out;
+        }
+
+        public static boolean validStart(char c) {
+            return Character.isAlphabetic(c) || c == '_';
+        }
+    }
+
+    public static class NumberToken extends Token {
+        public String value;
+        public boolean hex;
+        public boolean bin;
+
+        public NumberToken(char c, Location location) {
+            super(location);
+            value = c + "";
+        }
+
+        @Override
+        public boolean ingest(char c, Location location) {
+            if (c == 'x') {
+                if (value.length() == 1) {
+                    hex = true;
+                    value = "";
+                    endLocation = location;
+                    return true;
+                }
+                return false;
+            } else if (c == 'b') {
+                if (value.length() == 1) {
+                    bin = true;
+                    value = "";
+                    endLocation = location;
+                    return true;
+                }
+                return false;
+            }
+            if (hex) {
+                if (!(Character.isDigit(c) || ('a' <= c && c <= 'f') || ('A' <= c && c <= 'F') || c == '_'))
+                    return false;
+            } else if (bin) {
+                if (!(c == '0' || c == '1' || c == '_'))
+                    return false;
+            } else {
+                if (!(Character.isDigit(c) || c == '.' || c == 'e' || c == '_'))
+                    return false;
+            }
+            value += c;
+            endLocation = location;
+            return true;
+        }
+        @Override
+        public String toString() {
+            return String.format("NumberToken{value=%s, hex=%s, bin=%s, %s}", value, hex ? "true" : "false",
+                    bin ? "true" : "false", startLocation);
+        }
+
+        @Override
+        public String debugString() {
+            String out = "";
+            if (hex)
+                out = "0x";
+            if (bin)
+                out = "0b";
+            return out + value;
+        }
+    }
+    
+    public static class StringToken extends Token {
+        public String value = "";
+        public boolean ch = false;
+        public boolean escape = false;
+        public boolean closed = false;
+
+        public StringToken(char c, Location location) {
+            super(location);
+            ch = c == '\'';
+        }
+
+        @Override
+        public boolean ingest(char c, Location location) {
+            if (closed)
+                return false;
+            if (c == '\'') {
+                if (ch) {
+                    if (escape) {
+                        value += c;
+                        escape = false;
+                        endLocation = location;
+                        return true;
+                    }
+                    closed = true;
+                    endLocation = location;
+                    return true;
+                }
+                value += c;
+                endLocation = location;
+                return true;
+            } else if (c == '"') {
+                if (ch) {
+                    value += c;
+                    endLocation = location;
+                    return true;
+                } else if (escape) {
+                    value += c;
+                    escape = false;
+                    endLocation = location;
+                    return true;
+                }
+                closed = true;
+                endLocation = location;
+                return true;
+            } else if (c == '\\') {
+                if (escape) {
+                    value += c;
+                    escape = false;
+                    endLocation = location;
+                    return true;
+                }
+                escape = true;
+                endLocation = location;
+                return true;
+            }
+            value += c;
+            endLocation = location;
+            return true;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("StringToken{value=\"%s\", ch=%s, closed=%s, %s}", value, ch ? "true" : "false",
+                    closed ? "true" : "false", startLocation);
+        }
+
+        @Override
+        public String debugString() {
+            return String.format(ch ? "'%s'" : "\"%s\"", value);
+        }
+    }
+    
+    public static class SetToken extends Token {
+        public boolean closed = false;
+        protected Tokenizer tk;
+
+        protected char closer;
+
+        public SetToken(char c, Location location) {
+            super(location);
+            closer = c;
+            tk = new Tokenizer("", location);
+            subTokens = tk.tokens;
+        }
+
+        @Override
+        public boolean ingest(char c, Location location) {
+            if (closed)
+                return false;
+            if (tk.ingest(c, location)) {
+                endLocation = location;
+                return true;
+            }
+            if (c == closer) {
+                closed = true;
+                endLocation = location;
+                return true;
+            }
+            throw new TokenizerError("Found unexpected character in set: '" + c + "'");
+        }
+
+        public Token get(int i) {
+            return subTokens.get(i);
+        }
+
+        @Override
+        public String toString() {
+            return String.format("SetToken{closed=%s, numTokens=%d, %s}", closed ? "true" : "false",
+                    subTokens == null ? 0 : subTokens.size(), startLocation);
+        }
+
+        @Override
+        public String debugString() {
+            String out = "";
+            for (int i = 0; i < subTokens.size(); i++) {
+                if (i > 0 && subTokens.get(i).wsBefore())
+                    out += " ";
+                out += subTokens.get(i).debugString();
+            }
+            return out;
+        }
+    }
+    
+    public static class AnnotationToken extends Token {
+        public  String name;
+        public SetToken params = null;
+
+        public AnnotationToken(Location location) {
+            super(location);
+            name = "";
+        }
+
+        @Override
+        public boolean ingest(char c, Location location) {
+            boolean isDigit = Character.isDigit(c);
+            if (params != null) {
+                if (params.ingest(c, location)) {
+                    endLocation = location;
+                    return true;
+                }
+                return false;
+            } else if (Character.isAlphabetic(c) || Character.isDigit(c) || c == '_') {
+                if (name.length() == 0 && isDigit)
+                    throw new TokenizerError("Annotation name can not start with a digit");
+                name += c;
+                endLocation = location;
+                return true;
+            } else if (c == '(') {
+                params = new SetToken(')', location);
+                subTokens = params.subTokens;
+                endLocation = location;
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("AnnotationToken{name=\"%s\", %s}", name, startLocation);
+        }
+
+        @Override
+        public String debugString() {
+            String out = "@" + name;
+            if (params != null) {
+                out += "(" + params.debugString() + ")";
+            }
+            return out;
+        }
+    }
+}

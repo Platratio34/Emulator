@@ -1,0 +1,23 @@
+{
+	"name": "emulator-asm-server",
+	"description": "Language server for Emulator ASM.",
+	"version": "1.0.0",
+	"author": "Peter Crall",
+	"license": "MIT",
+	"engines": {
+		"node": "*"
+	},
+	"dependencies": {
+		"emulator-asm-server": "file:",
+		"vscode-languageserver": "^9.0.1",
+		"vscode-languageserver-textdocument": "^1.0.11"
+	},
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "pretest": "npm run compile && npm run lint",
+        "lint": "eslint src",
+        "test": "vscode-test"
+    }
+}

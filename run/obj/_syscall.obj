@@ -1,0 +1,61 @@
+{
+    "functions": {
+        "syscall::printStr": {
+            "args": [
+                "r0 const char* str",
+                "r1 const uint32 length"
+            ],
+            "rt": "void",
+            "start": 24,
+            "end": 29,
+            "isSyscall": true
+        },
+        "syscall::exit": {
+            "args": ["r0 uint32 exitCode"],
+            "rt": "void",
+            "start": 56,
+            "end": 66,
+            "isSyscall": true
+        },
+        "syscall::printChar": {
+            "args": ["r0 const char c"],
+            "rt": "void",
+            "start": 0,
+            "end": 2,
+            "isSyscall": true
+        },
+        "printStr": {
+            "args": [
+                "r0 const char* str",
+                "r1 const uint32 length"
+            ],
+            "rt": "void",
+            "start": 29,
+            "end": 45
+        },
+        "syscall::malloc": {
+            "args": [
+                "r0 uint32 size",
+                "r1 void* pntr"
+            ],
+            "rt": "void",
+            "start": 45,
+            "end": 56,
+            "isSyscall": true
+        },
+        "printChar": {
+            "args": ["r0 const char c"],
+            "rt": "void",
+            "start": 2,
+            "end": 24
+        }
+    },
+    "version": 1,
+    "definitions": {"EXIT_MSG": {
+        "start": 66,
+        "end": 89,
+        "type": "char*",
+        "value": "nProcess exit with code "
+    }},
+    "syscalls": {}
+}

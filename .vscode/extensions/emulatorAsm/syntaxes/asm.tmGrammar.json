@@ -1,0 +1,340 @@
+{
+    "name": "Emulator Assembly",
+    "scopeName": "source.asm",
+    "fileTypes": [],
+    "patterns": [
+        {
+            "match": "^(#define)(?:\\s+(\\S+)(?:\\s+(\"[^\"]*\"|'[^']*'|\\S+))?)?",
+            "captures": {
+                "1": {
+                    "name": "keyword.other.compiler"
+                },
+                "2": {
+                    "name": "entity.name"
+                },
+                "3": {
+                    "patterns": [
+                        { "include": "#value.constant" },
+                        { "include": "#string.quoted" },
+                        { "include": "#char.quoted" }
+                    ]
+                }
+            }
+        },
+        {
+            "match": "^(#syscall)\\s+(\\S+)\\s+(\\w+)",
+            "captures": {
+                "1": {
+                    "name": "keyword.other.compiler"
+                },
+                "2": {
+                    "patterns": [
+                        { "include": "#value.constant"}
+                    ]
+                },
+                "3": {
+                    "name": "support.function"
+                }
+            }
+        },
+        {
+            "match": "^(LOAD)(?:\\s+(\\S+)(?:\\s+(\\S+))?)?",
+            "captures": {
+                "1": {
+                    "name": "keyword.control.instruction"
+                },
+                "2": {
+                    "patterns": [
+                        { "include": "#register" }
+                    ]
+                },
+                "3": {
+                    "patterns": [
+                        { "include": "#value.constant" }
+                    ]
+                }
+            }
+        },
+        {
+            "match": "^(LOAD\\s+MEM)(?:\\s+(\\S+)(?:\\s+(\\S+))?)?",
+            "captures": {
+                "1": {
+                    "name": "keyword.control.instruction"
+                },
+                "2": {
+                    "patterns": [
+                        { "include": "#register" }
+                    ]
+                },
+                "3": {
+                    "patterns": [
+                        { "include": "#register" }
+                    ]
+                }
+            }
+        },
+        {
+            "match": "^(STORE)(?:\\s+(\\S+)(?:\\s+(\\S+))?)?",
+            "captures": {
+                "1": {
+                    "name": "keyword.control.instruction"
+                },
+                "2": {
+                    "patterns": [
+                        { "include": "#value.constant" },
+                        { "include": "#register" }
+                    ]
+                },
+                "3": {
+                    "patterns": [
+                        { "include": "#register" }
+                    ]
+                }
+            }
+        },
+        {
+            "match": "^(COPY(?:\\s+MEM)?)(?:\\s+(\\S+)(?:\\s+(\\S+))?)?",
+            "captures": {
+                "1": {
+                    "name": "keyword.control.instruction"
+                },
+                "2": {
+                    "patterns": [
+                        { "include": "#register" }
+                    ]
+                },
+                "3": {
+                    "patterns": [
+                        { "include": "#register" }
+                    ]
+                }
+            }
+        },
+        {
+            "match": "^(STACK\\s+(?:PUSH|POP))(?:\\s+(\\S+))?",
+            "captures": {
+                "1": {
+                    "name": "keyword.control.instruction"
+                },
+                "2": {
+                    "patterns": [
+                        { "include": "#register" }
+                    ]
+                }
+            }
+        },
+        {
+            "match": "^(INC)(?:\\s+(\\S+)(?:\\s+([^\\s/]+))?)?",
+            "captures": {
+                "1": {
+                    "name": "keyword.control.instruction"
+                },
+                "2": {
+                    "patterns": [
+                        { "include": "#register" }
+                    ]
+                },
+                "3": {
+                    "patterns": [
+                        { "include": "#value.constant" }
+                    ]
+                }
+            }
+        },
+        {
+            "match": "^(ADD|SUB)(?:\\s+(\\S+)(?:\\s+(\\S+)(?:\\s+(\\S+))?)?)?",
+            "captures": {
+                "1": {
+                    "name": "keyword.control.instruction"
+                },
+                "2": {
+                    "patterns": [
+                        { "include": "#register" }
+                    ]
+                },
+                "3": {
+                    "patterns": [
+                        { "include": "#register" }
+                    ]
+                },
+                "4": {
+                    "patterns": [
+                        { "include": "#register" }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "keyword.control.instruction",
+            "match": "^(HALT|SYSRETURN)\\b"
+        },
+        {
+            "match": "^(GOTO(?:\\s+(?:PUSH|POP))?(?:\\s+(?:EQ|LEQ|GT|NEQ))?)(?:\\s+(r\\S+))?(?:\\s+(\\:\\S+))?",
+            "captures": {
+                "1": {
+                    "name": "keyword.control.instruction"
+                },
+                "2": {
+                    "patterns": [
+                        { "include": "#register" }
+                    ]
+                },
+                "3": {
+                    "name": "entity.name.section"
+                }
+            }
+        },
+        {
+            "match": "^(SYSCALL)(?:\\s+(\\S+))?",
+            "captures": {
+                "1": {
+                    "name": "keyword.control.instruction"
+                },
+                "2": {
+                    "patterns": [
+                        { "include": "#value.constant" },
+                        { "name": "support.function" }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "comment.line",
+            "match": "(//.*)"
+        },
+        {
+            "match": "^(#function)(?:\\s+(?:(syscall)(::))?(\\S+)(\\s+[^/]+)?)?",
+            "captures": {
+                "1": {
+                    "name": "keyword.other.compiler"
+                },
+                "2": {
+                    "name": "support.function"
+                },
+                "3": {
+                    "name": "keyword.operator"
+                },
+                "4": {
+                    "name": "support.function"
+                },
+                "5": {
+                    "patterns": [
+                        { "include": "#function.parameter" }
+                    ]
+                }
+            }
+        },
+        {
+            "match": "^(#endfunction)(?:\\s+([\\w\\*]+))?",
+            "captures": {
+                "1": {
+                    "name": "keyword.other.compiler"
+                },
+                "2": {
+                    "name": "storage.type"
+                }
+            }
+        },
+        {
+            "match": "^(#include)(?:\\s+(\\S+))",
+            "captures": {
+                "1": {
+                    "name": "keyword.other.compiler"
+                },
+                "2": {
+                    "name": "string.unquoted"
+                }
+            }
+        },
+        {
+            "name": "entity.name.section",
+            "match": "^(\\:\\S+)\\b"
+        }
+    ],
+    "repository": {
+        "function.parameter": {
+            "match": "\\s+([^\\s,]+)(?:(?:\\s+const)?(?:\\s+(\\w+)(\\**\\s+\\**)(?:\\s+(\\w+))?)?)?(,)?",
+            "captures": {
+                "1": {
+                    "patterns": [
+                        { "include": "#register" }
+                    ]
+                },
+                "2": {
+                    "name": "storage.modifier"
+                },
+                "3": {
+                    "name": "storage.type"
+                },
+                "4": {
+                    "name": "keyword.operator"
+                },
+                "5": {
+                    "name": "variable.parameter"
+                },
+                "6": {
+                    "name": "keyword.operator"
+                }
+            }
+        },
+        "string.quoted": {
+            "match": "(\")([^\"]*)(\")",
+            "captures": {
+                "1": {
+                    "name": "keyword.quote"
+                },
+                "2": {
+                    "patterns": [
+                        { "include": "#char.escaped"},
+                        {"name": "string.quoted"}
+                    ]
+                },
+                "3": {
+                    "name": "keyword.quote"
+                }
+            }
+        },
+        "char.quoted": {
+            "match": "(')([^']*)(')",
+            "captures": {
+                "1": {
+                    "name": "keyword.quote"
+                },
+                "2": {
+                    "patterns": [
+                        { "include": "#char.escaped"},
+                        {"name": "string.quoted"}
+                    ]
+                    
+                },
+                "3": {
+                    "name": "keyword.quote"
+                }
+            }
+        },
+        "char.escaped": {
+            "match": "(\\\\.)",
+            "name": "constant.character.escape"
+        },
+        "value.constant": {
+            "patterns": [
+                {
+                    "name": "constant.numeric",
+                    "match": "(0x[0-9a-f]+|[\\-\\+]?\\d+)"
+                },
+                {
+                    "name": "entity.name",
+                    "match": "([A-Z][A-Z_0-9]*)"
+                }
+            ]
+        },
+        "register": {
+            "name": "variable.language.register",
+            "match": "\\b(r\\d+|rPgm|rStack)\\b"
+        },
+        "label": {
+            "name": "entity.name.section",
+            "match": "\\b(\\:\\S+)\\b"
+        }
+    }
+}

@@ -1,0 +1,70 @@
+#define CMD_STATUS 0x8001
+#define CMD_DEVICE 0x8002
+#define CMD_SIZE 0x8003
+#define CMD_0 0x8004
+#define CMD_1 0x8005
+#define CMD_2 0x8006
+#define CMD_3 0x8007
+#define CMD_4 0x8008
+#define CMD_WRITTEN 0x0001
+
+// List devices
+LOAD r1 CMD_DEVICE // Device ID
+STORE 0x0000 r1
+LOAD r1 CMD_SIZE // CMD Size
+STORE 0x0002 r1
+LOAD r1 CMD_0 // LIST
+STORE 0x0001 r1
+LOAD r1 CMD_1 // Start ID
+STORE 0x0000 r1
+LOAD r1 CMD_STATUS // Mark written
+STORE CMD_WRITTEN r1
+
+// Setup console
+LOAD r1 CMD_DEVICE // Device ID
+STORE 0x0001 r1
+LOAD r1 CMD_SIZE // CMD Size
+STORE 0x0003 r1
+LOAD r1 CMD_0 // SETUP
+STORE 0x0001 r1
+LOAD r1 CMD_1 // Queue start
+STORE 0x0100 r1
+LOAD r1 CMD_2 // Queue size
+STORE 0x0010 r1
+LOAD r1 CMD_STATUS // Mark written
+STORE CMD_WRITTEN r1
+
+// Write to queue
+LOAD r2 1
+LOAD r1 0x0100
+
+STORE 'T' r1
+ADD r1 r2 r1
+STORE 0x0001 r1
+
+ADD r1 r2 r1
+STORE 'e' r1
+ADD r1 r2 r1
+STORE 0x0001 r1
+
+ADD r1 r2 r1
+STORE 's' r1
+ADD r1 r2 r1
+STORE 0x0001 r1
+
+ADD r1 r2 r1
+STORE 't' r1
+ADD r1 r2 r1
+STORE 0x0001 r1
+
+COPY r1 r4
+
+LOAD r0 0xefff
+LOAD r1 0x170
+STORE r4 r1
+
+LOAD r0 0xefff
+LOAD r1 0xff
+STORE 0xefff r1
+
+HALT

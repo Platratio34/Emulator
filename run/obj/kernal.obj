@@ -1,0 +1,11 @@
+{
+    "functions": {},
+    "version": 1,
+    "definitions": {},
+    "syscalls": {
+        "malloc": 3,
+        "exit": 4095,
+        "printStr": 2,
+        "printChar": 1
+    }
+}

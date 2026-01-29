@@ -1,0 +1,14 @@
+{
+    "java.dependency.packagePresentation": "hierarchical",
+    "cSpell.words": [
+        "constexpr",
+        "endfunction",
+        "kernal",
+        "malloc",
+        "Pntr",
+        "syscall",
+        "Syscalls",
+        "SYSRETURN"
+    ],
+    "java.configuration.updateBuildConfiguration": "automatic"
+}

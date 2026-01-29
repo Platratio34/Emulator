@@ -1,0 +1,133 @@
+{
+    "functions": {"peripheralCmd": {
+        "args": [
+            "r0 uint32 deviceId",
+            "r1 uint32 cmdSize",
+            "r2 uint32* cmd"
+        ],
+        "rt": "void",
+        "start": 25,
+        "end": 50
+    }},
+    "version": 1,
+    "definitions": {
+        "HEAP_START": {
+            "start": -1,
+            "end": -1,
+            "type": "const uint32",
+            "value": "36865"
+        },
+        "CONSOLE_END": {
+            "start": -1,
+            "end": -1,
+            "type": "const uint32",
+            "value": "2112"
+        },
+        "CONSOLE_SETUP_CMD": {
+            "start": 60,
+            "end": 62,
+            "type": "uint32*",
+            "value": "0x0001,CONSOLE_START,0x0020"
+        },
+        "CONSOLE_START": {
+            "start": -1,
+            "end": -1,
+            "type": "const uint32",
+            "value": "2048"
+        },
+        "CMD_DEVICE": {
+            "start": -1,
+            "end": -1,
+            "type": "const uint32",
+            "value": "32770"
+        },
+        "SYS_NAME": {
+            "start": 50,
+            "end": 59,
+            "type": "char*",
+            "value": "EmulatorOS"
+        },
+        "PROGRAM_START": {
+            "start": -1,
+            "end": -1,
+            "type": "const uint32",
+            "value": "131072"
+        },
+        "CONSOLE_PNTR": {
+            "start": -1,
+            "end": -1,
+            "type": "const uint32",
+            "value": "2113"
+        },
+        "CMD_WRITTEN": {
+            "start": -1,
+            "end": -1,
+            "type": "const uint32",
+            "value": "1"
+        },
+        "HEAP_POINTER": {
+            "start": -1,
+            "end": -1,
+            "type": "const uint32",
+            "value": "36864"
+        },
+        "CMD_1": {
+            "start": -1,
+            "end": -1,
+            "type": "const uint32",
+            "value": "32773"
+        },
+        "CMD_STATUS": {
+            "start": -1,
+            "end": -1,
+            "type": "const uint32",
+            "value": "32769"
+        },
+        "CMD_2": {
+            "start": -1,
+            "end": -1,
+            "type": "const uint32",
+            "value": "32774"
+        },
+        "CMD_3": {
+            "start": -1,
+            "end": -1,
+            "type": "const uint32",
+            "value": "32775"
+        },
+        "CMD_4": {
+            "start": -1,
+            "end": -1,
+            "type": "const uint32",
+            "value": "32776"
+        },
+        "CMD_SIZE": {
+            "start": -1,
+            "end": -1,
+            "type": "const uint32",
+            "value": "32771"
+        },
+        "CMD_0": {
+            "start": -1,
+            "end": -1,
+            "type": "const uint32",
+            "value": "32772"
+        }
+    },
+    "syscalls": {
+        "malloc": 3,
+        "exit": 4095,
+        "printStr": 2,
+        "printChar": 1
+    }
+} "type": "const uint32",
+            "value": "32772"
+        }
+    },
+    "syscalls": {
+        "malloc": 3,
+        "halt": 4095,
+        "printStr": 2,
+        "printChar": 1
+    }
+}
