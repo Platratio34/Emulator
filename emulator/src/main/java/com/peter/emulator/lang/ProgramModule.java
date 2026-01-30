@@ -28,6 +28,9 @@ public class ProgramModule {
     public void addFile(Path f) {
         if (files.contains(f))
             return;
+        if(!new File(f.toUri()).isFile()) {
+            throw new RuntimeException("Path "+f.toString()+" does not exist");
+        }
         files.add(f);
     }
 
@@ -35,6 +38,9 @@ public class ProgramModule {
         addFiles(new File(root.toUri()));
     }
     public void addFiles(File root) {
+        if(!root.isDirectory()) {
+            throw new RuntimeException("Path "+root.getAbsolutePath()+" does not exist");
+        }
         for (File f : root.listFiles()) {
             if (f.isFile() && f.getName().endsWith(".el")) {
                 addFile(f.toPath());

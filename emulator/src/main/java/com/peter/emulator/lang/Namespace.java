@@ -139,8 +139,24 @@ public class Namespace {
     
     public void resolve(ArrayList<ELAnalysisError> errors, ProgramModule module) {
         for (String ns : imports.values()) {
-            if(module.getNamespaceIncluded(ns) == null)
-                errors.add(ELAnalysisError.warning(String.format("Could not find imported namespace %s", ns)));
+            if(module.getNamespaceIncluded(ns) == null) {
+                String[] p = ns.split("\\.");
+                String found = null;
+                for(int i = p.length-2; i >= 0; i--) {
+                    String n = p[0];
+                    for(int j = 1; j <= i; j++) {
+                        n += "."+p[j];
+                    }
+                    if(module.getNamespaceIncluded(n) != null) {
+                        found = n;
+                        break;
+                    }
+                }
+                if(found != null)
+                    errors.add(ELAnalysisError.warning(String.format("Could not find imported namespace %s (but did find parent %s)", ns, found)));
+                else
+                    errors.add(ELAnalysisError.warning(String.format("Could not find imported namespace %s", ns)));
+            }
         }
         for (Namespace namespace : namespaces.values()) {
             namespace.resolve(errors, module);

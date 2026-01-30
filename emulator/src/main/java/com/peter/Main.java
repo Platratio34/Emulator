@@ -1,25 +1,15 @@
 package com.peter;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.Optional;
-import java.util.Map.Entry;
 
-import com.peter.emulator.Emulator;
-import com.peter.emulator.KernalBuilder;
-import com.peter.emulator.assembly.Assembler;
-import com.peter.emulator.assembly.AssemblerError;
-import com.peter.emulator.debug.Debugger;
 import com.peter.emulator.lang.ELAnalysisError;
+import com.peter.emulator.lang.ELAnalysisError.Severity;
 import com.peter.emulator.lang.LanguageServer;
 import com.peter.emulator.lang.Namespace;
-import com.peter.emulator.lang.Parser;
 import com.peter.emulator.lang.ProgramModule;
-import com.peter.emulator.lang.Tokenizer;
-import com.peter.emulator.lang.ELAnalysisError.Severity;
 
 public class Main {
 
@@ -29,22 +19,18 @@ public class Main {
         LanguageServer ls = new LanguageServer();
         ProgramModule kernal = ls.addModule("Kernal");
         kernal.addRefModule("SysD");
-        kernal.addFile(ROOT_PATH.resolve("lang/kernal.el"));
-        kernal.addFile(ROOT_PATH.resolve("lang/memory.el"));
-        kernal.addFile(ROOT_PATH.resolve("lang/Console.el"));
         kernal.addFiles(ROOT_PATH.resolve("lang/Kernal"));
 
         ProgramModule system = ls.addModule("System");
         system.addRefModule("SysD");
         system.addRefModule("Kernal");
-        system.addFile(ROOT_PATH.resolve("lang/system.el"));
         system.addFiles(ROOT_PATH.resolve("lang/System"));
         
         ProgramModule testMod = ls.addModule("Test");
         testMod.addRefModule("SysD");
         testMod.addRefModule("Kernal");
         testMod.addRefModule("System");
-        testMod.addFile(ROOT_PATH.resolve("lang/test.el"));
+        testMod.addFiles(ROOT_PATH.resolve("lang/Test"));
 
         Optional<String> error = ls.parse();
         if (error.isPresent()) {
