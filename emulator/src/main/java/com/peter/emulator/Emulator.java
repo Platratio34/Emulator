@@ -2,7 +2,6 @@ package com.peter.emulator;
 
 import com.peter.emulator.components.MMU;
 import com.peter.emulator.components.RAM;
-import com.peter.emulator.debug.Debugger;
 import com.peter.emulator.peripherals.ConsolePeripheral;
 import com.peter.emulator.peripherals.PeripheralManager;
 import com.peter.emulator.peripherals.StoragePeripheral;

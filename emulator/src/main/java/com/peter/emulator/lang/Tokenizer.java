@@ -4,7 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import com.peter.emulator.lang.Token.*;
+import com.peter.emulator.lang.Token.AnnotationToken;
+import com.peter.emulator.lang.Token.BlockToken;
+import com.peter.emulator.lang.Token.IdentifierToken;
+import com.peter.emulator.lang.Token.NumberToken;
+import com.peter.emulator.lang.Token.OperatorToken;
+import com.peter.emulator.lang.Token.SetToken;
+import com.peter.emulator.lang.Token.StringToken;
 
 public class Tokenizer {
 
@@ -128,11 +134,7 @@ public class Tokenizer {
             workingToken = new SetToken(')', location);
         } else if (c == '@' && !id) {
             workingToken = new AnnotationToken(location);
-        } else if (Character.isWhitespace(c) || c == '\r' || c == '\n') {
-            return true;
-        } else {
-            return false;
-        }
+        } else return Character.isWhitespace(c) || c == '\r' || c == '\n';
         tokens.add(workingToken);
         return true;
     }

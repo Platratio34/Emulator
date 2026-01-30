@@ -8,6 +8,9 @@ import com.peter.emulator.lang.Token.BlockToken;
 import com.peter.emulator.lang.Token.IdentifierToken;
 import com.peter.emulator.lang.Token.OperatorToken;
 import com.peter.emulator.lang.Token.SetToken;
+import com.peter.emulator.lang.actions.Action;
+import com.peter.emulator.lang.actions.ActionBlock;
+import com.peter.emulator.lang.actions.ActionScope;
 import com.peter.emulator.lang.annotations.ELAnnotation;
 
 public class ELFunction {
@@ -30,6 +33,7 @@ public class ELFunction {
     public ArrayList<ELFunction> overloads = new ArrayList<>();
     public ArrayList<Token> body = null;
     public ArrayList<ELAnnotation> annotations = null;
+    public ArrayList<Action> actions = new ArrayList<>();
 
     public ELFunction(ELProtectionLevel protection, boolean extern, Namespace namespace, String name, FunctionType type, boolean constexpr, Location location) {
         if (namespace == null)
@@ -57,6 +61,8 @@ public class ELFunction {
         if (paramMatch(overload))
             throw new ELCompileException("Overload matches existing function (" + this + ")");
         for (ELFunction o : overloads) {
+            if(o == overload)
+                continue;
             if (o.paramMatch(overload))
                 throw new ELCompileException("Overload matches existing function (" + o + ")");
         }
@@ -141,9 +147,9 @@ public class ELFunction {
             out += params.get(p).typeString() + " " + p;
         }
         out += ")";
-        if (overloads != null && overloads.size() > 0)
+        if (overloads != null && !overloads.isEmpty())
             out += " + " + overloads.size() + " overload(s)";
-        return out;
+        return out+"}";
     }
 
     // public String debugString() {
@@ -166,23 +172,22 @@ public class ELFunction {
             out += "operator ";
         if (constexpr)
             out += "constexpr ";
-        if (type == FunctionType.CONSTRUCTOR) {
-            out += ret.typeString() + "(";
-        } else if (type == FunctionType.DESTRUCTOR) {
-            out += "~" + ret.typeString() + "(";
-        } else {
-            if (extern)
-                out += "extern ";
-            if (type == FunctionType.STATIC)
-                out += "static ";
-            if (abstractFunction)
-                out += "abstract ";
-            if (ret == null) {
-                out += "void ";
-            } else {
-                out += ret.typeString() + " ";
+        switch (type) {
+            case CONSTRUCTOR -> out += ret.typeString() + "(";
+            case DESTRUCTOR -> out += "~" + ret.typeString() + "(";
+            default -> {
+                if (extern)
+                    out += "extern ";
+                if (type == FunctionType.STATIC)
+                    out += "static ";
+                if (abstractFunction)
+                    out += "abstract ";
+                if (ret == null) {
+                    out += "void ";
+                } else {
+                    out += ret.typeString() + " ";
+                }   out += cName + "(";
             }
-            out += cName + "(";
         }
         boolean f = true;
         for (String n : paramOrder) {
@@ -222,6 +227,9 @@ public class ELFunction {
     public void ingestBody(BlockToken block) {
         bodyLocation = block.startLocation;
         body = block.subTokens;
+        ActionBlock bodyBlock = new ActionBlock(new ActionScope(namespace, null, 0));
+        bodyBlock.parse(body);
+        actions.add(bodyBlock);
     }
 
     public void analyze(ArrayList<ELAnalysisError> errors, ProgramModule module) {

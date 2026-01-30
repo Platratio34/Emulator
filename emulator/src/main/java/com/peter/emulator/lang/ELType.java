@@ -3,6 +3,7 @@ package com.peter.emulator.lang;
 import java.util.ArrayList;
 
 import com.peter.emulator.lang.Token.IdentifierToken;
+import com.peter.emulator.lang.Token.NumberToken;
 import com.peter.emulator.lang.Token.OperatorToken;
 import com.peter.emulator.lang.base.ELPrimitives;
 
@@ -34,7 +35,7 @@ public class ELType {
 
     public ELType(String base) {
         if (base.contains(".")) {
-            String[] p = base.split(".");
+            String[] p = base.split("\\.");
             for (int i = 0; i < p.length - 1; i++) {
                 baseClassParents.add(p[i]);
             }
@@ -112,7 +113,7 @@ public class ELType {
             for (String p : baseClassParents)
                 out += p + ".";
             out += baseClass;
-            if (genericTypes.size() > 0) {
+            if (!genericTypes.isEmpty()) {
                 out += "<";
                 for (int i = 0; i < genericTypes.size(); i++) {
                     if (i > 0)
@@ -124,8 +125,13 @@ public class ELType {
         } else {
             out = subType.typeString();
         }
-        if (array)
-            out += "[]";
+        if (array) {
+            if(arraySize > 0) {
+                out += String.format("[%d]", arraySize);
+            } else {
+                out += "[]";
+            }
+        }
         if (pointer)
             out += "*";
         if (address)
@@ -135,6 +141,8 @@ public class ELType {
     
     @Override
     public boolean equals(Object obj) {
+        if(!(obj instanceof ELType))
+            return false;
         return equals(obj, true);
     }
 
@@ -154,6 +162,8 @@ public class ELType {
                 return false;
             } else if (array != ot.array) {
                 // System.out.println("array mismatch");
+                return false;
+            } else if (arraySize != ot.arraySize) {
                 return false;
             } else if (address != ot.address) {
                 // System.out.println("address mismatch");
@@ -252,7 +262,7 @@ public class ELType {
 
         public Builder(ELType base) {
             type.baseClass = base.baseClass;
-            if (base.baseClassParents.size() > 0) {
+            if (!base.baseClassParents.isEmpty()) {
                 for(String p : base.baseClassParents)
                     type.baseClassParents.add(p);
             }
@@ -276,63 +286,71 @@ public class ELType {
                     return true;
                 }
             }
-            if (token instanceof IdentifierToken it) {
-                if (it.value.equals("const")) {
-                    constant = true;
-                    return true;
-                } else if (!baseSet) {
-                    baseSet = true;
-                    type.baseClass = it.value;
-                    type.location = token.startLocation;
-                    type.endLocation = token.endLocation;
-                    while (it.hasSub()) {
-                        Token tkn = it.subTokens.get(0);
-                        if (tkn instanceof IdentifierToken it2) {
-                            it = it2;
-                            type.baseClassParents.add(type.baseClass);
-                            type.baseClass = it2.value;
-                            type.endLocation = token.endLocation;
-                        } else {
-                            throw new ELCompileException("Unexpected token found, expected identifier: " + tkn);
+            switch (token) {
+                case IdentifierToken it -> {
+                    if (it.value.equals("const")) {
+                        constant = true;
+                        return true;
+                    } else if (!baseSet) {
+                        baseSet = true;
+                        type.baseClass = it.value;
+                        type.location = token.startLocation;
+                        type.endLocation = token.endLocation;
+                        while (it.hasSub()) {
+                            Token tkn = it.subTokens.get(0);
+                            if (tkn instanceof IdentifierToken it2) {
+                                it = it2;
+                                type.baseClassParents.add(type.baseClass);
+                                type.baseClass = it2.value;
+                                type.endLocation = token.endLocation;
+                            } else {
+                                throw new ELCompileException("Unexpected token found, expected identifier: " + tkn);
+                            }
                         }
+                        i++;
+                        return true;
                     }
-                    i++;
-                    return true;
+                    return false;
                 }
-                return false;
-            } else if (token instanceof OperatorToken ot) {
-                if (ot.type == OperatorToken.Type.ANGLE_LEFT) {
-                    if (type.pointer || type.array || type.subType != null)
-                        throw new ELCompileException("Found < in incorrect position");
-                    if (inTypes)
-                        throw new ELCompileException("Found < inside of types");
-                    if (type.genericTypes.size() > 0)
-                        throw new ELCompileException("Found < past types");
-                    inTypes = true;
-                    type.genericLocation = ot.startLocation;
-                    subBuilder = new Builder();
-                    return true;
-                } else if (ot.type == OperatorToken.Type.ANGLE_RIGHT) {
-                    if (!inTypes)
-                        return false;
-                    inTypes = false;
-                    type.endLocation = ot.endLocation;
-                    return true;
-                } else if (ot.type == OperatorToken.Type.POINTER) {
-                    pointer();
-                    type.location = token.startLocation;
-                    type.endLocation = token.endLocation;
-                    return true;
-                } else if (ot.type == OperatorToken.Type.INDEX && ot.indexClosed) {
-                    array();
-                    type.location = token.startLocation;
-                    type.endLocation = token.endLocation;
-                    return true;
-                } else if (ot.type == OperatorToken.Type.BITWISE_AND) {
-                    address();
-                    type.location = token.startLocation;
-                    type.endLocation = token.endLocation;
-                    return true;
+                case OperatorToken ot -> {
+                    if (ot.type == OperatorToken.Type.ANGLE_LEFT) {
+                        if (type.pointer || type.array || type.subType != null)
+                            throw new ELCompileException("Found < in incorrect position");
+                        if (inTypes)
+                            throw new ELCompileException("Found < inside of types");
+                        if (!type.genericTypes.isEmpty())
+                            throw new ELCompileException("Found < past types");
+                        inTypes = true;
+                        type.genericLocation = ot.startLocation;
+                        subBuilder = new Builder();
+                        return true;
+                    } else if (ot.type == OperatorToken.Type.ANGLE_RIGHT) {
+                        if (!inTypes)
+                            return false;
+                        inTypes = false;
+                        type.endLocation = ot.endLocation;
+                        return true;
+                    } else if (ot.type == OperatorToken.Type.POINTER) {
+                        pointer();
+                        type.location = token.startLocation;
+                        type.endLocation = token.endLocation;
+                        return true;
+                    } else if (ot.type == OperatorToken.Type.INDEX && ot.indexClosed) {
+                        array();
+                        type.location = token.startLocation;
+                        type.endLocation = token.endLocation;
+                        if(!ot.subTokens.isEmpty()) {
+                            type.arraySize = ELValue.number(ELPrimitives.UINT32, (NumberToken)ot.subTokens.get(0)).value;
+                        }
+                        return true;
+                    } else if (ot.type == OperatorToken.Type.BITWISE_AND) {
+                        address();
+                        type.location = token.startLocation;
+                        type.endLocation = token.endLocation;
+                        return true;
+                    }
+                }
+                default -> {
                 }
             }
             return false;
@@ -442,6 +460,9 @@ public class ELType {
                 continue;
             }
         }
+        if(array && arraySize == 0) {
+            errors.add(ELAnalysisError.error("Array type must specify size", location));
+        }
         this.clazz = clazz;
     }
 
@@ -489,9 +510,7 @@ public class ELType {
                 // generics match
             }
         }
-        if (equals(target))
-            return true;
-        return false;
+        return equals(target);
     }
 
     public Builder builder() {

@@ -2,6 +2,7 @@ package com.peter.emulator.lang;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 public abstract class Token {
 
@@ -42,6 +43,10 @@ public abstract class Token {
 
         @Override
         public boolean ingest(char c, Location location) {
+            if(type.next != null && type.hasNext(c)) {
+                type = type.getNext(c);
+                return true;
+            }
             if (type == Type.INDEX && !indexClosed) {
                 if (tk.ingest(c, location))
                     return true;
@@ -50,35 +55,6 @@ public abstract class Token {
                     return true;
                 }
                 throw new TokenizerError("Found unexpected character in index: '" + c + "'");
-            } else if (c == '=') {
-                if (type == Type.ASSIGN) {
-                    type = Type.EQ2;
-                    return true;
-                } else if (type == Type.NOT) {
-                    type = Type.NEQ;
-                    return true;
-                } else if (type == Type.ANGLE_LEFT) {
-                    type = Type.LEQ;
-                    return true;
-                } else if (type == Type.ANGLE_RIGHT) {
-                    type = Type.GEQ;
-                    return true;
-                }
-            } else if (type == Type.BITWISE_AND && c == '&') {
-                type = Type.AND;
-                return true;
-            } else if (type == Type.BITWISE_OR && c == '|') {
-                type = Type.OR;
-                return true;
-            } else if (type == Type.ADD && c == '+') {
-                type = Type.INC;
-                return true;
-            } else if (type == Type.SUB && c == '-') {
-                type = Type.DEC;
-                return true;
-            } else if (type == Type.DIV && (c == '/' || c == '*')) {
-                type = c == '/' ? Type.COMMENT : Type.COMMENT_MULTILINE;
-                return true;
             }
             return false;
         }
@@ -114,25 +90,16 @@ public abstract class Token {
         
         @Override
         public boolean wsBefore() {
-            switch (type) {
-                case INDEX:
-                    return false;
-                case NOT:
-                    return false;
-                case SEMICOLON:
-                    return false;
-                case COMMA:
-                    return false;
-                case INC:
-                    return false;
-                case DEC:
-                    return false;
-                case POINTER:
-                    return false;
-            
-                default:
-                    return true;
-            }
+            return switch (type) {
+                case INDEX -> false;
+                case NOT -> false;
+                case SEMICOLON -> false;
+                case COMMA -> false;
+                case INC -> false;
+                case DEC -> false;
+                case POINTER -> false;
+                default -> true;
+            };
         }
 
         public enum Type {
@@ -166,9 +133,23 @@ public abstract class Token {
             COMMENT("//"),
             COMMENT_MULTILINE("/*"),
             ;
+
+            static {
+                ASSIGN.addNext('=', EQ2);
+                ANGLE_LEFT.addNext('=', LEQ);
+                ANGLE_RIGHT.addNext('=', GEQ);
+                NOT.addNext('=', NEQ);
+                BITWISE_AND.addNext('&', AND);
+                BITWISE_OR.addNext('|', OR);
+                ADD.addNext('+', INC);
+                SUB.addNext('-', DEC);
+                DIV.addNext('/', COMMENT);
+                DIV.addNext('*', COMMENT_MULTILINE);
+            }
                 
             public final String value;
             private static HashMap<String, Type> values;
+            private HashMap<Character, Type> next = null;
 
             private Type(String value) {
                 this.value = value;
@@ -179,6 +160,18 @@ public abstract class Token {
                 if (values == null)
                     values = new HashMap<>();
                 values.put(value, this);
+            }
+
+            private void addNext(char c, Type n) {
+                if(next == null)
+                    next = new HashMap<>();
+                next.put(c, n);
+            }
+            public boolean hasNext(char c) {
+                return next.containsKey(c);
+            }
+            public Type getNext(char c) {
+                return next.get(c);
             }
 
             public static boolean contains(String c) {
@@ -366,6 +359,15 @@ public abstract class Token {
         public boolean escape = false;
         public boolean closed = false;
 
+        protected static final Map<Character, String> escapes = Map.of(
+            '\\', "\\",
+            'n', "\n",
+            't', "\t",
+            '"', "\"",
+            '\'', "\'",
+            '0', "\0"
+        );
+
         public StringToken(char c, Location location) {
             super(location);
             ch = c == '\'';
@@ -375,43 +377,22 @@ public abstract class Token {
         public boolean ingest(char c, Location location) {
             if (closed)
                 return false;
-            if (c == '\'') {
-                if (ch) {
-                    if (escape) {
-                        value += c;
-                        escape = false;
-                        endLocation = location;
-                        return true;
-                    }
-                    closed = true;
-                    endLocation = location;
-                    return true;
+            if(escape) {
+                if(escapes.containsKey(c)) {
+                    value += escapes.get(c);
+                } else {
+                    value += c;
                 }
-                value += c;
                 endLocation = location;
+                escape = false;
                 return true;
-            } else if (c == '"') {
-                if (ch) {
-                    value += c;
-                    endLocation = location;
-                    return true;
-                } else if (escape) {
-                    value += c;
-                    escape = false;
-                    endLocation = location;
-                    return true;
-                }
+            }
+            if (c == '\'' && ch) {
                 closed = true;
                 endLocation = location;
                 return true;
-            } else if (c == '\\') {
-                if (escape) {
-                    value += c;
-                    escape = false;
-                    endLocation = location;
-                    return true;
-                }
-                escape = true;
+            } else if (c == '"' && !ch) {
+                closed = true;
                 endLocation = location;
                 return true;
             }

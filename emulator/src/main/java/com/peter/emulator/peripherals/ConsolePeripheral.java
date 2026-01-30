@@ -13,7 +13,7 @@ public class ConsolePeripheral implements MemoryMappedPeripheral {
     private RAM ram;
     private int deviceId = -1;
 
-    private MessageQueue inputQueue = new MessageQueue();
+    private final MessageQueue inputQueue = new MessageQueue();
 
     @Override
     public void update() {

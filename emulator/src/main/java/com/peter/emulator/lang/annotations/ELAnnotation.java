@@ -14,6 +14,7 @@ public class ELAnnotation {
     static {
         types.put("Override", ELOverrideAnnotation::new);
         types.put("Operator", ELOperatorAnnotation::new);
+        types.put("Entrypoint", ELEntrypointAnnotation::new);
     }
 
     public final String name;

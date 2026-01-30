@@ -1,12 +1,12 @@
 package com.peter.emulator.lang.base;
 
 import com.peter.emulator.lang.ELFunction;
+import com.peter.emulator.lang.ELFunction.FunctionType;
 import com.peter.emulator.lang.ELProtectionLevel;
 import com.peter.emulator.lang.ELStruct;
 import com.peter.emulator.lang.ELVariable;
 import com.peter.emulator.lang.Location;
 import com.peter.emulator.lang.Namespace;
-import com.peter.emulator.lang.ELFunction.FunctionType;
 
 public class SysD extends Namespace {
 

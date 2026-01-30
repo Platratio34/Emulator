@@ -8,7 +8,6 @@ import java.util.Optional;
 import com.peter.emulator.lang.ELAnalysisError;
 import com.peter.emulator.lang.ELAnalysisError.Severity;
 import com.peter.emulator.lang.LanguageServer;
-import com.peter.emulator.lang.Namespace;
 import com.peter.emulator.lang.ProgramModule;
 
 public class Main {
@@ -17,35 +16,39 @@ public class Main {
 
     public static void main(String[] args) {
         LanguageServer ls = new LanguageServer();
-        ProgramModule kernal = ls.addModule("Kernal");
-        kernal.addRefModule("SysD");
-        kernal.addFiles(ROOT_PATH.resolve("lang/Kernal"));
+        // ProgramModule kernal = ls.addModule("Kernal");
+        // kernal.addRefModule("SysD");
+        // kernal.addFiles(ROOT_PATH.resolve("lang/Kernal"));
 
-        ProgramModule system = ls.addModule("System");
-        system.addRefModule("SysD");
-        system.addRefModule("Kernal");
-        system.addFiles(ROOT_PATH.resolve("lang/System"));
+        // ProgramModule system = ls.addModule("System");
+        // system.addRefModule("SysD");
+        // system.addRefModule("Kernal");
+        // system.addFiles(ROOT_PATH.resolve("lang/System"));
         
-        ProgramModule testMod = ls.addModule("Test");
-        testMod.addRefModule("SysD");
-        testMod.addRefModule("Kernal");
-        testMod.addRefModule("System");
-        testMod.addFiles(ROOT_PATH.resolve("lang/Test"));
+        // ProgramModule testMod = ls.addModule("Test");
+        // testMod.addRefModule("SysD");
+        // testMod.addRefModule("Kernal");
+        // testMod.addRefModule("System");
+        // testMod.addFiles(ROOT_PATH.resolve("lang/Test"));
+        
+        ProgramModule testD = ls.addModule("TestD");
+        testD.addRefModule("SysD");
+        testD.addFiles(ROOT_PATH.resolve("lang/TestD"));
 
         Optional<String> error = ls.parse();
         if (error.isPresent()) {
             System.out.println("Error in LS: " + error.get());
             return;
         }
-        System.out.println("Kernal:");
-        for(Namespace ns : kernal.getNamespaces())
-            System.out.println(ns.debugString());
-        System.out.println("System:");
-        for(Namespace ns : system.getNamespaces())
-            System.out.println(ns.debugString());
-        System.out.println("Test:");
-        for(Namespace ns : testMod.getNamespaces())
-            System.out.println(ns.debugString());
+        // System.out.println("Kernal:");
+        // for(Namespace ns : kernal.getNamespaces())
+        //     System.out.println(ns.debugString());
+        // System.out.println("System:");
+        // for(Namespace ns : system.getNamespaces())
+        //     System.out.println(ns.debugString());
+        // System.out.println("Test:");
+        // for(Namespace ns : testMod.getNamespaces())
+        //     System.out.println(ns.debugString());
 
         System.out.println("\nResolution:");
         for (ELAnalysisError err : ls.resolve()) {
@@ -58,6 +61,9 @@ public class Main {
                 continue;
             System.out.println("- "+err);
         }
+
+        System.out.println("\n");
+        System.out.println(testD.assemble());
 
         // Tokenizer tokenizer = new Tokenizer(readFile("lang/kernal.el"), 1, 1);
         // error = tokenizer.tokenize();

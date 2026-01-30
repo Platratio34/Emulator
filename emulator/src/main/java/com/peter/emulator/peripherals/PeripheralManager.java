@@ -6,8 +6,8 @@ import com.peter.emulator.components.RAM;
 
 public class PeripheralManager {
 
-    private RAM ram;
-    private HashMap<Integer, Peripheral> peripherals = new HashMap<>();
+    private final RAM ram;
+    private final HashMap<Integer, Peripheral> peripherals = new HashMap<>();
     private int nextId = 1;
 
     public PeripheralManager(RAM ram) {

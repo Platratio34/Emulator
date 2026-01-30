@@ -74,7 +74,16 @@ class String {
     }
 
     @Operator(cast)
-    operator String fromChar(char c) {
+    operator String _cast(char c) {
         return new String(1, &c);
+    }
+
+    @Operator(cast)
+    operator String _cast(char* c) {
+        uint32 len = 0;
+        while(c[len] != '\00') {
+            len++;
+        }
+        return new String(len, c);
     }
 }

@@ -17,11 +17,7 @@ public class ELOperatorAnnotation extends ELAnnotation {
             throw new ELCompileException("Tried to create Operator annotation, but had wrong name");
         Token tkn = token.params.get(0);
         if (tkn instanceof IdentifierToken idt) {
-            if (idt.value.equals("cast")) {
-                cast = true;
-            } else {
-                cast = false;
-            }
+            cast = idt.value.equals("cast");
         } else {
             cast = false;
         }

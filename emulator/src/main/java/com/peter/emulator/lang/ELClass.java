@@ -3,7 +3,6 @@ package com.peter.emulator.lang;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
-
 import java.util.NoSuchElementException;
 
 import com.peter.emulator.lang.Token.OperatorToken;
@@ -123,14 +122,6 @@ public class ELClass extends Namespace {
                     + " (was marked as " + (function.namespace != null ? function.namespace.getQualifiedName() : "none")
                     + ")");
         }
-        if (memberFunctions.containsKey(function.cName)) {
-            memberFunctions.get(function.cName).addOverload(function);
-        } else {
-            if (memberVariables.containsKey(function.cName) || staticVariables.containsKey(function.cName)
-                    || staticFunctions.containsKey(function.cName))
-                throw new ELCompileException("Duplicate member name: `" + function.cName + "` in class " + cName);
-            memberFunctions.put(function.cName, function);
-        }
         if (function.type == ELFunction.FunctionType.OPERATOR) {
             if (function.annotations == null)
                 throw new ELCompileException("Operator function must have an @Operator annotation");
@@ -148,6 +139,17 @@ public class ELClass extends Namespace {
                 else
                     operators.put(opAnnotation.type, function);
             }
+            if(opAnnotation.cast) {
+                return addStaticFunction(function);
+            }
+        }
+        if (memberFunctions.containsKey(function.cName)) {
+            memberFunctions.get(function.cName).addOverload(function);
+        } else {
+            if (memberVariables.containsKey(function.cName) || staticVariables.containsKey(function.cName)
+                    || staticFunctions.containsKey(function.cName))
+                throw new ELCompileException("Duplicate member name: `" + function.cName + "` in class " + cName);
+            memberFunctions.put(function.cName, function);
         }
         return function;
     }
@@ -170,6 +172,7 @@ public class ELClass extends Namespace {
         return "class";
     }
 
+    @Override
     public String debugString(String prefix) {
         String out = "";
         if (annotations != null)

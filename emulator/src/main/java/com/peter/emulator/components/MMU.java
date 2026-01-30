@@ -1,20 +1,11 @@
 package com.peter.emulator.components;
 
-import java.util.ArrayList;
-
 import com.peter.emulator.CPU;
-import com.peter.emulator.peripherals.MemoryMappedPeripheral;
 
 public class MMU {
 
     public static final int DEVICE_TYPE = 0x0100_0002;
     public static final int BLOCK_SIZE = 0x0800;
-
-    private ArrayList<AddressSpace> addressSpaces = new ArrayList<>();
-
-    public void addAddressSpace(int start, int size, int offset, int pid) {
-        addressSpaces.add(new AddressSpace(start, size, offset, pid));
-    }
 
     public int translate(CPU cpu, int addr) {
         if (cpu.memTablePtr == 0) {

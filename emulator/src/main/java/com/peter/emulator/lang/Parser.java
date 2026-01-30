@@ -4,8 +4,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Optional;
 
-import com.peter.emulator.lang.Token.*;
+import com.peter.emulator.lang.Token.AnnotationToken;
+import com.peter.emulator.lang.Token.BlockToken;
+import com.peter.emulator.lang.Token.IdentifierToken;
+import com.peter.emulator.lang.Token.OperatorToken;
+import com.peter.emulator.lang.Token.SetToken;
 import com.peter.emulator.lang.annotations.ELAnnotation;
+import com.peter.emulator.lang.annotations.ELEntrypointAnnotation;
 
 public class Parser {
 
@@ -17,17 +22,15 @@ public class Parser {
     public ArrayList<Namespace> namespaces = new ArrayList<>();
     public HashMap<String, String> imports = new HashMap<>();
 
-    private ProgramModule module;
+    private final ProgramModule module;
 
-    public Parser() {
-
-    }
     public Parser(ProgramModule module) {
         this.module = module;
     }
 
-    public Parser(Namespace namespace) {
+    public Parser(Namespace namespace, ProgramModule module) {
         currentNamespace = namespace;
+        this.module = module;
     }
 
     /*
@@ -125,6 +128,11 @@ public class Parser {
                             constexpr = true;
                             workingI++;
                         }
+                        if (!operator)
+                            if (tokens.get(workingI) instanceof IdentifierToken it && it.value.equals("operator")) {
+                                operator = true;
+                                workingI++;
+                            }
                         boolean abs = false;
                         if (tokens.get(workingI) instanceof IdentifierToken it2 && it2.value.equals("abstract")) {
                             abs = true;
@@ -141,7 +149,7 @@ public class Parser {
                             workingI++;
                         }
                         ELType type = typeBuilder.build();
-                        String name = "";
+                        String name;
                         if (currentNamespace instanceof ELClass currentClass && type.equals(currentClass.getType())
                                 && tokens.get(workingI) instanceof SetToken set) {
                             // this is a constructor;
@@ -194,6 +202,12 @@ public class Parser {
                                 function.annotations = annotations;
                             if (currentNamespace == null)
                                 throw new ELCompileException("Can not have a function outside of namespace or class");
+
+                            if (!type.isVoid())
+                                function.ret = type;
+                            function.abstractFunction = abs;
+                            function.ingestParams(set);
+                            
                             if (stat) {
                                 currentNamespace.addStaticFunction(function);
                             } else if (currentNamespace instanceof ELClass currentClass) {
@@ -201,10 +215,6 @@ public class Parser {
                             } else {
                                 throw new ELCompileException("Can not have non-static function outside of class");
                             }
-                            if (!type.isVoid())
-                                function.ret = type;
-                            function.abstractFunction = abs;
-                            function.ingestParams(set);
                             if (tokens.get(workingI) instanceof BlockToken bt) {
                                 function.ingestBody(bt);
                             } else if (tokens.get(workingI) instanceof OperatorToken ot
@@ -214,6 +224,9 @@ public class Parser {
                             } else {
                                 throw new ELCompileException("Unexpected token found, expected function body or `;`: "
                                         + tokens.get(workingI));
+                            }
+                            if(function.hasAnnotation(ELEntrypointAnnotation.class)) {
+                                module.entrypoint = function;
                             }
                         } else { // variable
                             if(abs)
@@ -231,14 +244,14 @@ public class Parser {
                                 throw new ELCompileException("Can not have non-static variable outside of class");
                             }
                             if (tokens.get(workingI) instanceof OperatorToken ot) {
-                                if (ot.type == OperatorToken.Type.SEMICOLON) {
-                                    workingI++;
-                                    continue;
-                                } else if (ot.type == OperatorToken.Type.ASSIGN) {
-                                    workingI++;
-                                } else {
-                                    throw new ELCompileException(
-                                            "Unexpected token found, expected `;` or `=`: " + tokens.get(workingI));
+                                switch (ot.type) {
+                                    case SEMICOLON -> {
+                                        workingI++;
+                                        continue;
+                                    }
+                                    case ASSIGN -> workingI++;
+                                    default -> throw new ELCompileException(
+                                                "Unexpected token found, expected `;` or `=`: " + tokens.get(workingI));
                                 }
                             } else {
                                 throw new ELCompileException(
@@ -254,13 +267,13 @@ public class Parser {
                         Namespace namespace = null;
                         if (tokens.get(workingI) instanceof IdentifierToken it) {
                             namespace = makeNamespace(it.value, namespace);
-                            System.out.println(namespace.getQualifiedName());
+                            // System.out.println(namespace.getQualifiedName());
                             while (it.hasSub()) {
                                 Token tkn = it.subTokens.get(0);
                                 if (tkn instanceof IdentifierToken it2) {
-                                    System.out.println("- " + it2.value);
+                                    // System.out.println("- " + it2.value);
                                     namespace = makeNamespace(it2.value, namespace);
-                                    System.out.println(namespace.getQualifiedName());
+                                    // System.out.println(namespace.getQualifiedName());
                                     it = it2;
                                 } else {
                                     throw new ELCompileException("Unexpected token found, expected identifier: " + tkn);
@@ -273,7 +286,7 @@ public class Parser {
                         }
                         workingI++;
                         if (tokens.get(workingI) instanceof BlockToken bt) {
-                            Optional<String> opt = new Parser(namespace).parse(bt.subTokens);
+                            Optional<String> opt = new Parser(namespace, module).parse(bt.subTokens);
                             if (opt.isPresent()) {
                                 return opt;
                             }
@@ -330,17 +343,13 @@ public class Parser {
                                 } else if (builder != null) {
                                     if (!builder.ingest(tkn)) {
                                         if (tkn instanceof OperatorToken ot2 && ot2.type == OperatorToken.Type.COMMA) {
-                                            if (builder != null) {
-                                                clazz.generics.put(tName, builder.build());
-                                                builder = null;
-                                            }
+                                            clazz.generics.put(tName, builder.build());
+                                            builder = null;
                                             tName = null;
                                             workingI++;
                                         } else if (tkn instanceof OperatorToken ot2
                                                 && ot2.type == OperatorToken.Type.ANGLE_RIGHT) {
-                                            if (builder != null) {
-                                                clazz.generics.put(tName, builder.build());
-                                            }
+                                            clazz.generics.put(tName, builder.build());
                                             r = false;
                                             workingI++;
                                         } else {
@@ -377,7 +386,7 @@ public class Parser {
                             }
                         }
                         if (tokens.get(workingI) instanceof BlockToken bt) {
-                            Optional<String> opt = new Parser(clazz).parse(bt.subTokens);
+                            Optional<String> opt = new Parser(clazz, module).parse(bt.subTokens);
                             if (opt.isPresent()) {
                                 return opt;
                             }
@@ -410,7 +419,7 @@ public class Parser {
         if (module == null) {
             return new Namespace(name, parent);
         }
-        Namespace namespace = null;
+        Namespace namespace;
         if(parent == null)
             namespace = module.getNamespace(name);
         else

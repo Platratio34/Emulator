@@ -57,8 +57,8 @@ public abstract class ELValue {
         }
     }
 
-    public static ELValue number(ELType type, NumberToken nt) {
-        int v = 0;
+    public static ELNumberValue number(ELType type, NumberToken nt) {
+        int v;
         String vS = nt.value.replace("_", "");
         if (nt.hex) {
             v = Integer.parseInt(vS, 16);
@@ -116,7 +116,9 @@ public abstract class ELValue {
         public String valueString() {
             String out = "{";
             for (int i = 0; i < values.size(); i++) {
-                
+                if(i > 0)
+                    out += ",";
+                out += values.get(0).valueString();
             }
             return out + "}";
         }

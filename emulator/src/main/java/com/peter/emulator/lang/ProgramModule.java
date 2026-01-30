@@ -15,6 +15,7 @@ public class ProgramModule {
     protected ArrayList<String> refModules = new ArrayList<>();
 
     protected HashMap<String, Namespace> namespaces = new HashMap<>();
+    protected ELFunction entrypoint;
 
     public final String name;
     private final LanguageServer languageServer;
@@ -60,14 +61,14 @@ public class ProgramModule {
         String name = namespace.getQualifiedName();
         if (namespaces.containsKey(name)) {
             if (namespaces.get(name) != namespace) {
-                System.out.println("Appending to namespace " + name + " (" + namespace.cName + ")");
+                // System.out.println("Appending to namespace " + name + " (" + namespace.cName + ")");
                 namespaces.get(name).append(namespace);
             }
         } else if (namespace.namespace != null) {
-            System.out.println("Adding parent namespace for "+namespace.cName+": "+namespace.namespace.cName+" ("+name+")");
+            // System.out.println("Adding parent namespace for "+namespace.cName+": "+namespace.namespace.cName+" ("+name+")");
             addNamespace(namespace.namespace);
         } else {
-            System.out.println("Adding namespace "+name+" ("+namespace.cName+")");
+            // System.out.println("Adding namespace "+name+" ("+namespace.cName+")");
             namespaces.put(name, namespace);
         }
     }
@@ -257,5 +258,9 @@ public class ProgramModule {
         }
         // System.out.println("- Couldn't find NS "+n);
         return null;
+    }
+
+    public String assemble() {
+        return new ELAssembler(this).assemble();
     }
 }

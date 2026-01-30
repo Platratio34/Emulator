@@ -8,10 +8,10 @@ import com.peter.emulator.assembly.SymbolFile.FunctionSymbol;
 
 public class Debugger {
 
-    private SymbolFile kernalSymbols;
-    private SymbolFile symbols;
+    private final SymbolFile kernalSymbols;
+    private final SymbolFile symbols;
 
-    private ArrayList<FunctionSymbol> stack = new ArrayList<>();
+    private final ArrayList<FunctionSymbol> stack = new ArrayList<>();
 
     public Debugger(SymbolFile kernalSymbols, SymbolFile symbols) {
         this.kernalSymbols = kernalSymbols;

@@ -143,18 +143,15 @@ public class MachineCode {
             }
             case STORE -> {
                 int op = instruction & MASK_STORE_OP;
-                if (op == STORE_MEM) {
-                    return String.format("STORE %s -> mem[%s]", translateReg((instruction & MASK_STORE_RG) >> 16),
+                return switch (op) {
+                    case STORE_MEM -> String.format("STORE %s -> mem[%s]", translateReg((instruction & MASK_STORE_RG) >> 16),
                             translateReg(instruction & MASK_STORE_RA));
-                } else if (op == STORE_VAL) {
-                    return String.format("STORE (%s) -> mem[%s]", next, translateReg(instruction & MASK_STORE_RA));
-                } else if (op == STORE_MEM_COPY) {
-                    return String.format("COPY mem[%s] -> mem[%s]", translateReg((instruction & MASK_STORE_RG) >> 16),
+                    case STORE_VAL -> String.format("STORE (%s) -> mem[%s]", next, translateReg(instruction & MASK_STORE_RA));
+                    case STORE_MEM_COPY -> String.format("COPY mem[%s] -> mem[%s]", translateReg((instruction & MASK_STORE_RG) >> 16),
                             translateReg(instruction & MASK_STORE_RA));
-                } else {
-                    return String.format("COPY %s -> %s", translateReg((instruction & MASK_STORE_RG) >> 16),
+                    default -> String.format("COPY %s -> %s", translateReg((instruction & MASK_STORE_RG) >> 16),
                             translateReg(instruction & MASK_STORE_RA));
-                }
+                };
             }
             case MATH -> {
                 int op = instruction & MASK_MATH_OP;
@@ -179,9 +176,9 @@ public class MachineCode {
                     case MATH_NOR -> String.format("NOR %s = %s !| %s", rd, ra, rb);
                     case MATH_NOT -> String.format("NOT %s = ~%s", rd, ra);
                     case MATH_XOR -> String.format("XOR %s = %s ^ %s", rd, ra, rb);
-                    case MATH_LSHIFT -> String.format("SHIFT %s = %s << %d", rd, ra, rb);
-                    case MATH_RSHIFT -> String.format("SHIFT %s = %s >> %d", rd, ra, rb);
-                    case MATH_MUL -> String.format("MUL %s = %s * %d", rd, ra, rb);
+                    case MATH_LSHIFT -> String.format("SHIFT %s = %s << %d", rd, ra, instruction & MASK_MATH_RB);
+                    case MATH_RSHIFT -> String.format("SHIFT %s = %s >> %d", rd, ra, instruction & MASK_MATH_RB);
+                    case MATH_MUL -> String.format("MUL %s = %s * %d", rd, ra, instruction & MASK_MATH_RB);
                     
                     default -> String.format("MATH (%x)", instruction);
                 }
@@ -218,9 +215,9 @@ public class MachineCode {
                     case GOTO_POP_GT_ZERO -> String.format("GOTO POP ? %s > 0", ro);
 
                     case GOTO_NOT_ZERO -> String.format("GOTO %s ? %s != 0", ra, ro);
-                    case GOTO_REL_NOT_ZERO -> String.format("GOTO pPtr + %d ? %s != 0", ra, ro);
+                    case GOTO_REL_NOT_ZERO -> String.format("GOTO pPtr + %d ? %s != 0", int8(raV), ro);
                     case GOTO_PUSH_NOT_ZERO -> String.format("GOTO PUSH %s ? %s != 0", ra, ro);
-                    case GOTO_PUSH_REL_NOT_ZERO -> String.format("GOTO PUSH pPtr + %d ? %s != 0", ra, ro);
+                    case GOTO_PUSH_REL_NOT_ZERO -> String.format("GOTO PUSH pPtr + %d ? %s != 0", int8(raV), ro);
                     case GOTO_POP_NOT_ZERO -> String.format("GOTO POP ? %s != 0", ro);
 
                     default -> String.format("GOTO (%x)", instruction);
@@ -235,20 +232,23 @@ public class MachineCode {
             }
             case SYSCALL -> {
                 int option = instruction & MASK_SYSCALL_OPTION;
-                if (option == SYSCALL_RETURN) {
-                    return "SYSRETURN";
-                } else if (option == SYSCALL_GOTO) {
-                    return String.format("SYSGOTO %s", translateReg(instruction & MASK_SYSCALL_RG));
-                } else if (option == SYSCALL_INTERRUPT) {
-                    int iOp = instruction & MASK_SYSCALL_INTERRUPT_OP;
-                    if (iOp == SYSCALL_INTERRUPT_RG) {
-                        return String.format("INTERRUPT %s", translateReg(instruction & MASK_SYSCALL_RG));
-                    } else if (iOp == SYSCALL_INTERRUPT_VAL) {
-                        return String.format("INTERRUPT %s", next);
-                    } else if (iOp == SYSCALL_INTERRUPT_RET) {
-                        return "INTERRUPT RET";
-                    } else {
-                        return String.format("INTERRUPT %s", Integer.toHexString(iOp));
+                switch (option) {
+                    case SYSCALL_RETURN -> {
+                        return "SYSRETURN";
+                    }
+                    case SYSCALL_GOTO -> {
+                        return String.format("SYSGOTO %s", translateReg(instruction & MASK_SYSCALL_RG));
+                    }
+                    case SYSCALL_INTERRUPT -> {
+                        int iOp = instruction & MASK_SYSCALL_INTERRUPT_OP;
+                        return switch (iOp) {
+                            case SYSCALL_INTERRUPT_RG -> String.format("INTERRUPT %s", translateReg(instruction & MASK_SYSCALL_RG));
+                            case SYSCALL_INTERRUPT_VAL -> String.format("INTERRUPT %s", next);
+                            case SYSCALL_INTERRUPT_RET -> "INTERRUPT RET";
+                            default -> String.format("INTERRUPT %s", Integer.toHexString(iOp));
+                        };
+                    }
+                    default -> {
                     }
                 }
                 return String.format("SYSCALL %x", instruction & MASK_SYSCALL_FUNCTION);

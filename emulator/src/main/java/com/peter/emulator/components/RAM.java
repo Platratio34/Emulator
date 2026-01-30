@@ -49,9 +49,7 @@ public class RAM {
                     "Length argument must be less than or equal to data length; Data length: " + data.length + "; Got "
                             + length);
         }
-        for (int i = 0; i < length; i++) {
-            mem[i + start] = data[i];
-        }
+        System.arraycopy(data, 0, mem, start, length);
     }
 
     private String toHex(int num) {
@@ -63,8 +61,7 @@ public class RAM {
     }
 
     public String debugPrint(int start, int rows) {
-        String str = "";
-        str = "           ";
+        String str = "           ";
         for (int i = 0; i < 16; i++) {
             str += "     0x" + Integer.toHexString(i) + "   ";
         }

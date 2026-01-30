@@ -10,7 +10,7 @@ public class Linker {
 
     public HashMap<String, Integer> sysCalls = new HashMap<>();
     public String[] sysCallMap = new String[64];
-    private SymbolFile symbols = new SymbolFile();
+    private final SymbolFile symbols = new SymbolFile();
 
     public void addSyscall(Assembler assembler, String syscall, int start) {
         int func = assembler.syscallDef.get(syscall) + start;
