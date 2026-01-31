@@ -72,7 +72,12 @@ public class MachineCode {
 
     public static final int STACK = 0x10 << 24;
     public static final int MASK_STACK_RG = 0x00ff_0000;
-    public static final int MASK_STACK_POP = 0x0000_0100;
+    public static final int MASK_STACK_OP = 0x00ff_ff00;
+    public static final int MASK_STACK_VAL = 0x0000_00ff;
+    public static final int STACK_PUSH = 0x0000_0000;
+    public static final int STACK_POP = 0x0000_0100;
+    public static final int STACK_INC = 0x0000_0200;
+    public static final int STACK_DEC = 0x0000_0300;
 
     public static final int SYSCALL = 0x11 << 24;
     public static final int MASK_SYSCALL_FUNCTION = 0x0000_ffff;
@@ -224,11 +229,15 @@ public class MachineCode {
                 };
             }
             case STACK -> {
-                if ((instruction & MASK_STACK_POP) != 0) {
-                    return String.format("STACK POP -> %s", translateReg((instruction & MASK_STACK_RG) >> 16));
-                } else {
-                    return String.format("STACK PUSH <- %s", translateReg((instruction & MASK_STACK_RG) >> 16));
-                }
+                return switch(instruction & MASK_STACK_OP) {
+                    case (STACK_PUSH) -> String.format("STACK PUSH <- %s", translateReg((instruction & MASK_STACK_RG) >> 16));
+                    case (STACK_POP) -> String.format("STACK POP -> %s", translateReg((instruction & MASK_STACK_RG) >> 16));
+                    
+                    case (STACK_INC) -> String.format("STACK INC %d", instruction & MASK_STACK_VAL + 1);
+                    case (STACK_DEC) -> String.format("STACK DEC %d", instruction & MASK_STACK_VAL + 1);
+
+                    default -> String.format("STACK 0x%s", Integer.toHexString((instruction & MASK_STACK_OP) >> 16));
+                };
             }
             case SYSCALL -> {
                 int option = instruction & MASK_SYSCALL_OPTION;

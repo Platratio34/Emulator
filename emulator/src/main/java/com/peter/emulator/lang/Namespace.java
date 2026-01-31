@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
+import com.peter.emulator.lang.Token.IdentifierToken;
+
 public class Namespace {
 
     public final String cName;
@@ -270,6 +272,15 @@ public class Namespace {
                 return null;
             }
         }
+        return null;
+    }
+    public ELVariable getVar(IdentifierToken targetVal) {
+        if(targetVal.subTokens == null) {
+            if(staticVariables.containsKey(targetVal.value))
+                return staticVariables.get(targetVal.value);
+        }
+        if(namespace != null)
+            return namespace.getVar(targetVal);
         return null;
     }
 }

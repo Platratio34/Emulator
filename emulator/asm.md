@@ -12,6 +12,8 @@
 | `05_op_ra_ro` | `GOTO`        | Goto command, see spec                                                                          |
 | `10_rg_00_00` | `STACK PUSH`  | Push `r[rg]` to the stack                                                                       |
 | `10_rg_01_00` | `STACK POP`   | Pop the top of the stack to `r[rg]`                                                             |
+| `10_rg_02_xx` | `STACK INC`   | Increment the stac pointer by `xx` + 1                                                          |
+| `10_rg_03_xx` | `STACK DEC`   | Decrement the stac pointer by `xx` + 1                                                          |
 | `11_00_xx_xx` | `SYSCALL`     | Executes the System call `xx_xx`                                                                |
 | `11_01_00_00` | `SYSRETURN`   | Returns from the current SysCall                                                                |
 | `11_02_00_rg` | `SYSGOTO`     | Goto `r[rg]`, setting `rPM` to false                                                            |
@@ -96,6 +98,7 @@
 | `GOTO (<PUSH\|POP>) (<EQ\|LEQ\|GT\|NEQ>) ([rg]) [:label]` |     | Goto label statement (See detail section)                |       |
 | `GOTO (<PUSH\|POP>) (<EQ\|LEQ\|GT\|NEQ>) ([rg]) [ra]`     |     | Goto absolute statement (See detail section)             |       |
 | `STACK <PUSH\|POP> [rg]`                                  |     | Push/Pop `r[rg]` to/from the stack                       |       |
+| `STACK <INC\|DEC> ([val])`                                |     | Inc/dec `rStack` by value (def 1)                        |       |
 | `SYSCALL [function]`                                      |     | Perform a system call. (`function` may be index or name) |       |
 | `SYSRETURN`                                               | Yes | Return from a system call                                |       |
 | `SYSGOTO [rg]`                                            | Yes | Goto `r[rg]`, setting `rPM` to false                     |       |

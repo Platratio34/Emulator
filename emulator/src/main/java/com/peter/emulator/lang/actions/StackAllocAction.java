@@ -13,7 +13,7 @@ public class StackAllocAction extends Action {
     @Override
     public String toAssembly() {
         if(reg < 0)
-            return "INC rStack";
+            return "STACK INC";
         return String.format("STACK PUSH %s", MachineCode.translateReg(reg));
     }
 

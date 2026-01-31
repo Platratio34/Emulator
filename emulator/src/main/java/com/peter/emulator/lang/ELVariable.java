@@ -16,18 +16,20 @@ public class ELVariable {
     public final boolean stat;
     public final boolean finalVal;
     public final Location startLocation;
+    public final Namespace namespace;
 
     public ArrayList<Token> valueTokens = null;
     public ELValue startingValue = null;
     public Location valueLocation = null;
     public ArrayList<ELAnnotation> annotations = null;
 
-    public ELVariable(ELProtectionLevel protection, boolean stat, ELType type, String name, boolean finalVal, Location location) {
+    public ELVariable(ELProtectionLevel protection, boolean stat, ELType type, String name, boolean finalVal, Namespace namespace, Location location) {
         this.type = type;
         this.protection = protection;
         this.stat = stat;
         this.name = name;
         this.finalVal = finalVal;
+        this.namespace = namespace;
         this.startLocation = location;
     }
 
@@ -103,5 +105,11 @@ public class ELVariable {
     public ELVariable setValue(int i) {
         startingValue = new ELValue.ELNumberValue(type, i);
         return this;
+    }
+
+    public String getQualifiedName() {
+        if(namespace == null)
+            return name;
+        return namespace.getQualifiedName() + "." + name;
     }
 }

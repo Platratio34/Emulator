@@ -231,7 +231,7 @@ public class Parser {
                         } else { // variable
                             if(abs)
                                 throw new ELCompileException("Variable can not be marked abstract");
-                            ELVariable var = new ELVariable(level, stat, type, name, final_, loc);
+                            ELVariable var = new ELVariable(level, stat, type, name, final_, currentNamespace, loc);
                             if (annotations != null)
                                 var.annotations = annotations;
                             if (currentNamespace == null)

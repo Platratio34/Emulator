@@ -1,87 +1,6 @@
 package com.peter.emulator;
 
-import static com.peter.emulator.MachineCode.GOTO;
-import static com.peter.emulator.MachineCode.GOTO_EQ_ZERO;
-import static com.peter.emulator.MachineCode.GOTO_GT_ZERO;
-import static com.peter.emulator.MachineCode.GOTO_LEQ_ZERO;
-import static com.peter.emulator.MachineCode.GOTO_NOT_ZERO;
-import static com.peter.emulator.MachineCode.GOTO_POP_EQ_ZERO;
-import static com.peter.emulator.MachineCode.GOTO_POP_GT_ZERO;
-import static com.peter.emulator.MachineCode.GOTO_POP_LEQ_ZERO;
-import static com.peter.emulator.MachineCode.GOTO_POP_NOT_ZERO;
-import static com.peter.emulator.MachineCode.GOTO_POP_UNCD;
-import static com.peter.emulator.MachineCode.GOTO_PUSH_EQ_ZERO;
-import static com.peter.emulator.MachineCode.GOTO_PUSH_GT_ZERO;
-import static com.peter.emulator.MachineCode.GOTO_PUSH_LEQ_ZERO;
-import static com.peter.emulator.MachineCode.GOTO_PUSH_NOT_ZERO;
-import static com.peter.emulator.MachineCode.GOTO_PUSH_REL_EQ_ZERO;
-import static com.peter.emulator.MachineCode.GOTO_PUSH_REL_GT_ZERO;
-import static com.peter.emulator.MachineCode.GOTO_PUSH_REL_LEQ_ZERO;
-import static com.peter.emulator.MachineCode.GOTO_PUSH_REL_NOT_ZERO;
-import static com.peter.emulator.MachineCode.GOTO_PUSH_REL_UNCD;
-import static com.peter.emulator.MachineCode.GOTO_PUSH_UNCD;
-import static com.peter.emulator.MachineCode.GOTO_REL_EQ_ZERO;
-import static com.peter.emulator.MachineCode.GOTO_REL_GT_ZERO;
-import static com.peter.emulator.MachineCode.GOTO_REL_LEQ_ZERO;
-import static com.peter.emulator.MachineCode.GOTO_REL_NOT_ZERO;
-import static com.peter.emulator.MachineCode.GOTO_REL_UNCD;
-import static com.peter.emulator.MachineCode.GOTO_UNCD;
-import static com.peter.emulator.MachineCode.HALT;
-import static com.peter.emulator.MachineCode.LOAD;
-import static com.peter.emulator.MachineCode.MASK_GOTO_OP;
-import static com.peter.emulator.MachineCode.MASK_GOTO_RA;
-import static com.peter.emulator.MachineCode.MASK_GOTO_RO;
-import static com.peter.emulator.MachineCode.MASK_INSTRUCTION;
-import static com.peter.emulator.MachineCode.MASK_LOAD_MEM;
-import static com.peter.emulator.MachineCode.MASK_LOAD_RA;
-import static com.peter.emulator.MachineCode.MASK_LOAD_RG;
-import static com.peter.emulator.MachineCode.MASK_MATH_INC;
-import static com.peter.emulator.MachineCode.MASK_MATH_OP;
-import static com.peter.emulator.MachineCode.MASK_MATH_RA;
-import static com.peter.emulator.MachineCode.MASK_MATH_RB;
-import static com.peter.emulator.MachineCode.MASK_MATH_RD;
-import static com.peter.emulator.MachineCode.MASK_STACK_POP;
-import static com.peter.emulator.MachineCode.MASK_STACK_RG;
-import static com.peter.emulator.MachineCode.MASK_STORE_OP;
-import static com.peter.emulator.MachineCode.MASK_STORE_RA;
-import static com.peter.emulator.MachineCode.MASK_STORE_RG;
-import static com.peter.emulator.MachineCode.MASK_SYSCALL_FUNCTION;
-import static com.peter.emulator.MachineCode.MASK_SYSCALL_INTERRUPT_OP;
-import static com.peter.emulator.MachineCode.MASK_SYSCALL_OPTION;
-import static com.peter.emulator.MachineCode.MASK_SYSCALL_RG;
-import static com.peter.emulator.MachineCode.MATH;
-import static com.peter.emulator.MachineCode.MATH_ADD;
-import static com.peter.emulator.MachineCode.MATH_AND;
-import static com.peter.emulator.MachineCode.MATH_INC;
-import static com.peter.emulator.MachineCode.MATH_LSHIFT;
-import static com.peter.emulator.MachineCode.MATH_MUL;
-import static com.peter.emulator.MachineCode.MATH_NAND;
-import static com.peter.emulator.MachineCode.MATH_NOR;
-import static com.peter.emulator.MachineCode.MATH_NOT;
-import static com.peter.emulator.MachineCode.MATH_OR;
-import static com.peter.emulator.MachineCode.MATH_RSHIFT;
-import static com.peter.emulator.MachineCode.MATH_SUB;
-import static com.peter.emulator.MachineCode.MATH_XOR;
-import static com.peter.emulator.MachineCode.REG_INTERRUPT;
-import static com.peter.emulator.MachineCode.REG_INTR_RSP;
-import static com.peter.emulator.MachineCode.REG_MEM_TABLE;
-import static com.peter.emulator.MachineCode.REG_PGM_PNTR;
-import static com.peter.emulator.MachineCode.REG_PID;
-import static com.peter.emulator.MachineCode.REG_PRIVILEGED_MODE;
-import static com.peter.emulator.MachineCode.REG_STACK_PNTR;
-import static com.peter.emulator.MachineCode.STACK;
-import static com.peter.emulator.MachineCode.STORE;
-import static com.peter.emulator.MachineCode.STORE_MEM;
-import static com.peter.emulator.MachineCode.STORE_MEM_COPY;
-import static com.peter.emulator.MachineCode.STORE_VAL;
-import static com.peter.emulator.MachineCode.SYSCALL;
-import static com.peter.emulator.MachineCode.SYSCALL_GOTO;
-import static com.peter.emulator.MachineCode.SYSCALL_INTERRUPT;
-import static com.peter.emulator.MachineCode.SYSCALL_INTERRUPT_RET;
-import static com.peter.emulator.MachineCode.SYSCALL_INTERRUPT_VAL;
-import static com.peter.emulator.MachineCode.SYSCALL_RETURN;
-import static com.peter.emulator.MachineCode.int8;
-import static com.peter.emulator.MachineCode.translate;
+import static com.peter.emulator.MachineCode.*;
 import com.peter.emulator.components.MMU;
 import com.peter.emulator.components.RAM;
 import com.peter.emulator.debug.Debugger;
@@ -239,7 +158,7 @@ public class CPU {
         int next = readMem(pgmPtr);
         int instruction = op & MASK_INSTRUCTION;
         String instrStr = translate(op, next);
-        // System.out.println(String.format("CPU Tick: [%x] %s", mmu.translate(this, pgmPtr - 1), instrStr));
+        System.out.println(String.format("CPU Tick: [%x] %s", mmu.translate(this, pgmPtr - 1), instrStr));
         switch (instruction) {
             case HALT -> {
                 if (!privilegeMode)
@@ -468,11 +387,19 @@ public class CPU {
             }
             case STACK -> {
                 int rg = (op & MASK_STACK_RG) >> 16;
-                boolean pop = (op & MASK_STACK_POP) != 0;
-                if (pop) {
-                    setReg(rg, stackPop());
-                } else { // push
-                    stackPush(getReg(rg));
+                switch(op & MASK_STACK_OP) {
+                    case (STACK_PUSH) -> {
+                        stackPush(getReg(rg));
+                    }
+                    case (STACK_POP) -> {
+                        setReg(rg, stackPop());
+                    }
+                    case (STACK_INC) -> {
+                        stackPtr += 1 + op & MASK_STACK_VAL;
+                    }
+                    case (STACK_DEC) -> {
+                        stackPtr -= 1 + op & MASK_STACK_VAL;
+                    }
                 }
             }
             case SYSCALL -> {
@@ -523,5 +450,24 @@ public class CPU {
                 }
             }
         }
+    }
+
+    private String toHex(int num) {
+        String str = String.format("%x", num);
+        while (str.length() < 8) {
+            str = "0" + str;
+        }
+        return str.substring(0,4)+"_"+str.substring(4);
+    }
+
+    public String dump() {
+        String out = "r0";
+        String vl = "";
+        for(int i = 0; i <= 0xf; i++) {
+            out += MachineCode.translateReg(i) + "         ";
+            vl += toHex(registers[i]) + "  ";
+        }
+        out += "\n" + vl;
+        return out;
     }
 }

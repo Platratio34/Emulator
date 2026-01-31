@@ -1,12 +1,7 @@
 package com.peter.emulator.lang.base;
 
-import com.peter.emulator.lang.ELFunction;
 import com.peter.emulator.lang.ELFunction.FunctionType;
-import com.peter.emulator.lang.ELProtectionLevel;
-import com.peter.emulator.lang.ELStruct;
-import com.peter.emulator.lang.ELVariable;
-import com.peter.emulator.lang.Location;
-import com.peter.emulator.lang.Namespace;
+import com.peter.emulator.lang.*;
 
 public class SysD extends Namespace {
 
@@ -62,23 +57,23 @@ public class SysD extends Namespace {
         copyToReg.addParameter(ELPrimitives.UINT32, "reg");
 
         // const uint32 MEMORY_DEVICE_START = 0x1_0000;
-        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, true, ELPrimitives.UINT32, "MEMORY_DEVICE_START", true, SYSD_LOCATION).setValue(0x1_0000));
+        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, true, ELPrimitives.UINT32, "MEMORY_DEVICE_START", true, this, SYSD_LOCATION).setValue(0x1_0000));
         // const uint32 MEMORY_PROCESS_START = 0x2_0000;
-        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, true, ELPrimitives.UINT32, "MEMORY_PROCESS_START", true, SYSD_LOCATION).setValue(0x2_0000));
+        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, true, ELPrimitives.UINT32, "MEMORY_PROCESS_START", true, this, SYSD_LOCATION).setValue(0x2_0000));
         // const uint32 MEMORY_BLOCK_SIZE = 0x8000;
-        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, true, ELPrimitives.UINT32, "MEMORY_BLOCK_SIZE", true, SYSD_LOCATION).setValue(0x8000));
+        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, true, ELPrimitives.UINT32, "MEMORY_BLOCK_SIZE", true, this, SYSD_LOCATION).setValue(0x8000));
 
         // const uint32 REG_PGM_PNTR = 0xf0;
-        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, true, ELPrimitives.UINT32, "REG_PGM_PNTR", true, SYSD_LOCATION).setValue(0xf0));
+        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, true, ELPrimitives.UINT32, "REG_PGM_PNTR", true, this, SYSD_LOCATION).setValue(0xf0));
         // const uint32 REG_STACK_PNTR = 0xf1;
-        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, true, ELPrimitives.UINT32, "REG_STACK_PNTR", true, SYSD_LOCATION).setValue(0xf1));
+        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, true, ELPrimitives.UINT32, "REG_STACK_PNTR", true, this, SYSD_LOCATION).setValue(0xf1));
         // const uint32 REG_PID = 0xf8;
-        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, true, ELPrimitives.UINT32, "REG_PID", true, SYSD_LOCATION).setValue(0xf8));
+        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, true, ELPrimitives.UINT32, "REG_PID", true, this, SYSD_LOCATION).setValue(0xf8));
         // const uint32 REG_MEM_TABLE = 0xf9;
-        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, true, ELPrimitives.UINT32, "REG_MEM_TABLE", true, SYSD_LOCATION).setValue(0xf9));
+        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, true, ELPrimitives.UINT32, "REG_MEM_TABLE", true, this, SYSD_LOCATION).setValue(0xf9));
         // const uint32 REG_PRIVILEGED_MODE = 0xff;
         addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, true, ELPrimitives.UINT32, "REG_PRIVILEGED_MODE",
-                true, SYSD_LOCATION).setValue(0xff));
+                true, this, SYSD_LOCATION).setValue(0xff));
 
         /*
         struct AddressSpace {
@@ -89,11 +84,11 @@ public class SysD extends Namespace {
         }
          */
         ELStruct AddressSpace = new ELStruct("AddressSpace", this);
-        AddressSpace.addMember(new ELVariable(ELProtectionLevel.PUBLIC, false, ELPrimitives.UINT32, "addressOffset", false, SYSD_LOCATION));
-        AddressSpace.addMember(new ELVariable(ELProtectionLevel.PUBLIC, false, ELPrimitives.UINT32, "pid", false, SYSD_LOCATION));
-        AddressSpace.addMember(new ELVariable(ELProtectionLevel.PUBLIC, false, ELPrimitives.UINT8, "type", false, SYSD_LOCATION));
+        AddressSpace.addMember(new ELVariable(ELProtectionLevel.PUBLIC, false, ELPrimitives.UINT32, "addressOffset", false, this, SYSD_LOCATION));
+        AddressSpace.addMember(new ELVariable(ELProtectionLevel.PUBLIC, false, ELPrimitives.UINT32, "pid", false, this, SYSD_LOCATION));
+        AddressSpace.addMember(new ELVariable(ELProtectionLevel.PUBLIC, false, ELPrimitives.UINT8, "type", false, this, SYSD_LOCATION));
         AddressSpace.addMember(
-                new ELVariable(ELProtectionLevel.PUBLIC, false, ELPrimitives.UINT8, "state", false, SYSD_LOCATION));
+                new ELVariable(ELProtectionLevel.PUBLIC, false, ELPrimitives.UINT8, "state", false, this, SYSD_LOCATION));
         
         /*
         struct PeripheralDescriptorShort {
@@ -102,9 +97,9 @@ public class SysD extends Namespace {
         }
          */
         ELStruct PeripheralDescriptorShort = new ELStruct("PeripheralDescriptorShort");
-        PeripheralDescriptorShort.addMember(new ELVariable(ELProtectionLevel.PUBLIC, false, ELPrimitives.UINT32, "id", true, SYSD_LOCATION));
+        PeripheralDescriptorShort.addMember(new ELVariable(ELProtectionLevel.PUBLIC, false, ELPrimitives.UINT32, "id", true, this, SYSD_LOCATION));
         PeripheralDescriptorShort.addMember(
-                new ELVariable(ELProtectionLevel.PUBLIC, false, ELPrimitives.UINT32, "type", true, SYSD_LOCATION));
+                new ELVariable(ELProtectionLevel.PUBLIC, false, ELPrimitives.UINT32, "type", true, this, SYSD_LOCATION));
         
         /*
         struct PeripheralDescriptor {
@@ -116,11 +111,11 @@ public class SysD extends Namespace {
         }
          */
         ELStruct PeripheralDescriptor = new ELStruct("PeripheralDescriptor");
-        PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, false, ELPrimitives.UINT32, "id", true, SYSD_LOCATION));
-        PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, false, ELPrimitives.UINT32, "type", true, SYSD_LOCATION));
-        PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, false, ELPrimitives.UINT32.builder().array(4).build(), "manufacturer", true, SYSD_LOCATION));
-        PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, false, ELPrimitives.UINT32.builder().array(4).build(), "serial", true, SYSD_LOCATION));
-        PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, false, ELPrimitives.UINT32.builder().array(6).build(), "data", true, SYSD_LOCATION));
+        PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, false, ELPrimitives.UINT32, "id", true, this, SYSD_LOCATION));
+        PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, false, ELPrimitives.UINT32, "type", true, this, SYSD_LOCATION));
+        PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, false, ELPrimitives.UINT32.builder().array(4).build(), "manufacturer", true, this, SYSD_LOCATION));
+        PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, false, ELPrimitives.UINT32.builder().array(4).build(), "serial", true, this, SYSD_LOCATION));
+        PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, false, ELPrimitives.UINT32.builder().array(6).build(), "data", true, this, SYSD_LOCATION));
     }
 
 }

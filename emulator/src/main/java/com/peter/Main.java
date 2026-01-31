@@ -1,10 +1,14 @@
 package com.peter;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Optional;
 
+import com.peter.emulator.Emulator;
+import com.peter.emulator.assembly.Assembler;
 import com.peter.emulator.lang.ELAnalysisError;
 import com.peter.emulator.lang.ELAnalysisError.Severity;
 import com.peter.emulator.lang.LanguageServer;
@@ -16,6 +20,7 @@ public class Main {
 
     public static void main(String[] args) {
         LanguageServer ls = new LanguageServer();
+
         // ProgramModule kernal = ls.addModule("Kernal");
         // kernal.addRefModule("SysD");
         // kernal.addFiles(ROOT_PATH.resolve("lang/Kernal"));
@@ -63,7 +68,18 @@ public class Main {
         }
 
         System.out.println("\n");
-        System.out.println(testD.assemble());
+        String asm = testD.assemble();
+        System.out.println(asm);
+        Path p = ROOT_PATH.resolve("testd.asm");
+        try {
+            new File(p.toUri()).delete();
+            Files.writeString(p, asm + "\nHALT", StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            return;
+        }
+
 
         // Tokenizer tokenizer = new Tokenizer(readFile("lang/kernal.el"), 1, 1);
         // error = tokenizer.tokenize();
@@ -84,9 +100,10 @@ public class Main {
         //     System.out.println(entry.getValue().debugString(entry.getKey()));
         // }
 
-        /*
+        
         Emulator emulator = new Emulator();
         
+        /*
         KernalBuilder kernalBuilder = new KernalBuilder();
         try {
             int[] kernal = kernalBuilder.build();
@@ -121,6 +138,20 @@ public class Main {
             e.printStackTrace();
             return;
         }
+        */
+        Assembler assembler = new Assembler();
+        try {
+            assembler.setSource(p);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            return;
+        }
+        if(!assembler.assemble()) {
+            System.err.println("Error assembeling");
+            return;
+        }
+        emulator.ram.copy(assembler.build());
         
         // Assembler assembler = new Assembler();
         // try {
@@ -147,6 +178,9 @@ public class Main {
                 break;
             }
         }
+
+        System.err.println("\n");
+        System.out.println(emulator.cores[0].dump());
         
         System.out.println("\n\n+----------+\n| MEM DUMP |\n+----------+");
         System.out.println("Kernal");
@@ -165,7 +199,7 @@ public class Main {
         System.out.println(emulator.ram.debugPrint(0x9000, 4));
         
         emulator.stop();
-        */
+        
     }
     
     public static String readFile(String path) {

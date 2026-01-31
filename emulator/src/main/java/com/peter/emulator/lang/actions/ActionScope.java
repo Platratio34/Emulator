@@ -4,11 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import com.peter.emulator.MachineCode;
-import com.peter.emulator.lang.ELCompileException;
-import com.peter.emulator.lang.ELProtectionLevel;
-import com.peter.emulator.lang.ELType;
-import com.peter.emulator.lang.ELVariable;
-import com.peter.emulator.lang.Namespace;
+import com.peter.emulator.lang.*;
 import com.peter.emulator.lang.Token.IdentifierToken;
 
 public class ActionScope {
@@ -31,7 +27,7 @@ public class ActionScope {
         if(stackVars.containsKey(name)) {
             throw new ELCompileException("Duplicate variable name `"+name+"`");
         }
-        ELVariable var = new ELVariable(ELProtectionLevel.INTERNAL, false, type, name, false, type.location);
+        ELVariable var = new ELVariable(ELProtectionLevel.INTERNAL, false, type, name, false, null, type.location);
         var.offset = stackOff++;
         stackVars.put(name, var);
     }
@@ -40,7 +36,7 @@ public class ActionScope {
         return stackOff - stackOffStart;
     }
     public DirectAction getStackResetAction() {
-        return new DirectAction("INC rStack -%d", stackOff - stackOffStart);
+        return new DirectAction("STACK DEC %d", stackOff - stackOffStart);
     }
     
     public boolean hasVariable(IdentifierToken idt) {

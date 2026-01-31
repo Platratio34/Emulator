@@ -12,6 +12,13 @@ public class ELAssembler {
 
     public String assemble() {
         String out = "";
+        out += "// static data\n";
+        for(Namespace ns : module.namespaces.values()) {
+            for(ELVariable v : ns.staticVariables.values()) {
+                out += String.format("#var %s %s // %s\n", v.getQualifiedName(), (v.startingValue == null)? "0x00" : v.startingValue.valueString(), v.typeString());
+            }
+        }
+        out += "\n";
         ELFunction ent = module.entrypoint;
         if(ent == null)
             throw new ELCompileException("Module had no entry point");

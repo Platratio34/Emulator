@@ -3,10 +3,7 @@ package com.peter.emulator.lang.actions;
 import java.util.ArrayList;
 
 import com.peter.emulator.MachineCode;
-import com.peter.emulator.lang.ELCompileException;
-import com.peter.emulator.lang.ELType;
-import com.peter.emulator.lang.ELValue;
-import com.peter.emulator.lang.Token;
+import com.peter.emulator.lang.*;
 import com.peter.emulator.lang.Token.IdentifierToken;
 import com.peter.emulator.lang.Token.NumberToken;
 import com.peter.emulator.lang.Token.OperatorToken;
@@ -30,28 +27,32 @@ public class ActionBlock extends Action {
             System.out.println(tkn);
             actions.add(new DirectAction("// "+ (l++)+" "+tkn.startLocation.line()+":"+tkn.startLocation.col()));
             if(tkn instanceof IdentifierToken it) {
-                if(tokens.get(wI+1) instanceof SetToken st) {
+                if(wI+1 < tokens.size() && tokens.get(wI+1) instanceof SetToken st) {
                     switch (it.value) {
                         case "if" ->                             {
                             // set is the condition
                             // also block
                             ActionBlock innerBlock = new ActionBlock(scope.createChild());
                             innerBlock.parse(tokens.get(wI+2).subTokens);
+                            continue;
                         }
                         case "for" ->                             {
                             // set is (initilizer; condition; incrementer)
                             // also block
                             ActionBlock innerBlock = new ActionBlock(scope.createChild());
                             innerBlock.parse(tokens.get(wI+2).subTokens);
+                            continue;
                         }
                         case "while" ->                             {
                             //set is condition
                             // also block
                             ActionBlock innerBlock = new ActionBlock(scope.createChild());
                             innerBlock.parse(tokens.get(wI+2).subTokens);
+                            continue;
                         }
                         default -> {
                             // function call; set is parameters
+                            continue;
                         }
                     }
                 }
@@ -71,7 +72,7 @@ public class ActionBlock extends Action {
                     }
                     tkn = tokens.get(wI);
                     if(scope.stackOff == 0) {
-                        actions.add(new DirectAction("COPT rStack r15"));
+                        actions.add(new DirectAction("COPY rStack r15"));
                     }
                     scope.addStackVar(name, type);
                     if(tkn instanceof OperatorToken ot) {
@@ -79,7 +80,6 @@ public class ActionBlock extends Action {
                             case SEMICOLON -> {
                                 wI++;
                                 actions.add(new StackAllocAction(-1));
-                                continue;
                             }
                             case ASSIGN -> wI++;
                             default -> throw new ELCompileException("Expected `;` or `=` (found `"+ot.type+"`) @"+tkn.startLocation);
@@ -93,9 +93,12 @@ public class ActionBlock extends Action {
                 wI++;
                 tkn = tokens.get(wI);
                 if(tkn instanceof OperatorToken ot && (ot.type == OperatorToken.Type.ASSIGN || ot.type == OperatorToken.Type.INC || ot.type == OperatorToken.Type.DEC)) {                    
-                    if(targetVal.subTokens == null) { // block or namespace var
-                        if(scope.hasVariable(targetVal)) { // block stack var
-                            scope.loadVar(targetVal, 1, actions);
+                    if(scope.hasVariable(targetVal)) { // block stack var
+                        scope.loadVar(targetVal, 1, actions);
+                    } else {
+                        ELVariable var = scope.namespace.getVar(targetVal);
+                        if(var != null) {
+                            actions.add(new ResolveAction(1, var));
                         }
                     }
 
@@ -130,20 +133,30 @@ public class ActionBlock extends Action {
                     int srcReg = 0;
                     tkn = exp.get(eI);
                     
-                    if(tkn instanceof IdentifierToken it2) {
-                        if(it2.value.equals("SysD")) {
-                            String v2 = ((IdentifierToken)it2.subTokens.get(0)).value;
-                            if(v2.equals("rPgm")) {
-                                srcReg = MachineCode.REG_PGM_PNTR;
+                    switch (tkn) {
+                        case IdentifierToken it2 -> {
+                            if(it2.value.equals("SysD")) {
+                                String v2 = ((IdentifierToken)it2.subTokens.get(0)).value;
+                                if(v2.equals("rPgm")) {
+                                    srcReg = MachineCode.REG_PGM_PNTR;
+                                }
+                            } else if(scope.hasVariable(it2)) {
+                                srcReg = 2;
+                                scope.loadVar(it2, srcReg, actions);
+                                actions.add(new DirectAction("LOAD MEM r2 r2"));
+                            } else {
+                                ELVariable var = scope.namespace.getVar(it2);
+                                if(var != null) {
+                                    actions.add(new ResolveAction(2, var).byVal());
+                                }
                             }
-                        } else if(scope.hasVariable(it2)) {
-                            srcReg = 2;
-                            scope.loadVar(it2, srcReg, actions);
-                            actions.add(new DirectAction("LOAD r2 r2"));
                         }
-                    } else if(tkn instanceof NumberToken nt) {
-                        srcReg = 2;
-                        actions.add(new DirectAction("LOAD r2 %d", ELValue.number(ELPrimitives.UINT32, nt).value));
+                        case NumberToken nt -> {
+                            srcReg = 2;
+                            actions.add(new DirectAction("LOAD r2 %d", ELValue.number(ELPrimitives.UINT32, nt).value));
+                        }
+                        default -> {
+                        }
                     }
                     String srcRegStr = MachineCode.translateReg(srcReg);
 
@@ -161,34 +174,45 @@ public class ActionBlock extends Action {
                         while(eI < exp.size()) {
                             tkn = exp.get(eI);
                             eI++;
-                            if(tkn instanceof NumberToken nt) {
-                                int val = ELValue.number(ELPrimitives.UINT32, nt).value; 
-                                if(sub) {
-                                    val *= -1;
+                            switch (tkn) {
+                                case NumberToken nt -> {
+                                    int val = ELValue.number(ELPrimitives.UINT32, nt).value;
+                                    if(sub) {
+                                        val *= -1;
+                                    }
+                                    actions.add(new DirectAction("INC %s %d", srcRegStr, val));
                                 }
-                                actions.add(new DirectAction("INC %s %d", srcRegStr, val));
-                            } else if(tkn instanceof OperatorToken ot3) {
-                                add = ot3.type == OperatorToken.Type.ADD;
-                                sub = ot3.type == OperatorToken.Type.SUB;
-                            } else if(tkn instanceof IdentifierToken it4) {
-                                if(it4.value.equals("SysD")) {
-                                    String v2 = ((IdentifierToken)it4.subTokens.get(0)).value;
-                                    if(v2.equals("rPgm")) {
+                                case OperatorToken ot3 -> {
+                                    add = ot3.type == OperatorToken.Type.ADD;
+                                    sub = ot3.type == OperatorToken.Type.SUB;
+                                }
+                                case IdentifierToken it4 -> {
+                                    if(it4.value.equals("SysD")) {
+                                        String v2 = ((IdentifierToken)it4.subTokens.get(0)).value;
+                                        if(v2.equals("rPgm")) {
+                                            if(add) {
+                                                actions.add(new DirectAction("ADD %s %s rPgm", srcRegStr, srcRegStr));
+                                            } else if(sub) {
+                                                actions.add(new DirectAction("SUB %s %s rPgm", srcRegStr, srcRegStr));
+                                            }
+                                        }
+                                    } else if(scope.hasVariable(it4)) {
+                                        scope.loadVar(it4, wR, actions);
+                                        String wRStr = MachineCode.translateReg(wR);
+                                        actions.add(new DirectAction("LOAD MEM %s %s", wRStr, wRStr));
                                         if(add) {
-                                            actions.add(new DirectAction("ADD %s %s rPgm", srcRegStr, srcRegStr));
+                                            actions.add(new DirectAction("ADD %s %s %s", srcRegStr, srcRegStr, wRStr));
                                         } else if(sub) {
-                                            actions.add(new DirectAction("SUB %s %s rPgm", srcRegStr, srcRegStr));
+                                            actions.add(new DirectAction("SUB %s %s %s", srcRegStr, srcRegStr, wRStr));
+                                        }
+                                    } else {
+                                        ELVariable var = scope.namespace.getVar(it4);
+                                        if(var != null) {
+                                            actions.add(new ResolveAction(wR, var).byVal());
                                         }
                                     }
-                                } else if(scope.hasVariable(it4)) {
-                                    scope.loadVar(it4, wR, actions);
-                                    String wRStr = MachineCode.translateReg(wR);
-                                    actions.add(new DirectAction("LOAD %s %s", wRStr, wRStr));
-                                    if(add) {
-                                        actions.add(new DirectAction("ADD %s %s %s", srcRegStr, srcRegStr, wRStr));
-                                    } else if(sub) {
-                                        actions.add(new DirectAction("SUB %s %s %s", srcRegStr, srcRegStr, wRStr));
-                                    }
+                                }
+                                default -> {
                                 }
                             }
                         }

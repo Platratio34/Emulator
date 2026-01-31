@@ -9,17 +9,16 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.peter.emulator.MachineCode.*;
 import com.peter.emulator.assembly.SymbolFile.FunctionSymbol;
 import com.peter.emulator.assembly.SymbolFile.ValueSymbol;
-
-import static com.peter.emulator.MachineCode.*;
 
 public class Assembler {
 
     private Entry[] data = null;
-    private HashMap<String, Integer> labels = new HashMap<>();
-    private HashMap<String, Integer> defines = new HashMap<>();
-    private ArrayList<MemSet> memSet = new ArrayList<>();
+    private final HashMap<String, Integer> labels = new HashMap<>();
+    private final HashMap<String, Integer> defines = new HashMap<>();
+    private final ArrayList<MemSet> memSet = new ArrayList<>();
     protected HashMap<String, Integer> functions = new HashMap<>();
     protected HashMap<String, Integer> syscallDef = new HashMap<>();
     protected HashMap<String, Integer> syscallMap = new HashMap<>();
@@ -152,6 +151,82 @@ public class Assembler {
                             symbols.addDefinition(
                                     new ValueSymbol(name, -1, -1,
                                             parts[2].startsWith("'") ? "const char" : "const uint32", val + ""),
+                                    lineN + 1);
+                        }
+                    }
+                    case "var" -> {
+                        String name = parts[1];
+                        if (parts[2].startsWith("\"")) {
+                            Matcher m = STRING_PATTERN.matcher(line);
+                            m.find();
+                            String str = m.group(1);
+                            String str2 = "";
+                            for (int j = 0; j < str.length(); j++) {
+                                char c = str.charAt(j);
+                                if (c == '\\') {
+                                    if (j > 0 && (str.charAt(j - 1) != '\\')) {
+                                        char n = str.charAt(j + 1);
+                                        switch (n) {
+                                            case 'n' -> {
+                                                str2 += "\n";
+                                                j++;
+                                            }
+                                            case 't' -> {
+                                                str2 += "\t";
+                                                j++;
+                                            }
+                                            case '\\' -> {
+                                                str2 += "\\";
+                                                j++;
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    str2 += c;
+                                }
+                            }
+                            str = str2;
+                            int[] val = new int[str.length()];
+                            for (int j = 0; j < val.length; j++) {
+                                val[j] = (int) str.charAt(j);
+                            }
+                            memSet.add(new MemSet(name, val));
+                            valAdd += val.length;
+                            symbols.addDefinition(new ValueSymbol(name, -1, -1, "char*", str), lineN + 1);
+                        } else if (parts[2].startsWith("[")) {
+                            Matcher m = DEFINE_ARRAY_PATTERN.matcher(line);
+                            if (!m.find()) {
+                                errors.add(new AssemblerError("Invalid array definition", lineN, 8, line, source));
+                                continue;
+                            }
+                            String content = m.group(1);
+                            m = DEFINE_ARRAY_VALUE_PATTERN.matcher(content);
+                            ArrayList<Integer> arr = new ArrayList<>();
+                            while (m.find()) {
+                                arr.add(getVal(m.group(1)));
+                            }
+                            int[] val = new int[arr.size()];
+                            for (int j = 0; j < val.length; j++) {
+                                val[j] = arr.get(j);
+                            }
+                            memSet.add(new MemSet(name, val));
+                            valAdd += val.length;
+                            symbols.addDefinition(new ValueSymbol(name, -1, -1, "uint32*", content), lineN + 1);
+                        } else if (parts[2].startsWith("(")) {
+                            Matcher m = ALLOC_PATTERN.matcher(parts[2]);
+                            m.find();
+                            int size = getVal(m.group(1));
+                            memSet.add(new MemSet(name, new int[size]));
+                            valAdd += size;
+                            symbols.addDefinition(new ValueSymbol(name, -1, -1, "uint32[" + size + "]*", ""),
+                                    lineN + 1);
+                        } else {
+                            int val = getVal(parts[2]);
+                            memSet.add(new MemSet(name, new int[] {val}));
+                            valAdd++;
+                            symbols.addDefinition(
+                                    new ValueSymbol(name, -1, -1,
+                                            parts[2].startsWith("'") ? "char" : "uint32", val + ""),
                                     lineN + 1);
                         }
                     }
@@ -493,13 +568,26 @@ public class Assembler {
                         data[addr++] = (entry);
                     }
                     case "STACK" -> {
+                        if(parts.length == 2) {
+                            if(parts[1].equals("INC")) {
+                                data[addr++] = Entry.StackInc(1);
+                                continue;
+                            } else if(parts[1].equals("DEC")) {
+                                data[addr++] = Entry.StackDec(1);
+                                continue;
+                            }
+                        }
                         if (parts.length < 3) {
-                            errors.add(new AssemblerError("Invalid stack instruction: STACK (PUSH|POP) [rg]", lineN,
+                            errors.add(new AssemblerError("Invalid stack instruction: STACK (PUSH|POP) [rg] | STACK (INC|DEC) ([value])", lineN,
                                     line.length(), line, source));
                             continue;
                         }
-                        int rg = getReg(parts[2]);
-                        data[addr++] = Entry.Stack(parts[1].equals("PUSH"), rg);
+                        if(parts[1].equals("INC"))
+                                data[addr++] = Entry.StackInc(getVal(parts[2]));
+                        else if(parts[1].equals("DEC"))
+                            data[addr++] = Entry.StackDec(getVal(parts[2]));
+                        else
+                            data[addr++] = Entry.Stack(parts[1].equals("PUSH"), getReg(parts[2]));
                     }
                     case "SYSCALL" -> {
                         if (parts.length < 2) {
@@ -661,6 +749,11 @@ public class Assembler {
             v = 0;
         } else if (defines.containsKey(val)) {
             v = defines.get(val);
+        } else if (val.startsWith("&") && defines.containsKey(val.substring(1))) {
+            String n = val.substring(1);
+            v = symbols.definitions.get(val.substring(1)).start;
+            if(v == -1)
+                throw new RuntimeException("Symbol had no start address");
         } else if (linker != null && linker.hasDefinition(val)) {
             v = linker.getDefinition(val);
         } else if (val.startsWith("0x")) {
@@ -758,7 +851,15 @@ public class Assembler {
         }
         
         public static Entry Stack(boolean push, int rg) {
-            return new Entry(STACK | (rg << 16) | (push ? 0x0 : MASK_STACK_POP));
+            return new Entry(STACK | (rg << 16) | (push ? 0x0 : STACK_POP));
+        }
+
+        public static Entry StackInc(int v) {
+            return new Entry(STACK | STACK_INC | (v-1));
+        }
+
+        public static Entry StackDec(int v) {
+            return new Entry(STACK | STACK_DEC | (v-1));
         }
 
         public static Entry SysCall(int function) {

@@ -2,6 +2,7 @@ package com.peter.emulator;
 
 import com.peter.emulator.components.MMU;
 import com.peter.emulator.components.RAM;
+import com.peter.emulator.gui.EmulatorGui;
 import com.peter.emulator.peripherals.ConsolePeripheral;
 import com.peter.emulator.peripherals.PeripheralManager;
 import com.peter.emulator.peripherals.StoragePeripheral;
@@ -15,6 +16,7 @@ public class Emulator {
         new CPU(ram, mmu)
     };
     public PeripheralManager peripheralManager = new PeripheralManager(ram);
+    public final EmulatorGui gui;
 
     public Emulator() {
         peripheralManager.addPeripheral(new ConsolePeripheral());
@@ -22,6 +24,7 @@ public class Emulator {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             stop();
         }));
+        gui = new EmulatorGui(this);
     }
 
     protected void tick() {
@@ -29,9 +32,12 @@ public class Emulator {
             cpu.tick();
         }
         peripheralManager.tick();
+        gui.update();
     }
 
     protected boolean running = false;
+    public boolean wait = true;
+    public boolean waiting = true;
     protected Thread thread;
 
     public void run() {
@@ -43,6 +49,16 @@ public class Emulator {
         thread = new Thread(() -> {
             System.out.println("Emulator started\n");
             while (running) {
+                if(wait) {
+                    while(waiting) {
+                        try {
+                            Thread.sleep(100);
+                        } catch (InterruptedException e) {
+                        }
+                    }
+                }
+                if(!running)
+                    break;
                 try {
                     tick();
                 } catch (Exception e) {
@@ -55,6 +71,8 @@ public class Emulator {
                     e.printStackTrace();
                     running = false;
                 }
+                if(wait)
+                    waiting = true;
             }
             System.out.println("\nEmulator stopped");
         }, "emulator-main");
@@ -82,5 +100,12 @@ public class Emulator {
 
     public boolean isRunning() {
         return running;
+    }
+
+    public void stopWaiting() {
+        if(running && waiting) {
+            waiting = false;
+            thread.interrupt();
+        }
     }
 }

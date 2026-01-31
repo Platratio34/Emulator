@@ -1,12 +1,51 @@
-:__start
-INC rStack
-COPY rStack r1
-INC r1 -1
-STORE rPgm r1
+// static data
+#var TestD.v 0x0000 // uint32
 
-:__alt
-INC rStack
-COPY rPgm r1
-COPY rStack r2
-INC r2 -1
+:__start
+// 0 9:10
+COPY rStack r15
+STACK INC
+// 1 10:10
+STACK INC
+// 2 11:10
+COPY r15 r1
+INC r1 1
+STORE rPgm r1
+// 3 12:10
+LOAD r1 &TestD.v
+COPY r15 r2
+INC r2 1
+LOAD MEM r2 r2
 STORE r2 r1
+// 4 13:10
+STACK INC
+// 5 14:10
+COPY r15 r1
+INC r1 2
+COPY r15 r2
+LOAD MEM r2 r2
+STORE r2 r1
+// 6 15:10
+COPY r15 r1
+INC r1 2
+LOAD MEM r2 r1
+INC r2 1
+STORE r2 r1
+// 7 16:10
+COPY r15 r1
+COPY r15 r2
+INC r2 1
+LOAD MEM r2 r2
+INC r2 1
+COPY r15 r3
+INC r3 2
+LOAD MEM r3 r3
+ADD r2 r2 r3
+STORE r2 r1
+// 8 17:10
+COPY r15 r1
+INC r1 2
+LOAD r2 32
+STORE r2 r1
+
+HALT
