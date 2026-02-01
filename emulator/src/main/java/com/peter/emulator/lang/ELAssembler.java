@@ -18,14 +18,26 @@ public class ELAssembler {
                 out += String.format("#var %s %s // %s\n", v.getQualifiedName(), (v.startingValue == null)? "0x00" : v.startingValue.valueString(), v.typeString());
             }
         }
-        out += "\n";
         ELFunction ent = module.entrypoint;
         if(ent == null)
             throw new ELCompileException("Module had no entry point");
-        out += ":__start";
-        for(Action action : ent.actions) {
-            out += "\n"+action.toAssembly();
+        out+="\n// text";
+        for(Namespace ns : module.namespaces.values()) {
+            for(ELFunction f : ns.staticFunctions.values()) {
+                if(ent == f)
+                    out += "\n:__start";
+                out +="\n:"+f.getQualifiedName(true);
+                for(Action action : f.actions) {
+                    out += "\n"+action.toAssembly();
+                }
+                if(ent == f)
+                    out +="\nHALT";
+                else
+                    out += "\nGOTO POP";
+                // out += String.format("#var %s %s // %s\n", v.getQualifiedName(), (v.startingValue == null)? "0x00" : v.startingValue.valueString(), v.typeString());
+            }
         }
+        out += "\n\nHALT";
         return out;
     }
 }

@@ -135,6 +135,8 @@ public class CPU {
         interruptCode = code;
     }
 
+    public int instr;
+    public int instrb;
     public void tick() {
         if (!running)
             return;
@@ -155,7 +157,9 @@ public class CPU {
             dbg = debugger.getSymbol(this);
         }
         int op = readMem(pgmPtr++);
+        instr = op;
         int next = readMem(pgmPtr);
+        instrb = next;
         int instruction = op & MASK_INSTRUCTION;
         String instrStr = translate(op, next);
         System.out.println(String.format("CPU Tick: [%x] %s", mmu.translate(this, pgmPtr - 1), instrStr));

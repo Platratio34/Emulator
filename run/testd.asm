@@ -1,9 +1,12 @@
 // static data
 #var TestD.v 0x0000 // uint32
 
+// text
 :__start
-// 0 9:10
+:TestD.main
+STACK PUSH r15
 COPY rStack r15
+// 0 9:10
 STACK INC
 // 1 10:10
 STACK INC
@@ -47,5 +50,32 @@ COPY r15 r1
 INC r1 2
 LOAD r2 32
 STORE r2 r1
+// 9 18:10
+COPY r15 r2
+INC r2 2
+LOAD MEM r2 r2
+STACK PUSH r2
+GOTO PUSH :TestD.funcb_uint32
+STACK DEC 1
+// 10 18:18
+STACK DEC 3
+STACK POP r15
+
+HALT
+:TestD.funcb_uint32
+STACK PUSH r15
+COPY rStack r15
+// 0 22:10
+LOAD r1 &TestD.v
+LOAD r2 &TestD.v
+LOAD MEM r2 r2
+COPY r15 r3
+INC r3 -3
+LOAD MEM r3 r3
+ADD r2 r2 r3
+STORE r2 r1
+STACK POP r15
+
+GOTO POP
 
 HALT

@@ -32,6 +32,15 @@ public class ActionScope {
         stackVars.put(name, var);
     }
 
+    public void addStackVar(String name, ELType type, int offset) {
+        if(stackVars.containsKey(name)) {
+            throw new ELCompileException("Duplicate variable name `"+name+"`");
+        }
+        ELVariable var = new ELVariable(ELProtectionLevel.INTERNAL, false, type, name, false, null, type.location);
+        var.offset = offset;
+        stackVars.put(name, var);
+    }
+
     public int getStackOffDif() {
         return stackOff - stackOffStart;
     }
@@ -69,7 +78,7 @@ public class ActionScope {
         }
         int so = stackVars.get(name).offset;
         actions.add(new DirectAction("COPY r15 %s", MachineCode.translateReg(reg)));
-        if(so > 0)
+        if(so != 0)
             actions.add(new DirectAction("INC %s %d", MachineCode.translateReg(reg), so));
     }
 }

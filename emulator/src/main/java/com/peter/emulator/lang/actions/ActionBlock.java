@@ -22,6 +22,8 @@ public class ActionBlock extends Action {
     public void parse(ArrayList<Token> tokens) {
         int wI = 0;
         int l = 0;
+        actions.add(new DirectAction("STACK PUSH r15"));
+        actions.add(new DirectAction("COPY rStack r15"));
         while(wI < tokens.size()) {
             Token tkn = tokens.get(wI);
             System.out.println(tkn);
@@ -51,7 +53,50 @@ public class ActionBlock extends Action {
                             continue;
                         }
                         default -> {
+                            wI += 2;
                             // function call; set is parameters
+                            ArrayList<ELType> types = new ArrayList<>();
+                            for(int i = 0; i < st.subTokens.size(); i++) {
+                                Token t2 = st.subTokens.get(i);
+                                if(t2 instanceof IdentifierToken it2) {
+                                    if(it2.value.equals("SysD")) {
+                                        String v2 = ((IdentifierToken)it2.subTokens.get(0)).value;
+                                        if(v2.equals("rPgm")) {
+                                            actions.add(new DirectAction("STACK PUSH rPgm"));
+                                            types.add(ELPrimitives.UINT32);
+                                        }
+                                    } else if(scope.hasVariable(it2)) {
+                                        scope.loadVar(it2, 2, actions);
+                                        actions.add(new DirectAction("LOAD MEM r2 r2"));
+                                        actions.add(new DirectAction("STACK PUSH r2"));
+                                        types.add(scope.getVar(it2).type);
+                                    } else {
+                                        ELVariable var = scope.namespace.getVar(it2);
+                                        if(var != null) {
+                                            actions.add(new ResolveAction(2, var).byVal());
+                                            actions.add(new DirectAction("STACK PUSH r2"));
+                                            types.add(var.type);
+                                        }
+                                    }
+                                }
+                            }
+                            Identifier id = new Identifier(it);
+                            ELFunction f = scope.namespace.findFunction(id, types);
+                            if(f == null) {
+                                String tStr = "(";
+                                for(int i = 0; i < types.size(); i++) {
+                                    if(i > 0)
+                                        tStr += ",";
+                                    tStr += types.get(i).typeString();
+                                }
+                                tStr += ")";
+                                throw new ELCompileException("Unknown function "+id.fullName+tStr);
+                            }
+                            actions.add(new DirectAction("GOTO PUSH :%s", f.getQualifiedName(true)));
+                            actions.add(new DirectAction("STACK DEC %d", types.size()));
+                            // STACK PUSH param 0
+                            // GOTO PUSH :funcName_paramTypes
+                            // STACK DEC 1
                             continue;
                         }
                     }
@@ -71,9 +116,6 @@ public class ActionBlock extends Action {
                         throw new ELCompileException("Expected identifier (found "+tkn+") @"+tkn.startLocation);
                     }
                     tkn = tokens.get(wI);
-                    if(scope.stackOff == 0) {
-                        actions.add(new DirectAction("COPY rStack r15"));
-                    }
                     scope.addStackVar(name, type);
                     if(tkn instanceof OperatorToken ot) {
                         switch (ot.type) {
@@ -145,6 +187,7 @@ public class ActionBlock extends Action {
                                 scope.loadVar(it2, srcReg, actions);
                                 actions.add(new DirectAction("LOAD MEM r2 r2"));
                             } else {
+                                srcReg = 2;
                                 ELVariable var = scope.namespace.getVar(it2);
                                 if(var != null) {
                                     actions.add(new ResolveAction(2, var).byVal());
@@ -222,6 +265,9 @@ public class ActionBlock extends Action {
             }
             wI++;
         }
+        if(scope.getStackOffDif() > 0)
+            actions.add(scope.getStackResetAction());
+        actions.add(new DirectAction("STACK POP r15"));
     }
 
     @Override

@@ -81,10 +81,12 @@ public class ELFunction {
 
     public ELFunction getFunction(ArrayList<ELType> paramTypes) {
         boolean self = paramOrder.size() == paramTypes.size();
+        System.out.println(self);
         if (self)
             for (int i = 0; i < paramOrder.size(); i++) {
                 if (!this.params.get(paramOrder.get(i)).equals(paramTypes.get(i))) {
                     self = false;
+                    System.out.println("Didn't match: "+this.params.get(paramOrder.get(i))+" != "+paramTypes.get(i));
                     break;
                 }
             }
@@ -227,9 +229,6 @@ public class ELFunction {
     public void ingestBody(BlockToken block) {
         bodyLocation = block.startLocation;
         body = block.subTokens;
-        ActionBlock bodyBlock = new ActionBlock(new ActionScope(namespace, null, 0));
-        bodyBlock.parse(body);
-        actions.add(bodyBlock);
     }
 
     public void analyze(ArrayList<ELAnalysisError> errors, ProgramModule module) {
@@ -247,6 +246,16 @@ public class ELFunction {
         for (ELFunction overload : overloads) {
             overload.analyze(errors, module);
         }
+
+        if(body != null) {
+            ActionBlock bodyBlock = new ActionBlock(new ActionScope(namespace, null, 0));
+            int l = paramOrder.size();
+            for(int i = 0 ; i < l; i++) {
+                bodyBlock.scope.addStackVar(paramOrder.get(i), params.get(paramOrder.get(i)), -(l-i+2));
+            }
+            bodyBlock.parse(body);
+            actions.add(bodyBlock);
+        }
     }
 
     public static enum FunctionType {
@@ -255,5 +264,18 @@ public class ELFunction {
         CONSTRUCTOR,
         DESTRUCTOR,
         OPERATOR;
+    }
+
+    public String getQualifiedName() {
+        return namespace.getQualifiedName()+"."+cName;
+    }
+    public String getQualifiedName(boolean incParams) {
+        String o = namespace.getQualifiedName()+"."+cName;
+        if(incParams) {
+            for(String p : paramOrder) {
+                o += "_"+params.get(p).typeString();
+            }
+        }
+        return o;
     }
 }

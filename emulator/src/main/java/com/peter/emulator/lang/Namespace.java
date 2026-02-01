@@ -61,6 +61,13 @@ public class Namespace {
         staticVariables.put(var.name, var);
     }
 
+    public ELFunction findFunction(Identifier id, ArrayList<ELType> params) {
+        if(staticFunctions.containsKey(id.fullName)) {
+            return staticFunctions.get(id.fullName).getFunction(params);
+        }
+        return null;
+    }
+
     public String debugString() {
         return debugString("\n");
     }

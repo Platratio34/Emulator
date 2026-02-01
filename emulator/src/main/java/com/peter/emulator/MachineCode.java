@@ -72,7 +72,7 @@ public class MachineCode {
 
     public static final int STACK = 0x10 << 24;
     public static final int MASK_STACK_RG = 0x00ff_0000;
-    public static final int MASK_STACK_OP = 0x00ff_ff00;
+    public static final int MASK_STACK_OP = 0x0000_ff00;
     public static final int MASK_STACK_VAL = 0x0000_00ff;
     public static final int STACK_PUSH = 0x0000_0000;
     public static final int STACK_POP = 0x0000_0100;

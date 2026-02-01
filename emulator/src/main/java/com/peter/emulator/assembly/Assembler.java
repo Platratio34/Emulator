@@ -59,7 +59,7 @@ public class Assembler {
     public boolean assemble() {
         errors.clear();
         // mapping
-        int addr = 0;
+        int addr = 1;
         int valAdd = 0;
         FunctionSymbol cFunction = null;
         for (int lineN = 0; lineN < lines.length; lineN++) {
@@ -321,6 +321,13 @@ public class Assembler {
         }
         // converting
         addr = 0;
+        if(labels.containsKey("__start")) {
+            GotoEntry entry = GotoEntry.Unconditional(true, 0, "__start");
+            data[addr++] = entry;
+        } else {
+            System.out.println("File did not have __start");
+            data[addr++] = Entry.Direct(NO_OP);
+        }
         for (int lineN = 0; lineN < lines.length; lineN++) {
             try {
                 String line = lines[lineN].trim();

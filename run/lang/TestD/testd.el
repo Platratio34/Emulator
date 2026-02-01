@@ -15,5 +15,10 @@ namespace TestD {
         c++;
         b = a + 1 + c;
         c = 32;
+        funcb(c);
+    }
+
+    public static void funcb(uint32 a) {
+        v = v + a;
     }
 }

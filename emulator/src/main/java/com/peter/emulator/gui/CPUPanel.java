@@ -106,6 +106,6 @@ public class CPUPanel extends JPanel {
 
         pmLbl.setText(EmulatorGui.toHex(cpu.privilegeMode ? 1 : 0));
 
-        instrLbl.setText(MachineCode.translate(cpu.readMem(cpu.pgmPtr), cpu.readMem(cpu.pgmPtr+1)));
+        instrLbl.setText(MachineCode.translate(cpu.instr, cpu.instrb)+"("+EmulatorGui.toHex(cpu.instr)+" "+EmulatorGui.toHex(cpu.instrb)+")");
     }
 }

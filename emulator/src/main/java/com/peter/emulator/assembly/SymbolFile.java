@@ -11,6 +11,7 @@ public class SymbolFile {
 
     public final HashMap<String, FunctionSymbol> functions = new HashMap<>();
     public final HashMap<String, ValueSymbol> definitions = new HashMap<>();
+    public final HashMap<String, VariableSymbol> variables = new HashMap<>();
     public final HashMap<String, Integer> syscalls = new HashMap<>();
 
     public SymbolFile() {
@@ -50,6 +51,16 @@ public class SymbolFile {
         def.end = end;
     }
 
+    public void addVariable(VariableSymbol value) {
+        if(source != null) value.source = source;
+        variables.put(value.name, value);
+    }
+
+    public void updateVariable(String name, int start) {
+        VariableSymbol def = variables.get(name);
+        def.start = start;
+    }
+
     public void mapSyscall(String name, int index) {
         syscalls.put(name, index);
     }
@@ -73,6 +84,16 @@ public class SymbolFile {
             }
             addDefinition(v2);
         }
+        for (VariableSymbol variableSymbol : other.variables.values()) {
+            VariableSymbol v2 = variableSymbol.copy();
+            if (v2.start >= 0) {
+                if (v2.end >= v2.start) {
+                    v2.end += otherOffset;
+                }
+                v2.start += otherOffset;
+            }
+            addVariable(v2);
+        }
         for (String name : other.syscalls.keySet()) {
             mapSyscall(name, other.syscalls.get(name));
         }
@@ -92,6 +113,11 @@ public class SymbolFile {
         for (ValueSymbol symbol : definitions.values()) {
             jsonDefinitions.put(symbol.name, symbol.toJSON());
         }
+        JSONObject jsonVariables = new JSONObject();
+        json.put("variables", jsonVariables);
+        for (VariableSymbol symbol : variables.values()) {
+            jsonVariables.put(symbol.name, symbol.toJSON());
+        }
         JSONObject jsonSyscalls = new JSONObject();
         json.put("syscalls", jsonSyscalls);
         for (String name : syscalls.keySet()) {
@@ -110,6 +136,11 @@ public class SymbolFile {
         for (ValueSymbol symbol : definitions.values()) {
             if(symbol.name.startsWith("KERNAL_"))
                 jsonDefinitions.put(symbol.name, symbol.toJSON());
+        }
+        JSONObject jsonVariables = new JSONObject();
+        json.put("variables", jsonVariables);
+        for (VariableSymbol symbol : variables.values()) {
+            jsonVariables.put(symbol.name, symbol.toJSON());
         }
         JSONObject jsonSyscalls = new JSONObject();
         json.put("syscalls", jsonSyscalls);
@@ -131,6 +162,12 @@ public class SymbolFile {
                 JSONObject jsonDefinitions = json.getJSONObject("definitions");
                 for (String key : jsonDefinitions.keySet()) {
                     symbols.definitions.put(key, ValueSymbol.fromJSON(key, jsonDefinitions.getJSONObject(key)));
+                }
+                if(json.has("variables")) {
+                    JSONObject jsonVariables = json.getJSONObject("variables");
+                    for (String key : jsonVariables.keySet()) {
+                        symbols.variables.put(key, VariableSymbol.fromJSON(key, jsonVariables.getJSONObject(key)));
+                    }
                 }
                 JSONObject jsonSyscalls = json.getJSONObject("syscalls");
                 for (String key : jsonSyscalls.keySet()) {
@@ -234,6 +271,48 @@ public class SymbolFile {
             if(source != null)
                 return String.format("%s.%s = %s", source, name, value);
             return String.format("%s = %s", name, value);
+        }
+
+    }
+
+    public static class VariableSymbol extends Symbol {
+
+        public String type;
+        public int address;
+
+        public VariableSymbol(String name, int start, int end, String type, int address) {
+            super(name, start, end);
+            this.type = type;
+            this.address = address;
+        }
+
+        public VariableSymbol copy() {
+            VariableSymbol s = new VariableSymbol(name, start, end, type, address);
+            s.source = source;
+            return s;
+        }
+
+        @Override
+        public JSONObject toJSON() {
+            JSONObject json = super.toJSON();
+            json.put("type", type);
+            json.put("address", address);
+            return json;
+        }
+
+        public static VariableSymbol fromJSON(String name, JSONObject json) {
+            int start = json.getInt("start");
+            int end = json.getInt("start");
+            String type = json.getString("type");
+            int address = json.getInt("address");
+            return new VariableSymbol(name, start, end, type, address);
+        }
+
+        @Override
+        public String toString() {
+            if(source != null)
+                return String.format("&%s.%s = %s", source, name, address);
+            return String.format("&%s = %s", name, address);
         }
 
     }

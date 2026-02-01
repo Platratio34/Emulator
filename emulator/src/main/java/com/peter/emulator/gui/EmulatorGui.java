@@ -11,6 +11,7 @@ public class EmulatorGui {
     protected JFrame frame;
     protected CPUPanel cpuPanel;
     protected MemoryPanel stackPanel;
+    protected MemoryPanel kernalPanel;
 
     protected JButton btn;
 
@@ -34,11 +35,18 @@ public class EmulatorGui {
             cpuPanel = new CPUPanel(emulator.cores[0], "cpu0");
             frame.getContentPane().add(cpuPanel, BorderLayout.WEST);
 
-            stackPanel = new MemoryPanel(emulator.cores[0], 0x1000);
-            stackPanel.stack = true;
-            frame.getContentPane().add(stackPanel, BorderLayout.EAST);
+            JPanel p = new JPanel();
+            p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
+            frame.getContentPane().add(p, BorderLayout.EAST);
 
-            frame.setSize(1000, 400);
+            stackPanel = new MemoryPanel(emulator.cores[0], 0x1000, 8);
+            stackPanel.stack = true;
+            p.add(stackPanel);
+
+            kernalPanel = new MemoryPanel(emulator.cores[0], 0, 10);
+            p.add(kernalPanel);
+
+            frame.setSize(1500, 500);
             
             frame.setVisible(true);
 
@@ -53,6 +61,7 @@ public class EmulatorGui {
         SwingUtilities.invokeLater(() -> {
             cpuPanel.update();
             stackPanel.update();
+            kernalPanel.update();
             updating = false;
         });
     }

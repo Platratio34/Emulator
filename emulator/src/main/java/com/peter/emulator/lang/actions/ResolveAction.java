@@ -34,7 +34,7 @@ public class ResolveAction extends Action {
             out += String.format("\nINC %s &%s", r, var.getQualifiedName());
         }
         if (resolveValue) {
-            out += String.format("LOAD MEM %s %s\n", r, r);
+            out += String.format("\nLOAD MEM %s %s", r, r);
         }
         return out;
     }

@@ -73,7 +73,7 @@ public class Main {
         Path p = ROOT_PATH.resolve("testd.asm");
         try {
             new File(p.toUri()).delete();
-            Files.writeString(p, asm + "\nHALT", StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+            Files.writeString(p, asm, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
