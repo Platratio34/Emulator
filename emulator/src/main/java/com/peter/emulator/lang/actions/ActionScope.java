@@ -5,7 +5,6 @@ import java.util.HashMap;
 
 import com.peter.emulator.MachineCode;
 import com.peter.emulator.lang.*;
-import com.peter.emulator.lang.Token.IdentifierToken;
 
 public class ActionScope {
 
@@ -48,11 +47,11 @@ public class ActionScope {
         return new DirectAction("STACK DEC %d", stackOff - stackOffStart);
     }
     
-    public boolean hasVariable(IdentifierToken idt) {
-        if(stackVars.containsKey(idt.value))
+    public boolean hasVariable(Identifier id) {
+        if(stackVars.containsKey(id.fullName))
             return true;
         if(parent != null)
-            return parent.hasVariable(idt);
+            return parent.hasVariable(id);
         return false;
     }
 
@@ -60,23 +59,21 @@ public class ActionScope {
         return new ActionScope(namespace, parent, stackOff);
     }
 
-    public ELVariable getVar(IdentifierToken idt) {
-        String name = idt.value;
-        if(!stackVars.containsKey(name)) {
+    public ELVariable getVar(Identifier id) {
+        if(!stackVars.containsKey(id.fullName)) {
             if(parent != null)
-                return parent.getVar(idt);
+                return parent.getVar(id);
             return null;
         }
-        return stackVars.get(name);
+        return stackVars.get(id.fullName);
     }
 
-    public void loadVar(IdentifierToken idt, int reg, ArrayList<Action> actions) {
-        String name = idt.value;
-        if(!stackVars.containsKey(name)) {
-            if(parent != null) parent.loadVar(idt, reg, actions);
+    public void loadVar(Identifier id, int reg, ArrayList<Action> actions) {
+        if(!stackVars.containsKey(id.fullName)) {
+            if(parent != null) parent.loadVar(id, reg, actions);
             return;
         }
-        int so = stackVars.get(name).offset;
+        int so = stackVars.get(id.fullName).offset;
         actions.add(new DirectAction("COPY r15 %s", MachineCode.translateReg(reg)));
         if(so != 0)
             actions.add(new DirectAction("INC %s %d", MachineCode.translateReg(reg), so));

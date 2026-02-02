@@ -184,16 +184,18 @@ public class ProgramModule {
 
     public boolean hasType(ELType base, int lvl) {
         // System.out.println("Looking for type "+base.typeString() + " (in "+name+")");
-        String n = base.baseClass;
-        boolean f = base.baseClassParents.size() == lvl;
-        if (!base.baseClassParents.isEmpty() && lvl != 0)
+        String n = base.baseClass.last();
+        boolean f = base.baseClass.numParts() == lvl+1;
+        if (base.baseClass.numParts() > 1 && lvl != 0) {
+            // System.err.println("- - had no parents, and was searching for lvl "+lvl);
             return false;
+        }
         if (f) {
             // the last step on the chain
-        } else if (base.baseClassParents.size() > lvl) {
-            n = base.baseClassParents.get(lvl);
+        } else if(base.baseClass.numParts() >= lvl) {
+            n = base.baseClass.get(lvl);
         } else {
-            // System.out.println("- Ran out of parents?");
+            // System.out.println("- - Ran out of parents");
             return false;
         }
         // System.out.println("- looking in NS "+n);
@@ -231,16 +233,18 @@ public class ProgramModule {
 
     public ELClass getType(ELType base, int lvl, Namespace srcNs) {
         // System.out.println("Looking for type "+base.typeString() + " (in "+name+")");
-        String n = base.baseClass;
-        boolean f = base.baseClassParents.size() == lvl;
-        if (!base.baseClassParents.isEmpty() && lvl != 0)
+        String n = base.baseClass.last();
+        boolean f = base.baseClass.numParts() == lvl+1;
+        if (base.baseClass.numParts() > 1 && lvl != 0) {
+            // System.err.println("- - had no parents, and was searching for lvl "+lvl);
             return null;
+        }
         if (f) {
             // the last step on the chain
-        } else if(base.baseClassParents.size() > lvl) {
-            n = base.baseClassParents.get(lvl);
+        } else if(base.baseClass.numParts() >= lvl) {
+            n = base.baseClass.get(lvl);
         } else {
-            // System.out.println("- Ran out of parents?");
+            // System.out.println("- - Ran out of parents");
             return null;
         }
         // System.out.println("- looking in NS "+n);

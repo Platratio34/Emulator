@@ -354,4 +354,27 @@ public class ELClass extends Namespace {
         }
         super.resolve(errors, module);
     }
+
+    @Override
+    public ELVariable getVar(Identifier identifier, int i) {
+        if (memberVariables.containsKey(identifier.parts[i])) {
+            return memberVariables.get(identifier.parts[i]);
+        }
+        return super.getVar(identifier, i);
+    }
+    
+    @Override
+    public ArrayList<ELVariable> getVarStack(Identifier identifier, ArrayList<ELVariable> stack) {
+        if (memberVariables.containsKey(identifier.parts[stack.size()])) {
+            ELVariable v = memberVariables.get(identifier.parts[stack.size()]);
+            stack.add(v);
+            if (v.type.clazz == null) {
+                if (stack.size() == identifier.numParts())
+                    return stack;
+                throw ELAnalysisError.error("Could not resolve variable " + identifier.fullName, v.startLocation);
+            }
+            return v.type.clazz.getVarStack(identifier, stack);
+        }
+        return super.getVarStack(identifier, stack);
+    }
 }

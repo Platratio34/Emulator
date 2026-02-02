@@ -291,6 +291,10 @@ public abstract class Token {
         public static boolean validStart(char c) {
             return Character.isAlphabetic(c) || c == '_';
         }
+
+        public Identifier asId() {
+            return new Identifier(this);
+        }
     }
 
     public static class NumberToken extends Token {

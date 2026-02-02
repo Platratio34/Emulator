@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
-import com.peter.emulator.lang.Token.IdentifierToken;
-
 public class Namespace {
 
     public final String cName;
@@ -191,16 +189,16 @@ public class Namespace {
 
     public boolean hasType(ELType base, int lvl) {
         // System.out.println("- Looking for type "+base.typeString() + " (in NS "+cName+")");
-        String n = base.baseClass;
-        boolean f = base.baseClassParents.size() == lvl;
-        if (base.baseClassParents.isEmpty() && lvl != 0) {
+        String n = base.baseClass.last();
+        boolean f = base.baseClass.numParts() == lvl+1;
+        if (base.baseClass.numParts() > 1 && lvl != 0) {
             // System.err.println("- - had no parents, and was searching for lvl "+lvl);
             return false;
         }
         if (f) {
             // the last step on the chain
-        } else if(base.baseClassParents.size() > lvl) {
-            n = base.baseClassParents.get(lvl);
+        } else if(base.baseClass.numParts() >= lvl) {
+            n = base.baseClass.get(lvl);
         } else {
             // System.out.println("- - Ran out of parents");
             return false;
@@ -226,16 +224,16 @@ public class Namespace {
 
     public ELClass getType(ELType base, int lvl, Namespace srcNs, ProgramModule module) {
         // System.out.println("- Looking for type "+base.typeString() + " (in NS "+cName+")");
-        String n = base.baseClass;
-        boolean f = base.baseClassParents.size() == lvl;
-        if (base.baseClassParents.isEmpty() && lvl != 0) {
+        String n = base.baseClass.last();
+        boolean f = base.baseClass.numParts() == lvl+1;
+        if (base.baseClass.numParts() > 1 && lvl != 0) {
             // System.err.println("- - had no parents, and was searching for lvl "+lvl);
             return null;
         }
         if (f) {
             // the last step on the chain
-        } else if(base.baseClassParents.size() > lvl) {
-            n = base.baseClassParents.get(lvl);
+        } else if(base.baseClass.numParts() >= lvl) {
+            n = base.baseClass.get(lvl);
         } else {
             // System.out.println("- - Ran out of parents");
             return null;
@@ -281,13 +279,33 @@ public class Namespace {
         }
         return null;
     }
-    public ELVariable getVar(IdentifierToken targetVal) {
-        if(targetVal.subTokens == null) {
-            if(staticVariables.containsKey(targetVal.value))
-                return staticVariables.get(targetVal.value);
+
+    public ELVariable getVar(Identifier identifier) {
+        return getVar(identifier, 0);
+    }
+
+    public ELVariable getVar(Identifier identifier, int i) {
+        if (staticVariables.containsKey(identifier.parts[i])) {
+            return staticVariables.get(identifier.parts[i]);
+        }
+        if (namespace != null)
+            return namespace.getVar(identifier, i);
+        return null;
+    }
+    
+    public ArrayList<ELVariable> getVarStack(Identifier identifier, ArrayList<ELVariable> stack) {
+        if (staticVariables.containsKey(identifier.parts[stack.size()])) {
+            ELVariable v = staticVariables.get(identifier.parts[stack.size()]);
+            stack.add(v);
+            if (v.type.clazz == null) {
+                if (stack.size() == identifier.numParts())
+                    return stack;
+                throw ELAnalysisError.error("Could not resolve variable " + identifier.fullName, v.startLocation);
+            }
+            return v.type.clazz.getVarStack(identifier, stack);
         }
         if(namespace != null)
-            return namespace.getVar(targetVal);
+            return namespace.getVarStack(identifier, stack);
         return null;
     }
 }

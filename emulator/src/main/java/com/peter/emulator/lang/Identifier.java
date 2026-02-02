@@ -1,5 +1,7 @@
 package com.peter.emulator.lang;
 
+import java.util.ArrayList;
+
 import com.peter.emulator.lang.Token.IdentifierToken;
 
 public class Identifier {
@@ -23,13 +25,39 @@ public class Identifier {
         fullName = n;
     }
 
+    public Identifier(ArrayList<String> pList) {
+        String n = pList.get(0);
+        parts = new String[pList.size()];
+        for(int i = 0; i < pList.size(); i++) {
+            String s = pList.get(i);
+            n += "." + s;
+            parts[i+1] = s;
+        }
+        fullName = n;
+    }
+
+    public Identifier(String name) {
+        parts = new String[] { name };
+        fullName = name;
+    }
+
+    public Identifier(String[] pArr) {
+        String n = pArr[0];
+        parts = new String[pArr.length];
+        for(int i = 0; i < pArr.length; i++) {
+            String s = pArr[i];
+            n += "." + s;
+            parts[i+1] = s;
+        }
+        fullName = n;
+    }
+
     @Override
     public String toString() {
         return String.format("Identifier{%s}", fullName);
     }
 
     @Override
-
     public boolean equals(Object obj) {
         if(obj instanceof String s)
             return s.equals(fullName);
@@ -38,6 +66,9 @@ public class Identifier {
         if(obj instanceof Identifier id)
             return id.fullName.equals(fullName);
         return false;
+    }
+    public boolean equals(String str) {
+        return str.equals(fullName);
     }
 
     @Override
@@ -55,5 +86,52 @@ public class Identifier {
 
     public String get(int i) {
         return parts[i];
+    }
+
+    public boolean starts(String part) {
+        return parts[0].equals(part);
+    }
+
+    public boolean starts(String... parts) {
+        for (int i = 0; i < parts.length; i++) {
+            if (i >= this.parts.length)
+                return false;
+            if (!parts[i].equals(this.parts[i]))
+                return false;
+        }
+        return true;
+    }
+
+    public boolean partEquals(int i, String part) {
+        if (parts.length <= i)
+            return false;
+        return parts[i].equals(part);
+    }
+
+    public Builder builder() {
+        return new Builder().ingest(parts);
+    }
+    
+    public static class Builder {
+        protected ArrayList<String> parts = new ArrayList<>();
+
+        public Builder ingest(String part) {
+            parts.add(part);
+            return this;
+        }
+
+        public Builder ingest(String[] arr) {
+            for (String p : arr)
+                parts.add(p);
+            return this;
+        }
+
+        public Identifier build() {
+            return new Identifier(parts);
+        }
+    }
+
+    public int numParts() {
+        return parts.length;
     }
 }

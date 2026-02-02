@@ -22,12 +22,24 @@ public class ActionBlock extends Action {
     public void parse(ArrayList<Token> tokens) {
         int wI = 0;
         int l = 0;
-        actions.add(new DirectAction("STACK PUSH r15"));
         actions.add(new DirectAction("COPY rStack r15"));
+        int last = -1;
         while(wI < tokens.size()) {
             Token tkn = tokens.get(wI);
             System.out.println(tkn);
-            actions.add(new DirectAction("// "+ (l++)+" "+tkn.startLocation.line()+":"+tkn.startLocation.col()));
+            if (last > -1) {
+                String line = "";
+                for (int i = last; i < wI; i++) {
+                    Token t2 = tokens.get(i);
+                    if (t2.wsBefore())
+                        line += " ";
+                    line += t2.debugString();
+                }
+                actions.add(new DirectAction("// " + line+"\n"));
+            }
+            last = wI;
+            actions.add(
+                    new DirectAction("// " + (l++) + " " + tkn.startLocation.line() + ":" + tkn.startLocation.col()));
             if(tkn instanceof IdentifierToken it) {
                 if(wI+1 < tokens.size() && tokens.get(wI+1) instanceof SetToken st) {
                     switch (it.value) {
@@ -55,23 +67,25 @@ public class ActionBlock extends Action {
                         default -> {
                             wI += 2;
                             // function call; set is parameters
+                            actions.add(new DirectAction("STACK PUSH r15"));
                             ArrayList<ELType> types = new ArrayList<>();
                             for(int i = 0; i < st.subTokens.size(); i++) {
                                 Token t2 = st.subTokens.get(i);
-                                if(t2 instanceof IdentifierToken it2) {
+                                if (t2 instanceof IdentifierToken it2) {
+                                    Identifier id2 = it2.asId();
                                     if(it2.value.equals("SysD")) {
                                         String v2 = ((IdentifierToken)it2.subTokens.get(0)).value;
                                         if(v2.equals("rPgm")) {
                                             actions.add(new DirectAction("STACK PUSH rPgm"));
                                             types.add(ELPrimitives.UINT32);
                                         }
-                                    } else if(scope.hasVariable(it2)) {
-                                        scope.loadVar(it2, 2, actions);
+                                    } else if(scope.hasVariable(id2)) {
+                                        scope.loadVar(id2, 2, actions);
                                         actions.add(new DirectAction("LOAD MEM r2 r2"));
                                         actions.add(new DirectAction("STACK PUSH r2"));
-                                        types.add(scope.getVar(it2).type);
+                                        types.add(scope.getVar(id2).type);
                                     } else {
-                                        ELVariable var = scope.namespace.getVar(it2);
+                                        ELVariable var = scope.namespace.getVar(id2);
                                         if(var != null) {
                                             actions.add(new ResolveAction(2, var).byVal());
                                             actions.add(new DirectAction("STACK PUSH r2"));
@@ -94,6 +108,7 @@ public class ActionBlock extends Action {
                             }
                             actions.add(new DirectAction("GOTO PUSH :%s", f.getQualifiedName(true)));
                             actions.add(new DirectAction("STACK DEC %d", types.size()));
+                            actions.add(new DirectAction("STACK POP r15"));
                             // STACK PUSH param 0
                             // GOTO PUSH :funcName_paramTypes
                             // STACK DEC 1
@@ -131,7 +146,7 @@ public class ActionBlock extends Action {
                     }
                     continue;
                 }
-                IdentifierToken targetVal = it;
+                Identifier targetVal = it.asId();
                 wI++;
                 tkn = tokens.get(wI);
                 if(tkn instanceof OperatorToken ot && (ot.type == OperatorToken.Type.ASSIGN || ot.type == OperatorToken.Type.INC || ot.type == OperatorToken.Type.DEC)) {                    
@@ -177,20 +192,20 @@ public class ActionBlock extends Action {
                     
                     switch (tkn) {
                         case IdentifierToken it2 -> {
-                            if(it2.value.equals("SysD")) {
-                                String v2 = ((IdentifierToken)it2.subTokens.get(0)).value;
-                                if(v2.equals("rPgm")) {
+                            Identifier id2 = it2.asId();
+                            if(id2.starts("SysD")) {
+                                if(id2.partEquals(1, "rPgm")) {
                                     srcReg = MachineCode.REG_PGM_PNTR;
                                 }
-                            } else if(scope.hasVariable(it2)) {
+                            } else if(scope.hasVariable(id2)) {
                                 srcReg = 2;
-                                scope.loadVar(it2, srcReg, actions);
+                                scope.loadVar(id2, srcReg, actions);
                                 actions.add(new DirectAction("LOAD MEM r2 r2"));
                             } else {
                                 srcReg = 2;
-                                ELVariable var = scope.namespace.getVar(it2);
-                                if(var != null) {
-                                    actions.add(new ResolveAction(2, var).byVal());
+                                ArrayList<ELVariable> varStack = scope.namespace.getVarStack(id2, new ArrayList<>());
+                                if(!varStack.isEmpty()) {
+                                    actions.add(new ResolveAction(2, varStack).byVal());
                                 }
                             }
                         }
@@ -230,17 +245,17 @@ public class ActionBlock extends Action {
                                     sub = ot3.type == OperatorToken.Type.SUB;
                                 }
                                 case IdentifierToken it4 -> {
-                                    if(it4.value.equals("SysD")) {
-                                        String v2 = ((IdentifierToken)it4.subTokens.get(0)).value;
-                                        if(v2.equals("rPgm")) {
+                                    Identifier id4 = it4.asId();
+                                    if(id4.starts("SysD")) {
+                                        if(id4.partEquals(1, "rPgm")) {
                                             if(add) {
                                                 actions.add(new DirectAction("ADD %s %s rPgm", srcRegStr, srcRegStr));
                                             } else if(sub) {
                                                 actions.add(new DirectAction("SUB %s %s rPgm", srcRegStr, srcRegStr));
                                             }
                                         }
-                                    } else if(scope.hasVariable(it4)) {
-                                        scope.loadVar(it4, wR, actions);
+                                    } else if(scope.hasVariable(id4)) {
+                                        scope.loadVar(id4, wR, actions);
                                         String wRStr = MachineCode.translateReg(wR);
                                         actions.add(new DirectAction("LOAD MEM %s %s", wRStr, wRStr));
                                         if(add) {
@@ -249,7 +264,7 @@ public class ActionBlock extends Action {
                                             actions.add(new DirectAction("SUB %s %s %s", srcRegStr, srcRegStr, wRStr));
                                         }
                                     } else {
-                                        ELVariable var = scope.namespace.getVar(it4);
+                                        ELVariable var = scope.namespace.getVar(id4);
                                         if(var != null) {
                                             actions.add(new ResolveAction(wR, var).byVal());
                                         }
@@ -267,7 +282,6 @@ public class ActionBlock extends Action {
         }
         if(scope.getStackOffDif() > 0)
             actions.add(scope.getStackResetAction());
-        actions.add(new DirectAction("STACK POP r15"));
     }
 
     @Override

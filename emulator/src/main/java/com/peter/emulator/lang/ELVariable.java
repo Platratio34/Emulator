@@ -80,9 +80,9 @@ public class ELVariable {
     public boolean ingestValue(Token token) {
         if (token instanceof OperatorToken ot && ot.type == OperatorToken.Type.SEMICOLON) {
             if (valueTokens.size() == 1) {
-                if(valueTokens.get(0) instanceof NumberToken nt)
+                if (valueTokens.get(0) instanceof NumberToken nt)
                     startingValue = ELValue.number(type, nt);
-                else if(valueTokens.get(0) instanceof StringToken st)
+                else if (valueTokens.get(0) instanceof StringToken st)
                     startingValue = ELValue.string(type, st);
             }
             return false;

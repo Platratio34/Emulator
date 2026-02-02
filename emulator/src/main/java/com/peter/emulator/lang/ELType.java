@@ -10,8 +10,7 @@ import com.peter.emulator.lang.base.ELPrimitives;
 public class ELType {
 
     protected boolean constant;
-    protected String baseClass = "";
-    protected ArrayList<String> baseClassParents = new ArrayList<>();
+    protected Identifier baseClass;
     protected ArrayList<ELType> genericTypes = new ArrayList<>();
     protected boolean array;
     protected int arraySize = 0;
@@ -35,13 +34,9 @@ public class ELType {
 
     public ELType(String base) {
         if (base.contains(".")) {
-            String[] p = base.split("\\.");
-            for (int i = 0; i < p.length - 1; i++) {
-                baseClassParents.add(p[i]);
-            }
-            baseClass = p[p.length];
+            baseClass = new Identifier(base.split("\\."));
         } else {
-            baseClass = base;
+            baseClass = new Identifier(base);
         }
         location = new Location("", 0, 0);
         endLocation = location;
@@ -62,17 +57,6 @@ public class ELType {
     public String toString() {
         String out = "ELType{";
         if (subType == null) {
-            if (!baseClassParents.isEmpty()) {
-                out += "baseClassParents={";
-                boolean f = true;
-                for (String p : baseClassParents) {
-                    if (!f)
-                        out += ",";
-                    f = false;
-                    out += p;
-                }
-                out += "}, ";
-            }
             out += "baseClass=\"" + baseClass + "\"";
         } else {
             out += "subType=" + subType.toString();
@@ -98,11 +82,7 @@ public class ELType {
     }
 
     public String qualifiedBaseClass() {
-        String out = baseClass;
-        for (String c : baseClassParents) {
-            out = c + "." + out;
-        }
-        return out;
+        return baseClass.fullName;
     }
 
     public String typeString() {
@@ -110,9 +90,7 @@ public class ELType {
         if (subType == null) {
             if (constant)
                 out += "const ";
-            for (String p : baseClassParents)
-                out += p + ".";
-            out += baseClass;
+            out += baseClass.fullName;
             if (!genericTypes.isEmpty()) {
                 out += "<";
                 for (int i = 0; i < genericTypes.size(); i++) {
@@ -176,15 +154,6 @@ public class ELType {
                 if (!baseClass.equals(ot.baseClass)) {
                     // System.out.println("base class mismatch");
                     return false;
-                } else if (baseClassParents.size() != ot.baseClassParents.size()) {
-                    // System.out.println("base parents size mismatch");
-                    return false;
-                }
-                for (int i = 0; i < baseClassParents.size(); i++) {
-                    if (!baseClassParents.get(i).equals(ot.baseClassParents.get(i))) {
-                        // System.out.println("base parents mismatch");
-                        return false;
-                    }
                 }
             } else if (!subType.equals(ot.subType)) {
                 // System.out.println("subtype mismatch");
@@ -256,16 +225,12 @@ public class ELType {
         }
 
         public Builder(String base) {
-            type.baseClass = base;
+            type.baseClass = new Identifier(base);
             baseSet = true;
         }
 
         public Builder(ELType base) {
             type.baseClass = base.baseClass;
-            if (!base.baseClassParents.isEmpty()) {
-                for(String p : base.baseClassParents)
-                    type.baseClassParents.add(p);
-            }
             baseSet = true;
         }
 
@@ -293,19 +258,22 @@ public class ELType {
                         return true;
                     } else if (!baseSet) {
                         baseSet = true;
-                        type.baseClass = it.value;
+                        type.baseClass = new Identifier(it.value);
                         type.location = token.startLocation;
                         type.endLocation = token.endLocation;
-                        while (it.hasSub()) {
-                            Token tkn = it.subTokens.get(0);
-                            if (tkn instanceof IdentifierToken it2) {
-                                it = it2;
-                                type.baseClassParents.add(type.baseClass);
-                                type.baseClass = it2.value;
-                                type.endLocation = token.endLocation;
-                            } else {
-                                throw new ELCompileException("Unexpected token found, expected identifier: " + tkn);
+                        if (it.hasSub()) {
+                            Identifier.Builder b = type.baseClass.builder();
+                            while (it.hasSub()) {
+                                Token tkn = it.subTokens.get(0);
+                                if (tkn instanceof IdentifierToken it2) {
+                                    it = it2;
+                                    b.ingest(it2.value);
+                                    type.endLocation = token.endLocation;
+                                } else {
+                                    throw new ELCompileException("Unexpected token found, expected identifier: " + tkn);
+                                }
                             }
+                            type.baseClass = b.build();
                         }
                         i++;
                         return true;
@@ -406,7 +374,6 @@ public class ELType {
         ELType t = new ELType();
         t.baseClass = baseClass;
         t.subType = subType;
-        t.baseClassParents = baseClassParents;
         t.genericTypes = genericTypes;
         t.pointer = pointer;
         t.array = array;

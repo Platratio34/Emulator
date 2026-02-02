@@ -17,6 +17,11 @@ public class ResolveAction extends Action {
         this.vars.addAll(Arrays.asList(vars));
     }
 
+    public ResolveAction(int reg, ArrayList<ELVariable> vars) {
+        this.reg = reg;
+        this.vars.addAll(vars);
+    }
+
     @Override
     public String toAssembly() {
         String out ;
