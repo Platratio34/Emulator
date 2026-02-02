@@ -48,4 +48,9 @@ public class ResolveAction extends Action {
         resolveValue = true;
         return this;
     }
+
+    public ResolveAction byVal(boolean byVal) {
+        resolveValue = byVal;
+        return this;
+    }
 }

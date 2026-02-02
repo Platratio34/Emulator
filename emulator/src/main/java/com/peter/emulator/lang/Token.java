@@ -27,6 +27,10 @@ public abstract class Token {
         return true;
     }
 
+    public Span span() {
+        return new Span(startLocation, endLocation);
+    }
+
     public static class OperatorToken extends Token {
         public Type type;
         public boolean indexClosed;

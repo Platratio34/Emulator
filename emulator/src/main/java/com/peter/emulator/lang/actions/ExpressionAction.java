@@ -2,9 +2,15 @@ package com.peter.emulator.lang.actions;
 
 import java.util.ArrayList;
 
+import com.peter.emulator.lang.Token;
+
 public class ExpressionAction extends Action {
 
     public ArrayList<Action> actions = new ArrayList<>();
+
+    public ExpressionAction(ActionScope scope, ArrayList<Token> tokens) {
+        
+    }
 
     @Override
     public String toAssembly() {

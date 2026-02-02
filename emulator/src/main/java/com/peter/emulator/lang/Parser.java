@@ -2,7 +2,6 @@ package com.peter.emulator.lang;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Optional;
 
 import com.peter.emulator.lang.Token.AnnotationToken;
 import com.peter.emulator.lang.Token.BlockToken;
@@ -40,7 +39,7 @@ public class Parser {
     
     */
 
-    public Optional<String> parse(ArrayList<Token> tokens) {
+    public void parse(ArrayList<Token> tokens, ErrorSet errors) {
         if (tokens == null)
             throw new NullPointerException();
         this.tokens = tokens;
@@ -54,8 +53,9 @@ public class Parser {
                     while (tokens.get(workingI) instanceof AnnotationToken at2) {
                         workingI++;
                         annotations.add(ELAnnotation.create(at2));
-                        if (workingI >= tokens.size())
-                            throw new ELCompileException("Found annotation at end of tokens");
+                        if (workingI >= tokens.size()) {
+                            errors.error("Found annotation at end of tokens", at2.span());
+                        }
                     }
                     t = tokens.get(workingI);
                 }
@@ -73,8 +73,8 @@ public class Parser {
                                 name = idt2.value;
                             }
                         } else {
-                            throw new ELCompileException(
-                                    "Unexpected token found in import (expected identifier): " + tokens.get(workingI));
+                            errors.error("Unexpected token found in import (expected identifier)", tokens.get(workingI).span());
+                            continue;
                         }
                         workingI++;
                         if (tokens.get(workingI) instanceof IdentifierToken idt3 && idt3.value.equals("as")) {
@@ -84,20 +84,20 @@ public class Parser {
                                 name = idt4.value;
                                 imports.put(name, imp);
                             } else {
-                                throw new ELCompileException(
-                                        "Unexpected token found in import (expected alias): " + tokens.get(workingI));
+                                errors.error("Unexpected token found in import (expected alias)", tokens.get(workingI).span());
+                                continue;
                             }
                             if (!(tokens.get(workingI) instanceof OperatorToken ot
                                 && ot.type == OperatorToken.Type.SEMICOLON)) {
-                                throw new ELCompileException(
-                                        "Unexpected token found in import (expected `;`): " + tokens.get(workingI));
+                                errors.error("Unexpected token found in import (expected `;`)", tokens.get(workingI).span());
+                                continue;
                             }
                         } else if (tokens.get(workingI) instanceof OperatorToken ot
                                 && ot.type == OperatorToken.Type.SEMICOLON) {
                             imports.put(name, imp);
                         } else {
-                            throw new ELCompileException(
-                                    "Unexpected token found in import (expected `as` or `;`): " + tokens.get(workingI));
+                            errors.error("Unexpected token found in import (expected `as` or `;`)", tokens.get(workingI).span());
+                            continue;
                         }
                     } else if (idt.value.equals("static") || idt.value.equals("operator") || idt.value.equals("extern")
                             || ELProtectionLevel.valid(idt.value)) {
@@ -161,7 +161,8 @@ public class Parser {
                                 function.annotations = annotations;
                             if (destructor) {
                                 if (currentClass.destructor != null) {
-                                    throw new ELCompileException("Class " + currentClass.getQualifiedName() + " already had a destructor");
+                                    errors.error("Class " + currentClass.getQualifiedName() + " already had a destructor", function.span());
+                                    continue;
                                 }
                                 currentClass.destructor = function;
                             } else {
@@ -178,8 +179,8 @@ public class Parser {
                                     && ot.type == OperatorToken.Type.SEMICOLON) {
                                 // no body;
                             } else {
-                                throw new ELCompileException("Unexpected token found, expected function body or `;`: "
-                                        + tokens.get(workingI));
+                                errors.error("Unexpected token found, expected function body or `;`", tokens.get(workingI).span());
+                                continue;
                             }
                             continue;
                         } else {
@@ -187,8 +188,8 @@ public class Parser {
                                 name = it4.value;
                                 workingI++;
                             } else {
-                                return Optional.of("Unexpected token found for name (expected identifier): "
-                                        + tokens.get(workingI));
+                                errors.error("Unexpected token found for name (expected identifier)", tokens.get(workingI).span());
+                                continue;
                             }
                         }
                         if (tokens.get(workingI) instanceof SetToken set) { // function
@@ -200,8 +201,10 @@ public class Parser {
                             ELFunction function = new ELFunction(level, extern, currentNamespace, name, funcType, constexpr, loc);
                             if (annotations != null)
                                 function.annotations = annotations;
-                            if (currentNamespace == null)
-                                throw new ELCompileException("Can not have a function outside of namespace or class");
+                            if (currentNamespace == null) {
+                                errors.error("Can not have a function outside of namespace or class", function.span());
+                                continue;
+                            }
 
                             if (!type.isVoid())
                                 function.ret = type;
@@ -213,7 +216,8 @@ public class Parser {
                             } else if (currentNamespace instanceof ELClass currentClass) {
                                 currentClass.addFunction(function);
                             } else {
-                                throw new ELCompileException("Can not have non-static function outside of class");
+                                errors.error("Can not have non-static function outside of class", function.span());
+                                continue;
                             }
                             if (tokens.get(workingI) instanceof BlockToken bt) {
                                 function.ingestBody(bt);
@@ -222,26 +226,31 @@ public class Parser {
                                 // no body;
                                 function.bodyLocation = ot.startLocation;
                             } else {
-                                throw new ELCompileException("Unexpected token found, expected function body or `;`: "
-                                        + tokens.get(workingI));
+                                errors.error("Unexpected token found, expected function body or `;`: ", tokens.get(workingI));
+                                continue;
                             }
                             if(function.hasAnnotation(ELEntrypointAnnotation.class)) {
                                 module.entrypoint = function;
                             }
                         } else { // variable
-                            if(abs)
-                                throw new ELCompileException("Variable can not be marked abstract");
+                            if(abs) {
+                                errors.error("Variable can not be marked abstract", loc.span());
+                                continue;
+                            }
                             ELVariable var = new ELVariable(level, stat, type, name, final_, currentNamespace, loc);
                             if (annotations != null)
                                 var.annotations = annotations;
-                            if (currentNamespace == null)
-                                throw new ELCompileException("Can not have a variable outside of namespace or class");
+                            if (currentNamespace == null) {
+                                errors.error("Can not have a variable outside of namespace or class", var.span());
+                                continue;
+                            }
                             else if (stat) {
                                 currentNamespace.addStaticVariable(var);
                             } else if (currentNamespace instanceof ELClass currentClass) {
                                 currentClass.addMember(var);
                             } else {
-                                throw new ELCompileException("Can not have non-static variable outside of class");
+                                errors.error("Can not have non-static variable outside of class", var.span());
+                                continue;
                             }
                             if (tokens.get(workingI) instanceof OperatorToken ot) {
                                 switch (ot.type) {
@@ -250,12 +259,14 @@ public class Parser {
                                         continue;
                                     }
                                     case ASSIGN -> workingI++;
-                                    default -> throw new ELCompileException(
-                                                "Unexpected token found, expected `;` or `=`: " + tokens.get(workingI));
+                                    default -> {
+                                        errors.error("Unexpected token found, expected `;` or `=`", tokens.get(workingI));
+                                        continue;
+                                    }
                                 }
                             } else {
-                                throw new ELCompileException(
-                                        "Unexpected token found, expected `;` or `=`: " + tokens.get(workingI));
+                                errors.error("Unexpected token found, expected `;` or `=`", tokens.get(workingI));
+                                continue;
                             }
                             var.valueLocation = tokens.get(workingI).startLocation;
                             while (var.ingestValue(tokens.get(workingI))) {
@@ -268,6 +279,7 @@ public class Parser {
                         if (tokens.get(workingI) instanceof IdentifierToken it) {
                             namespace = makeNamespace(it.value, namespace);
                             // System.out.println(namespace.getQualifiedName());
+                            boolean err = false;
                             while (it.hasSub()) {
                                 Token tkn = it.subTokens.get(0);
                                 if (tkn instanceof IdentifierToken it2) {
@@ -276,26 +288,28 @@ public class Parser {
                                     // System.out.println(namespace.getQualifiedName());
                                     it = it2;
                                 } else {
-                                    throw new ELCompileException("Unexpected token found, expected identifier: " + tkn);
+                                    errors.error("Unexpected token found, expected identifier", tkn);
+                                    err = true;
+                                    break;
                                 }
                             }
+                            if(err)
+                                continue;
                             namespaces.add(namespace);
                             namespace.addImports(imports);
                         } else {
-                            return Optional.of("Unknown token found (expected identifier): " + tokens.get(workingI));
+                            errors.error("Unknown token found (expected identifier)", tokens.get(workingI));
+                            continue;
                         }
                         workingI++;
                         if (tokens.get(workingI) instanceof BlockToken bt) {
-                            Optional<String> opt = new Parser(namespace, module).parse(bt.subTokens);
-                            if (opt.isPresent()) {
-                                return opt;
-                            }
+                            new Parser(namespace, module).parse(bt.subTokens, errors);
                         } else if (tokens.get(workingI) instanceof OperatorToken ot
                                 && ot.type == OperatorToken.Type.SEMICOLON) {
                             currentNamespace = namespace;
                         } else {
-                            throw new ELCompileException(
-                                    "Unexpected token found, expected block or `;`: " + tokens.get(workingI));
+                            errors.error("Unexpected token found, expected block or `;`", tokens.get(workingI));
+                            continue;
                         }
                     } else if (idt.value.equals("abstract") || idt.value.equals("class")
                             || idt.value.equals("struct")) {
@@ -316,7 +330,8 @@ public class Parser {
                                 clazz = new ELClass(it.value, currentNamespace);
                             namespaces.add(clazz);
                         } else {
-                            return Optional.of("Unknown token found (expected identifier): " + tokens.get(workingI));
+                            errors.error("Unknown token found (expected identifier)", tokens.get(workingI));
+                            continue;
                         }
                         if (annotations != null)
                             clazz.annotations = annotations;
@@ -337,8 +352,8 @@ public class Parser {
                                         clazz.generics.put(tName, null);
                                         workingI++;
                                     } else {
-                                        throw new ELCompileException(
-                                                "Unexpected token found in type (expected operator): " + tkn);
+                                        errors.error("Unexpected token found in type (expected operator)", tkn);
+                                        r = false;
                                     }
                                 } else if (builder != null) {
                                     if (!builder.ingest(tkn)) {
@@ -353,8 +368,8 @@ public class Parser {
                                             r = false;
                                             workingI++;
                                         } else {
-                                            throw new ELCompileException(
-                                                    "Unexpected token found in type (expected operator): " + tkn);
+                                            errors.error("Unexpected token found in type (expected operator)", tkn);
+                                            r = false;
                                         }
                                     } else {
                                         workingI++;
@@ -368,9 +383,8 @@ public class Parser {
                                         r = false;
                                         workingI++;
                                     } else {
-                                        throw new ELCompileException(
-                                                "Unexpected token found in type parameter (expected `extends`, `,` or `>`): "
-                                                        + tkn);
+                                        errors.error("Unexpected token found in type parameter (expected `extends`, `,` or `>`)", tkn);
+                                        r = false;
                                     }
                                 }
                             }
@@ -386,12 +400,10 @@ public class Parser {
                             }
                         }
                         if (tokens.get(workingI) instanceof BlockToken bt) {
-                            Optional<String> opt = new Parser(clazz, module).parse(bt.subTokens);
-                            if (opt.isPresent()) {
-                                return opt;
-                            }
+                            new Parser(clazz, module).parse(bt.subTokens, errors);
                         } else {
-                            return Optional.of("Unknown token found (expected `extends` or block): " + tokens.get(workingI));
+                            errors.error("Unknown token found (expected `extends` or block)", tokens.get(workingI));
+                            continue;
                         }
                     }
                 }
@@ -400,19 +412,18 @@ public class Parser {
         } /* catch (IndexOutOfBoundsException e) {
              return Optional.of("Index out of bounds");
           } */ catch (ELCompileException e) {
-            String last = "";
-            boolean f = true;
-            if (workingI >= tokens.size())
-                workingI = tokens.size() - 1;
-            for (int i = workingI < 4 ? 0 : workingI - 4; i <= workingI; i++) {
-                if (!f)
-                    last += ", ";
-                f = false;
-                last += tokens.get(i);
-            }
-            return Optional.of(e.getMessage() + "; " + last);
+            // String last = "";
+            // boolean f = true;
+            // if (workingI >= tokens.size())
+            //     workingI = tokens.size() - 1;
+            // for (int i = workingI < 4 ? 0 : workingI - 4; i <= workingI; i++) {
+            //     if (!f)
+            //         last += ", ";
+            //     f = false;
+            //     last += tokens.get(i);
+            // }
+            errors.error(e.getMessage(), tokens.get(workingI));
         }
-        return Optional.empty();
     }
     
     private Namespace makeNamespace(String name, Namespace parent) {

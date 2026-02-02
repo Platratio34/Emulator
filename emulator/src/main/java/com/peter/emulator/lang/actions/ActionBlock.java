@@ -19,14 +19,15 @@ public class ActionBlock extends Action {
         this.scope = scope;
     }
 
-    public void parse(ArrayList<Token> tokens) {
+    public void parse(ArrayList<Token> tokens, ErrorSet errors) {
         int wI = 0;
         int l = 0;
         actions.add(new DirectAction("COPY rStack r15"));
         int last = -1;
         while(wI < tokens.size()) {
+            try {
             Token tkn = tokens.get(wI);
-            System.out.println(tkn);
+            // System.out.println(tkn);
             if (last > -1) {
                 String line = "";
                 for (int i = last; i < wI; i++) {
@@ -47,21 +48,21 @@ public class ActionBlock extends Action {
                             // set is the condition
                             // also block
                             ActionBlock innerBlock = new ActionBlock(scope.createChild());
-                            innerBlock.parse(tokens.get(wI+2).subTokens);
+                            innerBlock.parse(tokens.get(wI+2).subTokens, errors);
                             continue;
                         }
                         case "for" ->                             {
                             // set is (initilizer; condition; incrementer)
                             // also block
                             ActionBlock innerBlock = new ActionBlock(scope.createChild());
-                            innerBlock.parse(tokens.get(wI+2).subTokens);
+                            innerBlock.parse(tokens.get(wI+2).subTokens, errors);
                             continue;
                         }
                         case "while" ->                             {
                             //set is condition
                             // also block
                             ActionBlock innerBlock = new ActionBlock(scope.createChild());
-                            innerBlock.parse(tokens.get(wI+2).subTokens);
+                            innerBlock.parse(tokens.get(wI+2).subTokens, errors);
                             continue;
                         }
                         default -> {
@@ -73,24 +74,15 @@ public class ActionBlock extends Action {
                                 Token t2 = st.subTokens.get(i);
                                 if (t2 instanceof IdentifierToken it2) {
                                     Identifier id2 = it2.asId();
-                                    if(it2.value.equals("SysD")) {
-                                        String v2 = ((IdentifierToken)it2.subTokens.get(0)).value;
-                                        if(v2.equals("rPgm")) {
-                                            actions.add(new DirectAction("STACK PUSH rPgm"));
-                                            types.add(ELPrimitives.UINT32);
-                                        }
-                                    } else if(scope.hasVariable(id2)) {
-                                        scope.loadVar(id2, 2, actions);
-                                        actions.add(new DirectAction("LOAD MEM r2 r2"));
+                                    if(scope.loadVar(id2, 2, actions, true)) {
                                         actions.add(new DirectAction("STACK PUSH r2"));
                                         types.add(scope.getVar(id2).type);
-                                    } else {
-                                        ELVariable var = scope.namespace.getVar(id2);
-                                        if(var != null) {
-                                            actions.add(new ResolveAction(2, var).byVal());
-                                            actions.add(new DirectAction("STACK PUSH r2"));
-                                            types.add(var.type);
-                                        }
+                                    } else if(it2.value.equals("SysD")) {
+                                        int r = getSysDReg(id2);
+                                        if(r == -1)
+                                            throw ELAnalysisError.error("Unable to resolve SysD variable "+id2);
+                                        actions.add(new DirectAction("STACK PUSH %s", MachineCode.translateReg(r)));
+                                        types.add(ELPrimitives.UINT32);
                                     }
                                 }
                             }
@@ -104,7 +96,7 @@ public class ActionBlock extends Action {
                                     tStr += types.get(i).typeString();
                                 }
                                 tStr += ")";
-                                throw new ELCompileException("Unknown function "+id.fullName+tStr);
+                                throw ELAnalysisError.error("Unknown function "+id.fullName+tStr, it.span());
                             }
                             actions.add(new DirectAction("GOTO PUSH :%s", f.getQualifiedName(true)));
                             actions.add(new DirectAction("STACK DEC %d", types.size()));
@@ -128,10 +120,10 @@ public class ActionBlock extends Action {
                     if(tkn instanceof IdentifierToken it2) {
                         name = it2.value;
                     } else {
-                        throw new ELCompileException("Expected identifier (found "+tkn+") @"+tkn.startLocation);
+                        throw ELAnalysisError.error("Expected identifier (found "+tkn+")", tkn.span());
                     }
                     tkn = tokens.get(wI);
-                    scope.addStackVar(name, type);
+                    scope.addStackVar(name, type, errors);
                     if(tkn instanceof OperatorToken ot) {
                         switch (ot.type) {
                             case SEMICOLON -> {
@@ -139,10 +131,10 @@ public class ActionBlock extends Action {
                                 actions.add(new StackAllocAction(-1));
                             }
                             case ASSIGN -> wI++;
-                            default -> throw new ELCompileException("Expected `;` or `=` (found `"+ot.type+"`) @"+tkn.startLocation);
+                            default -> throw ELAnalysisError.error("Expected `;` or `=` (found `"+ot.type+"`)", tkn.span());
                         }
                     } else {
-                        throw new ELCompileException("Expected `;` or `=` (found "+tkn+") @"+tkn.startLocation);
+                        throw ELAnalysisError.error("Expected `;` or `=` (found "+tkn+")", tkn.span());
                     }
                     continue;
                 }
@@ -150,13 +142,8 @@ public class ActionBlock extends Action {
                 wI++;
                 tkn = tokens.get(wI);
                 if(tkn instanceof OperatorToken ot && (ot.type == OperatorToken.Type.ASSIGN || ot.type == OperatorToken.Type.INC || ot.type == OperatorToken.Type.DEC)) {                    
-                    if(scope.hasVariable(targetVal)) { // block stack var
-                        scope.loadVar(targetVal, 1, actions);
-                    } else {
-                        ELVariable var = scope.namespace.getVar(targetVal);
-                        if(var != null) {
-                            actions.add(new ResolveAction(1, var));
-                        }
+                    if(!scope.loadVar(targetVal, 1, actions, false)) { // block stack var
+                        throw ELAnalysisError.error("Unable to resolve variable "+targetVal, it.span());
                     }
 
                     if(ot.type == OperatorToken.Type.INC) {
@@ -174,7 +161,7 @@ public class ActionBlock extends Action {
                     // need an expression here
                     ArrayList<Token> exp = new ArrayList<>();
                     while(!(tkn instanceof OperatorToken ot2 && ot2.type == OperatorToken.Type.SEMICOLON)) {
-                        System.out.println("- "+tkn);
+                        // System.out.println("- "+tkn);
                         exp.add(tkn);
                         tkn = tokens.get(wI++);
                     }
@@ -193,20 +180,14 @@ public class ActionBlock extends Action {
                     switch (tkn) {
                         case IdentifierToken it2 -> {
                             Identifier id2 = it2.asId();
-                            if(id2.starts("SysD")) {
-                                if(id2.partEquals(1, "rPgm")) {
-                                    srcReg = MachineCode.REG_PGM_PNTR;
-                                }
-                            } else if(scope.hasVariable(id2)) {
+                            if(scope.loadVar(id2, 2, actions, true)) {
                                 srcReg = 2;
-                                scope.loadVar(id2, srcReg, actions);
-                                actions.add(new DirectAction("LOAD MEM r2 r2"));
+                            } else if(id2.starts("SysD")) {
+                                srcReg = getSysDReg(id2);
+                                if(srcReg == -1)
+                                    throw ELAnalysisError.error("Unknown SysD variable "+id2, it2.span());
                             } else {
-                                srcReg = 2;
-                                ArrayList<ELVariable> varStack = scope.namespace.getVarStack(id2, new ArrayList<>());
-                                if(!varStack.isEmpty()) {
-                                    actions.add(new ResolveAction(2, varStack).byVal());
-                                }
+                                throw ELAnalysisError.error("Unknown variable "+id2, it2.span());
                             }
                         }
                         case NumberToken nt -> {
@@ -246,28 +227,26 @@ public class ActionBlock extends Action {
                                 }
                                 case IdentifierToken it4 -> {
                                     Identifier id4 = it4.asId();
-                                    if(id4.starts("SysD")) {
-                                        if(id4.partEquals(1, "rPgm")) {
-                                            if(add) {
-                                                actions.add(new DirectAction("ADD %s %s rPgm", srcRegStr, srcRegStr));
-                                            } else if(sub) {
-                                                actions.add(new DirectAction("SUB %s %s rPgm", srcRegStr, srcRegStr));
-                                            }
-                                        }
-                                    } else if(scope.hasVariable(id4)) {
-                                        scope.loadVar(id4, wR, actions);
-                                        String wRStr = MachineCode.translateReg(wR);
-                                        actions.add(new DirectAction("LOAD MEM %s %s", wRStr, wRStr));
+                                    String wRStr = MachineCode.translateReg(wR);
+                                    if(scope.loadVar(id4, wR, actions, true)) {
                                         if(add) {
                                             actions.add(new DirectAction("ADD %s %s %s", srcRegStr, srcRegStr, wRStr));
                                         } else if(sub) {
                                             actions.add(new DirectAction("SUB %s %s %s", srcRegStr, srcRegStr, wRStr));
                                         }
-                                    } else {
-                                        ELVariable var = scope.namespace.getVar(id4);
-                                        if(var != null) {
-                                            actions.add(new ResolveAction(wR, var).byVal());
+
+                                    } else if(id4.starts("SysD")) {
+                                        int r = getSysDReg(id4);
+                                        if(r == -1)
+                                            throw ELAnalysisError.error("Unknown SysD variable "+id4, it4.span());
+                                        String tReg = MachineCode.translateReg(r);
+                                        if(add) {
+                                            actions.add(new DirectAction("ADD %s %s %s", srcRegStr, srcRegStr, tReg));
+                                        } else if(sub) {
+                                            actions.add(new DirectAction("SUB %s %s %s", srcRegStr, srcRegStr, tReg));
                                         }
+                                    } else {
+                                        throw ELAnalysisError.error("Unknown variable "+id4, it4.span());
                                     }
                                 }
                                 default -> {
@@ -278,10 +257,42 @@ public class ActionBlock extends Action {
                     actions.add(new DirectAction("STORE %s r1", srcRegStr));
                 }
             }
+            } catch (ELAnalysisError e) {
+                errors.add(e);
+            }
             wI++;
         }
         if(scope.getStackOffDif() > 0)
             actions.add(scope.getStackResetAction());
+    }
+
+    public static int getSysDReg(Identifier id) {
+        return switch(id.parts[1]) {
+            case "r0" -> 0;
+            case "r1" -> 1;
+            case "r2" -> 2;
+            case "r3" -> 3;
+            case "r4" -> 4;
+            case "r5" -> 5;
+            case "r6" -> 6;
+            case "r7" -> 7;
+            case "r8" -> 8;
+            case "r9" -> 9;
+            case "r10" -> 10;
+            case "r11" -> 11;
+            case "r12" -> 12;
+            case "r13" -> 13;
+            case "r14" -> 14;
+            case "r15" -> 15;
+            case "rPgm" -> MachineCode.REG_PGM_PNTR;
+            case "rStack" -> MachineCode.REG_STACK_PNTR;
+            case "rPid" -> MachineCode.REG_PID;
+            case "rMemTbl" -> MachineCode.REG_MEM_TABLE;
+            case "rIC" -> MachineCode.REG_INTERRUPT;
+            case "rIR" -> MachineCode.REG_INTR_RSP;
+            case "rPM" -> MachineCode.REG_PRIVILEGED_MODE;
+            default -> -1;
+        };
     }
 
     @Override

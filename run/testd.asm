@@ -16,6 +16,7 @@ STACK INC
 // 2 11:10
 COPY r15 r1
 INC r1 1
+LOAD MEM r1 r1
 STORE rPgm r1
 //  a = SysD.rPgm;
 
@@ -34,6 +35,7 @@ STACK INC
 // 5 14:10
 COPY r15 r1
 INC r1 2
+LOAD MEM r1 r1
 COPY r15 r2
 LOAD MEM r2 r2
 STORE r2 r1
@@ -42,6 +44,7 @@ STORE r2 r1
 // 6 15:10
 COPY r15 r1
 INC r1 2
+LOAD MEM r1 r1
 LOAD MEM r2 r1
 INC r2 1
 STORE r2 r1
@@ -49,6 +52,7 @@ STORE r2 r1
 
 // 7 16:10
 COPY r15 r1
+LOAD MEM r1 r1
 COPY r15 r2
 INC r2 1
 LOAD MEM r2 r2
@@ -63,6 +67,7 @@ STORE r2 r1
 // 8 17:10
 COPY r15 r1
 INC r1 2
+LOAD MEM r1 r1
 LOAD r2 32
 STORE r2 r1
 //  c = 32;
@@ -84,7 +89,7 @@ STACK DEC 3
 HALT
 :TestD.funcb_uint32
 COPY rStack r15
-// 0 22:10
+// 0 23:10
 LOAD r1 &TestD.v
 LOAD r2 &TestD.v
 LOAD MEM r2 r2

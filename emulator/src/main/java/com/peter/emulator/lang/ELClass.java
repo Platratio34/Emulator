@@ -301,12 +301,12 @@ public class ELClass extends Namespace {
     }
 
     @Override
-    public void analyze(ArrayList<ELAnalysisError> errors, ProgramModule module) {
+    public void analyze(ErrorSet errors, ProgramModule module) {
         for (ELFunction func : memberFunctions.values()) {
             func.analyze(errors, module);
             if(func.abstractFunction && !abstractClass)
-                errors.add(ELAnalysisError.error("Abstract functions must exist within an abstract class",
-                        func.startLocation));
+                errors.error("Abstract functions must exist within an abstract class",
+                        func.startLocation.span());
             ELOverrideAnnotation oa = func.getAnnotation(ELOverrideAnnotation.class);
             if (oa != null) {
                 ArrayList<ELType> p = new ArrayList<>();
@@ -329,7 +329,7 @@ public class ELClass extends Namespace {
                     }
                 }
                 if(!found)
-                    errors.add(ELAnalysisError.error("Function was marked override, but no matching parent function could be found", oa.startLocation));
+                    errors.error("Function was marked override, but no matching parent function could be found", oa.span());
             }
         }
         for (ELVariable var : memberVariables.values()) {
@@ -339,18 +339,17 @@ public class ELClass extends Namespace {
     }
     
     @Override
-    public void resolve(ArrayList<ELAnalysisError> errors, ProgramModule module) {
+    public void resolve(ErrorSet errors, ProgramModule module) {
         if (parent == null) {
             ELType base = parentType.base();
             parent = getType(base, this, module);
             if (parent == null) {
-                errors.add(ELAnalysisError.error(String.format("Could not resolve parent class %s for %s",
-                        base.typeString(), getQualifiedName())));
+                errors.error(String.format("Could not resolve parent class %s for %s", base.typeString(), getQualifiedName()), parentType.span());
                 parent = ELPrimitives.OBJECT_CLASS;
             }
-            // errors.add(ELAnalysisError.info("Found parent class for " + getQualifiedName()+": " + parent.getQualifiedName()));
+            // errors.info("Found parent class for " + getQualifiedName()+": " + parent.getQualifiedName()));
         } else {
-            // errors.add(ELAnalysisError.info("Parent class for " + getQualifiedName() +" was "+parent.getQualifiedName()));
+            // errors.info("Parent class for " + getQualifiedName() +" was "+parent.getQualifiedName()));
         }
         super.resolve(errors, module);
     }
@@ -371,7 +370,7 @@ public class ELClass extends Namespace {
             if (v.type.clazz == null) {
                 if (stack.size() == identifier.numParts())
                     return stack;
-                throw ELAnalysisError.error("Could not resolve variable " + identifier.fullName, v.startLocation);
+                throw ELAnalysisError.error("Could not resolve variable " + identifier.fullName, v.span());
             }
             return v.type.clazz.getVarStack(identifier, stack);
         }

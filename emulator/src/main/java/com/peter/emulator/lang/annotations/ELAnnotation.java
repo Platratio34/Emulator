@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.function.Function;
 
 import com.peter.emulator.lang.Location;
+import com.peter.emulator.lang.Span;
 import com.peter.emulator.lang.Token;
 import com.peter.emulator.lang.Token.AnnotationToken;
 
@@ -50,5 +51,9 @@ public class ELAnnotation {
             out += ")";
         }
         return out;
+    }
+
+    public Span span() {
+        return new Span(startLocation, endLocation);
     }
 }

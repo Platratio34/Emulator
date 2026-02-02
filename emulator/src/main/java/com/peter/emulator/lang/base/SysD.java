@@ -12,7 +12,7 @@ public class SysD extends Namespace {
     private SysD() {
         super("SysD");
         // void memSet(uint32 address, uint32 value)
-        ELFunction memSet = addStaticFunction(new ELFunction(ELProtectionLevel.PUBLIC, false, this, "memSet", FunctionType.STATIC, true, SYSD_LOCATION));
+        ELFunction memSet = addStaticFunction(new ELFunction(ELProtectionLevel.PUBLIC, true, this, "memSet", FunctionType.STATIC, true, SYSD_LOCATION));
         memSet.addParameter(ELPrimitives.UINT32, "address");
         memSet.addParameter(ELPrimitives.UINT32, "value");
         // void memSet(uint32 address, char value)

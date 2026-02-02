@@ -1,6 +1,7 @@
 package com.peter.emulator.lang;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import com.peter.emulator.lang.Token.IdentifierToken;
 
@@ -54,7 +55,7 @@ public class Identifier {
 
     @Override
     public String toString() {
-        return String.format("Identifier{%s}", fullName);
+        return fullName;
     }
 
     @Override
@@ -121,8 +122,7 @@ public class Identifier {
         }
 
         public Builder ingest(String[] arr) {
-            for (String p : arr)
-                parts.add(p);
+            parts.addAll(Arrays.asList(arr));
             return this;
         }
 

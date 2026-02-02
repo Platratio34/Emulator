@@ -4,55 +4,74 @@ public class ELAnalysisError extends RuntimeException {
 
     public final Severity severity;
     public final String reason;
-    public final Location location;
+    public final Span span;
 
-    public ELAnalysisError(Severity severity, String reason, Location location) {
+    public ELAnalysisError(Severity severity, String reason, Span span) {
         this.severity = severity;
         this.reason = reason;
-        this.location = location;
-        if(location == null)
-            throw new NullPointerException();
+        this.span = span;
     }
 
-    public static ELAnalysisError info(String reason, Location location) {
-        return new ELAnalysisError(Severity.INFO, reason, location);
+    public static ELAnalysisError info(String reason, Span span) {
+        return new ELAnalysisError(Severity.INFO, reason, span);
+    }
+    public static ELAnalysisError info(String reason, Token token) {
+        return new ELAnalysisError(Severity.INFO, reason, token.span());
     }
     public static ELAnalysisError info(String reason) {
-        return new ELAnalysisError(Severity.INFO, reason, new Location("", 0, 0));
+        return new ELAnalysisError(Severity.INFO, reason, null);
     }
 
-    public static ELAnalysisError warning(String reason, Location location) {
-        return new ELAnalysisError(Severity.WARNING, reason, location);
+    public static ELAnalysisError warning(String reason, Span span) {
+        return new ELAnalysisError(Severity.WARNING, reason, span);
+    }
+    public static ELAnalysisError warning(String reason, Token token) {
+        return new ELAnalysisError(Severity.WARNING, reason, token.span());
     }
     public static ELAnalysisError warning(String reason) {
-        return new ELAnalysisError(Severity.WARNING, reason, new Location("", 0, 0));
+        return new ELAnalysisError(Severity.WARNING, reason, null);
     }
     
-    public static ELAnalysisError error(String reason, Location location) {
-        return new ELAnalysisError(Severity.ERROR, reason, location);
+    public static ELAnalysisError error(String reason, Span span) {
+        return new ELAnalysisError(Severity.ERROR, reason, span);
+    }
+    public static ELAnalysisError error(String reason, Token token) {
+        return new ELAnalysisError(Severity.ERROR, reason, token.span());
     }
     public static ELAnalysisError error(String reason) {
-        return new ELAnalysisError(Severity.ERROR, reason, new Location("", 0, 0));
+        return new ELAnalysisError(Severity.ERROR, reason, null);
     }
     
-    public static ELAnalysisError fatal(String reason, Location location) {
-        return new ELAnalysisError(Severity.FATAL, reason, location);
+    public static ELAnalysisError fatal(String reason, Span span) {
+        return new ELAnalysisError(Severity.FATAL, reason, span);
+    }
+    public static ELAnalysisError fatal(String reason, Token token) {
+        return new ELAnalysisError(Severity.FATAL, reason, token.span());
     }
     public static ELAnalysisError fatal(String reason) {
-        return new ELAnalysisError(Severity.FATAL, reason, new Location("", 0, 0));
+        return new ELAnalysisError(Severity.FATAL, reason, null);
     }
 
     @Override
     public String toString() {
-        if (location.line() == 0)
+        if (span == null)
             return severity + ": " + reason;
-        return severity + ": " + reason +" (@ "+location+")";
+        return severity + ": " + reason + " (@ "+span.start()+")";
     }
 
     public static enum Severity {
-        INFO,
-        WARNING,
-        ERROR,
-        FATAL;
+        INFO(3),
+        WARNING(2),
+        ERROR(1),
+        FATAL(0);
+
+        public final int level;
+        private Severity(int lvl) {
+            level = lvl;
+        }
+
+        public boolean atLeast(Severity other) {
+            return level <= other.level;
+        }
     }
 }

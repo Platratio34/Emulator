@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.Optional;
 
 import com.peter.emulator.Emulator;
 import com.peter.emulator.assembly.Assembler;
@@ -40,10 +39,11 @@ public class Main {
         testD.addRefModule("SysD");
         testD.addFiles(ROOT_PATH.resolve("lang/TestD"));
 
-        Optional<String> error = ls.parse();
-        if (error.isPresent()) {
-            System.out.println("Error in LS: " + error.get());
-            return;
+        System.out.println("\nParsing:");
+        for (ELAnalysisError err : ls.parse()) {
+            if (!err.severity.atLeast(Severity.WARNING))
+                continue;
+            System.out.println("- " + err);
         }
         // System.out.println("Kernal:");
         // for(Namespace ns : kernal.getNamespaces())
@@ -57,19 +57,23 @@ public class Main {
 
         System.out.println("\nResolution:");
         for (ELAnalysisError err : ls.resolve()) {
+            if (!err.severity.atLeast(Severity.WARNING))
+                continue;
             System.out.println("- " + err);
         }
         
         System.out.println("\nAnalysis:");
         for (ELAnalysisError err : ls.analyze()) {
-            if (err.severity == Severity.INFO)
+            if (!err.severity.atLeast(Severity.WARNING))
                 continue;
             System.out.println("- "+err);
         }
+        if(ls.clearError())
+            return;
 
         System.out.println("\n");
         String asm = testD.assemble();
-        System.out.println(asm);
+        // System.out.println(asm);
         Path p = ROOT_PATH.resolve("testd.asm");
         try {
             new File(p.toUri()).delete();

@@ -81,12 +81,11 @@ public class ELFunction {
 
     public ELFunction getFunction(ArrayList<ELType> paramTypes) {
         boolean self = paramOrder.size() == paramTypes.size();
-        System.out.println(self);
         if (self)
             for (int i = 0; i < paramOrder.size(); i++) {
                 if (!this.params.get(paramOrder.get(i)).equals(paramTypes.get(i))) {
                     self = false;
-                    System.out.println("Didn't match: "+this.params.get(paramOrder.get(i))+" != "+paramTypes.get(i));
+                    // System.out.println("Didn't match: "+this.params.get(paramOrder.get(i))+" != "+paramTypes.get(i));
                     break;
                 }
             }
@@ -231,17 +230,16 @@ public class ELFunction {
         body = block.subTokens;
     }
 
-    public void analyze(ArrayList<ELAnalysisError> errors, ProgramModule module) {
+    public void analyze(ErrorSet errors, ProgramModule module) {
         for (Entry<String, ELType> entry : params.entrySet()) {
             entry.getValue().analyze(errors, namespace, module);
         }
         if (ret != null)
             ret.analyze(errors, namespace, module);
         if (body == null && !(extern || abstractFunction)) {
-            errors.add(ELAnalysisError.error("Non-abstract or external functions must have a body", startLocation));
+            errors.error("Non-abstract or external functions must have a body", startLocation.span());
         } else if (body != null && (extern || abstractFunction)) {
-            errors.add(ELAnalysisError.error((extern ? "External" : "Abstract") + " functions must have a body",
-                    bodyLocation));
+            errors.error((extern ? "External" : "Abstract") + " functions must have a body", bodyLocation.span());
         }
         for (ELFunction overload : overloads) {
             overload.analyze(errors, module);
@@ -251,9 +249,9 @@ public class ELFunction {
             ActionBlock bodyBlock = new ActionBlock(new ActionScope(namespace, null, 0));
             int l = paramOrder.size();
             for(int i = 0 ; i < l; i++) {
-                bodyBlock.scope.addStackVar(paramOrder.get(i), params.get(paramOrder.get(i)), -(l-i+1));
+                bodyBlock.scope.addStackVar(paramOrder.get(i), params.get(paramOrder.get(i)), -(l-i+1), errors);
             }
-            bodyBlock.parse(body);
+            bodyBlock.parse(body, errors);
             actions.add(bodyBlock);
         }
     }
@@ -277,5 +275,9 @@ public class ELFunction {
             }
         }
         return o;
+    }
+
+    public Span span() {
+        return startLocation.span(bodyLocation);
     }
 }

@@ -1,15 +1,14 @@
 package com.peter.emulator.lang;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 
 import com.peter.emulator.lang.base.SysD;
 
 public class LanguageServer {
 
     public HashMap<String, ProgramModule> modules = new HashMap<>();
+    protected boolean err = false;
 
     public LanguageServer() {
         addModule("SysD").namespaces.put("SysD", SysD.INSTANCE);
@@ -21,40 +20,55 @@ public class LanguageServer {
         return module;
     }
 
-    public Optional<String> parse() {
+    public ErrorSet parse() {
+        ErrorSet errors = new ErrorSet();
         for (ProgramModule module : modules.values()) {
-            Optional<String> err = module.parse();
-            if (err.isPresent())
-                return err;
+            module.parse(errors);
         }
-        return Optional.empty();
-    }
-    
-    public ArrayList<ELAnalysisError> analyze() {
-        ArrayList<ELAnalysisError> errors = new ArrayList<>();
-        for (ProgramModule module : modules.values()) {
-            ArrayList<ELAnalysisError> errs = module.analyze();
-            errors.addAll(errs);
-        }
+        if(errors.hadError())
+            err = true;
         return errors;
     }
-    public ArrayList<ELAnalysisError> analyze(String moduleName) {
+    
+    public ErrorSet analyze() {
+        ErrorSet errors = new ErrorSet();
+        for (ProgramModule module : modules.values()) {
+            ErrorSet errs = module.analyze();
+            errors.combine(errs);
+        }
+        if(errors.hadError())
+            err = true;
+        return errors;
+    }
+    public ErrorSet analyze(String moduleName) {
         if(!modules.containsKey(moduleName))
             throw new NoSuchElementException("No module with name " + moduleName);
         return modules.get(moduleName).analyze();
     }
     
-    public ArrayList<ELAnalysisError> resolve() {
-        ArrayList<ELAnalysisError> errors = new ArrayList<>();
+    public ErrorSet resolve() {
+        ErrorSet errors = new ErrorSet();
         for (ProgramModule module : modules.values()) {
-            ArrayList<ELAnalysisError> errs = module.resolve();
-            errors.addAll(errs);
+            ErrorSet errs = module.resolve();
+            errors.combine(errs);
         }
+        if(errors.hadError())
+            err = true;
         return errors;
     }
-    public ArrayList<ELAnalysisError> resolve(String moduleName) {
+    public ErrorSet resolve(String moduleName) {
         if(!modules.containsKey(moduleName))
             throw new NoSuchElementException("No module with name " + moduleName);
         return modules.get(moduleName).resolve();
+    }
+
+    public boolean hasError() {
+        return err;
+    }
+
+    public boolean clearError() {
+        boolean e = err;
+        err = false;
+        return e;
     }
 }

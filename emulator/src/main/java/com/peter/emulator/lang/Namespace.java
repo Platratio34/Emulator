@@ -144,7 +144,7 @@ public class Namespace {
         return false;
     }
     
-    public void resolve(ArrayList<ELAnalysisError> errors, ProgramModule module) {
+    public void resolve(ErrorSet errors, ProgramModule module) {
         for (String ns : imports.values()) {
             if(module.getNamespaceIncluded(ns) == null) {
                 String[] p = ns.split("\\.");
@@ -160,9 +160,9 @@ public class Namespace {
                     }
                 }
                 if(found != null)
-                    errors.add(ELAnalysisError.warning(String.format("Could not find imported namespace %s (but did find parent %s)", ns, found)));
+                    errors.warning(String.format("Could not find imported namespace %s (but did find parent %s)", ns, found));
                 else
-                    errors.add(ELAnalysisError.warning(String.format("Could not find imported namespace %s", ns)));
+                    errors.warning(String.format("Could not find imported namespace %s", ns));
             }
         }
         for (Namespace namespace : namespaces.values()) {
@@ -170,7 +170,7 @@ public class Namespace {
         }
     }
 
-    public void analyze(ArrayList<ELAnalysisError> errors, ProgramModule module) {
+    public void analyze(ErrorSet errors, ProgramModule module) {
         for (ELFunction func : staticFunctions.values()) {
             func.analyze(errors, module);
         }
@@ -180,7 +180,7 @@ public class Namespace {
         for (Namespace namespace : namespaces.values()) {
             namespace.analyze(errors, module);
         }
-        errors.add(ELAnalysisError.info("Analyzed namespace "+getQualifiedName()));
+        errors.info("Analyzed namespace "+getQualifiedName());
     }
 
     public boolean hasType(ELType base) {
@@ -300,12 +300,12 @@ public class Namespace {
             if (v.type.clazz == null) {
                 if (stack.size() == identifier.numParts())
                     return stack;
-                throw ELAnalysisError.error("Could not resolve variable " + identifier.fullName, v.startLocation);
+                throw ELAnalysisError.error("Could not resolve variable " + identifier.fullName, v.span());
             }
             return v.type.clazz.getVarStack(identifier, stack);
         }
         if(namespace != null)
             return namespace.getVarStack(identifier, stack);
-        return null;
+        return stack;
     }
 }

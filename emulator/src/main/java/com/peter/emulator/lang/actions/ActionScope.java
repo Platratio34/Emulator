@@ -22,18 +22,20 @@ public class ActionScope {
         stackOff = stackOffset;
     }
 
-    public void addStackVar(String name, ELType type) {
+    public void addStackVar(String name, ELType type, ErrorSet errors) {
         if(stackVars.containsKey(name)) {
-            throw new ELCompileException("Duplicate variable name `"+name+"`");
+            errors.warning("Duplicate variable name `"+name+"`");
+            return;
         }
         ELVariable var = new ELVariable(ELProtectionLevel.INTERNAL, false, type, name, false, null, type.location);
         var.offset = stackOff++;
         stackVars.put(name, var);
     }
 
-    public void addStackVar(String name, ELType type, int offset) {
+    public void addStackVar(String name, ELType type, int offset, ErrorSet errors) {
         if(stackVars.containsKey(name)) {
-            throw new ELCompileException("Duplicate variable name `"+name+"`");
+            errors.warning("Duplicate variable name `"+name+"`");
+            return;
         }
         ELVariable var = new ELVariable(ELProtectionLevel.INTERNAL, false, type, name, false, null, type.location);
         var.offset = offset;
@@ -68,14 +70,22 @@ public class ActionScope {
         return stackVars.get(id.fullName);
     }
 
-    public void loadVar(Identifier id, int reg, ArrayList<Action> actions) {
-        if(!stackVars.containsKey(id.fullName)) {
-            if(parent != null) parent.loadVar(id, reg, actions);
-            return;
+    public boolean loadVar(Identifier id, int reg, ArrayList<Action> actions, boolean byValue) {
+        if(stackVars.containsKey(id.fullName)) {
+            int so = stackVars.get(id.fullName).offset;
+            actions.add(new DirectAction("COPY r15 %s", MachineCode.translateReg(reg)));
+            if(so != 0)
+                actions.add(new DirectAction("INC %s %d", MachineCode.translateReg(reg), so));
+            String regStr = MachineCode.translateReg(reg);
+            actions.add(new DirectAction("LOAD MEM %s %s", regStr, regStr));
+            return true;
         }
-        int so = stackVars.get(id.fullName).offset;
-        actions.add(new DirectAction("COPY r15 %s", MachineCode.translateReg(reg)));
-        if(so != 0)
-            actions.add(new DirectAction("INC %s %d", MachineCode.translateReg(reg), so));
+        if(parent != null && parent.loadVar(id, reg, actions, byValue))
+            return true;
+        ArrayList<ELVariable> vars = namespace.getVarStack(id, new ArrayList<>());
+        if(vars.isEmpty())
+            return false;
+        actions.add(new ResolveAction(reg, vars).byVal(byValue));
+        return true;
     }
 }

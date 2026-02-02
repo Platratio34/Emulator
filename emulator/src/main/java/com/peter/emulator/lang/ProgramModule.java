@@ -23,7 +23,6 @@ public class ProgramModule {
     public ProgramModule(String name, LanguageServer languageServer) {
         this.name = name;
         this.languageServer = languageServer;
-        refModules.add("System");
     }
 
     public void addFile(Path f) {
@@ -73,37 +72,37 @@ public class ProgramModule {
         }
     }
 
-    public Optional<String> parse() {
+    public void parse(ErrorSet errors) {
         for (Path path : files) {
             try {
                 String str = Files.readString(path);
                 Tokenizer tk = new Tokenizer(str, new Location(path.toString(), 1, 1), false);
                 try {
                     Optional<String> err = tk.tokenize();
-                    if (err.isPresent())
-                        return err;
+                    if (err.isPresent()) {
+                        errors.error("Tokenizer error: "+err.get());
+                        return;
+                    }
                     Parser parser = new Parser(this);
-                    err = parser.parse(tk.tokens);
-                    if (err.isPresent())
-                        return err;
+                    parser.parse(tk.tokens, errors);
                     for (Namespace ns : parser.namespaces) {
                         addNamespace(ns);
                     }
                 } catch (ELCompileException e) {
-                    return Optional.of(e.getMessage());
+                    errors.error("Exception: "+e.getMessage());
                 }
             } catch (IOException e) {
-                return Optional.of("");
+                errors.error("IO Exception: "+e);
+                return ;
             }
         }
-        return Optional.empty();
     }
     
-    public ArrayList<ELAnalysisError> resolve() {
-        ArrayList<ELAnalysisError> errors = new ArrayList<>();
+    public ErrorSet resolve() {
+        ErrorSet errors = new ErrorSet();
         for (String m : refModules) {
             if (!languageServer.modules.containsKey(m))
-                errors.add(ELAnalysisError.error("Could not resolve referenced module " + m));
+                errors.error("Could not resolve referenced module " + m);
         }
         for (Namespace ns : namespaces.values()) {
             ns.resolve(errors, this);
@@ -111,8 +110,8 @@ public class ProgramModule {
         return errors;
     }
     
-    public ArrayList<ELAnalysisError> analyze() {
-        ArrayList<ELAnalysisError> errors = new ArrayList<>();
+    public ErrorSet analyze() {
+        ErrorSet errors = new ErrorSet();
         for (Namespace ns : namespaces.values()) {
             ns.analyze(errors, this);
         }

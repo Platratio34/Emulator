@@ -81,6 +81,10 @@ public class ELType {
         return out + "}";
     }
 
+    public Span span() {
+        return location.span(endLocation);
+    }
+
     public String qualifiedBaseClass() {
         return baseClass.fullName;
     }
@@ -390,7 +394,7 @@ public class ELType {
         return this.nonConst();
     }
 
-    public void analyze(ArrayList<ELAnalysisError> errors, Namespace namespace, ProgramModule module) {
+    public void analyze(ErrorSet errors, Namespace namespace, ProgramModule module) {
         if(isVoidPtr())
             return;
         for(ELType type : genericTypes)
@@ -403,16 +407,15 @@ public class ELType {
             clazz = module.getType(base, namespace);
         }
         if (clazz == null) {
-            errors.add(ELAnalysisError.error("Unknown type: " + base.typeString(), base.location));
+            errors.error("Unknown type: " + base.typeString(), base.span());
             return;
         }
         if (clazz.genericsOrder.isEmpty() && !base.genericTypes.isEmpty()) {
-            errors.add(ELAnalysisError.error("Class " + base.typeString() + " does not have type parameters",
-                    base.genericLocation));
+            errors.error("Class " + base.typeString() + " does not have type parameters", base.genericLocation.span(base.endLocation));
             return;
         }
         if (clazz.genericsOrder.size() != base.genericTypes.size()) {
-            errors.add(ELAnalysisError.error("Incorrect number of type parameters: expected "+clazz.genericsOrder.size()+", found "+base.genericTypes.size(), base.endLocation));
+            errors.error("Incorrect number of type parameters: expected "+clazz.genericsOrder.size()+", found "+base.genericTypes.size(), base.endLocation.span());
             return;
         }
         for (int i = 0; i < clazz.genericsOrder.size(); i++) {
@@ -423,12 +426,12 @@ public class ELType {
                 continue;
             if (!pT.canCastTo(gT)) {
                 errors.add(ELAnalysisError
-                        .error(String.format("Invalid type parameter type for parameter %s; Found %s, expected %s or child", gN, pT.typeString(), gT.typeString()), pT.location));
-                continue;
+                        .error(String.format("Invalid type parameter type for parameter %s; Found %s, expected %s or child", gN, pT.typeString(), gT.typeString()), pT.span()));
+
             }
         }
         if(array && arraySize == 0) {
-            errors.add(ELAnalysisError.error("Array type must specify size", location));
+            errors.error("Array type must specify size", location.span());
         }
         this.clazz = clazz;
     }

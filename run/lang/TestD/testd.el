@@ -16,9 +16,14 @@ namespace TestD {
         b = a + 1 + c;
         c = 32;
         funcb(c);
+        // funcC();
     }
 
     public static void funcb(uint32 a) {
         v = v + a;
     }
+    
+    // public static void funcb(uint32 a) {
+    //     v = v + a;
+    // }
 }

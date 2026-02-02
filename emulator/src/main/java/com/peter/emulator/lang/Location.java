@@ -6,4 +6,12 @@ public record Location(String file, int line, int col) {
     public final String toString() {
         return String.format("%s: %d:%d", file, line, col);
     }
+
+    public Span span(Location end) {
+        return new Span(this, end);
+    }
+
+    public Span span() {
+        return new Span(this, null);
+    }
 }

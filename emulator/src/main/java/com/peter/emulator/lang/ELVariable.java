@@ -94,7 +94,7 @@ public class ELVariable {
         return true;
     }
 
-    public void analyze(ArrayList<ELAnalysisError> errors, Namespace namespace, ProgramModule module) {
+    public void analyze(ErrorSet errors, Namespace namespace, ProgramModule module) {
         type.analyze(errors, namespace, module);
     }
 
@@ -111,5 +111,9 @@ public class ELVariable {
         if(namespace == null)
             return name;
         return namespace.getQualifiedName() + "." + name;
+    }
+
+    public Span span() {
+        return startLocation.span(null);
     }
 }
