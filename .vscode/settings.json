@@ -5,6 +5,7 @@
         "endfunction",
         "kernal",
         "malloc",
+        "nullptr",
         "Pntr",
         "syscall",
         "Syscalls",

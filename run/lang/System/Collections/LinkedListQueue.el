@@ -3,8 +3,8 @@ import SysD;
 namespace System.Collections;
 
 class LinkedListQueue<T> extends Collection<T> {
-    QueueEntry<T>* head;
-    QueueEntry<T>* tail;
+    protected QueueEntry<T>* head;
+    protected QueueEntry<T>* tail;
 
     public LinkedListQueue<T>() {
 

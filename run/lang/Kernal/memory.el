@@ -10,12 +10,13 @@ namespace Kernal.Memory {
     protected static SysD.AddressSpace* blocks = MMU_START;
     protected static SysD.AddressSpace** blocks2 = MMU_START;
 
-    @Privliaged()
+    @Privileged()
     internal static void _setup() {
         mmuId = Kernal.getPeripheral(MMU_DEVICE_TYPE);
         Kernal.peripheralCmd(mmuId, 3, new uint32[] {0x00, MMU_START, MMU_MAX_BLOCKS});
     }
 
+    @Syscall
     public static void* mallocBlock() {
         uint32 blockId;
         uint32 lastOffset = 0;
@@ -37,6 +38,7 @@ namespace Kernal.Memory {
         return (void*)(MEMORY_PROCESS_START + blocks[blockId].offset);
     }
 
+    @Syscall
     public static void freeBlock(void* block) {
         uint32 pid = SysD.getPID();
         uint32 offset = ((uint32)block) - MEMORY_PROCESS_START;
@@ -52,7 +54,7 @@ namespace Kernal.Memory {
         }
     }
 
-    uint32 getBlocks() {
+    internal uint32 getBlocks() {
         uint32 pid = SysD.getPID();
         uint32 num = 0;
         for(uint32 i = 1; i < MMU_MAX_BLOCKS; i++) {

@@ -8,8 +8,14 @@
             "match": "(//.*)"
         },
         {
-            "name": "comment.block",
-            "match": "(/\\*.*\\*/)"
+            "begin": "/\\**",
+            "end": "\\*/",
+            "name": "comment.block.doc"
+        },
+        {
+            "begin": "/\\*",
+            "end": "\\*/",
+            "name": "comment.block"
         },
         {
             "match": "^(import)(?:\\s+(\\w[\\w\\d_\\.]*)(?:\\s+(as)(?:\\s+(\\w[\\w\\d_\\.]*))?)?)?",
@@ -40,13 +46,25 @@
             }
         },
         {
-            "match": "(class|struct)(?:\\s+(\\w[\\w\\d_]*))?",
+            "match": "(class|struct)(?:\\s+(\\w[\\w\\d_]*)(?:\\s*<([^>]*)>)?(?:\\s+(extends)(?:\\s+(\\w[\\w\\d_\\.]*)(?:\\s*<([^>]*)>)?)?)?)?",
             "captures": {
                 "1": {
                     "name": "keyword.other.compiler"
                 },
                 "2": {
                     "name": "entity.name.class"
+                },
+                "3": {
+                    "patterns": [{"include": "#type.list"}]
+                },
+                "4": {
+                    "name": "keyword.other.compiler"
+                },
+                "5": {
+                    "patterns": [{"include": "#identifier.type"}]
+                },
+                "6": {
+                    "patterns": [{"include": "#type.list"}]
                 }
             }
         },
@@ -88,7 +106,7 @@
         },
         {
             "name": "variable.other.constant",
-            "match": "(true|false|nullptr)"
+            "match": "(true|false|nullptr|this|super)"
         },
         {
             "match": "(@\\w[\\w\\d_\\.]*)(?:\\(([^\\)]*)\\))?",
@@ -123,7 +141,7 @@
             "match": "(if|for|while|malloc|free|new)"
         },
         {
-            "match": "(\\w[\\w\\d_\\.]*)(?:\\s|\\*|\\&|<([^>]*)>)*\\s+(\\w[\\w\\d_\\.]*)\\s*\\(",
+            "match": "(?:(\\w[\\w\\d_\\.]*)(?:\\s|\\*|\\&|<([^>]*)>)*\\s+)?(\\w[\\w\\d_\\.]*)(?:<([^\\>]*)>)?\\s*\\(",
             "captures": {
                 "1": {
                     "patterns": [{"include": "#identifier.type"}]
@@ -133,6 +151,9 @@
                 },
                 "3": {
                     "name": "entity.name.function"
+                },
+                "4": {
+                    "patterns": [{"include": "#type.list"}]
                 }
             }
         },
