@@ -21,6 +21,13 @@
                     ".asm"
                 ],
                 "configuration": "./language-configuration.json"
+            },
+            {
+                "id": "emulatorlang",
+                "extensions": [
+                    ".el"
+                ],
+                "configuration": "./el-language-configuration.json"
             }
         ],
         "grammars": [
@@ -28,6 +35,11 @@
                 "language": "emulatorasm",
                 "scopeName": "source.asm",
                 "path": "./syntaxes/asm.tmGrammar.json"
+            },
+            {
+                "language": "emulatorlang",
+                "scopeName": "source.el",
+                "path": "./syntaxes/el.tmGrammar.json"
             }
         ]
     },

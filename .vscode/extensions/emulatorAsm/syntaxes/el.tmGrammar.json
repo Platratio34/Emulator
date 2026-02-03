@@ -1,0 +1,313 @@
+{
+    "name": "Emulator Language",
+    "scopeName": "source.el",
+    "fileTypes": [],
+    "patterns": [
+        {
+            "name": "comment.line",
+            "match": "(//.*)"
+        },
+        {
+            "name": "comment.block",
+            "match": "(/\\*.*\\*/)"
+        },
+        {
+            "match": "^(import)(?:\\s+(\\w[\\w\\d_\\.]*)(?:\\s+(as)(?:\\s+(\\w[\\w\\d_\\.]*))?)?)?",
+            "captures": {
+                "1": {
+                    "name": "keyword.other.compiler"
+                },
+                "2": {
+                    "name": "entity.name.namespace"
+                },
+                "3": {
+                    "name": "keyword.other.compiler"
+                },
+                "4": {
+                    "name": "entity.name.namespace"
+                }
+            }
+        },
+        {
+            "match": "^(namespace)(?:\\s+(\\w[\\w\\d_\\.]*))?",
+            "captures": {
+                "1": {
+                    "name": "keyword.other.compiler"
+                },
+                "2": {
+                    "name": "entity.name.namespace"
+                }
+            }
+        },
+        {
+            "match": "(class|struct)(?:\\s+(\\w[\\w\\d_]*))?",
+            "captures": {
+                "1": {
+                    "name": "keyword.other.compiler"
+                },
+                "2": {
+                    "name": "entity.name.class"
+                }
+            }
+        },
+        {
+            "match": "((?:0x|0b)?[\\d_]+)",
+            "name": "constant.numeric"
+        },
+        {
+            "name": "keyword.other.compiler",
+            "match": "(public|private|protected|internal)"
+        },
+        {
+            "match": "(const|final)\\s+(\\w[\\w\\d_\\.]*)(?:\\s|\\*|\\&|<([^>]*)>|\\[([^\\]])\\])*\\s+(\\w[\\w\\d_]*)",
+            "captures": {
+                "1": {
+                    "name": "keyword.other.compiler"
+                },
+                "2": {
+                    "patterns": [{"include": "#identifier.type"}]
+                },
+                "3": {
+                    "patterns": [{"include": "#type.list"}]
+                },
+                "4": {
+                    "name": "variable.other.constant"
+                },
+                "5": {
+                    "name": "variable.other.constant"
+                }
+            }
+        },
+        {
+            "name": "keyword.other.compiler",
+            "match": "(static|constexpr|const|extern|final|class|struct|operator|abstract)"
+        },
+        {
+            "name": "keyword.control.instruction",
+            "match": "(return|delete)"
+        },
+        {
+            "name": "variable.other.constant",
+            "match": "(true|false|nullptr)"
+        },
+        {
+            "match": "(@\\w[\\w\\d_\\.]*)(?:\\(([^\\)]*)\\))?",
+            "captures": {
+                "1": {
+                    "name": "support.type"
+                },
+                "2": {
+                    "name": "variable.other.constant"
+                }
+            }
+        },
+        {
+            "match": "(new)\\s+(\\w[\\w\\d_\\.]*)(?:\\s|\\*|\\&|<([^>]*)>|\\[([^\\]]*)\\])*",
+            "captures": {
+                "1": {
+                    "name": "keyword.control.instruction"
+                },
+                "2": {
+                    "patterns": [{"include": "#identifier.type"}]
+                },
+                "3": {
+                    "patterns": [{"include": "#type.list"}]
+                },
+                "4": {
+                    "name": "variable.other.constant"
+                }
+            }
+        },
+        {
+            "name": "keyword.control.instruction",
+            "match": "(if|for|while|malloc|free|new)"
+        },
+        {
+            "match": "(\\w[\\w\\d_\\.]*)(?:\\s|\\*|\\&|<([^>]*)>)*\\s+(\\w[\\w\\d_\\.]*)\\s*\\(",
+            "captures": {
+                "1": {
+                    "patterns": [{"include": "#identifier.type"}]
+                },
+                "2": {
+                    "patterns": [{"include": "#type.list"}]
+                },
+                "3": {
+                    "name": "entity.name.function"
+                }
+            }
+        },
+        {
+            "match": "(\\w[\\w\\d_\\.]*)(?:\\s|\\*|\\&|<([^>]*)>|\\[([^\\]])\\])*\\s+(\\w[\\w\\d_]*)",
+            "captures": {
+                "1": {
+                    "patterns": [{"include": "#identifier.type"}]
+                },
+                "2": {
+                    "patterns": [{"include": "#type.list"}]
+                },
+                "3": {
+                    "name": "variable.other.constant"
+                },
+                "4": {
+                    "name": "entity.name.variable"
+                }
+            }
+        },
+        {
+            "match": "(\\w[\\w\\d_\\.]*)\\s*\\(",
+            "captures": {
+                "1": {
+                    "patterns": [{"include": "#identifier.function"}]
+                }
+            }
+        },
+        {
+            "match": "(~)(\\w[\\w\\d_]*)\\(",
+            "captures": {
+                "1": {
+                    "name": "keyword.control.instruction"
+                },
+                "2": {
+                    "name": "entity.name.type"
+                }
+            }
+        },
+        {
+            "match": "(\\w[\\w\\d_\\.]*)",
+            "captures": {
+                "1": {
+                    "patterns": [{"include": "#identifier.stack"}]
+                }
+            }
+        },
+        {
+            "match": "(\")([^\"]*)(\")",
+            "captures": {
+                "1": {
+                    "name": "keyword.quote"
+                },
+                "2": {
+                    "patterns": [
+                        { "include": "#char.escaped"},
+                        {"name": "string.quoted"}
+                    ]
+                },
+                "3": {
+                    "name": "keyword.quote"
+                }
+            }
+        },
+        {
+            "match": "(')([^']*)(')",
+            "captures": {
+                "1": {
+                    "name": "keyword.quote"
+                },
+                "2": {
+                    "patterns": [
+                        { "include": "#char.escaped"},
+                        {"name": "string.quoted"}
+                    ]
+                    
+                },
+                "3": {
+                    "name": "keyword.quote"
+                }
+            }
+        }
+    ],
+    "repository": {
+        "string.quoted": {
+            "match": "(\")([^\"]*)(\")",
+            "captures": {
+                "1": {
+                    "name": "keyword.quote"
+                },
+                "2": {
+                    "patterns": [
+                        { "include": "#char.escaped"},
+                        {"name": "string.quoted"}
+                    ]
+                },
+                "3": {
+                    "name": "keyword.quote"
+                }
+            }
+        },
+        "char.quoted": {
+            "match": "(')([^']*)(')",
+            "captures": {
+                "1": {
+                    "name": "keyword.quote"
+                },
+                "2": {
+                    "patterns": [
+                        { "include": "#char.escaped"},
+                        {"name": "string.quoted"}
+                    ]
+                    
+                },
+                "3": {
+                    "name": "keyword.quote"
+                }
+            }
+        },
+        "char.escaped": {
+            "match": "(\\\\.)",
+            "name": "constant.character.escape"
+        },
+        "identifier.stack": {
+            "match": "(\\w[\\w\\d_]*)\\.(\\w[\\w\\d_\\.]*)|(\\w[\\w\\d_]*)",
+            "captures": {
+                "1": {
+                    "name": "entity.name.variable"
+                },
+                "2": {
+                    "patterns": [{"include": "#identifier.stack"}]
+                },
+                "3": {
+                    "name": "entity.name.variable"
+                }
+            }
+        },
+        "identifier.function": {
+            "match": "(\\w[\\w\\d_]*)\\.(\\w[\\w\\d_\\.]*)|(\\w[\\w\\d_]*)",
+            "captures": {
+                "1": {
+                    "name": "entity.name.variable"
+                },
+                "2": {
+                    "patterns": [{"include": "#identifier.function"}]
+                },
+                "3": {
+                    "name": "entity.name.function"
+                }
+            }
+        },
+        "identifier.type": {
+            "match": "(\\w[\\w\\d_]*)\\.(\\w[\\w\\d_\\.]*)|(\\w[\\w\\d_]*)",
+            "captures": {
+                "1": {
+                    "name": "entity.name.type"
+                },
+                "2": {
+                    "patterns": [{"include": "#identifier.type"}]
+                },
+                "3": {
+                    "name": "entity.name.type"
+                }
+            }
+        },
+        "type.list": {
+            "match": "(\\w[\\w\\d_\\.]*)(?:\\s|\\*|\\&)?(?:,\\s*(.*))?",
+            "captures": {
+                "1": {
+                    "patterns": [{"include": "#identifier.type"}]
+                },
+                "2": {
+                    "patterns": [{"include": "#type.list"}]
+                }
+            }
+        }
+    }
+}
