@@ -77,7 +77,8 @@ public class ActionScope {
             if(so != 0)
                 actions.add(new DirectAction("INC %s %d", MachineCode.translateReg(reg), so));
             String regStr = MachineCode.translateReg(reg);
-            actions.add(new DirectAction("LOAD MEM %s %s", regStr, regStr));
+            if(byValue)
+                actions.add(new DirectAction("LOAD MEM %s %s", regStr, regStr));
             return true;
         }
         if(parent != null && parent.loadVar(id, reg, actions, byValue))

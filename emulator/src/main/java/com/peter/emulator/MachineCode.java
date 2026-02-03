@@ -233,8 +233,8 @@ public class MachineCode {
                     case (STACK_PUSH) -> String.format("STACK PUSH <- %s", translateReg((instruction & MASK_STACK_RG) >> 16));
                     case (STACK_POP) -> String.format("STACK POP -> %s", translateReg((instruction & MASK_STACK_RG) >> 16));
                     
-                    case (STACK_INC) -> String.format("STACK INC %d", instruction & MASK_STACK_VAL + 1);
-                    case (STACK_DEC) -> String.format("STACK DEC %d", instruction & MASK_STACK_VAL + 1);
+                    case (STACK_INC) -> String.format("STACK INC %d", (instruction & MASK_STACK_VAL) + 1);
+                    case (STACK_DEC) -> String.format("STACK DEC %d", (instruction & MASK_STACK_VAL) + 1);
 
                     default -> String.format("STACK 0x%s", Integer.toHexString((instruction & MASK_STACK_OP) >> 16));
                 };
