@@ -99,7 +99,7 @@ public class Parser {
                             errors.error("Unexpected token found in import (expected `as` or `;`)", tokens.get(workingI).span());
                             continue;
                         }
-                    } else if (idt.value.equals("static") || idt.value.equals("operator") || idt.value.equals("extern")
+                    } else if (idt.value.equals("static") || idt.value.equals("const") || idt.value.equals("operator") || idt.value.equals("extern")
                             || ELProtectionLevel.valid(idt.value)) {
                         Location loc = idt.startLocation;
                         workingI++;
@@ -108,10 +108,16 @@ public class Parser {
                         boolean extern = idt.value.equals("extern");
                         boolean operator = idt.value.equals("operator");
                         boolean final_ = idt.value.equals("final");
+                        boolean const_ = idt.value.equals("const");
                         boolean constexpr = false;
                         if (!stat)
                             if (tokens.get(workingI) instanceof IdentifierToken it && it.value.equals("static")) {
                                 stat = true;
+                                workingI++;
+                            }
+                        if (!const_)
+                            if (tokens.get(workingI) instanceof IdentifierToken it && it.value.equals("const")) {
+                                const_ = true;
                                 workingI++;
                             }
                         if (!extern)
@@ -237,7 +243,7 @@ public class Parser {
                                 errors.error("Variable can not be marked abstract", loc.span());
                                 continue;
                             }
-                            ELVariable var = new ELVariable(level, stat, type, name, final_, currentNamespace, loc);
+                            ELVariable var = new ELVariable(level, const_ ? ELVariable.Type.CONST : (stat ? ELVariable.Type.STATIC : ELVariable.Type.MEMBER), type, name, final_, currentNamespace, loc);
                             if (annotations != null)
                                 var.annotations = annotations;
                             if (currentNamespace == null) {

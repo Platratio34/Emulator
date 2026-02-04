@@ -23,7 +23,7 @@ public class ActionScope {
     }
 
     public ELVariable addStackVar(String name, ELType type, ErrorSet errors) {
-        ELVariable var = new ELVariable(ELProtectionLevel.INTERNAL, false, type, name, false, null, type.location);
+        ELVariable var = new ELVariable(ELProtectionLevel.INTERNAL, ELVariable.Type.SCOPE, type, name, false, null, type.location);
         if(stackVars.containsKey(name)) {
             errors.warning("Duplicate variable name `"+name+"`");
             return var;
@@ -33,13 +33,13 @@ public class ActionScope {
         return var;
     }
 
-    public ELVariable addStackVar(String name, ELType type, int offset, ErrorSet errors) {
-        ELVariable var = new ELVariable(ELProtectionLevel.INTERNAL, false, type, name, false, null, type.location);
+    public ELVariable addParam(String name, ELType type, int offset, ErrorSet errors) {
+        ELVariable var = new ELVariable(ELProtectionLevel.INTERNAL, ELVariable.Type.SCOPE, type, name, false, null, type.location);
         if(stackVars.containsKey(name)) {
             errors.warning("Duplicate variable name `"+name+"`");
             return var;
         }
-        var.offset = offset;
+        var.offset = offset - 2; // offseting by 2 to account for return address and r15
         stackVars.put(name, var);
         return var;
     }
@@ -67,6 +67,8 @@ public class ActionScope {
         if(!stackVars.containsKey(id.fullName)) {
             if(parent != null)
                 return parent.getVar(id);
+            if(namespace != null)
+                return namespace.getVar(id);
             return null;
         }
         return stackVars.get(id.fullName);

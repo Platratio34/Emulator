@@ -3,6 +3,7 @@ package com.peter.emulator.lang.actions;
 import java.util.ArrayList;
 
 import com.peter.emulator.MachineCode;
+import com.peter.emulator.lang.ELValue.ELStringValue;
 import com.peter.emulator.lang.*;
 import com.peter.emulator.lang.Token.IdentifierToken;
 import com.peter.emulator.lang.Token.NumberToken;
@@ -75,11 +76,22 @@ public class ActionBlock extends Action {
                             case "asm" -> {
                                 wI += 3;
                                 Token t = st.get(0);
+                                if(t == null)
+                                    throw ELAnalysisError.error("asm function must have a string literal or const parameter", it.span());
                                 if (t instanceof StringToken strT) {
                                     actions.add(new DirectAction(strT.value));
                                     // System.out.println(strT.value);
+                                } else if(t instanceof IdentifierToken it2) {
+                                    Identifier id2 = it2.asId();
+                                    ELVariable var = scope.getVar(id2);
+                                    if(var == null)
+                                        throw ELAnalysisError.error("Could not resolve variable "+id2.fullName, t.span());
+                                    if(var.varType != ELVariable.Type.CONST || !var.type.equals(ELPrimitives.CHAR.pointerTo())) {
+                                        throw ELAnalysisError.error("asm function may only take string literal or const", it2.span());
+                                    }
+                                    actions.add(new DirectAction(((ELStringValue)var.startingValue).value));
                                 } else {
-                                    throw ELAnalysisError.error("asm function may only take string literal", t.span());
+                                    throw ELAnalysisError.error("asm function may only take string literal or const", t.span());
                                 }
                                 continue;
                             }
@@ -173,7 +185,7 @@ public class ActionBlock extends Action {
                             throw ELAnalysisError.error("Expected identifier (found " + tkn + ")", tkn.span());
                         }
                         tkn = tokens.get(wI);
-                        scope.addStackVar(name, type, errors).analyze(errors, scope.namespace, null);;
+                        scope.addStackVar(name, type, errors).analyze(errors, scope.namespace, null);
                         if (tkn instanceof OperatorToken ot) {
                             switch (ot.type) {
                                 case SEMICOLON -> {
@@ -191,12 +203,15 @@ public class ActionBlock extends Action {
                     Identifier targetVal = it.asId();
                     wI++;
                     tkn = tokens.get(wI);
-                    if (tkn instanceof OperatorToken ot && (ot.type == OperatorToken.Type.ASSIGN
+                    if (tkn instanceof OperatorToken ot && (ot.type == OperatorToken.Type.ASSIGN || ot.type == OperatorToken.Type.ADD_ASSIGN || ot.type == OperatorToken.Type.SUB_ASSIGN
                             || ot.type == OperatorToken.Type.INC || ot.type == OperatorToken.Type.DEC)) {
                         if (!scope.loadVar(targetVal, 1, actions, false)) { // block stack var
                             throw ELAnalysisError.error("Unable to resolve variable " + targetVal, it.span());
                         }
 
+                        boolean addAss = ot.type == OperatorToken.Type.ADD_ASSIGN;
+                        boolean subAss = ot.type == OperatorToken.Type.SUB_ASSIGN;
+                        int wR = 2;
                         if (ot.type == OperatorToken.Type.INC) {
                             actions.add(new DirectAction("LOAD MEM r2 r1\nINC r2 1\nSTORE r2 r1"));
                             wI += 2;
@@ -205,6 +220,9 @@ public class ActionBlock extends Action {
                             actions.add(new DirectAction("LOAD MEM r2 r1\nINC r2 -1\nSTORE r2 r1"));
                             wI += 2;
                             continue;
+                        } else if (addAss || subAss) {
+                            actions.add(new DirectAction("LOAD MEM r2 r1"));
+                            wR++;
                         }
 
                         wI++;
@@ -227,12 +245,13 @@ public class ActionBlock extends Action {
                         }
                         int srcReg = 0;
                         tkn = exp.get(eI);
+                        String sRStr = MachineCode.translateReg(wR);
 
                         switch (tkn) {
                             case IdentifierToken it2 -> {
                                 Identifier id2 = it2.asId();
-                                if (scope.loadVar(id2, 2, actions, true)) {
-                                    srcReg = 2;
+                                if (scope.loadVar(id2, wR, actions, true)) {
+                                    srcReg = wR;
                                 } else if (id2.starts("SysD")) {
                                     srcReg = getSysDReg(id2);
                                     if (srcReg == -1)
@@ -242,8 +261,8 @@ public class ActionBlock extends Action {
                                 }
                             }
                             case NumberToken nt -> {
-                                srcReg = 2;
-                                actions.add(new DirectAction("LOAD r2 %d", ELValue.number(ELPrimitives.UINT32, nt).value));
+                                srcReg = wR;
+                                actions.add(new DirectAction("LOAD %s %d", sRStr, ELValue.number(ELPrimitives.UINT32, nt).value));
                             }
                             default -> {
                             }
@@ -252,7 +271,7 @@ public class ActionBlock extends Action {
 
                         eI++;
                         if (exp.size() > eI + 1) {
-                            int wR = 3;
+                            wR++;
                             boolean add = false;
                             boolean sub = false;
                             tkn = exp.get(eI);
@@ -304,6 +323,11 @@ public class ActionBlock extends Action {
                                     }
                                 }
                             }
+                        }
+                        if(addAss) {
+                            actions.add(new DirectAction("ADD %s r2 %s", srcRegStr, srcRegStr));
+                        } else if(subAss) {
+                            actions.add(new DirectAction("SUB %s r2 %s", srcRegStr, srcRegStr));
                         }
                         actions.add(new DirectAction("STORE %s r1", srcRegStr));
                     }

@@ -123,7 +123,9 @@ public abstract class Token {
             EQ2("=="),
             NEQ("!="),
             ADD("+"),
+            ADD_ASSIGN("+="),
             SUB("-"),
+            SUB_ASSIGN("-="),
             DIV("/"),
             INC("++"),
             DEC("--"),
@@ -146,7 +148,9 @@ public abstract class Token {
                 BITWISE_AND.addNext('&', AND);
                 BITWISE_OR.addNext('|', OR);
                 ADD.addNext('+', INC);
+                ADD.addNext('=', ADD_ASSIGN);
                 SUB.addNext('-', DEC);
+                SUB.addNext('=', SUB_ASSIGN);
                 DIV.addNext('/', COMMENT);
                 DIV.addNext('*', COMMENT_MULTILINE);
             }
@@ -408,15 +412,19 @@ public abstract class Token {
             return true;
         }
 
+        public String escapedValue() {
+            return value.replace("\\","\\\\").replace("\n","\\n").replace("\r","\\r").replace("\"","\\\"").replace("\'","\\'");
+        }
+
         @Override
         public String toString() {
-            return String.format("StringToken{value=\"%s\", ch=%s, closed=%s, %s}", value, ch ? "true" : "false",
+            return String.format("StringToken{value=\"%s\", ch=%s, closed=%s, %s}", escapedValue(), ch ? "true" : "false",
                     closed ? "true" : "false", startLocation);
         }
 
         @Override
         public String debugString() {
-            return String.format(ch ? "'%s'" : "\"%s\"", value);
+            return String.format(ch ? "'%s'" : "\"%s\"", escapedValue());
         }
     }
     
@@ -450,6 +458,8 @@ public abstract class Token {
         }
 
         public Token get(int i) {
+            if(i > subTokens.size())
+                return null;
             return subTokens.get(i);
         }
 

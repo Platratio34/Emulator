@@ -11,6 +11,7 @@ import com.peter.emulator.assembly.Assembler;
 import com.peter.emulator.lang.ELAnalysisError;
 import com.peter.emulator.lang.ELAnalysisError.Severity;
 import com.peter.emulator.lang.LanguageServer;
+import com.peter.emulator.lang.Namespace;
 import com.peter.emulator.lang.ProgramModule;
 
 public class Main {
@@ -51,9 +52,9 @@ public class Main {
         // System.out.println("System:");
         // for(Namespace ns : system.getNamespaces())
         //     System.out.println(ns.debugString());
-        // System.out.println("Test:");
-        // for(Namespace ns : testMod.getNamespaces())
-        //     System.out.println(ns.debugString());
+        System.out.println("TestD:");
+        for(Namespace ns : testD.getNamespaces())
+            System.out.println(ns.debugString());
 
         System.out.println("\nResolution:");
         for (ELAnalysisError err : ls.resolve()) {

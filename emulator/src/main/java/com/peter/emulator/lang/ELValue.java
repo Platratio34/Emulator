@@ -75,13 +75,13 @@ public abstract class ELValue {
         public final boolean ch;
 
         public ELStringValue(String value) {
-            super(ELPrimitives.STRING);
+            super(ELPrimitives.CHAR.pointerTo());
             this.value = value;
             ch = false;
         }
 
         public ELStringValue(char ch) {
-            super(ELPrimitives.STRING);
+            super(ELPrimitives.CHAR);
             this.value = ch + "";
             this.ch = true;
         }
@@ -90,7 +90,7 @@ public abstract class ELValue {
             super(type);
             this.value = value;
             this.ch = ch;
-            if(!(type.equals(ELPrimitives.STRING) || type.equals(ELPrimitives.CHAR) || type.equals(ELPrimitives.CHAR.pointerTo())))
+            if(!(type.equals(ELPrimitives.CHAR) || type.equals(ELPrimitives.CHAR.pointerTo())))
                 throw new ELCompileException("Invalid type for string value: "+type);
         }
 

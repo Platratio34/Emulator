@@ -48,7 +48,7 @@ public class ELPrimitives {
     // void*
     public static final ELType VOID_PTR = new ELType.Builder("void").pointer().build();
 
-    public static final ELType STRING = new ELType("string");
+    // public static final ELType STRING = new ELType("string");
 
     /* []
         struct array<T> {
@@ -151,7 +151,7 @@ public class ELPrimitives {
     }
 
     public static boolean isString(ELType type) {
-        return type.equals(CHAR, true) || type.equals(CHAR.pointerTo(), true) || type.equals(STRING, true);
+        return type.equals(CHAR, true) || type.equals(CHAR.pointerTo(), true);
     }
 
     public static final HashMap<ELType, ELClass> PRIMITIVE_TYPES = new HashMap<>();
@@ -161,7 +161,7 @@ public class ELPrimitives {
         PRIMITIVE_TYPES.put(CHAR, CHAR_CLASS);
         PRIMITIVE_TYPES.put(UINT16, UINT16_CLASS);
         PRIMITIVE_TYPES.put(UINT32, UINT32_CLASS);
-        PRIMITIVE_TYPES.put(STRING, null);
+        // PRIMITIVE_TYPES.put(STRING, null);
         PRIMITIVE_TYPES.put(OBJECT, OBJECT_CLASS);
     }
 }

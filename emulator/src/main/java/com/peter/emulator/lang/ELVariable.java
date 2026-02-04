@@ -13,7 +13,7 @@ public class ELVariable {
     public final String name;
     public final ELType type;
     public final ELProtectionLevel protection;
-    public final boolean stat;
+    public final Type varType;
     public final boolean finalVal;
     public final Location startLocation;
     public final Namespace namespace;
@@ -23,10 +23,10 @@ public class ELVariable {
     public Location valueLocation = null;
     public ArrayList<ELAnnotation> annotations = null;
 
-    public ELVariable(ELProtectionLevel protection, boolean stat, ELType type, String name, boolean finalVal, Namespace namespace, Location location) {
+    public ELVariable(ELProtectionLevel protection, Type varType, ELType type, String name, boolean finalVal, Namespace namespace, Location location) {
         this.type = type;
         this.protection = protection;
-        this.stat = stat;
+        this.varType = varType;
         this.name = name;
         this.finalVal = finalVal;
         this.namespace = namespace;
@@ -64,8 +64,12 @@ public class ELVariable {
     public String debugString() {
         String out = "";
         out += protection.value + " ";
-        if (stat)
-            out += "static ";
+        switch(varType) {
+            case CONST -> out += "const ";
+            case STATIC -> out += "static ";
+            case MEMBER -> {}
+            case SCOPE -> out += "scope ";
+        }
         if (finalVal)
             out += "final ";
         out += type.typeString() + " ";
@@ -115,5 +119,17 @@ public class ELVariable {
 
     public Span span() {
         return startLocation.span(null);
+    }
+
+    public static enum Type {
+        CONST("const"),
+        STATIC("static"),
+        MEMBER("member"),
+        SCOPE("scope");
+
+        public final String value;
+        private Type(String value) {
+            this.value = value;
+        }
     }
 }

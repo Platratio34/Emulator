@@ -27,7 +27,7 @@ public class ResolveAction extends Action {
         String out ;
         String r = MachineCode.translateReg(reg);
         ELVariable var = vars.get(0);
-        if (var.stat) {
+        if (var.varType == ELVariable.Type.STATIC) {
             out = String.format("LOAD %s &%s",r, var.getQualifiedName());
         } else {
             out = "COPY r15 "+r;

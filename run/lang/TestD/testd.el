@@ -3,6 +3,7 @@ import SysD;
 namespace TestD {
 
     public static uint32 v = 0;
+    public static const char* str = "// Test";
 
     @Entrypoint
     public static void main() {
@@ -17,20 +18,21 @@ namespace TestD {
         c = 32;
         funcb(c);
         asm("LOAD r1 64\nLOAD r2 &TestD.v\nSTORE r1 r2");
+        asm(str);
         // funcC();
     }
 
     public static void funcb(uint32 a) {
-        v = v + a;
+        v += a;
     }
     
     // public static void funcb(uint32 a) {
-    //     v = v + a;
+    //     v += a;
     // }
 
-    @InterruptHandler(raw)
+    /*@InterruptHandler(raw)
     internal static void onInterrupt() {
         char c;
         asm("HALT");
-    }
+    }*/
 }

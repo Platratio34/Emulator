@@ -278,7 +278,7 @@ public class ELFunction {
             ActionBlock bodyBlock = new ActionBlock(new ActionScope(namespace, null, 0));
             int l = paramOrder.size();
             for(int i = 0 ; i < l; i++) {
-                bodyBlock.scope.addStackVar(paramOrder.get(i), params.get(paramOrder.get(i)), -(l-i+1), errors);
+                bodyBlock.scope.addParam(paramOrder.get(i), params.get(paramOrder.get(i)), -(l-i), errors);
             }
             bodyBlock.parse(body, errors);
             if (irh != null && irh.raw) {
