@@ -275,7 +275,7 @@ public class ELFunction {
             if (hasAnnotation(ELInterruptHandlerAnnotation.class)) {
                 irh = getAnnotation(ELInterruptHandlerAnnotation.class);
             }
-            ActionBlock bodyBlock = new ActionBlock(new ActionScope(namespace, null, 0));
+            ActionBlock bodyBlock = new ActionBlock(new ActionScope(namespace, null, 0), true);
             int l = paramOrder.size();
             for(int i = 0 ; i < l; i++) {
                 bodyBlock.scope.addParam(paramOrder.get(i), params.get(paramOrder.get(i)), -(l-i), errors);

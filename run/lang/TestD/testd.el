@@ -19,6 +19,7 @@ namespace TestD {
         funcb(c);
         asm("LOAD r1 64\nLOAD r2 &TestD.v\nSTORE r1 r2");
         asm(str);
+        wait(c);
         // funcC();
     }
 
@@ -35,4 +36,10 @@ namespace TestD {
         char c;
         asm("HALT");
     }*/
+
+    public static void wait(uint32 time) {
+        while(time > 0) {
+            time--;
+        }
+    }
 }

@@ -1,6 +1,7 @@
 package com.peter.emulator.gui;
 
 import java.awt.BorderLayout;
+import java.awt.GridLayout;
 
 import javax.swing.*;
 
@@ -13,7 +14,10 @@ public class EmulatorGui {
     protected MemoryPanel stackPanel;
     protected MemoryPanel kernalPanel;
 
-    protected JButton btn;
+    protected JPanel buttonGrid;
+    protected JButton pauseBtn;
+    protected JButton resumeBtn;
+    protected JButton tickBtn;
 
     public EmulatorGui(Emulator emulator) {
         SwingUtilities.invokeLater(() -> {
@@ -26,11 +30,27 @@ public class EmulatorGui {
 
             frame.getContentPane().add(panel, BorderLayout.CENTER);
 
-            btn = new JButton("Tick");
-            btn.addActionListener((event) -> {
+            buttonGrid = new JPanel();
+            buttonGrid.setLayout(new GridLayout(2,2));
+            frame.getContentPane().add(buttonGrid, BorderLayout.CENTER);
+            
+            pauseBtn = new JButton("Pause");
+            pauseBtn.addActionListener((event) -> {
+                emulator.setWait(true);
+            });
+            buttonGrid.add(pauseBtn);
+
+            resumeBtn = new JButton("Resume");
+            resumeBtn.addActionListener((event) -> {
+                emulator.setWait(false);
+            });
+            buttonGrid.add(resumeBtn);
+
+            tickBtn = new JButton("Tick");
+            tickBtn.addActionListener((event) -> {
                 emulator.stopWaiting();
             });
-            frame.getContentPane().add(btn, BorderLayout.CENTER);
+            buttonGrid.add(tickBtn);
 
             cpuPanel = new CPUPanel(emulator.cores[0], "cpu0");
             frame.getContentPane().add(cpuPanel, BorderLayout.WEST);

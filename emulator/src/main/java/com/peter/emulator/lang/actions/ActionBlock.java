@@ -16,16 +16,22 @@ public class ActionBlock extends Action {
 
     public final ArrayList<Action> actions = new ArrayList<>();
     public final ActionScope scope;
+    public final boolean isFunction;
 
-    public ActionBlock(ActionScope scope) {
+    private static int subIndex = 0;
+
+    public ActionBlock(ActionScope scope, boolean isFunciton) {
         this.scope = scope;
+        this.isFunction = isFunciton;
     }
 
     public void parse(ArrayList<Token> tokens, ErrorSet errors) {
         int wI = 0;
         int l = 0;
-        actions.add(new DirectAction("STACK PUSH r15"));
-        actions.add(new DirectAction("COPY rStack r15"));
+        if(isFunction) {
+            actions.add(new DirectAction("STACK PUSH r15"));
+            actions.add(new DirectAction("COPY rStack r15"));
+        }
         int last = -1;
         while (wI < tokens.size()) {
             try {
@@ -53,24 +59,32 @@ public class ActionBlock extends Action {
                                 wI += 2;
                                 // set is the condition
                                 // also block
-                                ActionBlock innerBlock = new ActionBlock(scope.createChild());
-                                innerBlock.parse(tokens.get(wI + 2).subTokens, errors);
+                                ActionBlock innerBlock = new ActionBlock(scope.createChild(), false);
+                                innerBlock.parse(tokens.get(wI).subTokens, errors);
                                 continue;
                             }
                             case "for" -> {
                                 wI += 2;
                                 // set is (initilizer; condition; incrementer)
                                 // also block
-                                ActionBlock innerBlock = new ActionBlock(scope.createChild());
-                                innerBlock.parse(tokens.get(wI + 2).subTokens, errors);
+                                ActionBlock innerBlock = new ActionBlock(scope.createChild(), false);
+                                innerBlock.parse(tokens.get(wI).subTokens, errors);
                                 continue;
                             }
                             case "while" -> {
                                 wI += 2;
                                 //set is condition
                                 // also block
-                                ActionBlock innerBlock = new ActionBlock(scope.createChild());
-                                innerBlock.parse(tokens.get(wI + 2).subTokens, errors);
+                                ActionBlock innerBlock = new ActionBlock(scope.createChild(), false);
+                                innerBlock.parse(tokens.get(wI).subTokens, errors);
+                                int index = subIndex++;
+                                actions.add(new DirectAction(":while_condition_%d",index));
+                                actions.add(new ConditionalAction(scope, ":while_body_"+index, ":while_end_"+index, st.subTokens));
+                                actions.add(new DirectAction(":while_body_%d",index));
+                                actions.add(innerBlock);
+                                actions.add(new DirectAction("GOTO :while_condition_%d",index));
+                                actions.add(new DirectAction(":while_end_%d",index));
+                                wI++;
                                 continue;
                             }
                             case "asm" -> {
@@ -171,7 +185,7 @@ public class ActionBlock extends Action {
                         }
                     }
 
-                    if (!scope.hasVariable(it.asId())) {
+                    if (!scope.hasVariable(id)) {
                         ELType.Builder b = new ELType.Builder();
                         tkn = tokens.get(wI++);
                         while (b.ingest(tkn)) {
@@ -182,7 +196,7 @@ public class ActionBlock extends Action {
                         if (tkn instanceof IdentifierToken it2) {
                             name = it2.value;
                         } else {
-                            throw ELAnalysisError.error("Expected identifier (found " + tkn + ")", tkn.span());
+                            throw ELAnalysisError.error("Expected variable name identifier (found " + tkn.debugString() + ")", tkn.span());
                         }
                         tkn = tokens.get(wI);
                         scope.addStackVar(name, type, errors).analyze(errors, scope.namespace, null);
@@ -200,7 +214,8 @@ public class ActionBlock extends Action {
                         }
                         continue;
                     }
-                    Identifier targetVal = it.asId();
+
+                    Identifier targetVal = id;
                     wI++;
                     tkn = tokens.get(wI);
                     if (tkn instanceof OperatorToken ot && (ot.type == OperatorToken.Type.ASSIGN || ot.type == OperatorToken.Type.ADD_ASSIGN || ot.type == OperatorToken.Type.SUB_ASSIGN
@@ -348,7 +363,8 @@ public class ActionBlock extends Action {
         actions.add(new DirectAction("// " + line + "\n"));
         if(scope.getStackOffDif() > 0)
             actions.add(scope.getStackResetAction());
-        actions.add(new DirectAction("STACK POP r15"));
+        if(isFunction)
+            actions.add(new DirectAction("STACK POP r15"));
     }
 
     public static int getSysDReg(Identifier id) {

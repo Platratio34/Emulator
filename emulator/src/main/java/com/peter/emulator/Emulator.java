@@ -108,4 +108,13 @@ public class Emulator {
             thread.interrupt();
         }
     }
+    public void setWait(boolean newWait) {
+        if(newWait == wait || !running)
+            return;
+        wait = newWait;
+        if(!wait) {
+            waiting = false;
+            thread.interrupt();
+        }
+    }
 }

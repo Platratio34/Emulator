@@ -60,7 +60,7 @@ public class ActionScope {
     }
 
     public ActionScope createChild() {
-        return new ActionScope(namespace, parent, stackOff);
+        return new ActionScope(namespace, this, stackOff);
     }
 
     public ELVariable getVar(Identifier id) {
