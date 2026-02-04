@@ -381,7 +381,7 @@
         },
         "register": {
             "name": "variable.language.register",
-            "match": "\\b(r\\d+|rPgm|rStack)\\b"
+            "match": "\\b(r\\d+|rPgm|rStack|rPM|rIC|rIR|rMemTbl)\\b"
         },
         "label": {
             "name": "variable.other.event",
