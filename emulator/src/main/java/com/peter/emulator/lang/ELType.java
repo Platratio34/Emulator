@@ -42,6 +42,17 @@ public class ELType {
         endLocation = location;
     }
 
+    public ELType(String base, ELClass clazz) {
+        this.clazz = clazz;
+        if (base.contains(".")) {
+            baseClass = new Identifier(base.split("\\."));
+        } else {
+            baseClass = new Identifier(base);
+        }
+        location = new Location("", 0, 0);
+        endLocation = location;
+    }
+
     public ELType(String base, boolean pointer, boolean array) {
         this(base);
         this.pointer = pointer;
@@ -400,8 +411,10 @@ public class ELType {
         for(ELType type : genericTypes)
             type.analyze(errors, namespace, module);
         ELType base = base();
-        if (ELPrimitives.PRIMITIVE_TYPES.contains(base))
+        if (ELPrimitives.PRIMITIVE_TYPES.containsKey(base)) {
+            clazz = ELPrimitives.PRIMITIVE_TYPES.get(base);
             return;
+        }
         ELClass clazz = namespace.getType(base, namespace, module);
         if (clazz == null) {
             clazz = module.getType(base, namespace);
@@ -438,14 +451,18 @@ public class ELType {
 
     public boolean canCastTo(ELType target) {
         // check modifiers
-        if((subType == null) != (target.subType != null))
+        if ((subType == null) != (target.subType == null)) {
             return false;
+        }
         if(subType != null) {
             ELType t = this;
             ELType tt = target;
             while (t.subType != null) {
-                if(t.pointer != tt.pointer || t.array != tt.array)
+                if (t.pointer != tt.pointer || t.array != tt.array) {
                     return false;
+                }
+                t = t.subType;
+                tt = tt.subType;
             }
         }
 
@@ -455,8 +472,8 @@ public class ELType {
         ELType base = base();
         ELType tgtBase = base();
         if (base.clazz != null && tgtBase.clazz != null) {
-            boolean sameClass = false;
-            if (base.clazz != tgtBase.clazz) {
+            boolean sameClass = base.clazz != tgtBase.clazz;
+            if (!sameClass) {
                 ELClass c = base.clazz;
                 while (c.parent != null) {
                     c = c.parent;
@@ -465,10 +482,14 @@ public class ELType {
                         break;
                     }
                 }
+                if (!sameClass && clazz.canStaticCast(target)) {
+                    return true;
+                }
             }
-            if(!sameClass)
+            if (!sameClass) {
                 return false;
-            if(base.hasGenerics()) {
+            }
+            if (base.hasGenerics()) {
                 if(!tgtBase.hasGenerics())
                     return false;
                 if(base.genericTypes.size() != tgtBase.genericTypes.size())

@@ -376,4 +376,8 @@ public class ELClass extends Namespace {
         }
         return super.getVarStack(identifier, stack);
     }
+
+    public boolean canStaticCast(ELType target) {
+        return false;
+    }
 }

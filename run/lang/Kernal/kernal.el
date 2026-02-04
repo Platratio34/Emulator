@@ -37,25 +37,25 @@ namespace Kernal {
         System.console = new Console(0x0800, 0x0001, 0x0020);
     }
 
-    @InterruptHandler(raw = true)
+    @InterruptHandler(raw)
     internal static void _interrupt() {
         // stack: [...pgmPtr,rPM,r0...r15 [HEAD]]
-        void* stack; // stack: [...pgmPtr,rPM,r0...r15,var(stack) [HEAD]]
-        SysD.copyFromReg(REG_STACK_PNTR, &stack);
+        void* stack = SysD.rStack; // stack: [...pgmPtr,rPM,r0...r15,var(stack) [HEAD]]
         stack--; // now points to r15; stack: [...pgmPtr,rPM,r0...r15 [stack*],var(stack,+17) [HEAD]]
         oldState.stackPtr = stack;
-        ProcessState* oldState = &processStates[SysD.getPID()];
+        ProcessState* oldState = &processStates[SysD.rPID];
+        stack -= 16;
+        SysD.memCopy((void*)(oldState.registers), 0, 15, stack, 0);
         for(uint32 i = 15; i >= 0; i--) {
             oldState.registers[i] = *stack; stack--;
         }
-        oldState.updateNoReg();
+        oldState.update();
         oldState.privileged = *stack; stack--;
         oldState.pgmPtr = *stack; stack--;
-        SysD.copyFromReg(SysD.REG_MEM_TABLE, &oldState.memTablePtr);
-        uint32 code;
-        SysD.copyFromReg(REG_INTERRUPT, &code);
+        oldState.memTablePtr = SysD.rMemTbl;
+        uint32 code = SysD.rIC;
         if(code & 0x8000_0000 == 0) { // system interrupt in the active process
-            SysD.setPrivilegedMode(false);
+            SysD.rPM = false;
             System.onInterrupt(code);
         } else {
             if(code == 0x8000_0001) { // privileged mode failure
@@ -64,9 +64,9 @@ namespace Kernal {
 
             }
         }
-        SysD.copyToReg(&oldState.memTablePtr, SysD.REG_MEM_TABLE);
+        SysD.rMemTbl = oldState.memTablePtr;
         // stack: [...pgmPtr,rPM,r0...r15 [oldState.stackPtr*],var(stack,+1)...]
-        SysD.copyToReg(SysD.REG_STACK_PNTR, &oldState.stackPtr);
+        SysD.rStack = oldState.stackPtr;
         // stack: [...pgmPtr [stack*],rPM,r0...r15 [HEAD,oldState.stackPtr*] ,var(stack,+0)...]
         SysD.interruptReturn();
     }
@@ -113,27 +113,27 @@ namespace Kernal {
         public uint32[16] registers;
 
         public void update() {
-            SysD.copyFromReg(SysD.REG_PGM_PNTR, &pgmPtr);
-            SysD.copyFromReg(SysD.REG_STACK_PNTR, &stackPtr);
-            SysD.copyFromReg(SysD.REG_MEM_TABLE, &memTablePtr);
-            SysD.copyFromReg(SysD.REG_PRIVILEGED_MODE, &privileged);
+            pgmPtr = SysD.rPgm;
+            stackPtr = SysD.rStack;
+            memTablePtr = SysD.rMemTbl;
+            privileged = SysD.rPM;
         }
 
         public void apply() {
-            SysD.copyToReg(&memTablePtr, SysD.REG_MEM_TABLE);
-            SysD.copyToReg(&stackPtr, SysD.REG_STACK_PNTR);
-            SysD.copyToReg(&privileged, SysD.REG_PRIVILEGED_MODE);
-            SysD.copyToReg(&pgmPtr, SysD.REG_PGM_PNTR);
+            SysD.rMemTbl = memTablePtr;
+            SysD.rStack = stackPtr;
+            SysD.rPM = privileged;
+            SysD.rPgm = pgmPtr;
         }
 
         public void applyNoPgm() {
-            SysD.copyToReg(&memTablePtr, SysD.REG_MEM_TABLE);
-            SysD.copyToReg(&stackPtr, SysD.REG_STACK_PNTR);
-            SysD.copyToReg(&privileged, SysD.REG_PRIVILEGED_MODE);
+            SysD.rMemTbl = memTablePtr;
+            SysD.rStack = stackPtr;
+            SysD.rPM = privileged;
         }
 
         public static void create(ProcessState& state) {
-            SysD.copyFromReg(SysD.REG_PID, &state.pid);
+            state.pid = SysD.rPID;
             state.update();
             return state;
         }

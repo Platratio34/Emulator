@@ -385,27 +385,26 @@ public abstract class Token {
         public boolean ingest(char c, Location location) {
             if (closed)
                 return false;
+            endLocation = location;
             if(escape) {
                 if(escapes.containsKey(c)) {
                     value += escapes.get(c);
                 } else {
                     value += c;
                 }
-                endLocation = location;
                 escape = false;
                 return true;
-            }
-            if (c == '\'' && ch) {
+            } else if (c == '\'' && ch) {
                 closed = true;
-                endLocation = location;
                 return true;
             } else if (c == '"' && !ch) {
                 closed = true;
-                endLocation = location;
+                return true;
+            } else if (c == '\\') {
+                escape = true;
                 return true;
             }
             value += c;
-            endLocation = location;
             return true;
         }
 

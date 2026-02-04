@@ -22,24 +22,26 @@ public class ActionScope {
         stackOff = stackOffset;
     }
 
-    public void addStackVar(String name, ELType type, ErrorSet errors) {
+    public ELVariable addStackVar(String name, ELType type, ErrorSet errors) {
+        ELVariable var = new ELVariable(ELProtectionLevel.INTERNAL, false, type, name, false, null, type.location);
         if(stackVars.containsKey(name)) {
             errors.warning("Duplicate variable name `"+name+"`");
-            return;
+            return var;
         }
-        ELVariable var = new ELVariable(ELProtectionLevel.INTERNAL, false, type, name, false, null, type.location);
         var.offset = stackOff++;
         stackVars.put(name, var);
+        return var;
     }
 
-    public void addStackVar(String name, ELType type, int offset, ErrorSet errors) {
+    public ELVariable addStackVar(String name, ELType type, int offset, ErrorSet errors) {
+        ELVariable var = new ELVariable(ELProtectionLevel.INTERNAL, false, type, name, false, null, type.location);
         if(stackVars.containsKey(name)) {
             errors.warning("Duplicate variable name `"+name+"`");
-            return;
+            return var;
         }
-        ELVariable var = new ELVariable(ELProtectionLevel.INTERNAL, false, type, name, false, null, type.location);
         var.offset = offset;
         stackVars.put(name, var);
+        return var;
     }
 
     public int getStackOffDif() {
@@ -54,7 +56,7 @@ public class ActionScope {
             return true;
         if(parent != null)
             return parent.hasVariable(id);
-        return false;
+        return !namespace.getVarStack(id, new ArrayList<>()).isEmpty();
     }
 
     public ActionScope createChild() {

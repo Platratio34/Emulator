@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
+import com.peter.emulator.MachineCode;
 import com.peter.emulator.lang.Token.BlockToken;
 import com.peter.emulator.lang.Token.IdentifierToken;
 import com.peter.emulator.lang.Token.OperatorToken;
@@ -11,7 +12,9 @@ import com.peter.emulator.lang.Token.SetToken;
 import com.peter.emulator.lang.actions.Action;
 import com.peter.emulator.lang.actions.ActionBlock;
 import com.peter.emulator.lang.actions.ActionScope;
+import com.peter.emulator.lang.actions.DirectAction;
 import com.peter.emulator.lang.annotations.ELAnnotation;
+import com.peter.emulator.lang.annotations.ELInterruptHandlerAnnotation;
 
 public class ELFunction {
 
@@ -80,19 +83,41 @@ public class ELFunction {
     }
 
     public ELFunction getFunction(ArrayList<ELType> paramTypes) {
+        return getFunction(paramTypes, false);
+    }
+
+    public ELFunction getFunction(ArrayList<ELType> paramTypes, boolean cast) {
         boolean self = paramOrder.size() == paramTypes.size();
+        if (!cast) {
+            if (self)
+                for (int i = 0; i < paramOrder.size(); i++) {
+                    if (!this.params.get(paramOrder.get(i)).equals(paramTypes.get(i))) {
+                        self = false;
+                        // System.out.println("Didn't match: " + this.params.get(paramOrder.get(i)) + " != " + paramTypes.get(i));
+                        break;
+                    }
+                }
+            if (self)
+                return this;
+            for (ELFunction ov : overloads) {
+                ELFunction o = ov.getFunction(paramTypes);
+                if (o != null)
+                    return o;
+            }
+        }
+        self = paramOrder.size() == paramTypes.size();
         if (self)
             for (int i = 0; i < paramOrder.size(); i++) {
-                if (!this.params.get(paramOrder.get(i)).equals(paramTypes.get(i))) {
+                if (!paramTypes.get(i).canCastTo(this.params.get(paramOrder.get(i)))) {
                     self = false;
-                    // System.out.println("Didn't match: "+this.params.get(paramOrder.get(i))+" != "+paramTypes.get(i));
+                    // System.out.println("Couldn't cast: "+paramTypes.get(i)+" -> "+this.params.get(paramOrder.get(i)));
                     break;
                 }
             }
         if (self)
             return this;
         for (ELFunction ov : overloads) {
-            ELFunction o = ov.getFunction(paramTypes);
+            ELFunction o = ov.getFunction(paramTypes, true);
             if (o != null)
                 return o;
         }
@@ -167,10 +192,10 @@ public class ELFunction {
             for (ELAnnotation annotation : annotations) {
                 out += annotation.debugString() + prefix;
             }
-        if(type == FunctionType.OPERATOR)
-            out += protection.value + " ";
-        else
+        if (type == FunctionType.OPERATOR)
             out += "operator ";
+        else
+            out += protection.value + " ";
         if (constexpr)
             out += "constexpr ";
         switch (type) {
@@ -245,14 +270,28 @@ public class ELFunction {
             overload.analyze(errors, module);
         }
 
-        if(body != null) {
+        if (body != null) {
+            ELInterruptHandlerAnnotation irh = null;
+            if (hasAnnotation(ELInterruptHandlerAnnotation.class)) {
+                irh = getAnnotation(ELInterruptHandlerAnnotation.class);
+            }
             ActionBlock bodyBlock = new ActionBlock(new ActionScope(namespace, null, 0));
             int l = paramOrder.size();
             for(int i = 0 ; i < l; i++) {
                 bodyBlock.scope.addStackVar(paramOrder.get(i), params.get(paramOrder.get(i)), -(l-i+1), errors);
             }
             bodyBlock.parse(body, errors);
+            if (irh != null && irh.raw) {
+                actions.add(new DirectAction("STACK PUSH rPM"));
+                for (int i = 0; i < 0x10; i++)
+                    actions.add(new DirectAction("STACK PUSH %s", MachineCode.translateReg(i)));
+            }
             actions.add(bodyBlock);
+            if (irh != null && irh.raw) {
+                for (int i = 0xf; i >= 0x0; i--)
+                    actions.add(new DirectAction("STACK POP %s", MachineCode.translateReg(i)));
+                actions.add(new DirectAction("STACK POP rPM"));
+            }
         }
     }
 

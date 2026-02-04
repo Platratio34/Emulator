@@ -16,6 +16,7 @@ public class ELAnnotation {
         types.put("Override", ELOverrideAnnotation::new);
         types.put("Operator", ELOperatorAnnotation::new);
         types.put("Entrypoint", ELEntrypointAnnotation::new);
+        types.put("InterruptHandler", ELInterruptHandlerAnnotation::new);
     }
 
     public final String name;

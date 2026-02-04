@@ -10,12 +10,13 @@ namespace TestD {
         uint32 a;
         a = SysD.rPgm;
         v = a;
-        uint32 c;
+        char c;
         c = b;
         c++;
         b = a + 1 + c;
         c = 32;
         funcb(c);
+        asm("LOAD r1 64\nLOAD r2 &TestD.v\nSTORE r1 r2");
         // funcC();
     }
 
@@ -26,4 +27,10 @@ namespace TestD {
     // public static void funcb(uint32 a) {
     //     v = v + a;
     // }
+
+    @InterruptHandler(raw)
+    internal static void onInterrupt() {
+        char c;
+        asm("HALT");
+    }
 }

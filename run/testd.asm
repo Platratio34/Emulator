@@ -2,8 +2,58 @@
 #var TestD.v 0x0000 // uint32
 
 // text
+:TestD.onInterrupt
+STACK PUSH rPM
+STACK PUSH r0
+STACK PUSH r1
+STACK PUSH r2
+STACK PUSH r3
+STACK PUSH r4
+STACK PUSH r5
+STACK PUSH r6
+STACK PUSH r7
+STACK PUSH r8
+STACK PUSH r9
+STACK PUSH r10
+STACK PUSH r11
+STACK PUSH r12
+STACK PUSH r13
+STACK PUSH r14
+STACK PUSH r15
+STACK PUSH r15
+COPY rStack r15
+// 0 33:10
+STACK INC
+//  char c;
+
+// 1 34:10
+HALT
+//  asm "HALT";
+
+STACK DEC 1
+STACK POP r15
+
+STACK POP r15
+STACK POP r14
+STACK POP r13
+STACK POP r12
+STACK POP r11
+STACK POP r10
+STACK POP r9
+STACK POP r8
+STACK POP r7
+STACK POP r6
+STACK POP r5
+STACK POP r4
+STACK POP r3
+STACK POP r2
+STACK POP r1
+STACK POP r0
+STACK POP rPM
+GOTO POP
 :__start
 :TestD.main
+STACK PUSH r15
 COPY rStack r15
 // 0 9:10
 STACK INC
@@ -29,7 +79,7 @@ STORE r2 r1
 
 // 4 13:10
 STACK INC
-//  uint32 c;
+//  char c;
 
 // 5 14:10
 COPY r15 r1
@@ -68,23 +118,30 @@ STORE r2 r1
 //  c = 32;
 
 // 9 18:10
-STACK PUSH r15
 COPY r15 r2
 INC r2 2
 LOAD MEM r2 r2
 STACK PUSH r2
 GOTO PUSH :TestD.funcb_uint32
 STACK DEC 1
-STACK POP r15
-//  funcb c
+//  funcb c;
 
-// 10 18:18
+// 10 19:10
+LOAD r1 64
+LOAD r2 &TestD.v
+STORE r1 r2
+//  asm "LOAD r1 64
+LOAD r2 &TestD.v
+STORE r1 r2";
+
 STACK DEC 3
+STACK POP r15
 
 HALT
 :TestD.funcb_uint32
+STACK PUSH r15
 COPY rStack r15
-// 0 23:10
+// 0 24:10
 LOAD r1 &TestD.v
 LOAD r2 &TestD.v
 LOAD MEM r2 r2
@@ -93,6 +150,9 @@ INC r3 -2
 LOAD MEM r3 r3
 ADD r2 r2 r3
 STORE r2 r1
+//  v = v + a;
+
+STACK POP r15
 
 GOTO POP
 

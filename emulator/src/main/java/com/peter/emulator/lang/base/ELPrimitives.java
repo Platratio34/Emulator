@@ -1,29 +1,54 @@
 package com.peter.emulator.lang.base;
 
-import java.util.HashSet;
+import java.util.HashMap;
 
 import com.peter.emulator.lang.ELClass;
 import com.peter.emulator.lang.ELType;
 
 public class ELPrimitives {
 
+    public static final ELClass OBJECT_CLASS = new ELClass("Object");
+    public static final ELType OBJECT = new ELType("Object", OBJECT_CLASS);
+
     // bool
-    public static final ELType BOOL = new ELType("bool");
+    public static final ELClass BOOL_CLASS = new ELClass("bool", OBJECT_CLASS);
+    public static final ELType BOOL = new ELType("bool", BOOL_CLASS);
     // uint8
-    public static final ELType UINT8 = new ELType("uint8");
+    public static final ELClass UINT8_CLASS = new ELClass("uint8", OBJECT_CLASS) {
+        @Override
+        public boolean canStaticCast(ELType target) {
+            return target.equals(CHAR) || target.equals(UINT16) || target.equals(UINT32);
+        }
+    };
+    public static final ELType UINT8 = new ELType("uint8", UINT8_CLASS);
     // char
-    public static final ELType CHAR = new ELType("char");
+    public static final ELClass CHAR_CLASS = new ELClass("char", OBJECT_CLASS) {
+        @Override
+        public boolean canStaticCast(ELType target) {
+            return target.equals(UINT8) || target.equals(UINT16) || target.equals(UINT32);
+        }
+    };
+    public static final ELType CHAR = new ELType("char", CHAR_CLASS);
     // uint16
-    public static final ELType UINT16 = new ELType("uint16");
+    public static final ELClass UINT16_CLASS = new ELClass("uint16", OBJECT_CLASS) {
+        @Override
+        public boolean canStaticCast(ELType target) {
+            return target.equals(UINT32);
+        }
+    };
+    public static final ELType UINT16 = new ELType("uint16", UINT16_CLASS);
     // uint32
-    public static final ELType UINT32 = new ELType("uint32");
+    public static final ELClass UINT32_CLASS = new ELClass("uint32", OBJECT_CLASS) {
+        @Override
+        public boolean canStaticCast(ELType target) {
+            return target.equals(VOID_PTR);
+        }
+    };
+    public static final ELType UINT32 = new ELType("uint32", UINT32_CLASS);
     // void*
     public static final ELType VOID_PTR = new ELType.Builder("void").pointer().build();
 
     public static final ELType STRING = new ELType("string");
-
-    public static final ELType OBJECT = new ELType("Object");
-    public static final ELClass OBJECT_CLASS = new ELClass("Object");
 
     /* []
         struct array<T> {
@@ -129,14 +154,14 @@ public class ELPrimitives {
         return type.equals(CHAR, true) || type.equals(CHAR.pointerTo(), true) || type.equals(STRING, true);
     }
 
-    public static final HashSet<ELType> PRIMITIVE_TYPES = new HashSet<>();
+    public static final HashMap<ELType, ELClass> PRIMITIVE_TYPES = new HashMap<>();
     static {
-        PRIMITIVE_TYPES.add(BOOL);
-        PRIMITIVE_TYPES.add(UINT8);
-        PRIMITIVE_TYPES.add(CHAR);
-        PRIMITIVE_TYPES.add(UINT16);
-        PRIMITIVE_TYPES.add(UINT32);
-        PRIMITIVE_TYPES.add(STRING);
-        PRIMITIVE_TYPES.add(OBJECT);
+        PRIMITIVE_TYPES.put(BOOL, BOOL_CLASS);
+        PRIMITIVE_TYPES.put(UINT8, UINT8_CLASS);
+        PRIMITIVE_TYPES.put(CHAR, CHAR_CLASS);
+        PRIMITIVE_TYPES.put(UINT16, UINT16_CLASS);
+        PRIMITIVE_TYPES.put(UINT32, UINT32_CLASS);
+        PRIMITIVE_TYPES.put(STRING, null);
+        PRIMITIVE_TYPES.put(OBJECT, OBJECT_CLASS);
     }
 }

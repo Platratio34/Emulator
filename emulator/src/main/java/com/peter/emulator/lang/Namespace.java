@@ -65,6 +65,12 @@ public class Namespace {
         }
         return null;
     }
+    public ELFunction getFunction(Identifier id) {
+        if(staticFunctions.containsKey(id.fullName)) {
+            return staticFunctions.get(id.fullName);
+        }
+        return null;
+    }
 
     public String debugString() {
         return debugString("\n");
