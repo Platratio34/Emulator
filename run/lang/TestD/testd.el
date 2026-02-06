@@ -27,9 +27,9 @@ namespace TestD {
         v += a;
     }
     
-    // public static void funcb(uint32 a) {
-    //     v += a;
-    // }
+    public static void funcb(uint32 a, void* b) {
+        v += a;
+    }
 
     /*@InterruptHandler(raw)
     internal static void onInterrupt() {

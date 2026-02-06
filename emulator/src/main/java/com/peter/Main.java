@@ -8,6 +8,7 @@ import java.nio.file.StandardOpenOption;
 
 import com.peter.emulator.Emulator;
 import com.peter.emulator.assembly.Assembler;
+import com.peter.emulator.debug.Debugger;
 import com.peter.emulator.lang.ELAnalysisError;
 import com.peter.emulator.lang.ELAnalysisError.Severity;
 import com.peter.emulator.lang.LanguageServer;
@@ -152,11 +153,18 @@ public class Main {
             e.printStackTrace();
             return;
         }
-        if(!assembler.assemble()) {
-            System.err.println("Error assembeling");
+        if (!assembler.assemble()) {
+            System.err.println("Error assembling");
             return;
         }
+        try {
+            Files.writeString(ROOT_PATH.resolve("obj/testd.obj"), assembler.symbols.toFile(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
         emulator.ram.copy(assembler.build());
+        emulator.cores[0].debugger = new Debugger(assembler.symbols, assembler.symbols);
         
         // Assembler assembler = new Assembler();
         // try {

@@ -46,13 +46,21 @@ public class SymbolFile {
     }
 
     public void updateDefinition(String name, int start, int end) {
-        ValueSymbol def = definitions.get(name);
-        def.start = start;
-        def.end = end;
+        if (definitions.containsKey(name)) {
+            ValueSymbol def = definitions.get(name);
+            def.start = start;
+            def.end = end;
+        } else if (variables.containsKey(name)) {
+            VariableSymbol var = variables.get(name);
+            var.start = start;
+            var.end = end;
+            var.address = start;
+        }
     }
 
-    public void addVariable(VariableSymbol value) {
+    public void addVariable(VariableSymbol value, int lineN) {
         if(source != null) value.source = source;
+        value.sourceLine = lineN;
         variables.put(value.name, value);
     }
 
@@ -92,7 +100,7 @@ public class SymbolFile {
                 }
                 v2.start += otherOffset;
             }
-            addVariable(v2);
+            addVariable(v2, v2.sourceLine);
         }
         for (String name : other.syscalls.keySet()) {
             mapSyscall(name, other.syscalls.get(name));
@@ -278,16 +286,18 @@ public class SymbolFile {
     public static class VariableSymbol extends Symbol {
 
         public String type;
-        public int address;
+        public int address = -1;
+        public String value;
 
-        public VariableSymbol(String name, int start, int end, String type, int address) {
+        public VariableSymbol(String name, int start, int end, String type, String value) {
             super(name, start, end);
             this.type = type;
-            this.address = address;
+            this.value = value;
         }
 
         public VariableSymbol copy() {
-            VariableSymbol s = new VariableSymbol(name, start, end, type, address);
+            VariableSymbol s = new VariableSymbol(name, start, end, type, value);
+            s.address = address;
             s.source = source;
             return s;
         }
@@ -304,15 +314,18 @@ public class SymbolFile {
             int start = json.getInt("start");
             int end = json.getInt("start");
             String type = json.getString("type");
+            String value = json.getString("value");
             int address = json.getInt("address");
-            return new VariableSymbol(name, start, end, type, address);
+            VariableSymbol vs = new VariableSymbol(name, start, end, type, value);
+            vs.address = address;
+            return vs;
         }
 
         @Override
         public String toString() {
             if(source != null)
-                return String.format("&%s.%s = %s", source, name, address);
-            return String.format("&%s = %s", name, address);
+                return String.format("&%s.%s = %s (@ %d)", source, name, value, address);
+            return String.format("&%s = %s (@ %d)", name, value, address);
         }
 
     }

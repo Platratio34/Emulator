@@ -3,7 +3,8 @@
 #var TestD.v 0x0000 // uint32
 
 // text
-:TestD.wait_uint32
+
+#function TestD.wait_uint32 time uint32
 STACK PUSH r15
 COPY rStack r15
 // 0 41:10
@@ -27,8 +28,10 @@ GOTO :while_condition_0
 STACK POP r15
 
 GOTO POP
+#endfunction void
+
 :__start
-:TestD.main
+#function TestD.main
 STACK PUSH r15
 COPY rStack r15
 // 0 10:10
@@ -125,7 +128,9 @@ STACK DEC 3
 STACK POP r15
 
 HALT
-:TestD.funcb_uint32
+#endfunction void
+
+#function TestD.funcb_uint32 a uint32
 STACK PUSH r15
 COPY rStack r15
 // 0 27:10
@@ -141,5 +146,24 @@ STORE r3 r1
 STACK POP r15
 
 GOTO POP
+#endfunction void
+
+#function TestD.funcb_uint32_void* a uint32, b void*
+STACK PUSH r15
+COPY rStack r15
+// 0 31:10
+LOAD r1 &TestD.v
+LOAD MEM r2 r1
+COPY r15 r3
+INC r3 -4
+LOAD MEM r3 r3
+ADD r3 r2 r3
+STORE r3 r1
+//  v += a;
+
+STACK POP r15
+
+GOTO POP
+#endfunction void
 
 HALT

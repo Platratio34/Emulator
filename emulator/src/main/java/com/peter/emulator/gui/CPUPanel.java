@@ -30,6 +30,8 @@ public class CPUPanel extends JPanel {
 
     protected final JLabel instrLbl;
 
+    protected final DebuggerPanel debuggerPanel;
+
     public CPUPanel(CPU cpu, String name) {
         this.cpu = cpu;
         this.cpuName = name;
@@ -89,6 +91,9 @@ public class CPUPanel extends JPanel {
 
         instrLbl = new JLabel(MachineCode.translate(cpu.readMem(cpu.pgmPtr), cpu.readMem(cpu.pgmPtr+1)));
         add(instrLbl);
+
+        debuggerPanel = new DebuggerPanel(cpu);
+        add(debuggerPanel);
     }
 
     public void update() {
@@ -106,6 +111,9 @@ public class CPUPanel extends JPanel {
 
         pmLbl.setText(EmulatorGui.toHex(cpu.privilegeMode ? 1 : 0));
 
-        instrLbl.setText(MachineCode.translate(cpu.instr, cpu.instrb)+"("+EmulatorGui.toHex(cpu.instr)+" "+EmulatorGui.toHex(cpu.instrb)+")");
+        instrLbl.setText(MachineCode.translate(cpu.instr, cpu.instrb) + "(" + EmulatorGui.toHex(cpu.instr) + " "
+                + EmulatorGui.toHex(cpu.instrb) + ")");
+        
+        debuggerPanel.update();
     }
 }

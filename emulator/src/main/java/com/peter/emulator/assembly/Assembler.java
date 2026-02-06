@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
 import static com.peter.emulator.MachineCode.*;
 import com.peter.emulator.assembly.SymbolFile.FunctionSymbol;
 import com.peter.emulator.assembly.SymbolFile.ValueSymbol;
+import com.peter.emulator.assembly.SymbolFile.VariableSymbol;
 
 public class Assembler {
 
@@ -192,7 +193,7 @@ public class Assembler {
                             }
                             memSet.add(new MemSet(name, val));
                             valAdd += val.length;
-                            symbols.addDefinition(new ValueSymbol(name, -1, -1, "char*", str), lineN + 1);
+                            symbols.addVariable(new VariableSymbol(name, -1, -1, "char*", str), lineN + 1);
                         } else if (parts[2].startsWith("[")) {
                             Matcher m = DEFINE_ARRAY_PATTERN.matcher(line);
                             if (!m.find()) {
@@ -211,21 +212,21 @@ public class Assembler {
                             }
                             memSet.add(new MemSet(name, val));
                             valAdd += val.length;
-                            symbols.addDefinition(new ValueSymbol(name, -1, -1, "uint32*", content), lineN + 1);
+                            symbols.addVariable(new VariableSymbol(name, -1, -1, "uint32*", content), lineN + 1);
                         } else if (parts[2].startsWith("(")) {
                             Matcher m = ALLOC_PATTERN.matcher(parts[2]);
                             m.find();
                             int size = getVal(m.group(1));
                             memSet.add(new MemSet(name, new int[size]));
                             valAdd += size;
-                            symbols.addDefinition(new ValueSymbol(name, -1, -1, "uint32[" + size + "]*", ""),
+                            symbols.addVariable(new VariableSymbol(name, -1, -1, "uint32[" + size + "]*", ""),
                                     lineN + 1);
                         } else {
                             int val = getVal(parts[2]);
                             memSet.add(new MemSet(name, new int[] {val}));
                             valAdd++;
-                            symbols.addDefinition(
-                                    new ValueSymbol(name, -1, -1,
+                            symbols.addVariable(
+                                    new VariableSymbol(name, -1, -1,
                                             parts[2].startsWith("'") ? "char" : "uint32", val + ""),
                                     lineN + 1);
                         }
@@ -758,7 +759,7 @@ public class Assembler {
             v = defines.get(val);
         } else if (val.startsWith("&") && defines.containsKey(val.substring(1))) {
             String n = val.substring(1);
-            v = symbols.definitions.get(val.substring(1)).start;
+            v = symbols.variables.get(n).start;
             if(v == -1)
                 throw new RuntimeException("Symbol had no start address");
         } else if (linker != null && linker.hasDefinition(val)) {

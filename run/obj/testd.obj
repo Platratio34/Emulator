@@ -1,0 +1,48 @@
+{
+    "variables": {
+        "TestD.v": {
+            "address": 103,
+            "start": 103,
+            "end": 103,
+            "type": "uint32"
+        },
+        "TestD.str": {
+            "address": 96,
+            "start": 96,
+            "end": 102,
+            "type": "char*"
+        }
+    },
+    "functions": {
+        "TestD.main": {
+            "args": [],
+            "rt": "void",
+            "start": 12,
+            "end": 71
+        },
+        "TestD.funcb_uint32": {
+            "args": ["a uint32"],
+            "rt": "void",
+            "start": 71,
+            "end": 83
+        },
+        "TestD.wait_uint32": {
+            "args": ["time uint32"],
+            "rt": "void",
+            "start": 1,
+            "end": 12
+        },
+        "TestD.funcb_uint32_void*": {
+            "args": [
+                "a uint32",
+                "b void*"
+            ],
+            "rt": "void",
+            "start": 83,
+            "end": 95
+        }
+    },
+    "version": 1,
+    "definitions": {},
+    "syscalls": {}
+}

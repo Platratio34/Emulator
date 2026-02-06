@@ -1,10 +1,12 @@
 package com.peter.emulator.debug;
 
 import java.util.ArrayList;
+import java.util.Set;
 
 import com.peter.emulator.CPU;
 import com.peter.emulator.assembly.SymbolFile;
 import com.peter.emulator.assembly.SymbolFile.FunctionSymbol;
+import com.peter.emulator.assembly.SymbolFile.VariableSymbol;
 
 public class Debugger {
 
@@ -72,5 +74,39 @@ public class Debugger {
             str += "\n\t" + s;
         }
         return str;
+    }
+
+    public String getVar(CPU cpu, String name) {
+        if (cpu.privilegeMode) {
+            if (!kernalSymbols.variables.containsKey(name)) {
+                return "unknown";
+            }
+            VariableSymbol vs = kernalSymbols.variables.get(name);
+            if (vs.type.equals("char*")) {
+                String out = "\"";
+                for (int i = vs.start; i < vs.end; i++) {
+                    out += (char) cpu.readMem(i);
+                }
+                return out + "\"";
+            }
+            return Integer.toString(cpu.readMem(vs.address));
+        } else {
+            if (!symbols.variables.containsKey(name)) {
+                return "unknown";
+            }
+            VariableSymbol vs = symbols.variables.get(name);
+            if (vs.type.equals("char*")) {
+                String out = "\"";
+                for (int i = vs.start; i < vs.end; i++) {
+                    out += (char) cpu.readMem(i);
+                }
+                return out + "\"";
+            }
+            return Integer.toString(cpu.readMem(vs.address));
+        }
+    }
+
+    public Set<String> getVars() {
+        return symbols.variables.keySet();
     }
 }

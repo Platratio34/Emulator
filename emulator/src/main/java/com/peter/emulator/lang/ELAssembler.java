@@ -10,6 +10,33 @@ public class ELAssembler {
         module = pm;
     }
 
+    private String assembleFunction(ELFunction f) {
+        String out = "";
+        out += "\n";
+        if(module.entrypoint == f)
+            out += "\n:__start";
+        out += "\n#function " + f.getQualifiedName(true);
+        boolean first = true;
+        for (String p : f.paramOrder) {
+            if (!first)
+                out += ",";
+            first = false;
+            out += String.format(" %s %s", p, f.params.get(p).typeString());
+        }
+        for(Action action : f.actions) {
+            out += "\n"+action.toAssembly();
+        }
+        if(module.entrypoint == f)
+            out +="\nHALT";
+        else
+            out += "\nGOTO POP";
+        out += "\n#endfunction " + (f.ret == null ? "void" : f.ret.typeString());
+        for (ELFunction f2 : f.overloads) {
+            out += assembleFunction(f2);
+        }
+        return out;
+    }
+
     public String assemble() {
         String out = "";
         out += "// static data\n";
@@ -23,18 +50,8 @@ public class ELAssembler {
             throw new ELCompileException("Module had no entry point");
         out+="\n// text";
         for(Namespace ns : module.namespaces.values()) {
-            for(ELFunction f : ns.staticFunctions.values()) {
-                if(ent == f)
-                    out += "\n:__start";
-                out +="\n:"+f.getQualifiedName(true);
-                for(Action action : f.actions) {
-                    out += "\n"+action.toAssembly();
-                }
-                if(ent == f)
-                    out +="\nHALT";
-                else
-                    out += "\nGOTO POP";
-                // out += String.format("#var %s %s // %s\n", v.getQualifiedName(), (v.startingValue == null)? "0x00" : v.startingValue.valueString(), v.typeString());
+            for (ELFunction f : ns.staticFunctions.values()) {
+                out += assembleFunction(f);
             }
         }
         out += "\n\nHALT";
