@@ -138,7 +138,7 @@
         },
         {
             "name": "keyword.control.instruction",
-            "match": "(if|for|while|malloc|free|new|asm)"
+            "match": "(if|for|while|malloc|free|new|asm|else)"
         },
         {
             "match": "(?:(\\w[\\w\\d_\\.]*)(?:\\s|\\*|\\&|<([^>]*)>)*\\s+)?(\\w[\\w\\d_\\.]*)(?:<([^\\>]*)>)?\\s*\\(",

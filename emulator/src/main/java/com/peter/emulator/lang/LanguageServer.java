@@ -71,4 +71,18 @@ public class LanguageServer {
         err = false;
         return e;
     }
+
+    public ErrorSet recompile() {
+        err = false;
+        for(ProgramModule pm : modules.values())
+            pm.onRecompile();
+        ErrorSet errors = parse();
+        if(errors.hadError())
+            return errors;
+        errors.combine(resolve());
+        if(errors.hadError())
+            return errors;
+        errors.combine(analyze());
+        return errors;
+    }
 }

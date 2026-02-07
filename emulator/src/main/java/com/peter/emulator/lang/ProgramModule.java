@@ -28,8 +28,8 @@ public class ProgramModule {
     public void addFile(Path f) {
         if (files.contains(f))
             return;
-        if(!new File(f.toUri()).isFile()) {
-            throw new RuntimeException("Path "+f.toString()+" does not exist");
+        if (!new File(f.toUri()).isFile()) {
+            throw new RuntimeException("Path " + f.toString() + " does not exist");
         }
         files.add(f);
     }
@@ -265,5 +265,9 @@ public class ProgramModule {
 
     public String assemble() {
         return new ELAssembler(this).assemble();
+    }
+
+    public void onRecompile() {
+        namespaces.clear();
     }
 }

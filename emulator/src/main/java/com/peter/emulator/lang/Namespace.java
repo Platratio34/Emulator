@@ -59,15 +59,72 @@ public class Namespace {
         staticVariables.put(var.name, var);
     }
 
-    public ELFunction findFunction(Identifier id, ArrayList<ELType> params) {
-        if(staticFunctions.containsKey(id.fullName)) {
-            return staticFunctions.get(id.fullName).getFunction(params);
+    public final ELFunction findFunction(Identifier id, ArrayList<ELType> params) {
+        return findFunction(id, params, 0);
+    }
+
+    public final ELFunction findFunction(Identifier id, ArrayList<ELType> params, int index) {
+        if (id.parts.length == index+1) { // must be in this namespace
+            return findFunction(id.last(), params);
+        }
+        if (id.parts[index].equals(cName)) {
+            if(id.parts.length == index+2)
+                return findFunction(id.last(), params);
+            if (namespaces.containsKey(id.parts[index + 1])) {
+                return namespaces.get(id.parts[index + 1]).findFunction(id, params, index + 1);
+            }
+            return null;
+        }
+        if(index > 0)
+            return null;
+        Namespace ns = namespace;
+        while (ns != null) {
+            if (ns.cName.equals(id.parts[0])) {
+                return ns.findFunction(id, params, 0);
+            }
+            ns = ns.namespace;
         }
         return null;
     }
-    public ELFunction getFunction(Identifier id) {
-        if(staticFunctions.containsKey(id.fullName)) {
-            return staticFunctions.get(id.fullName);
+
+    protected ELFunction findFunction(String name, ArrayList<ELType> params) {
+        if (staticFunctions.containsKey(name)) {
+            return staticFunctions.get(name).getFunction(params);
+        }
+        return null;
+    }
+
+    public final ELFunction getFunction(Identifier id) {
+        return getFunction(id, 0);
+    }
+
+    public final ELFunction getFunction(Identifier id, int index) {
+        if (id.parts.length == index+1) { // must be in this namespace
+            return getFunction(id.last());
+        }
+        if (id.parts[index].equals(cName)) {
+            if(id.parts.length == index+2)
+                return getFunction(id.last());
+            if (namespaces.containsKey(id.parts[index + 1])) {
+                return namespaces.get(id.parts[index + 1]).getFunction(id, index + 1);
+            }
+            return null;
+        }
+        if(index > 0)
+            return null;
+        Namespace ns = namespace;
+        while (ns != null) {
+            if (ns.cName.equals(id.parts[0])) {
+                return ns.getFunction(id, 0);
+            }
+            ns = ns.namespace;
+        }
+        return null;
+    }
+    
+    protected ELFunction getFunction(String name) {
+        if (staticFunctions.containsKey(name)) {
+            return staticFunctions.get(name);
         }
         return null;
     }

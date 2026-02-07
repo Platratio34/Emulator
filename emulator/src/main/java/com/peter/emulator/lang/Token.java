@@ -347,7 +347,7 @@ public abstract class Token {
             }
             value += c;
             endLocation = location;
-            numValue = Integer.parseInt(value, bin ? 2 : (hex ? 16 : 10));
+            numValue = (int)Long.parseLong(value.replace("_",""), bin ? 2 : (hex ? 16 : 10));
             return true;
         }
         @Override

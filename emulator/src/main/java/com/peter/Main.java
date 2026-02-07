@@ -6,11 +6,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
+import org.eclipse.lsp4j.jsonrpc.Launcher;
+import org.eclipse.lsp4j.launch.LSPLauncher;
+import org.eclipse.lsp4j.services.LanguageClient;
+
 import com.peter.emulator.Emulator;
 import com.peter.emulator.assembly.Assembler;
 import com.peter.emulator.debug.Debugger;
 import com.peter.emulator.lang.ELAnalysisError;
 import com.peter.emulator.lang.ELAnalysisError.Severity;
+import com.peter.emulator.languageserver.ELLanguageServer;
 import com.peter.emulator.lang.LanguageServer;
 import com.peter.emulator.lang.Namespace;
 import com.peter.emulator.lang.ProgramModule;
@@ -18,18 +23,32 @@ import com.peter.emulator.lang.ProgramModule;
 public class Main {
 
     public static final Path ROOT_PATH = Path.of("run");
+    private static ELLanguageServer lspServer;
 
     public static void main(String[] args) {
+        boolean isLsp = false;
+        for (int i = 0; i < args.length; i++) {
+            if(args[i].equals("-lsp"))
+                isLsp = true;
+        }
+        if (isLsp) {
+            lspServer = new ELLanguageServer();
+            Launcher<LanguageClient> launcher = LSPLauncher.createServerLauncher(lspServer, System.in, System.out);
+            lspServer.connect(launcher.getRemoteProxy());
+            launcher.startListening();
+            return;
+        }
+
         LanguageServer ls = new LanguageServer();
 
-        // ProgramModule kernal = ls.addModule("Kernal");
-        // kernal.addRefModule("SysD");
-        // kernal.addFiles(ROOT_PATH.resolve("lang/Kernal"));
+        ProgramModule kernal = ls.addModule("Kernal");
+        kernal.addRefModule("SysD");
+        kernal.addFiles(ROOT_PATH.resolve("lang/Kernal"));
 
-        // ProgramModule system = ls.addModule("System");
-        // system.addRefModule("SysD");
-        // system.addRefModule("Kernal");
-        // system.addFiles(ROOT_PATH.resolve("lang/System"));
+        ProgramModule system = ls.addModule("System");
+        system.addRefModule("SysD");
+        system.addRefModule("Kernal");
+        system.addFiles(ROOT_PATH.resolve("lang/System"));
         
         // ProgramModule testMod = ls.addModule("Test");
         // testMod.addRefModule("SysD");
@@ -53,9 +72,9 @@ public class Main {
         // System.out.println("System:");
         // for(Namespace ns : system.getNamespaces())
         //     System.out.println(ns.debugString());
-        System.out.println("TestD:");
-        for(Namespace ns : testD.getNamespaces())
-            System.out.println(ns.debugString());
+        // System.out.println("TestD:");
+        // for(Namespace ns : testD.getNamespaces())
+        //     System.out.println(ns.debugString());
 
         System.out.println("\nResolution:");
         for (ELAnalysisError err : ls.resolve()) {

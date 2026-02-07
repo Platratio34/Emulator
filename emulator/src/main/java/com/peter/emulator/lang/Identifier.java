@@ -32,7 +32,7 @@ public class Identifier {
         for(int i = 0; i < pList.size(); i++) {
             String s = pList.get(i);
             n += "." + s;
-            parts[i+1] = s;
+            parts[i] = s;
         }
         fullName = n;
     }
@@ -133,5 +133,13 @@ public class Identifier {
 
     public int numParts() {
         return parts.length;
+    }
+
+    public Identifier subId(int first, int last) {
+        ArrayList<String> strs = new ArrayList<>();
+        for (int i = first; i < last; i++) {
+            strs.add(parts[i]);
+        }
+        return new Identifier(strs);
     }
 }

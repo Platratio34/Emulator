@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import com.peter.emulator.MachineCode;
 import com.peter.emulator.lang.ELValue.ELStringValue;
 import com.peter.emulator.lang.*;
+import com.peter.emulator.lang.Token.BlockToken;
 import com.peter.emulator.lang.Token.IdentifierToken;
 import com.peter.emulator.lang.Token.NumberToken;
 import com.peter.emulator.lang.Token.OperatorToken;
@@ -60,6 +61,8 @@ public class ActionBlock extends Action {
                                 // set is the condition
                                 // also block
                                 ActionBlock innerBlock = new ActionBlock(scope.createChild(), null);
+                                if (!(tokens.get(wI) instanceof BlockToken))
+                                        throw ELAnalysisError.error("Expected block after if", tokens.get(wI).span());
                                 innerBlock.parse(tokens.get(wI).subTokens, errors);
                                 wI++;
                                 int index = subIndex++;
@@ -72,6 +75,8 @@ public class ActionBlock extends Action {
                                 if (elsePresent) {
                                     actions.add(new DirectAction("GOTO :if_end_%d", index));
                                     wI++;
+                                    if (!(tokens.get(wI) instanceof BlockToken))
+                                        throw ELAnalysisError.error("Expected block after else", tokens.get(wI).span());
                                     actions.add(new DirectAction(":if_false_%d", index));
                                     ActionBlock falseBlock = new ActionBlock(scope.createChild(), null);
                                     falseBlock.parse(tokens.get(wI).subTokens, errors);
@@ -116,7 +121,7 @@ public class ActionBlock extends Action {
                                     // System.out.println(strT.value);
                                 } else if(t instanceof IdentifierToken it2) {
                                     Identifier id2 = it2.asId();
-                                    ELVariable var = scope.getVar(id2);
+                                    ELVariable var = scope.getVarStack(id2).getLast();
                                     if(var == null)
                                         throw ELAnalysisError.error("Could not resolve variable "+id2.fullName, t.span());
                                     if(var.varType != ELVariable.Type.CONST || !var.type.equals(ELPrimitives.CHAR.pointerTo())) {
@@ -135,6 +140,24 @@ public class ActionBlock extends Action {
                             }
                             default -> {
                                 wI += 3;
+                                if (id.starts("SysD")) {
+                                    switch (id.parts[1]) {
+                                        case "memSet" -> {
+                                            ELAnalysisError.warning("SysD.memSet is not currently implemented",
+                                                    it.span());
+                                            continue;
+                                        }
+                                        case "memCopy" -> {
+                                            ELAnalysisError.warning("SysD.copy is not currently implemented",
+                                                    it.span());
+                                            continue;
+                                        }
+                                        case "halt" -> {
+                                            actions.add(new DirectAction("HALT"));
+                                            continue;
+                                        }
+                                    }
+                                }
                                 // function call; set is parameters
                                 ArrayList<ELType> types = new ArrayList<>();
                                 Location endOfParams = null;
@@ -145,7 +168,7 @@ public class ActionBlock extends Action {
                                         Identifier id2 = it2.asId();
                                         if (scope.loadVar(id2, 2, actions, true)) {
                                             actions.add(new DirectAction("STACK PUSH r2"));
-                                            types.add(scope.getVar(id2).type);
+                                            types.add(scope.getVarStack(id2).getFirst().type);
                                         } else if (it2.value.equals("SysD")) {
                                             int r = getSysDReg(id2);
                                             if (r == -1)
@@ -205,7 +228,9 @@ public class ActionBlock extends Action {
                         case "return" -> {
                             wI++;
                             tkn = tokens.get(wI);
-                            while(!(tkn instanceof OperatorToken ot && ot.type == OperatorToken.Type.SEMICOLON)) {
+                            while (!(tkn instanceof OperatorToken ot && ot.type == OperatorToken.Type.SEMICOLON)) {
+                                if (wI == tokens.size())
+                                    throw ELAnalysisError.error("Expected semicolon", tokens.get(wI-1).endLocation.span());
                                 tkn = tokens.get(wI++);
                             }
                             continue;
@@ -233,7 +258,30 @@ public class ActionBlock extends Action {
                                     wI++;
                                     actions.add(new StackAllocAction(-1));
                                 }
-                                case ASSIGN -> wI++;
+                                case ASSIGN -> {
+                                    wI++;
+                                    tkn = tokens.get(wI++);
+                                    if (tkn instanceof NumberToken nt) {
+                                        actions.add(new DirectAction("LOAD r1 %d", nt.numValue));
+                                        actions.add(new StackAllocAction(1));
+                                    } else if (tkn instanceof IdentifierToken it3) {
+                                        Identifier id3 = it3.asId();
+                                        if (id3.starts("SysD")) {
+                                            int r = getSysDReg(id3);
+                                            if(r == -1)
+                                                throw ELAnalysisError.error("Unknown SysD variable "+id3, it3.span());
+                                            actions.add(new StackAllocAction(r));
+                                        } else if (!scope.loadVar(id3, 1, actions, true)) {
+                                            actions.add(new StackAllocAction(1));
+                                        } else {
+                                            throw ELAnalysisError.error("Unable to resolve variable "+id3, it3.span());
+                                        }
+                                    }
+                                    tkn = tokens.get(wI++);
+                                    if (!(tkn instanceof OperatorToken ot2 && ot2.type == OperatorToken.Type.SEMICOLON)) {
+                                        throw ELAnalysisError.error("Expected `;` (found " + tkn + ")", tkn.span());
+                                    }
+                                }
                                 default -> throw ELAnalysisError.error("Expected `;` or `=` (found `" + ot.type + "`)", tkn.span());
                             }
                         } else {
@@ -381,6 +429,8 @@ public class ActionBlock extends Action {
         }
 
         String line = "";
+        if (last == -1)
+            last = 0;
         for (int i = last; i < tokens.size(); i++) {
             Token t2 = tokens.get(i);
             if (t2.wsBefore())

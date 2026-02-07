@@ -11,6 +11,8 @@
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
+
+        <lsp4j.version>0.24.0</lsp4j.version>
     </properties>
 
     <dependencies>
@@ -20,6 +22,40 @@
             <artifactId>json</artifactId>
             <version>20250517</version>
         </dependency>
+        <dependency>
+			<groupId>org.eclipse.lsp4j</groupId>
+			<artifactId>org.eclipse.lsp4j.jsonrpc</artifactId>
+			<version>${lsp4j.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.lsp4j</groupId>
+			<artifactId>org.eclipse.lsp4j.websocket.jakarta</artifactId>
+			<version>${lsp4j.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.lsp4j</groupId>
+			<artifactId>org.eclipse.lsp4j</artifactId>
+			<version>${lsp4j.version}</version>
+		</dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <configuration>
+                <archive>
+                <manifest>
+                    <mainClass>com.peter.Main</mainClass>
+                </manifest>
+                </archive>
+                <descriptorRefs>
+                <descriptorRef>jar-with-dependencies</descriptorRef>
+                </descriptorRefs>
+            </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
 
 </project>

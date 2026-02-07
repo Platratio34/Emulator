@@ -52,7 +52,7 @@ public class ActionScope {
     }
     
     public boolean hasVariable(Identifier id) {
-        if(stackVars.containsKey(id.fullName))
+        if(stackVars.containsKey(id.first()))
             return true;
         if(parent != null)
             return parent.hasVariable(id);
@@ -63,24 +63,52 @@ public class ActionScope {
         return new ActionScope(namespace, this, stackOff);
     }
 
-    public ELVariable getVar(Identifier id) {
-        if(!stackVars.containsKey(id.fullName)) {
-            if(parent != null)
-                return parent.getVar(id);
-            if(namespace != null)
-                return namespace.getVar(id);
+    public ArrayList<ELVariable> getVarStack(Identifier id) {
+        if (!stackVars.containsKey(id.first())) {
+            if (parent != null)
+                return parent.getVarStack(id);
+            if (namespace != null)
+                return namespace.getVarStack(id, new ArrayList<>());
             return null;
         }
-        return stackVars.get(id.fullName);
+        ArrayList<ELVariable> vars = new ArrayList<>();
+        ELVariable v = stackVars.get(id.first());
+        vars.add(v);
+        ELType t = v.type;
+        for (int i = 1; i < id.parts.length; i++) {
+            ELClass clazz = t.clazz;
+            if(clazz == null)
+                throw ELAnalysisError.fatal("Type was missing class " + t.typeString());
+            if(!clazz.memberVariables.containsKey(id.parts[i]))
+                throw ELAnalysisError.fatal("Class " + clazz.getQualifiedName() + " does not contain member variable "+id.parts[i]);
+            ELVariable v2 = clazz.memberVariables.get(id.parts[i]);
+            vars.add(v2);
+            t = v2.type;
+        }
+        return vars;
     }
 
     public boolean loadVar(Identifier id, int reg, ArrayList<Action> actions, boolean byValue) {
-        if(stackVars.containsKey(id.fullName)) {
-            int so = stackVars.get(id.fullName).offset;
+        if(stackVars.containsKey(id.first())) {
+            ELVariable v = stackVars.get(id.first());
+            int so = v.offset;
             actions.add(new DirectAction("COPY r15 %s", MachineCode.translateReg(reg)));
             if(so != 0)
                 actions.add(new DirectAction("INC %s %d", MachineCode.translateReg(reg), so));
             String regStr = MachineCode.translateReg(reg);
+            if (id.parts.length > 1) {
+                ELType t = v.type;
+                for (int i = 1; i < id.parts.length; i++) {
+                    ELClass clazz = t.clazz;
+                    if(clazz == null)
+                        throw ELAnalysisError.fatal("Type was missing class " + t.typeString());
+                    if(!clazz.memberVariables.containsKey(id.parts[i]))
+                        return false;
+                    ELVariable v2 = clazz.memberVariables.get(id.parts[i]);
+                    actions.add(new DirectAction("INC %s %d", regStr, v2.offset));
+                    t = v2.type;
+                }
+            }
             if(byValue)
                 actions.add(new DirectAction("LOAD MEM %s %s", regStr, regStr));
             return true;

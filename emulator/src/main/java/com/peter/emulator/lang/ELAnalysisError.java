@@ -1,5 +1,7 @@
 package com.peter.emulator.lang;
 
+import org.eclipse.lsp4j.DiagnosticSeverity;
+
 public class ELAnalysisError extends RuntimeException {
 
     public final Severity severity;
@@ -60,14 +62,17 @@ public class ELAnalysisError extends RuntimeException {
     }
 
     public static enum Severity {
-        INFO(3),
-        WARNING(2),
-        ERROR(1),
-        FATAL(0);
+        HINT(4, DiagnosticSeverity.Hint),
+        INFO(3, DiagnosticSeverity.Information),
+        WARNING(2, DiagnosticSeverity.Warning),
+        ERROR(1, DiagnosticSeverity.Error),
+        FATAL(0, DiagnosticSeverity.Error);
 
         public final int level;
-        private Severity(int lvl) {
+        public final DiagnosticSeverity severity;
+        private Severity(int lvl, DiagnosticSeverity severity) {
             level = lvl;
+            this.severity = severity;
         }
 
         public boolean atLeast(Severity other) {

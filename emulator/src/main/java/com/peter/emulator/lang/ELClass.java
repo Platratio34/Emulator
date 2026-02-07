@@ -380,4 +380,19 @@ public class ELClass extends Namespace {
     public boolean canStaticCast(ELType target) {
         return false;
     }
+
+    @Override
+    protected ELFunction getFunction(String name) {
+        if (memberFunctions.containsKey(name))
+            return memberFunctions.get(name);
+        return super.getFunction(name);
+    }
+    
+    @Override
+    protected ELFunction findFunction(String name, ArrayList<ELType> params) {
+        if (memberFunctions.containsKey(name)) {
+            return memberFunctions.get(name).getFunction(params);
+        }
+        return super.findFunction(name, params);
+    }
 }

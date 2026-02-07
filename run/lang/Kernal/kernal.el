@@ -30,10 +30,10 @@ namespace Kernal {
 
     @Entrypoint(raw = true)
     internal static void _main() {
-        SysD.copyToReg(REG_INTR_RSP, &Kernal::_interrupt);
-        peripheralCmd(0x0001, CONSOLE_SETUP_CMD.length, CONSOLE_SETUP_CMD);
+        // SysD.rIR = &Kernal::_interrupt;
+        peripheralCmd(0x0001, 3, CONSOLE_SETUP_CMD);
         SysD.memSet(CONSOLE_START, CONSOLE_PNTR);
-        Kernal.Memory._setup();
+        Memory._setup();
         System.console = new Console(0x0800, 0x0001, 0x0020);
     }
 
@@ -54,13 +54,14 @@ namespace Kernal {
         oldState.pgmPtr = *stack; stack--;
         oldState.memTablePtr = SysD.rMemTbl;
         uint32 code = SysD.rIC;
-        if(code & 0x8000_0000 == 0) { // system interrupt in the active process
+        if((code & 0x8000_0000) == 0) { // system interrupt in the active process
             SysD.rPM = false;
             System.onInterrupt(code);
         } else {
             if(code == 0x8000_0001) { // privileged mode failure
                 SysD.halt(); // this is a breaking instruct, we just don't know it
-            } else if(code & 0x0001_0000 != 0) { // peripheral interrupt
+            }
+            if((code & 0x0001_0000) != 0) { // peripheral interrupt
 
             }
         }
@@ -98,8 +99,9 @@ namespace Kernal {
         for(int i = 0; i < numDevices; i++) {
             uint32 addr = 0x8083 + ( i * 2 );
             uint32 deviceType = SysD.memGet(addr+1);
-            if(deviceType == type)
+            if(deviceType == type) {
                 return SysD.memGet(addr);
+            }
         }
         return 0;
     }

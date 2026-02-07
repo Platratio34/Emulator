@@ -40,7 +40,7 @@ public class ConditionalAction extends Action {
             case ANGLE_RIGHT -> actions.add(new DirectAction("SUB r1 r1 r2\nGOTO GT r1 %s", trueTarget));
             case NEQ -> actions.add(new DirectAction("SUB r1 r1 r2\nGOTO NEQ r1 %s", trueTarget));
 
-            default -> throw ELAnalysisError.error("Unknown conditional", ot.span());
+            default -> throw ELAnalysisError.error("Unknown conditional "+ot.type, ot.span());
         }
         actions.add(new DirectAction("GOTO %s", falseTarget));
     }

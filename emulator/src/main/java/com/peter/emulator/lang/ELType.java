@@ -190,6 +190,8 @@ public class ELType {
     }
 
     public boolean isVoid() {
+        if (baseClass == null)
+            return false;
         return baseClass.equals("void") && !pointer;
     }
 
@@ -322,7 +324,9 @@ public class ELType {
                         array();
                         type.location = token.startLocation;
                         type.endLocation = token.endLocation;
-                        if(!ot.subTokens.isEmpty()) {
+                        if (!ot.subTokens.isEmpty()) {
+                            if (!(ot.subTokens.get(0) instanceof NumberToken))
+                                throw ELAnalysisError.error("Expected number token, found "+ot.subTokens.get(0));
                             type.arraySize = ELValue.number(ELPrimitives.UINT32, (NumberToken)ot.subTokens.get(0)).value;
                         }
                         return true;
@@ -458,7 +462,7 @@ public class ELType {
             ELType t = this;
             ELType tt = target;
             while (t.subType != null) {
-                if (t.pointer != tt.pointer || t.array != tt.array) {
+                if ((t.pointer != tt.pointer || t.array != tt.array) && !(t.array && tt.pointer)) {
                     return false;
                 }
                 t = t.subType;

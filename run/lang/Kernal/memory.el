@@ -54,7 +54,7 @@ namespace Kernal.Memory {
         }
     }
 
-    internal uint32 getBlocks() {
+    internal static uint32 getBlocks() {
         uint32 pid = SysD.getPID();
         uint32 num = 0;
         for(uint32 i = 1; i < MMU_MAX_BLOCKS; i++) {
