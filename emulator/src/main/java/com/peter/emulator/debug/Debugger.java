@@ -84,7 +84,7 @@ public class Debugger {
             VariableSymbol vs = kernalSymbols.variables.get(name);
             if (vs.type.equals("char*")) {
                 String out = "\"";
-                for (int i = vs.start; i < vs.end; i++) {
+                for (int i = vs.start; i <= vs.end; i++) {
                     out += (char) cpu.readMem(i);
                 }
                 return out + "\"";
@@ -97,7 +97,7 @@ public class Debugger {
             VariableSymbol vs = symbols.variables.get(name);
             if (vs.type.equals("char*")) {
                 String out = "\"";
-                for (int i = vs.start; i < vs.end; i++) {
+                for (int i = vs.start; i <= vs.end; i++) {
                     out += (char) cpu.readMem(i);
                 }
                 return out + "\"";

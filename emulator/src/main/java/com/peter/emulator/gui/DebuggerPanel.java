@@ -19,7 +19,7 @@ public class DebuggerPanel extends JPanel {
     protected final HashMap<String, VarDisplay> varDisplays = new HashMap<>();
 
     public DebuggerPanel(CPU cpu) {
-        super(new GridLayout(1, 2));
+        super(new GridLayout(2, 1));
         this.cpu = cpu;
 
         this.funcLbl = new JLabel();

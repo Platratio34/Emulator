@@ -643,6 +643,7 @@ public class Assembler {
                             continue;
                         }
                         if (parts[1].equals("RET")) {
+                            System.out.println("ir");
                             data[addr++] = Entry.Interrupt(SYSCALL_INTERRUPT_RET, 0);
                         } else if (parts[1].startsWith("r")) {
                             data[addr++] = Entry.Interrupt(SYSCALL_INTERRUPT_RG, getReg(parts[1]));
@@ -687,6 +688,8 @@ public class Assembler {
             Entry entry = data[i];
             if (entry instanceof GotoEntry ge) {
                 if (!ge.target.isBlank()) {
+                    if(!labels.containsKey(ge.target))
+                        throw new RuntimeException("Invalid label "+ge.target);
                     int tW = labels.get(ge.target);
                     int off = tW - i - 1;
                     ge.setOffset(off);
@@ -757,11 +760,16 @@ public class Assembler {
             v = 0;
         } else if (defines.containsKey(val)) {
             v = defines.get(val);
-        } else if (val.startsWith("&") && defines.containsKey(val.substring(1))) {
+        } else if (val.startsWith("&")) {
             String n = val.substring(1);
-            v = symbols.variables.get(n).start;
-            if(v == -1)
-                throw new RuntimeException("Symbol had no start address");
+            if (defines.containsKey(n)) {
+                v = symbols.variables.get(n).start;
+                if (v == -1)
+                    throw new RuntimeException("Symbol had no start address");
+            } else if (labels.containsKey(n.substring(1))) {
+                n = n.substring(1);
+                v = labels.get(n);
+            }
         } else if (linker != null && linker.hasDefinition(val)) {
             v = linker.getDefinition(val);
         } else if (val.startsWith("0x")) {

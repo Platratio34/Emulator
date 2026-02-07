@@ -1,6 +1,7 @@
 package com.peter.emulator.lang;
 
 import com.peter.emulator.lang.actions.Action;
+import com.peter.emulator.lang.annotations.ELInterruptHandlerAnnotation;
 
 public class ELAssembler {
 
@@ -28,6 +29,8 @@ public class ELAssembler {
         }
         if(module.entrypoint == f)
             out +="\nHALT";
+        else if (f.hasAnnotation(ELInterruptHandlerAnnotation.class))
+            out += "\nINTERRUPT RET";
         else
             out += "\nGOTO POP";
         out += "\n#endfunction " + (f.ret == null ? "void" : f.ret.typeString());

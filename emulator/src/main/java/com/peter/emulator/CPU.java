@@ -102,7 +102,7 @@ public class CPU {
                     interrupt(0x8000_0001);
                     return;
                 }
-                interruptCode = val;
+                interruptRsp = val;
             }
 
             default -> {
@@ -137,14 +137,17 @@ public class CPU {
 
     public int instr;
     public int instrb;
+    public boolean inInterrupt = false;
     public void tick() {
         if (!running)
             return;
 
-        if (interruptCode != 0) {
+        if (interruptCode != 0 && !inInterrupt) {
+            inInterrupt = true;
+            System.err.println("Interrupt: "+interruptCode);
             stackPush(pgmPtr);
             stackPush(getReg(REG_PRIVILEGED_MODE));
-            for (int i = 0; i < 0x10; i++)
+            for (int i = 0; i <= 0xf; i++)
                 stackPush(registers[i]);
             privilegeMode = true;
             pgmPtr = interruptRsp;
@@ -435,6 +438,8 @@ public class CPU {
                                 registers[i] = stackPop();
                             setReg(REG_PRIVILEGED_MODE, stackPop());
                             pgmPtr = stackPop();
+                            inInterrupt = false;
+                            System.out.println("Interrupt ret to "+pgmPtr);
                             return;
                         }
                         interrupt(iOp == SYSCALL_INTERRUPT_VAL ? next : getReg(op & MASK_SYSCALL_RG));

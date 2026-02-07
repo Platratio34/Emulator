@@ -271,27 +271,13 @@ public class ELFunction {
         }
 
         if (body != null) {
-            ELInterruptHandlerAnnotation irh = null;
-            if (hasAnnotation(ELInterruptHandlerAnnotation.class)) {
-                irh = getAnnotation(ELInterruptHandlerAnnotation.class);
-            }
-            ActionBlock bodyBlock = new ActionBlock(new ActionScope(namespace, null, 0), true);
+            ActionBlock bodyBlock = new ActionBlock(new ActionScope(namespace, null, 0), this);
             int l = paramOrder.size();
-            for(int i = 0 ; i < l; i++) {
-                bodyBlock.scope.addParam(paramOrder.get(i), params.get(paramOrder.get(i)), -(l-i), errors);
+            for (int i = 0; i < l; i++) {
+                bodyBlock.scope.addParam(paramOrder.get(i), params.get(paramOrder.get(i)), -(l - i), errors);
             }
             bodyBlock.parse(body, errors);
-            if (irh != null && irh.raw) {
-                actions.add(new DirectAction("STACK PUSH rPM"));
-                for (int i = 0; i < 0x10; i++)
-                    actions.add(new DirectAction("STACK PUSH %s", MachineCode.translateReg(i)));
-            }
             actions.add(bodyBlock);
-            if (irh != null && irh.raw) {
-                for (int i = 0xf; i >= 0x0; i--)
-                    actions.add(new DirectAction("STACK POP %s", MachineCode.translateReg(i)));
-                actions.add(new DirectAction("STACK POP rPM"));
-            }
         }
     }
 

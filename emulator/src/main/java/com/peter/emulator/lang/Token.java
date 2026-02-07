@@ -309,6 +309,7 @@ public abstract class Token {
         public String value;
         public boolean hex;
         public boolean bin;
+        public int numValue = 0;
 
         public NumberToken(char c, Location location) {
             super(location);
@@ -346,6 +347,7 @@ public abstract class Token {
             }
             value += c;
             endLocation = location;
+            numValue = Integer.parseInt(value, bin ? 2 : (hex ? 16 : 10));
             return true;
         }
         @Override

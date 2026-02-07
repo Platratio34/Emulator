@@ -87,7 +87,7 @@ public class MachineCode {
     public static final int SYSCALL_RETURN = 0x0001_0000;
     public static final int SYSCALL_GOTO = 0x0002_0000;
     public static final int SYSCALL_INTERRUPT = 0x0003_0000;
-    public static final int MASK_SYSCALL_INTERRUPT_OP = 0x0000_00ff;
+    public static final int MASK_SYSCALL_INTERRUPT_OP = 0x0000_ff00;
     public static final int SYSCALL_INTERRUPT_RG = 0x0000_0000;
     public static final int SYSCALL_INTERRUPT_VAL = 0x0000_0100;
     public static final int SYSCALL_INTERRUPT_RET = 0x0000_ff00;

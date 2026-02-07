@@ -16,19 +16,19 @@ public class ActionBlock extends Action {
 
     public final ArrayList<Action> actions = new ArrayList<>();
     public final ActionScope scope;
-    public final boolean isFunction;
+    public final ELFunction func;
 
     private static int subIndex = 0;
 
-    public ActionBlock(ActionScope scope, boolean isFunciton) {
+    public ActionBlock(ActionScope scope, ELFunction func) {
         this.scope = scope;
-        this.isFunction = isFunciton;
+        this.func = func;
     }
 
     public void parse(ArrayList<Token> tokens, ErrorSet errors) {
         int wI = 0;
         int l = 0;
-        if(isFunction) {
+        if(func != null) {
             actions.add(new DirectAction("STACK PUSH r15"));
             actions.add(new DirectAction("COPY rStack r15"));
         }
@@ -59,15 +59,34 @@ public class ActionBlock extends Action {
                                 wI += 2;
                                 // set is the condition
                                 // also block
-                                ActionBlock innerBlock = new ActionBlock(scope.createChild(), false);
+                                ActionBlock innerBlock = new ActionBlock(scope.createChild(), null);
                                 innerBlock.parse(tokens.get(wI).subTokens, errors);
+                                wI++;
+                                int index = subIndex++;
+                                boolean elsePresent = wI < tokens.size() && tokens.get(wI) instanceof IdentifierToken it3
+                                        && it3.value.equals("else");
+                                actions.add(new ConditionalAction(scope, ":if_true_" + index, elsePresent ? (":if_false_" + index) : (":if_end_" + index),
+                                        st.subTokens));
+                                actions.add(new DirectAction(":if_true_%d", index));
+                                actions.add(innerBlock);
+                                if (elsePresent) {
+                                    actions.add(new DirectAction("GOTO :if_end_%d", index));
+                                    wI++;
+                                    actions.add(new DirectAction(":if_false_%d", index));
+                                    ActionBlock falseBlock = new ActionBlock(scope.createChild(), null);
+                                    falseBlock.parse(tokens.get(wI).subTokens, errors);
+                                    actions.add(falseBlock);
+                                    wI++;
+                                }
+                                
+                                actions.add(new DirectAction(":if_end_%d",index));
                                 continue;
                             }
                             case "for" -> {
                                 wI += 2;
                                 // set is (initilizer; condition; incrementer)
                                 // also block
-                                ActionBlock innerBlock = new ActionBlock(scope.createChild(), false);
+                                ActionBlock innerBlock = new ActionBlock(scope.createChild(), null);
                                 innerBlock.parse(tokens.get(wI).subTokens, errors);
                                 continue;
                             }
@@ -75,7 +94,7 @@ public class ActionBlock extends Action {
                                 wI += 2;
                                 //set is condition
                                 // also block
-                                ActionBlock innerBlock = new ActionBlock(scope.createChild(), false);
+                                ActionBlock innerBlock = new ActionBlock(scope.createChild(), null);
                                 innerBlock.parse(tokens.get(wI).subTokens, errors);
                                 int index = subIndex++;
                                 actions.add(new DirectAction(":while_condition_%d",index));
@@ -105,8 +124,13 @@ public class ActionBlock extends Action {
                                     }
                                     actions.add(new DirectAction(((ELStringValue)var.startingValue).value));
                                 } else {
-                                    throw ELAnalysisError.error("asm function may only take string literal or const", t.span());
+                                    throw ELAnalysisError.error("asm function may only take string literal or const",
+                                            t.span());
                                 }
+                                if (!(tokens.get(wI - 1) instanceof OperatorToken ot
+                                        && ot.type == OperatorToken.Type.SEMICOLON))
+                                    throw ELAnalysisError.error("Missing semicolon",
+                                            tokens.get(wI - 2).endLocation.span());
                                 continue;
                             }
                             default -> {
@@ -129,6 +153,9 @@ public class ActionBlock extends Action {
                                             actions.add(new DirectAction("STACK PUSH %s", MachineCode.translateReg(r)));
                                             types.add(ELPrimitives.UINT32);
                                         }
+                                    } else if (t2 instanceof NumberToken nt2) {
+                                        actions.add(new DirectAction("LOAD r2 %d\nSTACK PUSH r2", nt2.numValue));
+                                        types.add(ELPrimitives.UINT32);
                                     }
                                 }
                                 ELFunction f = scope.namespace.findFunction(id, types);
@@ -363,7 +390,7 @@ public class ActionBlock extends Action {
         actions.add(new DirectAction("// " + line + "\n"));
         if(scope.getStackOffDif() > 0)
             actions.add(scope.getStackResetAction());
-        if(isFunction)
+        if(func != null)
             actions.add(new DirectAction("STACK POP r15"));
     }
 

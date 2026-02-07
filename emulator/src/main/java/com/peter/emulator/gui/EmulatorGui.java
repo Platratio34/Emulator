@@ -19,6 +19,9 @@ public class EmulatorGui {
     protected JButton resumeBtn;
     protected JButton tickBtn;
 
+    protected JButton interruptButton;
+    protected JTextArea interruptCode;
+
     public EmulatorGui(Emulator emulator) {
         SwingUtilities.invokeLater(() -> {
             frame = new JFrame("Emulator");
@@ -31,7 +34,7 @@ public class EmulatorGui {
             frame.getContentPane().add(panel, BorderLayout.CENTER);
 
             buttonGrid = new JPanel();
-            buttonGrid.setLayout(new GridLayout(2,2));
+            buttonGrid.setLayout(new GridLayout(3,2));
             frame.getContentPane().add(buttonGrid, BorderLayout.CENTER);
             
             pauseBtn = new JButton("Pause");
@@ -51,6 +54,23 @@ public class EmulatorGui {
                 emulator.stopWaiting();
             });
             buttonGrid.add(tickBtn);
+
+            buttonGrid.add(new JLabel());
+            interruptButton = new JButton("Interrupt");
+            interruptButton.addActionListener((event) -> {
+                int c;
+                String cStr = interruptCode.getText();
+                if(cStr.startsWith("0x"))
+                    c = Integer.parseInt(cStr.substring(2), 16);
+                else if(cStr.startsWith("0b"))
+                    c = Integer.parseInt(cStr.substring(2), 2);
+                else
+                    c = Integer.parseInt(cStr);
+                emulator.cores[0].interrupt(c);
+            });
+            buttonGrid.add(interruptButton);
+            interruptCode = new JTextArea("0xff");
+            buttonGrid.add(interruptCode);
 
             cpuPanel = new CPUPanel(emulator.cores[0], "cpu0");
             frame.getContentPane().add(cpuPanel, BorderLayout.WEST);

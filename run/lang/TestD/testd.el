@@ -7,6 +7,7 @@ namespace TestD {
 
     @Entrypoint
     public static void main() {
+        asm("LOAD rIR &:TestD.onInterrupt");
         uint32 b;
         uint32 a;
         a = SysD.rPgm;
@@ -19,7 +20,7 @@ namespace TestD {
         funcb(c);
         asm("LOAD r1 64\nLOAD r2 &TestD.v\nSTORE r1 r2");
         asm(str);
-        wait(c);
+        wait(1000);
         // funcC();
     }
 
@@ -31,11 +32,15 @@ namespace TestD {
         v += a;
     }
 
-    /*@InterruptHandler(raw)
+    @InterruptHandler(raw)
     internal static void onInterrupt() {
-        char c;
-        asm("HALT");
-    }*/
+        uint32 code;
+        code = SysD.rIC;
+        asm("LOAD rIC 0");
+        if(code == 0xff) {
+            asm("HALT");
+        }
+    }
 
     public static void wait(uint32 time) {
         while(time > 0) {

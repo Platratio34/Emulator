@@ -11,6 +11,7 @@ public class Emulator {
 
     public final RAM ram = new RAM();
     public final MMU mmu = new MMU();
+    public float tickSpeed = 60;
 
     public final CPU[] cores = new CPU[] {
         new CPU(ram, mmu)
@@ -55,6 +56,11 @@ public class Emulator {
                             Thread.sleep(100);
                         } catch (InterruptedException e) {
                         }
+                    }
+                } else if(tickSpeed > 0) {
+                    try {
+                        Thread.sleep((long)((1/tickSpeed)*1000));
+                    } catch (InterruptedException e) {
                     }
                 }
                 if(!running)
