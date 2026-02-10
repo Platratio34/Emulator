@@ -1,7 +1,11 @@
 package com.peter.emulator.lang;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.NoSuchElementException;
+
+import org.json.JSONException;
 
 import com.peter.emulator.lang.base.SysD;
 
@@ -17,6 +21,12 @@ public class LanguageServer {
     public ProgramModule addModule(String name) {
         ProgramModule module = new ProgramModule(name, this);
         modules.put(name, module);
+        return module;
+    }
+
+    public ProgramModule addModule(File root) throws JSONException, IOException {
+        ProgramModule module = new ProgramModule(root, this);
+        modules.put(module.name, module);
         return module;
     }
 

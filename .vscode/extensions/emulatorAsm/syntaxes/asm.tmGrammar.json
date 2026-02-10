@@ -246,6 +246,22 @@
             }
         },
         {
+            "match": "^(INTERRUPT)(?:\\s+(RET)|\\s+(\\S+))?",
+            "captures": {
+                "1": {
+                    "name": "keyword.control.instruction"
+                },
+                "2": {
+                    "name": "keyword.control.instruction"
+                },
+                "3": {
+                    "patterns": [
+                        { "include": "#value.constant" }
+                    ]
+                }
+            }
+        },
+        {
             "name": "comment.line",
             "match": "(//.*)"
         },

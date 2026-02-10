@@ -591,9 +591,11 @@ const asmLines = {
         name: "Increment", desc: "Increment a register. Equivalent to `r[rg] = r[rg] + [value ?? 1]`", usage: "`INC [rg] ([value])`"
     },
     "STACK": {
-        name: "Stack", desc: "Stack operation", usage: "`STACK <PUSH|POP> [rg]`", sub: {
+        name: "Stack", desc: "Stack operation", usage: "`STACK <PUSH|POP> [rg] | STACK <INC|DEC> ([amount])`", sub: {
             "PUSH": { name: "Stack Push", desc: "Push the value of a register to the stack", usage: "`STACK PUSH [rg]`" },
-            "POP": { name: "Stack Pop", desc: "Pop a value from the stack into a register", usage: "`STACK POP [rg]`" }
+            "POP": { name: "Stack Pop", desc: "Pop a value from the stack into a register", usage: "`STACK POP [rg]`" },
+            "INC": { name: "Stack Increment", desc: "Increment the stack pointer", usage: "`STACK INC ([amount])`" },
+            "DEC": { name: "Stack Decrement", desc: "Decrement the stack pointer", usage: "`STACK DEC ([amount])`" }
         }
     },
     "SYSCALL": {
@@ -601,6 +603,11 @@ const asmLines = {
     },
     "SYSRETURN": {
         name: "System Call Return", desc: "Return from a system call. **Privileged**", usage: "`SYSRETURN`"
+    },
+    "INTERRUPT": {
+        name: "Interrupt", desc: "Trigger an interrupt", usage: "`INTERRUPT <RET|[code]>`", sub: {
+            "RET": { name: "Interrupt return", desc: "Return from an interrupt, resetting registers", usage: "INTERRUPT RET" }
+        }
     },
     "GOTO": {
         name: "Goto", desc: "Unconditional goto", usage: "`GOTO (<PUSH|POP>) (<EQ|LEQ|GT|NEQ> [rg]) <[:label]|[ra]>`", sub: {

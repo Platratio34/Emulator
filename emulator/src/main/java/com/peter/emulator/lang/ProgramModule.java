@@ -9,8 +9,13 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Optional;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class ProgramModule {
 
+    protected final File root;
     protected ArrayList<Path> files = new ArrayList<>();
     protected ArrayList<String> refModules = new ArrayList<>();
 
@@ -23,6 +28,23 @@ public class ProgramModule {
     public ProgramModule(String name, LanguageServer languageServer) {
         this.name = name;
         this.languageServer = languageServer;
+        root = null;
+    }
+
+    public ProgramModule(File root, LanguageServer languageServer) throws JSONException, IOException {
+        this.languageServer = languageServer;
+        this.root = root;
+        JSONObject json;
+        json = new JSONObject(Files.readString(root.toPath().resolve("module-info.json")));
+        if(!json.has("name"))
+            throw new IOException("Illegal module info file");
+        name = json.getString("name");
+        if (json.has("ref")) {
+            JSONArray jsonRef = json.getJSONArray("ref");
+            for (int i = 0; i < jsonRef.length(); i++) {
+                addRefModule(jsonRef.getString(i));
+            }
+        }
     }
 
     public void addFile(Path f) {
@@ -72,7 +94,45 @@ public class ProgramModule {
         }
     }
 
+    protected void parse(ErrorSet errors, File dir) {
+        for (File f : root.listFiles()) {
+            if (f.isFile() && f.getName().endsWith(".el")) {
+                try {
+                    Path path = f.toPath();
+                    String str = Files.readString(path);
+                    Tokenizer tk = new Tokenizer(str, new Location(path.toString(), 1, 1), false);
+                    try {
+                        Optional<String> err = tk.tokenize();
+                        if (err.isPresent()) {
+                            errors.error("Tokenizer error: "+err.get());
+                            return;
+                        }
+                        Parser parser = new Parser(this);
+                        parser.parse(tk.tokens, errors);
+                        for (Namespace ns : parser.namespaces) {
+                            addNamespace(ns);
+                        }
+                    } catch (ELCompileException e) {
+                        errors.error("Exception: "+e.getMessage());
+                    }
+                } catch (IOException e) {
+                    errors.error("IO Exception: "+e);
+                    return ;
+                }
+            } else if (f.isDirectory()) {
+                parse(errors, f);
+            }
+        }
+    }
+
     public void parse(ErrorSet errors) {
+        if (root != null) {
+            if (!root.isDirectory()) {
+                throw new RuntimeException("Path " + root.getAbsolutePath() + " does not exist");
+            }
+            parse(errors, root);
+            return;
+        }
         for (Path path : files) {
             try {
                 String str = Files.readString(path);

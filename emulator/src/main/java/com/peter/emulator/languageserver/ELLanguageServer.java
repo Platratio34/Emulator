@@ -2,9 +2,7 @@ package com.peter.emulator.languageserver;
 
 import java.util.concurrent.CompletableFuture;
 
-import org.eclipse.lsp4j.CompletionOptions;
 import org.eclipse.lsp4j.DiagnosticRegistrationOptions;
-import org.eclipse.lsp4j.DocumentSymbolOptions;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.InitializedParams;
@@ -19,12 +17,16 @@ import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
 
+import com.peter.emulator.lang.ErrorSet;
+
 public class ELLanguageServer extends LSPServer implements LanguageServer, LanguageClientAware {
 
     public static final String LANGUAGE_ID = "emulatorlang";
 
     protected LanguageClient client;
     private ELTextDocumentService textDocumentService;
+    private ELWorkspaceService workspaceService;
+    protected ErrorSet errors = null;
 
     @Override
     public void connect(LanguageClient client) {
@@ -40,6 +42,7 @@ public class ELLanguageServer extends LSPServer implements LanguageServer, Langu
 
     @Override
     public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
+        client.logMessage(new MessageParams(MessageType.Info, "Emulator lang initializing ..."));
         Integer processId = params.getProcessId();
         if (processId != null) {
             setParentProcessId(processId);
@@ -70,12 +73,13 @@ public class ELLanguageServer extends LSPServer implements LanguageServer, Langu
         capabilities.setDefinitionProvider(false);
         capabilities.setCodeActionProvider(false);
         capabilities.setFoldingRangeProvider(false);
-        capabilities.setDiagnosticProvider(new DiagnosticRegistrationOptions(false, false));
+        capabilities.setDiagnosticProvider(new DiagnosticRegistrationOptions(true, false));
         return capabilities;
     }
 
     @Override
     public CompletableFuture<Object> shutdown() {
+        logMessage(MessageType.Info, "Emulator lang shutting down ...");
         shutdownServer();
         return CompletableFuture.completedFuture(new Object());
     }
@@ -89,7 +93,9 @@ public class ELLanguageServer extends LSPServer implements LanguageServer, Langu
 
     @Override
     public WorkspaceService getWorkspaceService() {
-        return null;
+        if (workspaceService == null)
+            workspaceService = new ELWorkspaceService(this);
+        return workspaceService;
     }
 
     @Override
@@ -99,5 +105,32 @@ public class ELLanguageServer extends LSPServer implements LanguageServer, Langu
     
     public void sendShowMessageNotification(final MessageType type, final String msg) {
         client.showMessage(new MessageParams(type, msg));
+    }
+
+    public void logMessage(final MessageType type, final String msg) {
+        client.logMessage(new MessageParams(type, msg));
+    }
+
+    public boolean debugEnabled = true;
+
+    public void logDebug(final String msg) {
+        if (!debugEnabled)
+            return;
+        client.logMessage(new MessageParams(MessageType.Info, msg));
+    }
+
+    public void logInfo(final String msg) {
+        client.logMessage(new MessageParams(MessageType.Info, msg));
+    }
+
+    public void logWarn(final String msg) {
+        client.logMessage(new MessageParams(MessageType.Warning, msg));
+    }
+    public void logError(final String msg) {
+        client.logMessage(new MessageParams(MessageType.Error, msg));
+    }
+
+    public void triggerDiagnostics() {
+        workspaceService.triggerRecompile();
     }
 }

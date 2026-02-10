@@ -25,7 +25,7 @@ function activate(context) {
         documentSelector: [{ scheme: 'file', language: 'emulatorasm' }],
         synchronize: {
             // Notify the server about file changes to '.clientrc files contained in the workspace
-            fileEvents: vscode_1.workspace.createFileSystemWatcher('**/.clientrc')
+            fileEvents: vscode_1.workspace.createFileSystemWatcher('**/*.asm')
         }
     };
     // Create the language client and start the client.
@@ -43,7 +43,7 @@ function activate(context) {
         documentSelector: [{ scheme: 'file', language: 'emulatorlang' }],
         synchronize: {
             // Notify the server about file changes to '.clientrc files contained in the workspace
-            fileEvents: vscode_1.workspace.createFileSystemWatcher('**/.clientrc')
+            fileEvents: vscode_1.workspace.createFileSystemWatcher('**/*.el'),
         }
     };
     elClient = new node_1.LanguageClient('emulator-el-client', 'EmulatorLang Language Client', elServerOptions, elClientOptions);

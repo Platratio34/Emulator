@@ -26,6 +26,7 @@ public class ELFunction {
     public final FunctionType type;
     public final boolean constexpr;
     public Location bodyLocation;
+    public Location bodyEndLocation;
 
     public HashMap<String, ELType> params = new HashMap<>();
     public ArrayList<String> paramOrder = new ArrayList<>();
@@ -252,6 +253,7 @@ public class ELFunction {
 
     public void ingestBody(BlockToken block) {
         bodyLocation = block.startLocation;
+        bodyEndLocation = block.endLocation;
         body = block.subTokens;
     }
 
@@ -264,7 +266,7 @@ public class ELFunction {
         if (body == null && !(extern || abstractFunction)) {
             errors.error("Non-abstract or external functions must have a body", startLocation.span());
         } else if (body != null && (extern || abstractFunction)) {
-            errors.error((extern ? "External" : "Abstract") + " functions must have a body", bodyLocation.span());
+            errors.error((extern ? "External" : "Abstract") + " functions must not have a body", bodySpan());
         }
         for (ELFunction overload : overloads) {
             overload.analyze(errors, module);
@@ -304,5 +306,11 @@ public class ELFunction {
 
     public Span span() {
         return startLocation.span(bodyLocation);
+    }
+
+    public Span bodySpan() {
+        if (bodyLocation == null)
+            return startLocation.span();
+        return bodyLocation.span(bodyEndLocation);
     }
 }
