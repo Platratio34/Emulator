@@ -13,8 +13,6 @@ public class Namespace {
     public HashMap<String, ELFunction> staticFunctions = new HashMap<>();
     public HashMap<String, Namespace> namespaces = new HashMap<>();
 
-    protected HashMap<String, String> imports = new HashMap<>();
-
     public Namespace(String name) {
         cName = name;
         namespace = null;
@@ -162,15 +160,6 @@ public class Namespace {
         }
         return out + prefix + "}";
     }
-
-    public void addImport(String importNS, String alias) {
-        imports.put(alias, importNS);
-    }
-
-    public void addImports(HashMap<String, String> importNSs) {
-        for(Entry<String, String> entry : importNSs.entrySet())
-            imports.put(entry.getKey(), entry.getValue());
-    }
     
     public String getQualifiedName() {
         String name = cName;
@@ -192,7 +181,6 @@ public class Namespace {
         for (Entry<String, Namespace> entry : ns.namespaces.entrySet()) {
             addNamespace(entry.getValue());
         }
-        addImports(ns.imports);
     }
 
     public boolean isParentNSOf(Namespace ns) {
@@ -207,41 +195,21 @@ public class Namespace {
         return false;
     }
     
-    public void resolve(ErrorSet errors, ProgramModule module) {
-        for (String ns : imports.values()) {
-            if(module.getNamespaceIncluded(ns) == null) {
-                String[] p = ns.split("\\.");
-                String found = null;
-                for(int i = p.length-2; i >= 0; i--) {
-                    String n = p[0];
-                    for(int j = 1; j <= i; j++) {
-                        n += "."+p[j];
-                    }
-                    if(module.getNamespaceIncluded(n) != null) {
-                        found = n;
-                        break;
-                    }
-                }
-                if(found != null)
-                    errors.warning(String.format("Could not find imported namespace %s (but did find parent %s)", ns, found));
-                else
-                    errors.warning(String.format("Could not find imported namespace %s", ns));
-            }
-        }
+    public void resolve(ErrorSet errors) {
         for (Namespace namespace : namespaces.values()) {
-            namespace.resolve(errors, module);
+            namespace.resolve(errors);
         }
     }
 
-    public void analyze(ErrorSet errors, ProgramModule module) {
+    public void analyze(ErrorSet errors) {
         for (ELFunction func : staticFunctions.values()) {
-            func.analyze(errors, module);
+            func.analyze(errors);
         }
         for (ELVariable var : staticVariables.values()) {
-            var.analyze(errors, this, module);
+            var.analyze(errors, this);
         }
         for (Namespace namespace : namespaces.values()) {
-            namespace.analyze(errors, module);
+            namespace.analyze(errors);
         }
         errors.info("Analyzed namespace "+getQualifiedName());
     }
@@ -281,11 +249,11 @@ public class Namespace {
         return false;
     }
 
-    public ELClass getType(ELType base, Namespace srcNs, ProgramModule module) {
-        return getType(base, 0, srcNs, module);
+    public ELClass getType(ELType base, Namespace srcNs, ProgramUnit unit) {
+        return getType(base, 0, srcNs, unit);
     }
 
-    public ELClass getType(ELType base, int lvl, Namespace srcNs, ProgramModule module) {
+    public ELClass getType(ELType base, int lvl, Namespace srcNs, ProgramUnit unit) {
         // System.out.println("- Looking for type "+base.typeString() + " (in NS "+cName+")");
         String n = base.baseClass.last();
         boolean f = base.baseClass.numParts() == lvl+1;
@@ -305,7 +273,7 @@ public class Namespace {
             Namespace ns = namespaces.get(n);
             if (!f) {
                 // System.out.println("- - checking sub ns");
-                return ns.getType(base, lvl + 1, srcNs, module);
+                return ns.getType(base, lvl + 1, srcNs, unit);
             }
             if (ns instanceof ELClass clazz) {
                 return clazz;
@@ -316,14 +284,14 @@ public class Namespace {
             // System.out.println("- - Did find in current");
         }
         if (namespace != null) {
-            Namespace ns = namespace.getType(base, srcNs, module);
+            Namespace ns = namespace.getType(base, srcNs, unit);
             if(ns != null && ns instanceof ELClass clazz)
                 return clazz;
         }
         if (isParentNSOf(srcNs)) {
             // System.out.println("- - was parent, checking imports");
-            if (imports.containsKey(n)) {
-                Namespace ns = module.getNamespaceIncluded(imports.get(n));
+            if (unit.hasInclude(n)) {
+                Namespace ns = unit.getNamespaceIncluded(unit.getInclude(n));
                 if (ns == null) {
                     // System.out.println("- - - Could not find imported NS: "+imports.get(n));
                     return null;
@@ -331,7 +299,7 @@ public class Namespace {
                 // System.out.println("- - - Checking imported NS: "+ns.getQualifiedName());
                 if (!f) {
                     // System.out.println("- - checking sub ns");
-                    return ns.getType(base, lvl + 1, srcNs, module);
+                    return ns.getType(base, lvl + 1, srcNs, unit);
                 }
                 if (ns instanceof ELClass clazz) {
                     return clazz;

@@ -251,7 +251,7 @@ public class ActionBlock extends Action {
                             throw ELAnalysisError.error("Expected variable name identifier (found " + tkn.debugString() + ")", tkn.span());
                         }
                         tkn = tokens.get(wI);
-                        scope.addStackVar(name, type, errors).analyze(errors, scope.namespace, null);
+                        scope.addStackVar(name, type, errors).analyze(errors, scope.namespace);
                         if (tkn instanceof OperatorToken ot) {
                             switch (ot.type) {
                                 case SEMICOLON -> {

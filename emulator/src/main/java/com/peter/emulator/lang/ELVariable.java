@@ -17,19 +17,21 @@ public class ELVariable {
     public final boolean finalVal;
     public final Location startLocation;
     public final Namespace namespace;
+    public final ProgramUnit unit;
 
     public ArrayList<Token> valueTokens = null;
     public ELValue startingValue = null;
     public Location valueLocation = null;
     public ArrayList<ELAnnotation> annotations = null;
 
-    public ELVariable(ELProtectionLevel protection, Type varType, ELType type, String name, boolean finalVal, Namespace namespace, Location location) {
+    public ELVariable(ELProtectionLevel protection, Type varType, ELType type, String name, boolean finalVal, Namespace namespace, ProgramUnit unit, Location location) {
         this.type = type;
         this.protection = protection;
         this.varType = varType;
         this.name = name;
         this.finalVal = finalVal;
         this.namespace = namespace;
+        this.unit = unit;
         this.startLocation = location;
     }
 
@@ -98,8 +100,8 @@ public class ELVariable {
         return true;
     }
 
-    public void analyze(ErrorSet errors, Namespace namespace, ProgramModule module) {
-        type.analyze(errors, namespace, module);
+    public void analyze(ErrorSet errors, Namespace namespace) {
+        type.analyze(errors, namespace, unit);
     }
 
     public int getAddress() {

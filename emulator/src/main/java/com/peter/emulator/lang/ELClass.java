@@ -13,6 +13,8 @@ import com.peter.emulator.lang.base.ELPrimitives;
 
 public class ELClass extends Namespace {
 
+    public final ProgramUnit unit;
+
     public ELClass parent = ELPrimitives.OBJECT_CLASS;
     public ELType parentType = ELPrimitives.OBJECT;
 
@@ -32,13 +34,11 @@ public class ELClass extends Namespace {
 
     public boolean abstractClass = false;
 
-    public ELClass(String name) {
-        super(name);
+    public ELClass(String name, Namespace namespace, ProgramUnit unit) {
+        super(name, namespace);
+        this.unit = unit;
     }
 
-    public ELClass(String name, Namespace namespace) {
-        super(name, namespace);
-    }
     public void addMember(ELVariable var) {
         if (memberVariables.containsKey(var.name) || staticVariables.containsKey(var.name) || staticFunctions.containsKey(var.name) || memberFunctions.containsKey(var.name))
             throw new ELCompileException("Duplicate member name: `"+var.name+"` in class "+cName);
@@ -286,7 +286,7 @@ public class ELClass extends Namespace {
     }
 
     @Override
-    public ELClass getType(ELType base, Namespace srcNs, ProgramModule module) {
+    public ELClass getType(ELType base, Namespace srcNs, ProgramUnit unit) {
         if (srcNs == this) {
 
             String n = base.qualifiedBaseClass();
@@ -294,16 +294,16 @@ public class ELClass extends Namespace {
                 ELType t = generics.get(n);
                 if (t == null)
                     return ELPrimitives.OBJECT_CLASS;
-                return getType(t.base(), 0, this, module);
+                return getType(t.base(), 0, this, unit);
             }
         }
-        return super.getType(base, srcNs, module);
+        return super.getType(base, srcNs, unit);
     }
 
     @Override
-    public void analyze(ErrorSet errors, ProgramModule module) {
+    public void analyze(ErrorSet errors) {
         for (ELFunction func : memberFunctions.values()) {
-            func.analyze(errors, module);
+            func.analyze(errors);
             if(func.abstractFunction && !abstractClass)
                 errors.error("Abstract functions must exist within an abstract class",
                         func.startLocation.span());
@@ -333,16 +333,16 @@ public class ELClass extends Namespace {
             }
         }
         for (ELVariable var : memberVariables.values()) {
-            var.analyze(errors, this, module);
+            var.analyze(errors, this);
         }
-        super.analyze(errors, module);
+        super.analyze(errors);
     }
     
     @Override
-    public void resolve(ErrorSet errors, ProgramModule module) {
+    public void resolve(ErrorSet errors) {
         if (parent == null) {
             ELType base = parentType.base();
-            parent = getType(base, this, module);
+            parent = getType(base, this, unit);
             if (parent == null) {
                 errors.error(String.format("Could not resolve parent class %s for %s", base.typeString(), getQualifiedName()), parentType.span());
                 parent = ELPrimitives.OBJECT_CLASS;
@@ -351,7 +351,7 @@ public class ELClass extends Namespace {
         } else {
             // errors.info("Parent class for " + getQualifiedName() +" was "+parent.getQualifiedName()));
         }
-        super.resolve(errors, module);
+        super.resolve(errors);
     }
 
     @Override

@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
-import com.peter.emulator.MachineCode;
 import com.peter.emulator.lang.Token.BlockToken;
 import com.peter.emulator.lang.Token.IdentifierToken;
 import com.peter.emulator.lang.Token.OperatorToken;
@@ -12,9 +11,7 @@ import com.peter.emulator.lang.Token.SetToken;
 import com.peter.emulator.lang.actions.Action;
 import com.peter.emulator.lang.actions.ActionBlock;
 import com.peter.emulator.lang.actions.ActionScope;
-import com.peter.emulator.lang.actions.DirectAction;
 import com.peter.emulator.lang.annotations.ELAnnotation;
-import com.peter.emulator.lang.annotations.ELInterruptHandlerAnnotation;
 
 public class ELFunction {
 
@@ -27,6 +24,7 @@ public class ELFunction {
     public final boolean constexpr;
     public Location bodyLocation;
     public Location bodyEndLocation;
+    public final ProgramUnit unit;
 
     public HashMap<String, ELType> params = new HashMap<>();
     public ArrayList<String> paramOrder = new ArrayList<>();
@@ -39,7 +37,7 @@ public class ELFunction {
     public ArrayList<ELAnnotation> annotations = null;
     public ArrayList<Action> actions = new ArrayList<>();
 
-    public ELFunction(ELProtectionLevel protection, boolean extern, Namespace namespace, String name, FunctionType type, boolean constexpr, Location location) {
+    public ELFunction(ELProtectionLevel protection, boolean extern, Namespace namespace, String name, FunctionType type, boolean constexpr, ProgramUnit unit, Location location) {
         if (namespace == null)
             throw new NullPointerException("Namespace must be non-null");
         this.protection = protection;
@@ -48,6 +46,7 @@ public class ELFunction {
         cName = name;
         this.type = type;
         this.constexpr = constexpr;
+        this.unit = unit;
         this.startLocation = location;
     }
 
@@ -257,23 +256,23 @@ public class ELFunction {
         body = block.subTokens;
     }
 
-    public void analyze(ErrorSet errors, ProgramModule module) {
+    public void analyze(ErrorSet errors) {
         for (Entry<String, ELType> entry : params.entrySet()) {
-            entry.getValue().analyze(errors, namespace, module);
+            entry.getValue().analyze(errors, namespace, unit);
         }
         if (ret != null)
-            ret.analyze(errors, namespace, module);
+            ret.analyze(errors, namespace, unit);
         if (body == null && !(extern || abstractFunction)) {
             errors.error("Non-abstract or external functions must have a body", startLocation.span());
         } else if (body != null && (extern || abstractFunction)) {
             errors.error((extern ? "External" : "Abstract") + " functions must not have a body", bodySpan());
         }
         for (ELFunction overload : overloads) {
-            overload.analyze(errors, module);
+            overload.analyze(errors);
         }
 
         if (body != null) {
-            ActionBlock bodyBlock = new ActionBlock(new ActionScope(namespace, null, 0), this);
+            ActionBlock bodyBlock = new ActionBlock(new ActionScope(namespace, unit, null, 0), this);
             int l = paramOrder.size();
             for (int i = 0; i < l; i++) {
                 bodyBlock.scope.addParam(paramOrder.get(i), params.get(paramOrder.get(i)), -(l - i), errors);

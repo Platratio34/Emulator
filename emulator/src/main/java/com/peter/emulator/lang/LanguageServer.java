@@ -15,7 +15,8 @@ public class LanguageServer {
     protected boolean err = false;
 
     public LanguageServer() {
-        addModule("SysD").namespaces.put("SysD", SysD.INSTANCE);
+        ProgramModule sysD = addModule("SysD");
+        sysD.namespaces.put("SysD", new SysD(sysD));
     }
 
     public ProgramModule addModule(String name) {

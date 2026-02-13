@@ -409,19 +409,19 @@ public class ELType {
         return this.nonConst();
     }
 
-    public void analyze(ErrorSet errors, Namespace namespace, ProgramModule module) {
+    public void analyze(ErrorSet errors, Namespace namespace, ProgramUnit unit) {
         if(isVoidPtr())
             return;
         for(ELType type : genericTypes)
-            type.analyze(errors, namespace, module);
+            type.analyze(errors, namespace, unit);
         ELType base = base();
         if (ELPrimitives.PRIMITIVE_TYPES.containsKey(base)) {
             clazz = ELPrimitives.PRIMITIVE_TYPES.get(base);
             return;
         }
-        ELClass clazz = namespace.getType(base, namespace, module);
+        ELClass clazz = namespace.getType(base, namespace, unit);
         if (clazz == null) {
-            clazz = module.getType(base, namespace);
+            clazz = unit.module.getType(base, namespace, unit);
         }
         if (clazz == null) {
             errors.error("Unknown type: " + base.typeString(), base.span());

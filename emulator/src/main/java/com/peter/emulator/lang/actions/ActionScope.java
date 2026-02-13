@@ -12,18 +12,20 @@ public class ActionScope {
     public final int stackOffStart;
     protected final HashMap<String, ELVariable> stackVars = new HashMap<>();
     public final Namespace namespace;
+    public final ProgramUnit unit;
 
     public final ActionScope parent;
 
-    public ActionScope(Namespace namespace, ActionScope parent, int stackOffset) {
+    public ActionScope(Namespace namespace, ProgramUnit unit, ActionScope parent, int stackOffset) {
         this.parent = parent;
+        this.unit = unit;
         this.namespace = namespace;
         stackOffStart = stackOffset;
         stackOff = stackOffset;
     }
 
     public ELVariable addStackVar(String name, ELType type, ErrorSet errors) {
-        ELVariable var = new ELVariable(ELProtectionLevel.INTERNAL, ELVariable.Type.SCOPE, type, name, false, null, type.location);
+        ELVariable var = new ELVariable(ELProtectionLevel.INTERNAL, ELVariable.Type.SCOPE, type, name, false, namespace, unit, type.location);
         if(stackVars.containsKey(name)) {
             errors.warning("Duplicate variable name `"+name+"`");
             return var;
@@ -34,7 +36,7 @@ public class ActionScope {
     }
 
     public ELVariable addParam(String name, ELType type, int offset, ErrorSet errors) {
-        ELVariable var = new ELVariable(ELProtectionLevel.INTERNAL, ELVariable.Type.SCOPE, type, name, false, null, type.location);
+        ELVariable var = new ELVariable(ELProtectionLevel.INTERNAL, ELVariable.Type.SCOPE, type, name, false, namespace, unit, type.location);
         if(stackVars.containsKey(name)) {
             errors.warning("Duplicate variable name `"+name+"`");
             return var;
@@ -60,7 +62,7 @@ public class ActionScope {
     }
 
     public ActionScope createChild() {
-        return new ActionScope(namespace, this, stackOff);
+        return new ActionScope(namespace, unit, this, stackOff);
     }
 
     public ArrayList<ELVariable> getVarStack(Identifier id) {

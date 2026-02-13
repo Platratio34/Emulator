@@ -21,15 +21,15 @@ public class Parser {
     public ArrayList<Namespace> namespaces = new ArrayList<>();
     public HashMap<String, String> imports = new HashMap<>();
 
-    private final ProgramModule module;
+    private final ProgramUnit unit;
 
-    public Parser(ProgramModule module) {
-        this.module = module;
+    public Parser(ProgramUnit unit) {
+        this.unit = unit;
     }
 
-    public Parser(Namespace namespace, ProgramModule module) {
+    public Parser(ProgramUnit unit, Namespace namespace) {
+        this.unit = unit;
         currentNamespace = namespace;
-        this.module = module;
     }
 
     /*
@@ -160,7 +160,7 @@ public class Parser {
                                 && tokens.get(workingI) instanceof SetToken set) {
                             // this is a constructor;
                             ELFunction function = new ELFunction(level, extern, currentClass,
-                                    currentClass.cName, destructor ? ELFunction.FunctionType.DESTRUCTOR : ELFunction.FunctionType.CONSTRUCTOR, false, loc);
+                                    currentClass.cName, destructor ? ELFunction.FunctionType.DESTRUCTOR : ELFunction.FunctionType.CONSTRUCTOR, false, unit, loc);
                             function.ret = type;
                             function.ingestParams(set);
                             if (annotations != null)
@@ -204,7 +204,7 @@ public class Parser {
                                     : ELFunction.FunctionType.INSTANCE;
                             if(operator)
                                 funcType = ELFunction.FunctionType.OPERATOR;
-                            ELFunction function = new ELFunction(level, extern, currentNamespace, name, funcType, constexpr, loc);
+                            ELFunction function = new ELFunction(level, extern, currentNamespace, name, funcType, constexpr, unit, loc);
                             if (annotations != null)
                                 function.annotations = annotations;
                             if (currentNamespace == null) {
@@ -232,18 +232,22 @@ public class Parser {
                                 // no body;
                                 function.bodyLocation = ot.startLocation;
                             } else {
-                                errors.error("Unexpected token found, expected function body or `;`: ", tokens.get(workingI));
+                                errors.error("Unexpected token found, expected function body or `;`: "+tokens.get(workingI), tokens.get(workingI));
                                 continue;
                             }
-                            if(function.hasAnnotation(ELEntrypointAnnotation.class)) {
-                                module.entrypoint = function;
+                            if (function.hasAnnotation(ELEntrypointAnnotation.class)) {
+                                if (unit.module.entrypoint != null) {
+                                    errors.error("Module already had a function marked as entrypoint: "+unit.module.entrypoint.debugString(""), tokens.get(workingI));
+                                    continue;
+                                }
+                                unit.module.entrypoint = function;
                             }
                         } else { // variable
                             if(abs) {
                                 errors.error("Variable can not be marked abstract", loc.span());
                                 continue;
                             }
-                            ELVariable var = new ELVariable(level, const_ ? ELVariable.Type.CONST : (stat ? ELVariable.Type.STATIC : ELVariable.Type.MEMBER), type, name, final_, currentNamespace, loc);
+                            ELVariable var = new ELVariable(level, const_ ? ELVariable.Type.CONST : (stat ? ELVariable.Type.STATIC : ELVariable.Type.MEMBER), type, name, final_, currentNamespace, unit, loc);
                             if (annotations != null)
                                 var.annotations = annotations;
                             if (currentNamespace == null) {
@@ -302,14 +306,14 @@ public class Parser {
                             if(err)
                                 continue;
                             namespaces.add(namespace);
-                            namespace.addImports(imports);
+                            unit.addImports(imports);
                         } else {
                             errors.error("Unknown token found (expected identifier)", tokens.get(workingI));
                             continue;
                         }
                         workingI++;
                         if (tokens.get(workingI) instanceof BlockToken bt) {
-                            new Parser(namespace, module).parse(bt.subTokens, errors);
+                            new Parser(unit, namespace).parse(bt.subTokens, errors);
                         } else if (tokens.get(workingI) instanceof OperatorToken ot
                                 && ot.type == OperatorToken.Type.SEMICOLON) {
                             currentNamespace = namespace;
@@ -331,9 +335,9 @@ public class Parser {
                         ELClass clazz;
                         if (tokens.get(workingI) instanceof IdentifierToken it) {
                             if (struct)
-                                clazz = new ELStruct(it.value, currentNamespace);
+                                clazz = new ELStruct(it.value, currentNamespace, unit);
                             else
-                                clazz = new ELClass(it.value, currentNamespace);
+                                clazz = new ELClass(it.value, currentNamespace, unit);
                             namespaces.add(clazz);
                         } else {
                             errors.error("Unknown token found (expected identifier)", tokens.get(workingI));
@@ -406,7 +410,7 @@ public class Parser {
                             }
                         }
                         if (tokens.get(workingI) instanceof BlockToken bt) {
-                            new Parser(clazz, module).parse(bt.subTokens, errors);
+                            new Parser(unit, clazz).parse(bt.subTokens, errors);
                         } else {
                             errors.error("Unknown token found (expected `extends` or block)", tokens.get(workingI));
                             continue;
@@ -433,14 +437,11 @@ public class Parser {
     }
     
     private Namespace makeNamespace(String name, Namespace parent) {
-        if (module == null) {
-            return new Namespace(name, parent);
-        }
         Namespace namespace;
         if(parent == null)
-            namespace = module.getNamespace(name);
+            namespace = unit.module.getNamespace(name);
         else
-            namespace = module.getNamespace(parent.getQualifiedName() + "." + name);
+            namespace = unit.module.getNamespace(parent.getQualifiedName() + "." + name);
         if(namespace == null)
             namespace = new Namespace(name, parent);
         return namespace;

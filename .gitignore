@@ -2,3 +2,4 @@
 /.vscode/extensions/emulatorAsm/node_modules
 /.vscode/extensions/emulatorAsm/server/node_modules
 /emulator/target
+.vscode/extensions/emulatorAsm/emulator-1.0-SNAPSHOT-jar-with-dependencies.jar

@@ -16,10 +16,11 @@ import org.json.JSONObject;
 public class ProgramModule {
 
     protected final File root;
-    protected ArrayList<Path> files = new ArrayList<>();
-    protected ArrayList<String> refModules = new ArrayList<>();
+    protected final ArrayList<Path> files = new ArrayList<>();
+    protected final HashMap<String, ProgramUnit> units = new HashMap<>();
+    protected final ArrayList<String> refModules = new ArrayList<>();
 
-    protected HashMap<String, Namespace> namespaces = new HashMap<>();
+    protected final HashMap<String, Namespace> namespaces = new HashMap<>();
     protected ELFunction entrypoint;
 
     public final String name;
@@ -99,15 +100,17 @@ public class ProgramModule {
             if (f.isFile() && f.getName().endsWith(".el")) {
                 try {
                     Path path = f.toPath();
+                    ProgramUnit unit = new ProgramUnit(this, path.toString());
+                    units.put(unit.uri, unit);
                     String str = Files.readString(path);
                     Tokenizer tk = new Tokenizer(str, new Location(path.toString(), 1, 1), false);
                     try {
                         Optional<String> err = tk.tokenize();
                         if (err.isPresent()) {
-                            errors.error("Tokenizer error: "+err.get());
+                            errors.error("Tokenizer error: " + err.get());
                             return;
                         }
-                        Parser parser = new Parser(this);
+                        Parser parser = new Parser(unit);
                         parser.parse(tk.tokens, errors);
                         for (Namespace ns : parser.namespaces) {
                             addNamespace(ns);
@@ -133,29 +136,29 @@ public class ProgramModule {
             parse(errors, root);
             return;
         }
-        for (Path path : files) {
-            try {
-                String str = Files.readString(path);
-                Tokenizer tk = new Tokenizer(str, new Location(path.toString(), 1, 1), false);
-                try {
-                    Optional<String> err = tk.tokenize();
-                    if (err.isPresent()) {
-                        errors.error("Tokenizer error: "+err.get());
-                        return;
-                    }
-                    Parser parser = new Parser(this);
-                    parser.parse(tk.tokens, errors);
-                    for (Namespace ns : parser.namespaces) {
-                        addNamespace(ns);
-                    }
-                } catch (ELCompileException e) {
-                    errors.error("Exception: "+e.getMessage());
-                }
-            } catch (IOException e) {
-                errors.error("IO Exception: "+e);
-                return ;
-            }
-        }
+        // for (Path path : files) {
+        //     try {
+        //         String str = Files.readString(path);
+        //         Tokenizer tk = new Tokenizer(str, new Location(path.toString(), 1, 1), false);
+        //         try {
+        //             Optional<String> err = tk.tokenize();
+        //             if (err.isPresent()) {
+        //                 errors.error("Tokenizer error: "+err.get());
+        //                 return;
+        //             }
+        //             Parser parser = new Parser(this);
+        //             parser.parse(tk.tokens, errors);
+        //             for (Namespace ns : parser.namespaces) {
+        //                 addNamespace(ns);
+        //             }
+        //         } catch (ELCompileException e) {
+        //             errors.error("Exception: "+e.getMessage());
+        //         }
+        //     } catch (IOException e) {
+        //         errors.error("IO Exception: "+e);
+        //         return ;
+        //     }
+        // }
     }
     
     public ErrorSet resolve() {
@@ -165,7 +168,7 @@ public class ProgramModule {
                 errors.error("Could not resolve referenced module " + m);
         }
         for (Namespace ns : namespaces.values()) {
-            ns.resolve(errors, this);
+            ns.resolve(errors);
         }
         return errors;
     }
@@ -173,7 +176,7 @@ public class ProgramModule {
     public ErrorSet analyze() {
         ErrorSet errors = new ErrorSet();
         for (Namespace ns : namespaces.values()) {
-            ns.analyze(errors, this);
+            ns.analyze(errors);
         }
         return errors;
     }
@@ -274,23 +277,23 @@ public class ProgramModule {
         return false;
     }
 
-    public ELClass getType(ELType base, Namespace srcNs) {
-        ELClass clazz = getType(base, 0, srcNs);
+    public ELClass getType(ELType base, Namespace srcNs, ProgramUnit unit) {
+        ELClass clazz = getType(base, 0, srcNs, unit);
         if (clazz == null) {
             for (String r : refModules) {
                 if (!languageServer.modules.containsKey(r))
                     continue;
-                return languageServer.modules.get(r).getTypeIntrinsic(base, srcNs);
+                return languageServer.modules.get(r).getTypeIntrinsic(base, srcNs, unit);
             }
             return null;
         }
         return clazz;
     }
-    public ELClass getTypeIntrinsic(ELType base, Namespace srcNs) {
-        return getType(base, 0, srcNs);
+    public ELClass getTypeIntrinsic(ELType base, Namespace srcNs, ProgramUnit unit) {
+        return getType(base, 0, srcNs, unit);
     }
 
-    public ELClass getType(ELType base, int lvl, Namespace srcNs) {
+    public ELClass getType(ELType base, int lvl, Namespace srcNs, ProgramUnit unit) {
         // System.out.println("Looking for type "+base.typeString() + " (in "+name+")");
         String n = base.baseClass.last();
         boolean f = base.baseClass.numParts() == lvl+1;
@@ -311,7 +314,7 @@ public class ProgramModule {
             Namespace ns = namespaces.get(n);
             if (!f) {
                 // System.out.println("- Checking ns");
-                return ns.getType(base, lvl + 1, srcNs, this);
+                return ns.getType(base, lvl + 1, srcNs, unit);
             }
             if (ns instanceof ELClass clazz) {
                 return clazz;
