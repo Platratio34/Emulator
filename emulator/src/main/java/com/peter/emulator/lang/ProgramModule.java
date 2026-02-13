@@ -176,7 +176,11 @@ public class ProgramModule {
     public ErrorSet analyze() {
         ErrorSet errors = new ErrorSet();
         for (Namespace ns : namespaces.values()) {
-            ns.analyze(errors);
+            try {
+                ns.analyze(errors);
+            } catch (ELCompileException e) {
+                errors.error(e.getMessage());
+            }
         }
         return errors;
     }

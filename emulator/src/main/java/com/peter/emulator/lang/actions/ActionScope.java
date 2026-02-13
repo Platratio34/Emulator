@@ -15,6 +15,7 @@ public class ActionScope {
     public final ProgramUnit unit;
 
     public final ActionScope parent;
+    public final boolean[] reservedRegisters = new boolean[16];
 
     public ActionScope(Namespace namespace, ProgramUnit unit, ActionScope parent, int stackOffset) {
         this.parent = parent;
@@ -90,6 +91,9 @@ public class ActionScope {
         return vars;
     }
 
+    /**
+     * @return If loading succeded
+     */
     public boolean loadVar(Identifier id, int reg, ArrayList<Action> actions, boolean byValue) {
         if(stackVars.containsKey(id.first())) {
             ELVariable v = stackVars.get(id.first());
@@ -120,7 +124,23 @@ public class ActionScope {
         ArrayList<ELVariable> vars = namespace.getVarStack(id, new ArrayList<>());
         if(vars.isEmpty())
             return false;
-        actions.add(new ResolveAction(reg, vars).byVal(byValue));
+        actions.add(new ResolveAction(this, reg, vars).byVal(byValue));
         return true;
+    }
+
+    public void reserve(int reg) {
+        reservedRegisters[reg] = true;
+    }
+    public void release(int reg) {
+        reservedRegisters[reg] = false;
+    }
+    public boolean isReserved(int reg) {
+        return reservedRegisters[reg];
+    }
+    public int firstFree() {
+        for(int i = 1; i < 15; i++)
+            if(!reservedRegisters[i])
+                return i;
+        return -1;
     }
 }

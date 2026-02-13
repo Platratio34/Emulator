@@ -28,7 +28,7 @@ namespace TestD {
         v += a;
     }
     
-    public static void funcb(uint32 a) {
+    public static void funcb(uint32 a, uint32* b) {
         v += a;
     }
 

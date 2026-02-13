@@ -8,8 +8,9 @@ public class ExpressionAction extends Action {
 
     public ArrayList<Action> actions = new ArrayList<>();
 
-    public ExpressionAction(ActionScope scope, ArrayList<Token> tokens) {
-        
+    
+    public ExpressionAction(ActionScope scope, ArrayList<Token> tokens, int targetReg) {
+        super(scope);
     }
 
     @Override

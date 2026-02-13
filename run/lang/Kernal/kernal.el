@@ -16,9 +16,9 @@ namespace Kernal {
     static const uint32 CONSOLE_END = 0x0840;
     static const uint32 CONSOLE_PNTR = 0x0841;
 
-    static const char* SYS_NAME = "EmulatorOS";
-    static const uint32[3] CONSOLE_SETUP_CMD = {0x0001,CONSOLE_START,0x0020};
-    static const ProcessState[1024] processStates;
+    static final char* SYS_NAME = "EmulatorOS";
+    static final uint32[3] CONSOLE_SETUP_CMD = {0x0001,CONSOLE_START,0x0020};
+    static final ProcessState[1024] processStates;
 
     // #syscall 0x0001 printChar
     // #syscall 0x0002 printStr
@@ -31,7 +31,7 @@ namespace Kernal {
     @Entrypoint(raw = true)
     internal static void _main() {
         // SysD.rIR = &Kernal::_interrupt;
-        peripheralCmd(0x0001, 3, CONSOLE_SETUP_CMD);
+        peripheralCmd(0x0001, 3, &CONSOLE_SETUP_CMD);
         SysD.memSet(CONSOLE_START, CONSOLE_PNTR);
         Memory._setup();
         System.console = new Console(0x0800, 0x0001, 0x0020);
@@ -91,9 +91,10 @@ namespace Kernal {
     }
 
     public static uint32 getPeripheral(uint32 type) {
-        peripheralCmd(0, 0x1, new uint32[] {0x1});
+        uint32[1] cmd = {0x1};
+        peripheralCmd(0, 0x1, &cmd);
         while(SysD.memGet(0x8080) != 0x1) {
-            SysD.sleep(1);
+            asm("NO OP");
         }
         uint32 numDevices = SysD.memGet(0x8082);
         for(int i = 0; i < numDevices; i++) {

@@ -1,22 +1,15 @@
 package com.peter.emulator.languageserver;
 
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-import org.eclipse.lsp4j.DiagnosticRegistrationOptions;
-import org.eclipse.lsp4j.InitializeParams;
-import org.eclipse.lsp4j.InitializeResult;
-import org.eclipse.lsp4j.InitializedParams;
-import org.eclipse.lsp4j.MessageParams;
-import org.eclipse.lsp4j.MessageType;
-import org.eclipse.lsp4j.ServerCapabilities;
-import org.eclipse.lsp4j.SetTraceParams;
-import org.eclipse.lsp4j.TextDocumentSyncKind;
-import org.eclipse.lsp4j.services.LanguageClient;
-import org.eclipse.lsp4j.services.LanguageClientAware;
-import org.eclipse.lsp4j.services.LanguageServer;
-import org.eclipse.lsp4j.services.TextDocumentService;
-import org.eclipse.lsp4j.services.WorkspaceService;
+import org.eclipse.lsp4j.*;
+import org.eclipse.lsp4j.services.*;
 
+import com.peter.emulator.lang.ELAnalysisError;
 import com.peter.emulator.lang.ErrorSet;
 
 public class ELLanguageServer extends LSPServer implements LanguageServer, LanguageClientAware {
@@ -119,18 +112,64 @@ public class ELLanguageServer extends LSPServer implements LanguageServer, Langu
         client.logMessage(new MessageParams(MessageType.Info, msg));
     }
 
+    public void logDebug(final String msg, Object... args) {
+        if (!debugEnabled)
+            return;
+        client.logMessage(new MessageParams(MessageType.Info, String.format(msg, args)));
+    }
+
     public void logInfo(final String msg) {
         client.logMessage(new MessageParams(MessageType.Info, msg));
+    }
+    public void logInfo(final String msg, Object... args) {
+        client.logMessage(new MessageParams(MessageType.Info, String.format(msg, args)));
     }
 
     public void logWarn(final String msg) {
         client.logMessage(new MessageParams(MessageType.Warning, msg));
     }
+    public void logWarn(final String msg, Object... args) {
+        client.logMessage(new MessageParams(MessageType.Warning, String.format(msg, args)));
+    }
+
     public void logError(final String msg) {
         client.logMessage(new MessageParams(MessageType.Error, msg));
+    }
+    public void logError(final String msg, Object... args) {
+        client.logMessage(new MessageParams(MessageType.Error, String.format(msg, args)));
     }
 
     public void triggerDiagnostics() {
         workspaceService.triggerRecompile();
+    }
+
+    private final HashMap<String, ArrayList<Diagnostic>> fileDiagnostics = new HashMap<>();
+    public void pushDiagnostics() {
+        for(ArrayList<Diagnostic> list : fileDiagnostics.values()) {
+            list.clear();
+        }
+        if(errors == null)
+            triggerDiagnostics();
+        for (ELAnalysisError err : errors) {
+            if (err.span == null) {
+                continue;
+            }
+            String f = err.span.start().file();
+            ArrayList<Diagnostic> diagnostics;
+            if(fileDiagnostics.containsKey(f))
+                diagnostics = fileDiagnostics.get(f);
+            else {
+                diagnostics = new ArrayList<>();
+                fileDiagnostics.put(f, diagnostics);
+            }
+            diagnostics.add(new Diagnostic(err.span.toRange(), err.reason, err.severity.severity, "emulatorlang"));
+        }
+        for(Map.Entry<String, ArrayList<Diagnostic>> entry : fileDiagnostics.entrySet()) {
+            client.publishDiagnostics(new PublishDiagnosticsParams(entry.getKey(), entry.getValue()));
+        }
+    }
+
+    public void addFile(URI uri) {
+        workspaceService.addFile(uri);
     }
 }

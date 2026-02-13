@@ -6,7 +6,8 @@ public class StackAllocAction extends Action {
 
     public int reg = 1;
 
-    public StackAllocAction(int reg) {
+    public StackAllocAction(ActionScope scope, int reg) {
+        super(scope);
         this.reg = reg;
     }
 

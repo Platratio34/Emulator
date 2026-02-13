@@ -5,14 +5,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 
-import org.eclipse.lsp4j.Diagnostic;
-import org.eclipse.lsp4j.DidChangeTextDocumentParams;
-import org.eclipse.lsp4j.DidCloseTextDocumentParams;
-import org.eclipse.lsp4j.DidOpenTextDocumentParams;
-import org.eclipse.lsp4j.DidSaveTextDocumentParams;
-import org.eclipse.lsp4j.DocumentDiagnosticParams;
-import org.eclipse.lsp4j.DocumentDiagnosticReport;
-import org.eclipse.lsp4j.RelatedFullDocumentDiagnosticReport;
+import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.services.TextDocumentService;
 
 import com.peter.emulator.lang.ELAnalysisError;
@@ -52,9 +45,10 @@ public class ELTextDocumentService implements TextDocumentService {
         return CompletableFuture.supplyAsync(() -> {
             URI uri = URI.create(params.getTextDocument().getUri());
             String p = Path.of(uri).toAbsolutePath().toString();
-            lspServer.logDebug("Async diagnostics for " + uri);
+            lspServer.logDebug("Async diagnostics for %s", uri);
             
             ArrayList<Diagnostic> diagnostics = new ArrayList<>();
+            lspServer.addFile(uri);
             if (lspServer.errors == null) {
                 lspServer.triggerDiagnostics();
             }

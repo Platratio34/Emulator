@@ -212,8 +212,20 @@ public class ELType {
     public ELType pointerTo() {
         if (constant)
             throw new ELCompileException("Can not get pointer to constant value");
-        ELType t2 = new ELType(this);
+        ELType t2;
+        t2 = new ELType(this);
         t2.pointer = true;
+        return t2;
+    }
+    public ELType addressOf() {
+        if (constant)
+            throw new ELCompileException("Can not get address to constant value");
+        ELType t2;
+        if(array)
+            t2 = new ELType(this.subType);
+        else
+            t2 = new ELType(this);
+        t2.address = true;
         return t2;
     }
     
@@ -462,7 +474,17 @@ public class ELType {
             ELType t = this;
             ELType tt = target;
             while (t.subType != null) {
-                if ((t.pointer != tt.pointer || t.array != tt.array) && !(t.array && tt.pointer)) {
+                /*
+                * -> *
+                & -> &
+                & -> *
+                [] -> []
+                */
+                boolean valid = false;
+                valid |= t.pointer && tt.pointer;
+                valid |= t.address && (tt.address || tt.pointer);
+                valid |= t.array && tt.array && (t.arraySize == tt.arraySize);
+                if (!valid) {
                     return false;
                 }
                 t = t.subType;
@@ -476,7 +498,7 @@ public class ELType {
         ELType base = base();
         ELType tgtBase = base();
         if (base.clazz != null && tgtBase.clazz != null) {
-            boolean sameClass = base.clazz != tgtBase.clazz;
+            boolean sameClass = base.clazz == tgtBase.clazz;
             if (!sameClass) {
                 ELClass c = base.clazz;
                 while (c.parent != null) {
@@ -505,7 +527,7 @@ public class ELType {
                 // generics match
             }
         }
-        return equals(target);
+        return true;
     }
 
     public Builder builder() {

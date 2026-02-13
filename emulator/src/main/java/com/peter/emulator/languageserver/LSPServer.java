@@ -42,7 +42,7 @@ public class LSPServer {
         }
 
         String command;
-        if (OS.indexOf("win") != -1) {
+        if (OS.contains("win")) {
             command = String.format("cmd /c \"tasklist /FI \"PID eq %d\" | findstr %d\"", parentProcessId,
                     parentProcessId);
         } else {

@@ -12,12 +12,14 @@ public class ResolveAction extends Action {
     public ArrayList<ELVariable> vars = new ArrayList<>();
     public boolean resolveValue = false;
 
-    public ResolveAction(int reg, ELVariable... vars) {
+    public ResolveAction(ActionScope scope, int reg, ELVariable... vars) {
+        super(scope);
         this.reg = reg;
         this.vars.addAll(Arrays.asList(vars));
     }
 
-    public ResolveAction(int reg, ArrayList<ELVariable> vars) {
+    public ResolveAction(ActionScope scope, int reg, ArrayList<ELVariable> vars) {
+        super(scope);
         this.reg = reg;
         this.vars.addAll(vars);
     }

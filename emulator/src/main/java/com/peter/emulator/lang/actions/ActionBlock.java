@@ -16,13 +16,12 @@ import com.peter.emulator.lang.base.ELPrimitives;
 public class ActionBlock extends Action {
 
     public final ArrayList<Action> actions = new ArrayList<>();
-    public final ActionScope scope;
     public final ELFunction func;
 
     private static int subIndex = 0;
 
     public ActionBlock(ActionScope scope, ELFunction func) {
-        this.scope = scope;
+        super(scope);
         this.func = func;
     }
 
@@ -114,23 +113,22 @@ public class ActionBlock extends Action {
                             case "asm" -> {
                                 wI += 3;
                                 Token t = st.get(0);
-                                if(t == null)
-                                    throw ELAnalysisError.error("asm function must have a string literal or const parameter", it.span());
-                                if (t instanceof StringToken strT) {
-                                    actions.add(new DirectAction(strT.value));
-                                    // System.out.println(strT.value);
-                                } else if(t instanceof IdentifierToken it2) {
-                                    Identifier id2 = it2.asId();
-                                    ELVariable var = scope.getVarStack(id2).getLast();
-                                    if(var == null)
-                                        throw ELAnalysisError.error("Could not resolve variable "+id2.fullName, t.span());
-                                    if(var.varType != ELVariable.Type.CONST || !var.type.equals(ELPrimitives.CHAR.pointerTo())) {
-                                        throw ELAnalysisError.error("asm function may only take string literal or const", it2.span());
+                                switch (t) {
+                                    case null -> throw ELAnalysisError.error("asm function must have a string literal or const parameter", it);
+
+                                    case StringToken strT -> actions.add(new DirectAction(strT.value));
+
+                                    case IdentifierToken it2 -> {
+                                        Identifier id2 = it2.asId();
+                                        ELVariable var = scope.getVarStack(id2).getLast();
+                                        if(var == null)
+                                            throw ELAnalysisError.error("Could not resolve variable "+id2.fullName, t.span());
+                                        if(var.varType != ELVariable.Type.CONST || !var.type.equals(ELPrimitives.CHAR.pointerTo())) {
+                                            throw ELAnalysisError.error("asm function may only take string literal or const", it2);
+                                        }
+                                        actions.add(new DirectAction(((ELStringValue)var.startingValue).value));
                                     }
-                                    actions.add(new DirectAction(((ELStringValue)var.startingValue).value));
-                                } else {
-                                    throw ELAnalysisError.error("asm function may only take string literal or const",
-                                            t.span());
+                                    default -> throw ELAnalysisError.error("asm function may only take string literal or const", t);
                                 }
                                 if (!(tokens.get(wI - 1) instanceof OperatorToken ot
                                         && ot.type == OperatorToken.Type.SEMICOLON))
@@ -139,17 +137,17 @@ public class ActionBlock extends Action {
                                 continue;
                             }
                             default -> {
+                                boolean onStack = true;
                                 wI += 3;
                                 if (id.starts("SysD")) {
                                     switch (id.parts[1]) {
                                         case "memSet" -> {
-                                            ELAnalysisError.warning("SysD.memSet is not currently implemented",
-                                                    it.span());
-                                            continue;
+                                            // SysD.memSet(uint32 addr, uint32 value);
+                                            errors.warning("SysD.memSet is not currently implemented", it);
+                                            onStack = false;
                                         }
                                         case "memCopy" -> {
-                                            ELAnalysisError.warning("SysD.copy is not currently implemented",
-                                                    it.span());
+                                            errors.warning("SysD.copy is not currently implemented", it);
                                             continue;
                                         }
                                         case "halt" -> {
@@ -161,35 +159,109 @@ public class ActionBlock extends Action {
                                 // function call; set is parameters
                                 ArrayList<ELType> types = new ArrayList<>();
                                 Location endOfParams = null;
+                                boolean vNext = true;
+                                boolean addr = false;
                                 for (int i = 0; i < st.subTokens.size(); i++) {
                                     Token t2 = st.subTokens.get(i);
                                     endOfParams = t2.endLocation;
-                                    if (t2 instanceof IdentifierToken it2) {
-                                        Identifier id2 = it2.asId();
-                                        if (scope.loadVar(id2, 2, actions, true)) {
-                                            actions.add(new DirectAction("STACK PUSH r2"));
-                                            types.add(scope.getVarStack(id2).getFirst().type);
-                                        } else if (it2.value.equals("SysD")) {
-                                            int r = getSysDReg(id2);
-                                            if (r == -1)
-                                                throw ELAnalysisError.error("Unable to resolve SysD variable " + id2);
-                                            actions.add(new DirectAction("STACK PUSH %s", MachineCode.translateReg(r)));
-                                            types.add(ELPrimitives.UINT32);
+                                    int r = 2;
+                                    switch (t2) {
+                                        case IdentifierToken it2 -> {
+                                            if(!vNext)
+                                                throw ELAnalysisError.error(String.format("Unexpected token %s in function parameters", t2), t2);
+                                            Identifier id2 = it2.asId();
+                                            if (scope.loadVar(id2, r, actions, !addr)) {
+                                                if(onStack)
+                                                    actions.add(new DirectAction("STACK PUSH %s", MachineCode.translateReg(r)));
+                                                else
+                                                    r++;
+                                                ELType t = scope.getVarStack(id2).getLast().type;
+                                                if(addr)
+                                                    types.add(t.addressOf());
+                                                else
+                                                    types.add(t);
+                                            } else if (it2.value.equals("SysD")) {
+                                                int r2 = getSysDReg(id2);
+                                                if (r2 == -1)
+                                                    throw ELAnalysisError.error("Unable to resolve SysD variable " + id2, it2);
+                                                if(addr)
+                                                    throw ELAnalysisError.error("Unable to get address of SysD variables", it2);
+                                                if(onStack)
+                                                    actions.add(new DirectAction("STACK PUSH %s", MachineCode.translateReg(r2)));
+                                                else
+                                                    actions.add(new DirectAction("COPY %s %s", MachineCode.translateReg(r2), MachineCode.translateReg(r++)));
+                                                types.add(ELPrimitives.UINT32);
+                                            }
+                                            vNext = false;
+                                            addr = false;
                                         }
-                                    } else if (t2 instanceof NumberToken nt2) {
-                                        actions.add(new DirectAction("LOAD r2 %d\nSTACK PUSH r2", nt2.numValue));
-                                        types.add(ELPrimitives.UINT32);
+                                        case NumberToken nt2 -> {
+                                            if(!vNext)
+                                                throw ELAnalysisError.error(String.format("Unexpected token %s in function parameters", t2), t2);
+                                            if(addr)
+                                                throw ELAnalysisError.error(String.format("Can not get address of literal", t2), t2);
+                                            if(onStack)
+                                                actions.add(new DirectAction("LOAD r2 %d\nSTACK PUSH r2", nt2.numValue));
+                                            else
+                                                actions.add(new DirectAction("LOAD %s %d", MachineCode.translateReg(r++), nt2.numValue));
+                                            types.add(ELPrimitives.UINT32);
+                                            vNext = false;
+                                        }
+                                        case OperatorToken ot2 -> {
+                                            switch(ot2.type) {
+                                                case OperatorToken.Type.COMMA -> {
+                                                    if(vNext) {
+                                                        throw ELAnalysisError.error(String.format("Unexpected `,` found in function parameters"), t2);
+                                                    }
+                                                    vNext = true;
+                                                    addr = false;
+                                                }
+                                                case OperatorToken.Type.BITWISE_AND -> {
+                                                    if(!vNext) {
+                                                        throw ELAnalysisError.error(String.format("Unexpected `&` found in function parameters"), t2);
+                                                    }
+                                                    addr = true;
+                                                }
+                                                default -> {
+                                                    throw ELAnalysisError.error(String.format("Unexpected token %s in function parameters", t2), t2);
+                                                }
+                                            }
+                                        }
+                                        default -> throw ELAnalysisError.error(String.format("Unexpected token %s in function parameters", t2), t2);
+                                    }
+                                }
+                                String tStr = "(";
+                                for (int i = 0; i < types.size(); i++) {
+                                    if (i > 0)
+                                        tStr += ",";
+                                    tStr += types.get(i).typeString();
+                                }
+                                tStr += ")";
+
+                                if (id.starts("SysD")) {
+                                    switch (id.parts[1]) {
+                                        case "memSet" -> {
+                                            // SysD.memSet(uint32 addr, uint32 value);
+                                            if(types.size() != 2 || !(types.get(0).canCastTo(ELPrimitives.UINT32) && types.get(1).canCastTo(ELPrimitives.UINT32))) {
+                                                
+                                                throw ELAnalysisError.error(String.format(
+                                                "Found no overload of SysD.memSet matching %s; Found SysD.memSet(uint32 addr, uint32 value)", tStr), it.endLocation.span(endOfParams));
+                                            }
+                                            actions.add(new DirectAction("STORE MEM r1 r2"));
+                                            continue;
+                                        }
+                                        case "memCopy" -> {
+                                            errors.warning("SysD.copy is not currently implemented", it);
+                                            continue;
+                                        }
+                                        case "halt" -> {
+                                            actions.add(new DirectAction("HALT"));
+                                            continue;
+                                        }
                                     }
                                 }
                                 ELFunction f = scope.namespace.findFunction(id, types);
                                 if (f == null) {
-                                    String tStr = "(";
-                                    for (int i = 0; i < types.size(); i++) {
-                                        if (i > 0)
-                                            tStr += ",";
-                                        tStr += types.get(i).typeString();
-                                    }
-                                    tStr += ")";
 
                                     f = scope.namespace.getFunction(id);
                                     if (f != null) {
@@ -235,6 +307,20 @@ public class ActionBlock extends Action {
                             }
                             continue;
                         }
+                        case "continue" -> {
+                            wI++;
+                            tkn = tokens.get(wI);
+                            if(!(tkn instanceof OperatorToken ot && ot.type == OperatorToken.Type.SEMICOLON))
+                                throw ELAnalysisError.error("Expected semicolon", tkn);
+                            continue;
+                        }
+                        case "break" -> {
+                            wI++;
+                            tkn = tokens.get(wI);
+                            if(!(tkn instanceof OperatorToken ot && ot.type == OperatorToken.Type.SEMICOLON))
+                                throw ELAnalysisError.error("Expected semicolon", tkn);
+                            continue;
+                        }
                     }
 
                     if (!scope.hasVariable(id)) {
@@ -248,7 +334,7 @@ public class ActionBlock extends Action {
                         if (tkn instanceof IdentifierToken it2) {
                             name = it2.value;
                         } else {
-                            throw ELAnalysisError.error("Expected variable name identifier (found " + tkn.debugString() + ")", tkn.span());
+                            throw ELAnalysisError.error("Expected variable name identifier (found " + tkn.debugString() + ")", tkn);
                         }
                         tkn = tokens.get(wI);
                         scope.addStackVar(name, type, errors).analyze(errors, scope.namespace);
@@ -256,36 +342,40 @@ public class ActionBlock extends Action {
                             switch (ot.type) {
                                 case SEMICOLON -> {
                                     wI++;
-                                    actions.add(new StackAllocAction(-1));
+                                    actions.add(new StackAllocAction(scope, -1));
                                 }
                                 case ASSIGN -> {
                                     wI++;
                                     tkn = tokens.get(wI++);
-                                    if (tkn instanceof NumberToken nt) {
-                                        actions.add(new DirectAction("LOAD r1 %d", nt.numValue));
-                                        actions.add(new StackAllocAction(1));
-                                    } else if (tkn instanceof IdentifierToken it3) {
-                                        Identifier id3 = it3.asId();
-                                        if (id3.starts("SysD")) {
-                                            int r = getSysDReg(id3);
-                                            if(r == -1)
-                                                throw ELAnalysisError.error("Unknown SysD variable "+id3, it3.span());
-                                            actions.add(new StackAllocAction(r));
-                                        } else if (!scope.loadVar(id3, 1, actions, true)) {
-                                            actions.add(new StackAllocAction(1));
-                                        } else {
-                                            throw ELAnalysisError.error("Unable to resolve variable "+id3, it3.span());
+                                    switch (tkn) {
+                                        case NumberToken nt -> {
+                                            actions.add(new DirectAction("LOAD r1 %d", nt.numValue));
+                                            actions.add(new StackAllocAction(scope, 1));
                                         }
+                                        case IdentifierToken it3 -> {
+                                            Identifier id3 = it3.asId();
+                                            if (id3.starts("SysD")) {
+                                                int r = getSysDReg(id3);
+                                                if(r == -1)
+                                                    throw ELAnalysisError.error("Unknown SysD variable "+id3, it3);
+                                                actions.add(new StackAllocAction(scope, r));
+                                            } else if (scope.loadVar(id3, 1, actions, true)) {
+                                                actions.add(new StackAllocAction(scope, 1));
+                                            } else {
+                                                throw ELAnalysisError.error("Unable to resolve variable "+id3, it3);
+                                            }
+                                        }
+                                        default -> {}
                                     }
                                     tkn = tokens.get(wI++);
                                     if (!(tkn instanceof OperatorToken ot2 && ot2.type == OperatorToken.Type.SEMICOLON)) {
-                                        throw ELAnalysisError.error("Expected `;` (found " + tkn + ")", tkn.span());
+                                        throw ELAnalysisError.error("Expected `;` (found " + tkn + ")", tkn);
                                     }
                                 }
-                                default -> throw ELAnalysisError.error("Expected `;` or `=` (found `" + ot.type + "`)", tkn.span());
+                                default -> throw ELAnalysisError.error("Expected `;` or `=` (found `" + ot.type + "`)", tkn);
                             }
                         } else {
-                            throw ELAnalysisError.error("Expected `;` or `=` (found " + tkn + ")", tkn.span());
+                            throw ELAnalysisError.error("Expected `;` or `=` (found " + tkn + ")", tkn);
                         }
                         continue;
                     }
