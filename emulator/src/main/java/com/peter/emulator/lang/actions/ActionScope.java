@@ -25,8 +25,8 @@ public class ActionScope {
         stackOff = stackOffset;
     }
 
-    public ELVariable addStackVar(String name, ELType type, ErrorSet errors) {
-        ELVariable var = new ELVariable(ELProtectionLevel.INTERNAL, ELVariable.Type.SCOPE, type, name, false, namespace, unit, type.location);
+    public ELVariable addStackVar(String name, ELType type, Location endLocation, ErrorSet errors) {
+        ELVariable var = new ELVariable(ELProtectionLevel.INTERNAL, ELVariable.Type.SCOPE, type, name, false, namespace, unit, type.location, endLocation);
         if(stackVars.containsKey(name)) {
             errors.warning("Duplicate variable name `"+name+"`");
             return var;

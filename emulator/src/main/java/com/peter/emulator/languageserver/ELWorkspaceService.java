@@ -3,6 +3,7 @@ package com.peter.emulator.languageserver;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Path;
 import java.util.ArrayList;
 
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
@@ -12,11 +13,13 @@ import org.eclipse.lsp4j.services.WorkspaceService;
 import org.json.JSONException;
 
 import com.peter.emulator.lang.LanguageServer;
+import com.peter.emulator.lang.ProgramUnit;
 
 public class ELWorkspaceService implements WorkspaceService {
 
     public final ELLanguageServer lspServer;
     private final ArrayList<File> moduleRoots = new ArrayList<>();
+    protected LanguageServer ls;
 
     public ELWorkspaceService(ELLanguageServer lspServer) {
         this.lspServer = lspServer;
@@ -60,7 +63,7 @@ public class ELWorkspaceService implements WorkspaceService {
 
     public void triggerRecompile() {
         lspServer.logDebug("Recompiling modules ...");
-        LanguageServer ls = new LanguageServer();
+        ls = new LanguageServer();
         for (File f : moduleRoots) {
             lspServer.logDebug("- %s", f.getAbsolutePath());
             if (!f.exists()) {
@@ -77,6 +80,12 @@ public class ELWorkspaceService implements WorkspaceService {
         lspServer.errors = ls.recompile();
         lspServer.logDebug("Modules recompiled");
         lspServer.pushDiagnostics();
+    }
+
+    public ProgramUnit getUnit(URI uri) {
+        if(ls == null)
+            return null;
+        return ls.getUnit(Path.of(uri).toAbsolutePath().toString());
     }
 
 }

@@ -4,18 +4,20 @@ import java.util.HashMap;
 
 import com.peter.emulator.lang.ELClass;
 import com.peter.emulator.lang.ELType;
+import com.peter.emulator.lang.Location;
 import com.peter.emulator.lang.ProgramUnit;
 
 public class ELPrimitives {
 
     private static final ProgramUnit INTERNAL_UNIT = new ProgramUnit(null, "<Base>");
+    private static final Location INTERNAL_LOCATION = new Location("<Base>", 0, 0);
 
     public static final ELClass OBJECT_CLASS = new ELClass("Object", null, INTERNAL_UNIT);
-    public static final ELType OBJECT = new ELType("Object", OBJECT_CLASS);
+    public static final ELType OBJECT = new ELType("Object", OBJECT_CLASS, INTERNAL_LOCATION);
 
     // bool
     public static final ELClass BOOL_CLASS = new ELClass("bool", OBJECT_CLASS, INTERNAL_UNIT);
-    public static final ELType BOOL = new ELType("bool", BOOL_CLASS);
+    public static final ELType BOOL = new ELType("bool", BOOL_CLASS, INTERNAL_LOCATION);
     // uint8
     public static final ELClass UINT8_CLASS = new ELClass("uint8", OBJECT_CLASS, INTERNAL_UNIT) {
         @Override
@@ -23,7 +25,7 @@ public class ELPrimitives {
             return target.equals(CHAR) || target.equals(UINT16) || target.equals(UINT32);
         }
     };
-    public static final ELType UINT8 = new ELType("uint8", UINT8_CLASS);
+    public static final ELType UINT8 = new ELType("uint8", UINT8_CLASS, INTERNAL_LOCATION);
     // char
     public static final ELClass CHAR_CLASS = new ELClass("char", OBJECT_CLASS, INTERNAL_UNIT) {
         @Override
@@ -31,7 +33,7 @@ public class ELPrimitives {
             return target.equals(UINT8) || target.equals(UINT16) || target.equals(UINT32);
         }
     };
-    public static final ELType CHAR = new ELType("char", CHAR_CLASS);
+    public static final ELType CHAR = new ELType("char", CHAR_CLASS, INTERNAL_LOCATION);
     // uint16
     public static final ELClass UINT16_CLASS = new ELClass("uint16", OBJECT_CLASS, INTERNAL_UNIT) {
         @Override
@@ -39,7 +41,7 @@ public class ELPrimitives {
             return target.equals(UINT32);
         }
     };
-    public static final ELType UINT16 = new ELType("uint16", UINT16_CLASS);
+    public static final ELType UINT16 = new ELType("uint16", UINT16_CLASS, INTERNAL_LOCATION);
     // uint32
     public static final ELClass UINT32_CLASS = new ELClass("uint32", OBJECT_CLASS, INTERNAL_UNIT) {
         @Override
@@ -47,9 +49,9 @@ public class ELPrimitives {
             return target.equals(VOID_PTR);
         }
     };
-    public static final ELType UINT32 = new ELType("uint32", UINT32_CLASS);
+    public static final ELType UINT32 = new ELType("uint32", UINT32_CLASS, INTERNAL_LOCATION);
     // void*
-    public static final ELType VOID_PTR = new ELType.Builder("void").pointer().build();
+    public static final ELType VOID_PTR = new ELType.Builder("void").pointer().location(INTERNAL_LOCATION).build();
 
     // public static final ELType STRING = new ELType("string");
 

@@ -104,9 +104,9 @@ public class SysD extends Namespace {
         ELStruct PeripheralDescriptor = new ELStruct("PeripheralDescriptor", this, unit);
         PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.UINT32, "id", true, this, unit, SYSD_LOCATION));
         PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.UINT32, "type", true, this, unit, SYSD_LOCATION));
-        PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.UINT32.builder().array(4).build(), "manufacturer", true, this, unit, SYSD_LOCATION));
-        PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.UINT32.builder().array(4).build(), "serial", true, this, unit, SYSD_LOCATION));
-        PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.UINT32.builder().array(6).build(), "data", true, this, unit, SYSD_LOCATION));
+        PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.UINT32.builder().array(4).location(SYSD_LOCATION).build(), "manufacturer", true, this, unit, SYSD_LOCATION));
+        PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.UINT32.builder().array(4).location(SYSD_LOCATION).build(), "serial", true, this, unit, SYSD_LOCATION));
+        PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.UINT32.builder().array(6).location(SYSD_LOCATION).build(), "data", true, this, unit, SYSD_LOCATION));
     }
 
 }

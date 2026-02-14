@@ -9,6 +9,11 @@ import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.services.TextDocumentService;
 
 import com.peter.emulator.lang.ELAnalysisError;
+import com.peter.emulator.lang.ELFunction;
+import com.peter.emulator.lang.ELType;
+import com.peter.emulator.lang.ELVariable;
+import com.peter.emulator.lang.ProgramUnit;
+import com.peter.emulator.lang.annotations.ELAnnotation;
 
 public class ELTextDocumentService implements TextDocumentService {
 
@@ -46,7 +51,7 @@ public class ELTextDocumentService implements TextDocumentService {
             URI uri = URI.create(params.getTextDocument().getUri());
             String p = Path.of(uri).toAbsolutePath().toString();
             lspServer.logDebug("Async diagnostics for %s", uri);
-            
+
             ArrayList<Diagnostic> diagnostics = new ArrayList<>();
             lspServer.addFile(uri);
             if (lspServer.errors == null) {
@@ -56,11 +61,64 @@ public class ELTextDocumentService implements TextDocumentService {
                 if (err.span == null) {
                     continue;
                 }
-                if(!err.span.start().file().equals(p))
+                if (!err.span.start().file().equals(p))
                     continue;
                 diagnostics.add(new Diagnostic(err.span.toRange(), err.reason, err.severity.severity, "emulatorlang"));
             }
             return new DocumentDiagnosticReport(new RelatedFullDocumentDiagnosticReport(diagnostics));
+        });
+    }
+    
+    @Override
+    public CompletableFuture<Hover> hover(HoverParams params) {
+        return CompletableFuture.supplyAsync(() -> {
+            URI uri = URI.create(params.getTextDocument().getUri());
+            ProgramUnit unit = lspServer.getUnit(uri);
+            if (unit == null) {
+                lspServer.logError("Hover was requested for %s, but no program unit could be found", uri);
+                return null;
+            }
+            Position hoverPos = params.getPosition();
+            if (unit.variables.size() == 0 && unit.functions.size() == 0) {
+                lspServer.logWarn("Hover was requested for %s, but program unit had no hover-able symbols", uri);
+            }
+            for (ELVariable var : unit.variables) {
+                if (var.span().contains(hoverPos, lspServer)) {
+                    String content = switch(var.varType) {
+                        case CONST -> String.format("### `%s const %s.%s`", var.protection.value, var.namespace.cName, var.name);
+                        case STATIC -> String.format("### `%s static %s.%s`", var.protection.value, var.namespace.cName, var.name);
+                        case MEMBER -> String.format("### `%s %s.%s`", var.protection.value, var.namespace.cName, var.name);
+                        case SCOPE -> String.format("### `%s %s.%s` (Scope)", var.protection.value, var.namespace.cName, var.name);
+                    };
+                    content += "\n" + var.debugString();
+                    return new Hover(new MarkupContent("markdown", content));
+                }
+            }
+            for (ELFunction func : unit.functions) {
+                if (func.startLocation.span(func.bodyLocation).contains(hoverPos, null)) {
+                    String retStr = (func.ret == null ? "void" : func.ret.typeString());
+                    String content = switch (func.type) {
+                        case CONSTRUCTOR -> String.format("### `%s %s(%s)`", func.protection.value, func.namespace.cName, func.getParamString());
+                        case DESTRUCTOR -> String.format("### `%s ~%s(%s)`", func.protection.value, func.namespace.cName, func.getParamString());
+                        case INSTANCE -> String.format("### `%s %s %s.%s(%s)`", func.protection.value, retStr, func.namespace.cName, func.cName, func.getParamString());
+                        case STATIC -> String.format("### `%s static %s %s.%s(%s)`", func.protection.value, retStr, func.namespace.cName, func.cName, func.getParamString());
+                        case OPERATOR -> String.format("### `%s operator %s %s.%s(%s)`", func.protection.value, retStr, func.namespace.cName, func.cName, func.getParamString());
+                    };
+                    if(func.annotations != null)
+                        for (ELAnnotation annotation : func.annotations) {
+                            content += String.format("\n`%s`", annotation.debugString());
+                        }
+                    return new Hover(new MarkupContent("markdown", content));
+                }
+            }
+            // for (ELClass var : unit.classes) {
+            //     if (var.span().contains(hoverPos.getLine(), hoverPos.getCharacter())) {
+            //         String content = "## " + var.cName;
+            //         content += "\n" + var.debugString("");
+            //         return new Hover(new MarkupContent("markdown", content));
+            //     }
+            // }
+            return null;
         });
     }
 

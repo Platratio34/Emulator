@@ -37,6 +37,7 @@ public class ELClass extends Namespace {
     public ELClass(String name, Namespace namespace, ProgramUnit unit) {
         super(name, namespace);
         this.unit = unit;
+        unit.classes.add(this);
     }
 
     public void addMember(ELVariable var) {

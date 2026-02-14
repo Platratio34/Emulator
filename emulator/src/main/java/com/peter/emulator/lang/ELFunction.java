@@ -48,6 +48,9 @@ public class ELFunction {
         this.constexpr = constexpr;
         this.unit = unit;
         this.startLocation = location;
+        if (location == null)
+            throw new NullPointerException("Start location must be non-null");
+        unit.functions.add(this);
     }
 
     public void addParameter(ELType type, String name) {
@@ -311,5 +314,15 @@ public class ELFunction {
         if (bodyLocation == null)
             return startLocation.span();
         return bodyLocation.span(bodyEndLocation);
+    }
+
+    public String getParamString() {
+        String out = "";
+        boolean f = true;
+        for (String p : paramOrder) {
+            out += String.format("%s%s %s", (f ? "" : ", "), params.get(p).typeString(), p);
+            f = false;
+        }
+        return out;
     }
 }

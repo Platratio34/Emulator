@@ -42,14 +42,14 @@ public class ELType {
         endLocation = location;
     }
 
-    public ELType(String base, ELClass clazz) {
+    public ELType(String base, ELClass clazz, Location location) {
         this.clazz = clazz;
         if (base.contains(".")) {
             baseClass = new Identifier(base.split("\\."));
         } else {
             baseClass = new Identifier(base);
         }
-        location = new Location("", 0, 0);
+        this.location = location;
         endLocation = location;
     }
 
@@ -267,9 +267,9 @@ public class ELType {
             if (built)
                 throw new ELCompileException("Type builder ingest called after build");
             if (inTypes) {
-                if (subBuilder.ingest(token))
+                if (subBuilder.ingest(token)) {
                     return true;
-                else {
+                } else {
                     ELType t2 = subBuilder.build();
                     type.genericTypes.add(t2);
                     subBuilder = null;
@@ -303,6 +303,20 @@ public class ELType {
                                 }
                             }
                             type.baseClass = b.build();
+                        }
+                        if (it.index != null) {
+                            if(it.index.size() == 0)
+                                throw new ELCompileException("Array type must have a size");
+                            if(it.index.size() > 1)
+                                throw new ELCompileException("Invalid array size");
+                            Token tkn = it.index.get(0);
+                            if (tkn instanceof NumberToken nt) {
+                                array(nt.numValue);
+                                type.location = nt.startLocation;
+                                type.endLocation = nt.endLocation;
+                            } else {
+                                throw new ELCompileException("Unexpected token found in array size, expected number: " + tkn);
+                            }
                         }
                         i++;
                         return true;
@@ -381,18 +395,16 @@ public class ELType {
         }
 
         public Builder location(Location location) {
-            ELType t = type;
-            if (t.subType != null) {
-                t = t.subType;
-            }
-            t.location = location;
-            t.endLocation = location;
+            type.location = location;
+            type.endLocation = location;
             return this;
         }
 
         public ELType build() {
             if (!baseSet)
                 throw new ELCompileException("Base was never set");
+            if (type.location == null)
+                throw new NullPointerException("Location was null");
             built = true;
             type.constant = constant;
             return type;

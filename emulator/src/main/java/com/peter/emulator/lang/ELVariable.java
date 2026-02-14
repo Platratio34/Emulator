@@ -16,6 +16,7 @@ public class ELVariable {
     public final Type varType;
     public final boolean finalVal;
     public final Location startLocation;
+    public final Location endLocation;
     public final Namespace namespace;
     public final ProgramUnit unit;
 
@@ -25,6 +26,9 @@ public class ELVariable {
     public ArrayList<ELAnnotation> annotations = null;
 
     public ELVariable(ELProtectionLevel protection, Type varType, ELType type, String name, boolean finalVal, Namespace namespace, ProgramUnit unit, Location location) {
+        this(protection, varType, type, name, finalVal, namespace, unit, location, location);
+    }
+    public ELVariable(ELProtectionLevel protection, Type varType, ELType type, String name, boolean finalVal, Namespace namespace, ProgramUnit unit, Location location, Location endLocation) {
         this.type = type;
         this.protection = protection;
         this.varType = varType;
@@ -33,6 +37,10 @@ public class ELVariable {
         this.namespace = namespace;
         this.unit = unit;
         this.startLocation = location;
+        this.endLocation = endLocation;
+        if (location == null)
+            throw new NullPointerException("Start location must be non-null");
+        unit.variables.add(this);
     }
 
     public int sizeof() {

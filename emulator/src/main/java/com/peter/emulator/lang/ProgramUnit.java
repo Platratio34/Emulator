@@ -1,5 +1,6 @@
 package com.peter.emulator.lang;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
@@ -9,6 +10,10 @@ public class ProgramUnit {
     public final String uri;
 
     protected final HashMap<String, String> imports = new HashMap<>();
+
+    public final ArrayList<ELVariable> variables = new ArrayList<>();
+    public final ArrayList<ELFunction> functions = new ArrayList<>();
+    public final ArrayList<ELClass> classes = new ArrayList<>();
 
     public ProgramUnit(ProgramModule module, String uri) {
         this.module = module;

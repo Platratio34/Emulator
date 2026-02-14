@@ -96,4 +96,12 @@ public class LanguageServer {
         errors.combine(analyze());
         return errors;
     }
+
+    public ProgramUnit getUnit(String uri) {
+        for (ProgramModule module : modules.values()) {
+            if (module.units.containsKey(uri))
+                return module.units.get(uri);
+        }
+        return null;
+    }
 }

@@ -15,6 +15,8 @@ public abstract class Token {
     protected Token(Location location) {
         startLocation = location;
         endLocation = location;
+        if (location == null)
+            throw new NullPointerException("Start location must be non-null");
     }
 
     public boolean hasSub() {
@@ -237,6 +239,9 @@ public abstract class Token {
 
     public static class IdentifierToken extends Token {
         public String value;
+        public ArrayList<Token> index = null;
+        protected Tokenizer indexTokenizer;
+        protected boolean indexClosed = false;
 
         public IdentifierToken(char c, Location location) {
             super(location);
@@ -244,6 +249,7 @@ public abstract class Token {
         }
 
         private boolean nextIsID = false;
+        private boolean nextIsDot = false;
         private IdentifierToken nextId = null;
         @Override
         public boolean ingest(char c, Location location) {
@@ -253,6 +259,17 @@ public abstract class Token {
                     return true;
                 }
                 return false;
+            } else if (indexTokenizer != null) {
+                if (!indexTokenizer.ingest(c, location)) {
+                    if (c == ']') {
+                        indexClosed = true;
+                        indexTokenizer = null;
+                        nextIsDot = true;
+                        return true;
+                    }
+                    throw new TokenizerError("Unexpected character in index");
+                }
+                return true;
             }
             if (nextIsID) {
                 nextIsID = false;
@@ -266,12 +283,22 @@ public abstract class Token {
                     throw new TokenizerError("Invalid identifier");
                 }
             } else if (validStart(c) || Character.isDigit(c)) {
+                if (nextIsDot)
+                    throw new TokenizerError("Unexpected character in identifier, expected `.`");
                 value += c;
                 endLocation = location;
                 return true;
             } else if (c == '.') {
                 nextIsID = true;
                 endLocation = location;
+                nextIsDot = false;
+                return true;
+            } else if (c == '[') {
+                if (indexTokenizer != null || indexClosed) {
+                    throw new TokenizerError("Unexpected `[` in identifier");
+                }
+                indexTokenizer = new Tokenizer("", location);
+                index = indexTokenizer.tokens;
                 return true;
             }
             return false;
@@ -281,6 +308,19 @@ public abstract class Token {
         public String toString() {
             String out = "IdentifierToken{value=\"";
             out += value + "\"";
+            if (index != null) {
+                out += ", index=[";
+                boolean f = true;
+                for (Token t : index) {
+                    if (!f)
+                        out += ",";
+                    f = false;
+                    out += t;
+                }
+                out += "]";
+            }
+            if (subTokens != null)
+                out += ", subTokens=" + subTokens.size();
             out += ", " + startLocation;
             return out + "}";
         }

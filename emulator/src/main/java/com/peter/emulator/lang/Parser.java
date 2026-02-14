@@ -151,8 +151,14 @@ public class Parser {
                             workingI++;
                         }
                         ELType.Builder typeBuilder = new ELType.Builder();
+                        boolean ingestOne = false;
                         while (typeBuilder.ingest(tokens.get(workingI))) {
+                            ingestOne = true;
                             workingI++;
+                        }
+                        if (!ingestOne) {
+                            errors.error("Type building didn't ingest any tokens", tokens.get(workingI));
+                            continue;
                         }
                         ELType type = typeBuilder.build();
                         String name;
@@ -243,11 +249,12 @@ public class Parser {
                                 unit.module.entrypoint = function;
                             }
                         } else { // variable
+                            Location endLocation = tokens.get(workingI-1).endLocation;
                             if(abs) {
-                                errors.error("Variable can not be marked abstract", loc.span());
+                                errors.error("Variable can not be marked abstract", loc.span(endLocation));
                                 continue;
                             }
-                            ELVariable var = new ELVariable(level, const_ ? ELVariable.Type.CONST : (stat ? ELVariable.Type.STATIC : ELVariable.Type.MEMBER), type, name, final_, currentNamespace, unit, loc);
+                            ELVariable var = new ELVariable(level, const_ ? ELVariable.Type.CONST : (stat ? ELVariable.Type.STATIC : ELVariable.Type.MEMBER), type, name, final_, currentNamespace, unit, loc, endLocation);
                             if (annotations != null)
                                 var.annotations = annotations;
                             if (currentNamespace == null) {

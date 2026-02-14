@@ -11,6 +11,8 @@ import org.eclipse.lsp4j.services.*;
 
 import com.peter.emulator.lang.ELAnalysisError;
 import com.peter.emulator.lang.ErrorSet;
+import com.peter.emulator.lang.ProgramModule;
+import com.peter.emulator.lang.ProgramUnit;
 
 public class ELLanguageServer extends LSPServer implements LanguageServer, LanguageClientAware {
 
@@ -60,7 +62,7 @@ public class ELLanguageServer extends LSPServer implements LanguageServer, Langu
         ServerCapabilities capabilities = new ServerCapabilities();
         capabilities.setTextDocumentSync(TextDocumentSyncKind.None);
         capabilities.setCompletionProvider(null);
-        capabilities.setHoverProvider(false);
+        capabilities.setHoverProvider(true);
         capabilities.setDocumentSymbolProvider(false);
         capabilities.setReferencesProvider(false);
         capabilities.setDefinitionProvider(false);
@@ -171,5 +173,9 @@ public class ELLanguageServer extends LSPServer implements LanguageServer, Langu
 
     public void addFile(URI uri) {
         workspaceService.addFile(uri);
+    }
+
+    public ProgramUnit getUnit(URI uri) {
+        return workspaceService.getUnit(uri);
     }
 }

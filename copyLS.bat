@@ -1,8 +1,10 @@
 @echo off
 cd .vscode\extensions\emulatorAsm\server
-call npm run compile
-cd ..\client
-call npm run compile
+IF "%1"=="-c" (
+    call npm run compile
+    cd ..\client
+    call npm run compile
+)
 cd ..\
 del emulator-1.0-SNAPSHOT-jar-with-dependencies.jar
 cd ..\..\..\emulator
