@@ -7,6 +7,7 @@ class Console {
     private uint32 deviceId;
     private uint32 end;
     private uint32 consoleSize;
+    private uint32 index;
     protected void* consolePtr;
 
     public Console(void* address, uint32 deviceId, uint32 consoleSize) {
@@ -18,10 +19,12 @@ class Console {
     }
 
     public void printChar(const char c) {
-        SysD.memSet(consolePtr++, c);
-        SysD.memSet(consolePtr++, 0x1);
-        if(consolePtr >= end) {
-            consolePtr = address;
+        address[index] = c;
+        index++;
+        address[index] = 0x1;
+        index++;
+        if(index > consoleSize) {
+            index = 0;
         }
     }
 
@@ -29,7 +32,8 @@ class Console {
         if(len == 0) {
             uint32 i = 0;
             while(str[i] != 0) {
-                printChar(str[i++]);
+                printChar(str[i]);
+                i++;
             }
         } else {
             for(uint32 i = 0; i < len; i++) {

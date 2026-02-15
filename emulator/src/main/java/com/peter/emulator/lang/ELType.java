@@ -233,6 +233,10 @@ public class ELType {
         return pointer;
     }
 
+    public boolean isResolvable() {
+        return pointer | address | array;
+    }
+
     @Override
     public int hashCode() {
         return typeString().hashCode();
@@ -549,4 +553,10 @@ public class ELType {
     public boolean isIndexable() {
         return pointer || array;
 	}
+
+    public ELType resolve() {
+        if(!pointer || array || address)
+            throw new ELCompileException("Can not get resolve a non pointer, address, or array");
+        return subType;
+    }
 }

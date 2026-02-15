@@ -396,4 +396,14 @@ public class ELClass extends Namespace {
         }
         return super.findFunction(name, params);
     }
+
+    @Override
+    protected boolean hasVariable(String name) {
+        return memberVariables.containsKey(name) || staticVariables.containsKey(name);
+    }
+
+    @Override
+    protected ELVariable getVariable(String name) {
+        return memberVariables.getOrDefault(name, staticVariables.get(name));
+    }
 }

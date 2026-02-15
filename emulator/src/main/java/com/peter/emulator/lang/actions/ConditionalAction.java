@@ -8,11 +8,10 @@ import com.peter.emulator.lang.Token.IdentifierToken;
 import com.peter.emulator.lang.Token.NumberToken;
 import com.peter.emulator.lang.Token.OperatorToken;
 
-public class ConditionalAction extends Action {
+public class ConditionalAction extends ComplexAction {
 
     public final String trueTarget;
     public final String falseTarget;
-    public final ArrayList<Action> actions = new ArrayList<>();
 
     public ConditionalAction(ActionScope scope, String trueTarget, String falseTarget, ArrayList<Token> condition) {
         super(scope);
@@ -21,12 +20,18 @@ public class ConditionalAction extends Action {
         Token t1 = condition.get(0);
         Token t2 = condition.get(2);
         if(t1 instanceof IdentifierToken it1) {
-            scope.loadVar(it1.asId(), 1, actions, true);
+            ResolveAction r = scope.loadVar(it1, 1, true);
+            if (r == null)
+                throw ELAnalysisError.error("Unable to resolve variable", it1);
+            actions.add(r);
         } else if (t1 instanceof NumberToken nt1) {
             actions.add(new DirectAction("LOAD r1 %d", nt1.numValue));
         }
         if(t2 instanceof IdentifierToken it2) {
-            scope.loadVar(it2.asId(), 2, actions, true);
+            ResolveAction r = scope.loadVar(it2, 2, true);
+            if (r == null)
+                throw ELAnalysisError.error("Unable to resolve variable", it2);
+            actions.add(r);
         } else if (t2 instanceof NumberToken nt2) {
             actions.add(new DirectAction("LOAD r2 %d", nt2.numValue));
         }
@@ -47,14 +52,5 @@ public class ConditionalAction extends Action {
             throw ELAnalysisError.error("Unexpected token in conditional "+tkn, tkn);
         }
         actions.add(new DirectAction("GOTO %s", falseTarget));
-    }
-
-    @Override
-    public String toAssembly() {
-        String o = "";
-        for(Action a : actions) {
-            o += a.toAssembly()+"\n";
-        }
-        return o;
     }
 }

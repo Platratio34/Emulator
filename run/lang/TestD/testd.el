@@ -9,8 +9,7 @@ namespace TestD {
     public static void main() {
         asm("LOAD rIR &:TestD.onInterrupt");
         uint32 b;
-        uint32 a;
-        a = SysD.rPgm;
+        uint32 a = SysD.rPgm;
         v = a;
         char c;
         c = b;
@@ -34,8 +33,7 @@ namespace TestD {
 
     @InterruptHandler(raw)
     internal static void onInterrupt() {
-        uint32 code;
-        code = SysD.rIC;
+        uint32 code = SysD.rIC;
         asm("LOAD rIC 0");
         if(code == 0xff) {
             asm("HALT");

@@ -7,15 +7,13 @@ import com.peter.emulator.lang.ELValue.ELStringValue;
 import com.peter.emulator.lang.*;
 import com.peter.emulator.lang.Token.BlockToken;
 import com.peter.emulator.lang.Token.IdentifierToken;
-import com.peter.emulator.lang.Token.NumberToken;
 import com.peter.emulator.lang.Token.OperatorToken;
 import com.peter.emulator.lang.Token.SetToken;
 import com.peter.emulator.lang.Token.StringToken;
 import com.peter.emulator.lang.base.ELPrimitives;
 
-public class ActionBlock extends Action {
+public class ActionBlock extends ComplexAction {
 
-    public final ArrayList<Action> actions = new ArrayList<>();
     public final ELFunction func;
 
     private static int subIndex = 0;
@@ -159,77 +157,40 @@ public class ActionBlock extends Action {
                                 // function call; set is parameters
                                 ArrayList<ELType> types = new ArrayList<>();
                                 Location endOfParams = null;
-                                boolean vNext = true;
-                                boolean addr = false;
+                                // boolean vNext = true;
+                                // boolean addr = false;
+                                ArrayList<Token> exp = new ArrayList<>();
+                                int r = 2;
                                 for (int i = 0; i < st.subTokens.size(); i++) {
                                     Token t2 = st.subTokens.get(i);
                                     endOfParams = t2.endLocation;
-                                    int r = 2;
-                                    switch (t2) {
-                                        case IdentifierToken it2 -> {
-                                            if(!vNext)
-                                                throw ELAnalysisError.error(String.format("Unexpected token %s in function parameters", t2), t2);
-                                            Identifier id2 = it2.asId();
-                                            if (scope.loadVar(id2, r, actions, !addr)) {
-                                                if(onStack)
-                                                    actions.add(new DirectAction("STACK PUSH %s", MachineCode.translateReg(r)));
-                                                else
-                                                    r++;
-                                                ELType t = scope.getVarStack(id2).getLast().type;
-                                                if(addr)
-                                                    types.add(t.addressOf());
-                                                else
-                                                    types.add(t);
-                                            } else if (it2.value.equals("SysD")) {
-                                                int r2 = getSysDReg(id2);
-                                                if (r2 == -1)
-                                                    throw ELAnalysisError.error("Unable to resolve SysD variable " + id2, it2);
-                                                if(addr)
-                                                    throw ELAnalysisError.error("Unable to get address of SysD variables", it2);
-                                                if(onStack)
-                                                    actions.add(new DirectAction("STACK PUSH %s", MachineCode.translateReg(r2)));
-                                                else
-                                                    actions.add(new DirectAction("COPY %s %s", MachineCode.translateReg(r2), MachineCode.translateReg(r++)));
-                                                types.add(ELPrimitives.UINT32);
-                                            }
-                                            vNext = false;
-                                            addr = false;
-                                        }
-                                        case NumberToken nt2 -> {
-                                            if(!vNext)
-                                                throw ELAnalysisError.error(String.format("Unexpected token %s in function parameters", t2), t2);
-                                            if(addr)
-                                                throw ELAnalysisError.error(String.format("Can not get address of literal", t2), t2);
-                                            if(onStack)
-                                                actions.add(new DirectAction("LOAD r2 %d\nSTACK PUSH r2", nt2.numValue));
-                                            else
-                                                actions.add(new DirectAction("LOAD %s %d", MachineCode.translateReg(r++), nt2.numValue));
-                                            types.add(ELPrimitives.UINT32);
-                                            vNext = false;
-                                        }
-                                        case OperatorToken ot2 -> {
-                                            switch(ot2.type) {
-                                                case OperatorToken.Type.COMMA -> {
-                                                    if(vNext) {
-                                                        throw ELAnalysisError.error(String.format("Unexpected `,` found in function parameters"), t2);
-                                                    }
-                                                    vNext = true;
-                                                    addr = false;
-                                                }
-                                                case OperatorToken.Type.BITWISE_AND -> {
-                                                    if(!vNext) {
-                                                        throw ELAnalysisError.error(String.format("Unexpected `&` found in function parameters"), t2);
-                                                    }
-                                                    addr = true;
-                                                }
-                                                default -> {
-                                                    throw ELAnalysisError.error(String.format("Unexpected token %s in function parameters", t2), t2);
-                                                }
-                                            }
-                                        }
-                                        default -> throw ELAnalysisError.error(String.format("Unexpected token %s in function parameters", t2), t2);
+                                    if (t2 instanceof OperatorToken ot && ot.type == OperatorToken.Type.COMMA) {
+                                        if(exp.size() == 0)
+                                            throw ELAnalysisError.error("Empty expression", t2);
+                                        ExpressionAction expA = new ExpressionAction(scope, exp, r);
+                                        actions.add(expA);
+                                        types.add(expA.outType);
+                                        if(onStack)
+                                            actions.add(new DirectAction("STACK PUSH %s", MachineCode.translateReg(r)));
+                                        else
+                                            actions.add(new DirectAction("COPY %s %s", MachineCode.translateReg(r),
+                                                    MachineCode.translateReg(r++)));
+                                        exp = new ArrayList<>();
+                                    } else {
+                                        exp.add(t2);
                                     }
                                 }
+                                if (exp.size() > 0) {
+                                    ExpressionAction expA = new ExpressionAction(scope, exp, r);
+                                    actions.add(expA);
+                                    types.add(expA.outType);
+                                    if (onStack)
+                                        actions.add(new DirectAction("STACK PUSH %s", MachineCode.translateReg(r)));
+                                    else
+                                        actions.add(new DirectAction("COPY %s %s", MachineCode.translateReg(r),
+                                                MachineCode.translateReg(r++)));
+                                }
+
                                 String tStr = "(";
                                 for (int i = 0; i < types.size(); i++) {
                                     if (i > 0)
@@ -334,10 +295,12 @@ public class ActionBlock extends Action {
                         if (tkn instanceof IdentifierToken it2) {
                             name = it2.value;
                         } else {
-                            throw ELAnalysisError.error("Expected variable name identifier (found " + tkn.debugString() + ")", tkn);
+                            throw ELAnalysisError
+                                    .error("Expected variable name identifier (found " + tkn.debugString() + ")", tkn);
                         }
                         tkn = tokens.get(wI);
-                        scope.addStackVar(name, type, tokens.get(wI-1).endLocation, errors).analyze(errors, scope.namespace);
+                        scope.addStackVar(name, type, tokens.get(wI - 1).endLocation, errors).analyze(errors,
+                                scope.namespace);
                         if (tkn instanceof OperatorToken ot) {
                             switch (ot.type) {
                                 case SEMICOLON -> {
@@ -347,172 +310,212 @@ public class ActionBlock extends Action {
                                 case ASSIGN -> {
                                     wI++;
                                     tkn = tokens.get(wI++);
-                                    switch (tkn) {
-                                        case NumberToken nt -> {
-                                            actions.add(new DirectAction("LOAD r1 %d", nt.numValue));
-                                            actions.add(new StackAllocAction(scope, 1));
-                                        }
-                                        case IdentifierToken it3 -> {
-                                            Identifier id3 = it3.asId();
-                                            if (id3.starts("SysD")) {
-                                                int r = getSysDReg(id3);
-                                                if(r == -1)
-                                                    throw ELAnalysisError.error("Unknown SysD variable "+id3, it3);
-                                                actions.add(new StackAllocAction(scope, r));
-                                            } else if (scope.loadVar(id3, 1, actions, true)) {
-                                                actions.add(new StackAllocAction(scope, 1));
-                                            } else {
-                                                throw ELAnalysisError.error("Unable to resolve variable "+id3, it3);
-                                            }
-                                        }
-                                        default -> {}
+                                    ArrayList<Token> exp = new ArrayList<>();
+                                    while (!(tkn instanceof OperatorToken ot2
+                                            && ot2.type == OperatorToken.Type.SEMICOLON)) {
+                                        exp.add(tkn);
+                                        if (wI + 1 == tokens.size())
+                                            throw ELAnalysisError.error("Unexpected end of block. Expected `;`", tkn);
+                                        tkn = tokens.get(wI++);
                                     }
-                                    tkn = tokens.get(wI++);
-                                    if (!(tkn instanceof OperatorToken ot2 && ot2.type == OperatorToken.Type.SEMICOLON)) {
-                                        throw ELAnalysisError.error("Expected `;` (found " + tkn + ")", tkn);
-                                    }
+                                    int r = scope.firstFree();
+                                    actions.add(new ExpressionAction(scope, exp, r));
+                                    actions.add(new StackAllocAction(scope, r));
                                 }
-                                default -> throw ELAnalysisError.error("Expected `;` or `=` (found `" + ot.type + "`)", tkn);
+                                default ->
+                                    throw ELAnalysisError.error("Expected `;` or `=` (found `" + ot.type + "`)", tkn);
                             }
                         } else {
                             throw ELAnalysisError.error("Expected `;` or `=` (found " + tkn + ")", tkn);
                         }
                         continue;
                     }
+                    
+                    
 
-                    Identifier targetVal = id;
+                    IdentifierToken targetVal = it;
                     wI++;
                     tkn = tokens.get(wI);
+
                     if (tkn instanceof OperatorToken ot && (ot.type == OperatorToken.Type.ASSIGN || ot.type == OperatorToken.Type.ADD_ASSIGN || ot.type == OperatorToken.Type.SUB_ASSIGN
                             || ot.type == OperatorToken.Type.INC || ot.type == OperatorToken.Type.DEC)) {
-                        if (!scope.loadVar(targetVal, 1, actions, false)) { // block stack var
+                        int rT = scope.firstFree();
+                        String rTStr = MachineCode.translateReg(rT);
+                        ResolveAction rA = scope.loadVar(targetVal, rT, false);
+                        if (rA == null) // block stack var
                             throw ELAnalysisError.error("Unable to resolve variable " + targetVal, it.span());
-                        }
-
-                        boolean addAss = ot.type == OperatorToken.Type.ADD_ASSIGN;
-                        boolean subAss = ot.type == OperatorToken.Type.SUB_ASSIGN;
-                        int wR = 2;
+                        
                         if (ot.type == OperatorToken.Type.INC) {
-                            actions.add(new DirectAction("LOAD MEM r2 r1\nINC r2 1\nSTORE r2 r1"));
+                            int r2 = scope.firstFree();
+                            String r2Str = MachineCode.translateReg(r2);
+                            actions.add(new DirectAction("LOAD MEM %s %s", r2Str, rTStr));
+                            actions.add(new DirectAction("INC %s 1", r2Str));
+                            actions.add(new DirectAction("STORE %s %s", r2Str, rTStr));
                             wI += 2;
                             continue;
                         } else if (ot.type == OperatorToken.Type.DEC) {
-                            actions.add(new DirectAction("LOAD MEM r2 r1\nINC r2 -1\nSTORE r2 r1"));
+                            int r2 = scope.firstFree();
+                            String r2Str = MachineCode.translateReg(r2);
+                            actions.add(new DirectAction("LOAD MEM %s %s", r2Str, rTStr));
+                            actions.add(new DirectAction("INC %s -1", r2Str));
+                            actions.add(new DirectAction("STORE %s %s", r2Str, rTStr));
                             wI += 2;
                             continue;
-                        } else if (addAss || subAss) {
-                            actions.add(new DirectAction("LOAD MEM r2 r1"));
-                            wR++;
                         }
-
+                        
+                        ArrayList<Token> exp = new ArrayList<>();
                         wI++;
                         tkn = tokens.get(wI++);
-                        // need an expression here
-                        ArrayList<Token> exp = new ArrayList<>();
                         while (!(tkn instanceof OperatorToken ot2 && ot2.type == OperatorToken.Type.SEMICOLON)) {
-                            // System.out.println("- "+tkn);
                             exp.add(tkn);
+                            if (wI == tokens.size())
+                                throw ELAnalysisError.error("Unexpected end of block. Expected `;` " + tkn, tkn);
                             tkn = tokens.get(wI++);
                         }
-                        wI--;
-                        int eI = 0;
-                        if (exp.get(0) instanceof OperatorToken ot3) {
-                            if (ot3.type == OperatorToken.Type.POINTER) {// pointer de-ref
-                                eI++;
-                            } else if (ot3.type == OperatorToken.Type.BITWISE_AND) {// address-of
-                                eI++;
-                            }
-                        }
-                        int srcReg = 0;
-                        tkn = exp.get(eI);
-                        String sRStr = MachineCode.translateReg(wR);
 
-                        switch (tkn) {
-                            case IdentifierToken it2 -> {
-                                Identifier id2 = it2.asId();
-                                if (scope.loadVar(id2, wR, actions, true)) {
-                                    srcReg = wR;
-                                } else if (id2.starts("SysD")) {
-                                    srcReg = getSysDReg(id2);
-                                    if (srcReg == -1)
-                                        throw ELAnalysisError.error("Unknown SysD variable " + id2, it2.span());
-                                } else {
-                                    throw ELAnalysisError.error("Unknown variable " + id2, it2.span());
-                                }
-                            }
-                            case NumberToken nt -> {
-                                srcReg = wR;
-                                actions.add(new DirectAction("LOAD %s %d", sRStr, ELValue.number(ELPrimitives.UINT32, nt).value));
-                            }
-                            default -> {
-                            }
+                        
+                        scope.reserve(rT);
+                        int r = scope.firstFree();
+                        actions.add(new ExpressionAction(scope, exp, r));
+                        if (ot.type == OperatorToken.Type.ADD_ASSIGN) {
+                            int r2 = scope.firstFree();
+                            actions.add(new DirectAction("LOAD MEM %s %s", MachineCode.translateReg(r2), rTStr));
+                            actions.add(new DirectAction("ADD %s %s %s", rTStr, MachineCode.translateReg(r2), rTStr));
+                        } else if (ot.type == OperatorToken.Type.SUB_ASSIGN) {
+                            int r2 = scope.firstFree();
+                            actions.add(new DirectAction("LOAD MEM %s %s", MachineCode.translateReg(r2), rTStr));
+                            actions.add(new DirectAction("SUB %s %s %s", rTStr, MachineCode.translateReg(r2), rTStr));
                         }
-                        String srcRegStr = MachineCode.translateReg(srcReg);
+                        actions.add(new DirectAction("STORE %s %s", MachineCode.translateReg(r), rTStr));
+                        scope.release(rT);
+                        scope.release(r);
 
-                        eI++;
-                        if (exp.size() > eI + 1) {
-                            wR++;
-                            boolean add = false;
-                            boolean sub = false;
-                            tkn = exp.get(eI);
-                            if (tkn instanceof OperatorToken ot3) {
-                                add = ot3.type == OperatorToken.Type.ADD;
-                                sub = ot3.type == OperatorToken.Type.SUB;
-                            }
-                            eI++;
-                            while (eI < exp.size()) {
-                                tkn = exp.get(eI);
-                                eI++;
-                                switch (tkn) {
-                                    case NumberToken nt -> {
-                                        int val = ELValue.number(ELPrimitives.UINT32, nt).value;
-                                        if (sub) {
-                                            val *= -1;
-                                        }
-                                        actions.add(new DirectAction("INC %s %d", srcRegStr, val));
-                                    }
-                                    case OperatorToken ot3 -> {
-                                        add = ot3.type == OperatorToken.Type.ADD;
-                                        sub = ot3.type == OperatorToken.Type.SUB;
-                                    }
-                                    case IdentifierToken it4 -> {
-                                        Identifier id4 = it4.asId();
-                                        String wRStr = MachineCode.translateReg(wR);
-                                        if (scope.loadVar(id4, wR, actions, true)) {
-                                            if (add) {
-                                                actions.add( new DirectAction("ADD %s %s %s", srcRegStr, srcRegStr, wRStr));
-                                            } else if (sub) {
-                                                actions.add( new DirectAction("SUB %s %s %s", srcRegStr, srcRegStr, wRStr));
-                                            }
+                        // boolean addAss = ot.type == OperatorToken.Type.ADD_ASSIGN;
+                        // boolean subAss = ot.type == OperatorToken.Type.SUB_ASSIGN;
+                        // int wR = 2;
+                        // if (ot.type == OperatorToken.Type.INC) {
+                        //     actions.add(new DirectAction("LOAD MEM r2 r1\nINC r2 1\nSTORE r2 r1"));
+                        //     wI += 2;
+                        //     continue;
+                        // } else if (ot.type == OperatorToken.Type.DEC) {
+                        //     actions.add(new DirectAction("LOAD MEM r2 r1\nINC r2 -1\nSTORE r2 r1"));
+                        //     wI += 2;
+                        //     continue;
+                        // } else if (addAss || subAss) {
+                        //     actions.add(new DirectAction("LOAD MEM r2 r1"));
+                        //     wR++;
+                        // }
 
-                                        } else if (id4.starts("SysD")) {
-                                            int r = getSysDReg(id4);
-                                            if (r == -1)
-                                                throw ELAnalysisError.error("Unknown SysD variable " + id4, it4.span());
-                                            String tReg = MachineCode.translateReg(r);
-                                            if (add) {
-                                                actions.add( new DirectAction("ADD %s %s %s", srcRegStr, srcRegStr, tReg));
-                                            } else if (sub) {
-                                                actions.add( new DirectAction("SUB %s %s %s", srcRegStr, srcRegStr, tReg));
-                                            }
-                                        } else {
-                                            throw ELAnalysisError.error("Unknown variable " + id4, it4.span());
-                                        }
-                                    }
-                                    default -> {
-                                    }
-                                }
-                            }
-                        }
-                        if(addAss) {
-                            actions.add(new DirectAction("ADD %s r2 %s", srcRegStr, srcRegStr));
-                        } else if(subAss) {
-                            actions.add(new DirectAction("SUB %s r2 %s", srcRegStr, srcRegStr));
-                        }
-                        actions.add(new DirectAction("STORE %s r1", srcRegStr));
+                        // wI++;
+                        // tkn = tokens.get(wI++);
+                        // // need an expression here
+                        // ArrayList<Token> exp = new ArrayList<>();
+                        // while (!(tkn instanceof OperatorToken ot2 && ot2.type == OperatorToken.Type.SEMICOLON)) {
+                        //     // System.out.println("- "+tkn);
+                        //     exp.add(tkn);
+                        //     tkn = tokens.get(wI++);
+                        // }
+                        // wI--;
+                        // int eI = 0;
+                        // if (exp.get(0) instanceof OperatorToken ot3) {
+                        //     if (ot3.type == OperatorToken.Type.POINTER) {// pointer de-ref
+                        //         eI++;
+                        //     } else if (ot3.type == OperatorToken.Type.BITWISE_AND) {// address-of
+                        //         eI++;
+                        //     }
+                        // }
+                        // int srcReg = 0;
+                        // tkn = exp.get(eI);
+                        // String sRStr = MachineCode.translateReg(wR);
+
+                        // switch (tkn) {
+                        //     case IdentifierToken it2 -> {
+                        //         Identifier id2 = it2.asId();
+                        //         if (scope.loadVar(id2, wR, actions, true)) {
+                        //             srcReg = wR;
+                        //         } else if (id2.starts("SysD")) {
+                        //             srcReg = getSysDReg(id2);
+                        //             if (srcReg == -1)
+                        //                 throw ELAnalysisError.error("Unknown SysD variable " + id2, it2.span());
+                        //         } else {
+                        //             throw ELAnalysisError.error("Unknown variable " + id2, it2.span());
+                        //         }
+                        //     }
+                        //     case NumberToken nt -> {
+                        //         srcReg = wR;
+                        //         actions.add(new DirectAction("LOAD %s %d", sRStr, ELValue.number(ELPrimitives.UINT32, nt).value));
+                        //     }
+                        //     default -> {
+                        //     }
+                        // }
+                        // String srcRegStr = MachineCode.translateReg(srcReg);
+
+                        // eI++;
+                        // if (exp.size() > eI + 1) {
+                        //     wR++;
+                        //     boolean add = false;
+                        //     boolean sub = false;
+                        //     tkn = exp.get(eI);
+                        //     if (tkn instanceof OperatorToken ot3) {
+                        //         add = ot3.type == OperatorToken.Type.ADD;
+                        //         sub = ot3.type == OperatorToken.Type.SUB;
+                        //     }
+                        //     eI++;
+                        //     while (eI < exp.size()) {
+                        //         tkn = exp.get(eI);
+                        //         eI++;
+                        //         switch (tkn) {
+                        //             case NumberToken nt -> {
+                        //                 int val = ELValue.number(ELPrimitives.UINT32, nt).value;
+                        //                 if (sub) {
+                        //                     val *= -1;
+                        //                 }
+                        //                 actions.add(new DirectAction("INC %s %d", srcRegStr, val));
+                        //             }
+                        //             case OperatorToken ot3 -> {
+                        //                 add = ot3.type == OperatorToken.Type.ADD;
+                        //                 sub = ot3.type == OperatorToken.Type.SUB;
+                        //             }
+                        //             case IdentifierToken it4 -> {
+                        //                 Identifier id4 = it4.asId();
+                        //                 String wRStr = MachineCode.translateReg(wR);
+                        //                 if (scope.loadVar(id4, wR, actions, true)) {
+                        //                     if (add) {
+                        //                         actions.add( new DirectAction("ADD %s %s %s", srcRegStr, srcRegStr, wRStr));
+                        //                     } else if (sub) {
+                        //                         actions.add( new DirectAction("SUB %s %s %s", srcRegStr, srcRegStr, wRStr));
+                        //                     }
+
+                        //                 } else if (id4.starts("SysD")) {
+                        //                     int r = getSysDReg(id4);
+                        //                     if (r == -1)
+                        //                         throw ELAnalysisError.error("Unknown SysD variable " + id4, it4.span());
+                        //                     String tReg = MachineCode.translateReg(r);
+                        //                     if (add) {
+                        //                         actions.add( new DirectAction("ADD %s %s %s", srcRegStr, srcRegStr, tReg));
+                        //                     } else if (sub) {
+                        //                         actions.add( new DirectAction("SUB %s %s %s", srcRegStr, srcRegStr, tReg));
+                        //                     }
+                        //                 } else {
+                        //                     throw ELAnalysisError.error("Unknown variable " + id4, it4.span());
+                        //                 }
+                        //             }
+                        //             default -> {
+                        //             }
+                        //         }
+                        //     }
+                        // }
+                        // if(addAss) {
+                        //     actions.add(new DirectAction("ADD %s r2 %s", srcRegStr, srcRegStr));
+                        // } else if(subAss) {
+                        //     actions.add(new DirectAction("SUB %s r2 %s", srcRegStr, srcRegStr));
+                        // }
+                        // actions.add(new DirectAction("STORE %s r1", srcRegStr));
                     }
                 }
             } catch (ELAnalysisError e) {
+                if (e.span == null)
+                    e = new ELAnalysisError(e.severity, e.reason, tokens.get(wI).span());
                 errors.add(e);
             }
             wI++;
@@ -561,14 +564,6 @@ public class ActionBlock extends Action {
             case "rPM" -> MachineCode.REG_PRIVILEGED_MODE;
             default -> -1;
         };
-    }
-
-    @Override
-    public String toAssembly() {
-        String s = "";
-        for(Action a : actions)
-            s+= a.toAssembly()+"\n";
-        return s;
     }
 
 }

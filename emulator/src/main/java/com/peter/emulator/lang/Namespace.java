@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
+import com.peter.emulator.lang.Token.IdentifierToken;
+
 public class Namespace {
 
     public final String cName;
@@ -335,8 +337,54 @@ public class Namespace {
             }
             return v.type.clazz.getVarStack(identifier, stack);
         }
-        if(namespace != null)
+        if (namespace != null)
             return namespace.getVarStack(identifier, stack);
         return stack;
+    }
+    
+    public ELVariable getFirstVar(IdentifierToken id, ProgramUnit unit) {
+        return getFirstVar(id, 0, unit);
+    }
+
+    protected ELVariable getFirstVar(IdentifierToken id, int index, ProgramUnit unit) {
+        IdentifierToken it = id;
+        if (index == 0) {
+            if (id.value.equals(cName))
+                index++;
+        }
+        if (index > 0 && (id.subTokens == null || index > id.subTokens.size()))
+            return null;
+        if (index > 0) {
+            if (id.index != null)
+                return null;
+            it = id.sub(index - 1);
+            if (index > 1)
+                if (id.sub(index - 2) != null)
+                    return null;
+        }
+        ELVariable v = getVariable(it.value);
+        if (v != null)
+            return v;
+        if (namespaces.containsKey(it.value))
+            return namespaces.get(it.value).getFirstVar(id, index + 1, null);
+        if (index == 0 && unit != null) {
+            // we only check parent/includes on the first step, and only if we couldn't find it in this namespace or a child namespace, and if we are not already searching an include
+            if (unit.hasInclude(it.value)) {
+                Namespace ns = unit.getNamespaceIncluded(unit.getInclude(it.value));
+                if (ns == null)
+                    throw ELAnalysisError.error("Unable to find included namespace " + unit.getInclude(it.value), it);
+                return ns.getFirstVar(id, index + 1, null); // and don't check includes within the included namespace 
+            }
+            if (namespace != null)
+                return namespace.getFirstVar(id, unit);
+        }
+        return null;
+    }
+
+    protected boolean hasVariable(String name) {
+        return staticVariables.containsKey(name);
+    }
+    protected ELVariable getVariable(String name) {
+        return staticVariables.get(name);
     }
 }

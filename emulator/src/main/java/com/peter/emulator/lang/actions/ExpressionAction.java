@@ -12,14 +12,14 @@ import com.peter.emulator.lang.Token.OperatorToken;
 import com.peter.emulator.lang.Token.SetToken;
 import com.peter.emulator.lang.base.ELPrimitives;
 
-public class ExpressionAction extends Action {
+public class ExpressionAction extends ComplexAction {
 
-    public ArrayList<Action> actions = new ArrayList<>();
-    public int targetReg;
-    public ELType outType = null;
+    public final int targetReg;
+    public final ELType outType;
     
     public ExpressionAction(ActionScope scope, ArrayList<Token> tokens, int targetReg) {
         super(scope);
+        this.targetReg = targetReg;
         String tRegStr = MachineCode.translateReg(targetReg);
         int wI = 0;
 
@@ -27,73 +27,70 @@ public class ExpressionAction extends Action {
         ELType lastType = null;
 
         boolean addressOf = false;
-        boolean resolvePointer = false;
+        int resolvePointer = 0;
         boolean not = false;
 
         while (wI < tokens.size()) {
             Token tkn = tokens.get(wI);
             switch (tkn) {
                 case OperatorToken ot -> {
-                    switch(ot.type) {
-                        case ADD -> lastOp = ot.type;
-                        case SUB -> lastOp = ot.type;
-                        
-                        case BITWISE_OR -> lastOp = ot.type;
-                        case BITWISE_NOR -> lastOp = ot.type;
+                    switch (ot.type) {
+                        case ADD, SUB, BITWISE_OR, BITWISE_NOR, LEFT_SHIFT, RIGHT_SHIFT, AND, OR, LEQ, GEQ, ANGLE_LEFT,
+                                ANGLE_RIGHT, NEQ, EQ2 -> {
+                            if (lastOp != null)
+                                throw ELAnalysisError.error(
+                                        "Unknown or unsupported operation: " + ot.type + " (op, after " + lastOp + ")",
+                                        tkn);
+                            lastOp = ot.type;
+                        }
                         case BITWISE_AND -> {
                             if (lastOp != null) {
+                                if (addressOf)
+                                    throw ELAnalysisError.error("Can not get address of address of", tkn);
                                 addressOf = true;
                             } else {
                                 lastOp = ot.type;
                             }
                         }
 
-                        case LEFT_SHIFT -> lastOp = ot.type;
-                        case RIGHT_SHIFT -> lastOp = ot.type;
-
                         case POINTER -> {
                             if (lastOp != null) {
-                                resolvePointer = true;
+                                resolvePointer++;
                             } else {
                                 lastOp = ot.type;
                             }
                         }
                         case NOT -> {
                             if (lastOp != null) {
+                                if (not)
+                                    throw ELAnalysisError.error("Can not have more that one `!` in a row", tkn);
                                 not = true;
                             } else {
-                                throw ELAnalysisError.error("Unknown or unsupported operation", tkn);
+                                throw ELAnalysisError.error("Unknown or unsupported operation: " + ot.type + " (op)",
+                                        tkn);
                             }
                         }
-                        
-                        case AND -> lastOp = ot.type;
-                        case OR -> lastOp = ot.type;
-
-                        case LEQ -> lastOp = ot.type;
-                        case GEQ -> lastOp = ot.type;
-                        case ANGLE_LEFT -> lastOp = ot.type;
-                        case ANGLE_RIGHT -> lastOp = ot.type;
-                        case NEQ -> lastOp = ot.type;
-                        case EQ2 -> lastOp = ot.type;
 
                         default -> {
-                            throw ELAnalysisError.error("Unknown or unsupported operation", tkn);
+                            throw ELAnalysisError.error("Unknown or unsupported operation: " + ot.type + " (op)", tkn);
                         }
                     }
                 }
                 case NumberToken nt -> {
-                    if(addressOf || resolvePointer)
+                    if (addressOf || resolvePointer > 0)
                         throw ELAnalysisError.error("Invalid pointer operation", tkn);
-                    if(not)
+                    if (not)
                         throw ELAnalysisError.error("Can't not a number literal", tkn);
                     if (lastType != null) {
-                        if(!ELPrimitives.UINT32.canCastTo(lastType))
-                            throw ELAnalysisError.error("Invalid type-cast (uint32 -> "+lastType.toString()+")", tkn);
+                        if (!ELPrimitives.UINT32.canCastTo(lastType))
+                            throw ELAnalysisError.error("Invalid type-cast (uint32 -> " + lastType.toString() + ")",
+                                    tkn);
                     }
-                    int tR = (lastOp == null) ? targetReg : scope.firstFree();
+                    lastType = ELPrimitives.UINT32;
+                    int tR = (lastType == null) ? targetReg : scope.firstFree();
                     String str = MachineCode.translateReg(tR);
                     if (lastOp != null) {
-                        switch(lastOp) {
+                        switch (lastOp) {
                             case ADD -> {
                                 actions.add(new DirectAction("INC %s %d", tRegStr, nt.numValue));
                             }
@@ -124,20 +121,41 @@ public class ExpressionAction extends Action {
                             case RIGHT_SHIFT -> {
                                 actions.add(new DirectAction("RSH %s %d", tRegStr, nt.numValue));
                             }
-                            
+
                             default -> {
-                                throw ELAnalysisError.error("Unknown or unsupported operation", tkn);
+                                throw ELAnalysisError
+                                        .error("Unknown or unsupported operation: " + lastOp + " (num lit)", tkn);
                             }
                         }
                     } else {
                         actions.add(new DirectAction("LOAD %s %d", str, nt.numValue));
                         scope.reserve(tR);
                     }
+                    lastOp = null;
                 }
                 case IdentifierToken it -> {
-                    int tR = (lastOp == null) ? targetReg : scope.firstFree();
+                    int tR = (lastType == null) ? targetReg : scope.firstFree();
                     String str = MachineCode.translateReg(tR);
-                    scope.loadVar(it, tR, actions, !addressOf);
+                    ResolveAction rA = scope.loadVar(it, tR, addressOf);
+                    if (rA == null)
+                        throw ELAnalysisError.error("Unable to resolve variable", it);
+                    actions.add(rA);
+                    ELType t = rA.returnType;
+                    while (resolvePointer > 0) {
+                        if (!t.isResolvable())
+                            throw ELAnalysisError.error(
+                                    "Unable to resolve non-pointer, address, or array (was " + t.typeString() + ")",
+                                    it);
+                        actions.add(new DirectAction("LOAD MEM %s %s", str, str));
+                        resolvePointer--;
+                        t = t.resolve();
+                    }
+                    if (lastType != null) {
+                        if (!t.canCastTo(lastType))
+                            throw ELAnalysisError.error(
+                                    "Invalid type-cast (" + t.typeString() + " -> " + lastType.toString() + ")", tkn);
+                    }
+                    lastType = t;
                     // actions.add(new ResolveAction(scope, tR, it));
                     if (lastOp != null) {
                         switch (lastOp) {
@@ -169,19 +187,42 @@ public class ExpressionAction extends Action {
                             }
 
                             default -> {
-                                throw ELAnalysisError.error("Unknown or unsupported operation", tkn);
+                                throw ELAnalysisError.error("Unknown or unsupported operation: " + lastOp + " (var)",
+                                        tkn);
                             }
                         }
                         scope.release(tR);
                     } else {
                         scope.reserve(tR);
                     }
+                    addressOf = false;
+                    not = false;
+                    lastOp = null;
                 }
                 case SetToken st -> {
+                    if (addressOf)
+                        throw ELAnalysisError.error("Can not get address of an expression", tkn);
                     // but what if this is casting?
-                    int tR = (lastOp == null) ? targetReg : scope.firstFree();
+                    int tR = (lastType == null) ? targetReg : scope.firstFree();
                     String str = MachineCode.translateReg(tR);
-                    actions.add(new ExpressionAction(scope, st.subTokens, tR));
+                    ExpressionAction expA = new ExpressionAction(scope, st.subTokens, tR);
+                    actions.add(expA);
+                    ELType t = expA.outType;
+                    while (resolvePointer > 0) {
+                        if (!t.isResolvable())
+                            throw ELAnalysisError.error(
+                                    "Unable to resolve non-pointer, address, or array (was " + t.typeString() + ")",
+                                    st);
+                        actions.add(new DirectAction("LOAD MEM %s %s", str, str));
+                        resolvePointer--;
+                        t = t.resolve();
+                    }
+                    if (lastType != null) {
+                        if (!t.canCastTo(lastType))
+                            throw ELAnalysisError.error(
+                                    "Invalid type-cast (" + t.typeString() + " -> " + lastType.toString() + ")", tkn);
+                    }
+                    lastType = t;
                     if (lastOp != null) {
                         switch (lastOp) {
                             case ADD -> {
@@ -208,27 +249,26 @@ public class ExpressionAction extends Action {
                             }
 
                             default -> {
-                                throw ELAnalysisError.error("Unknown or unsupported operation", tkn);
+                                throw ELAnalysisError.error("Unknown or unsupported operation: " + lastOp + " (exp)",
+                                        tkn);
                             }
                         }
                         scope.release(tR);
                     } else {
                         scope.reserve(tR);
                     }
+                    not = false;
+                    lastOp = null;
                 }
                 default -> {
-                    throw ELAnalysisError.error("Unexpected token found in expression: "+tkn, tkn);
+                    throw ELAnalysisError.error("Unexpected token found in expression: " + tkn, tkn);
                 }
             }
             wI++;
         }
-
-    }
-
-    @Override
-    public String toAssembly() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'toAssembly'");
+        if (lastType == null)
+            throw ELAnalysisError.error("Un-typed expression", tokens.getFirst().startLocation.span(tokens.getLast().endLocation));
+        outType = lastType;
     }
 
     /*
