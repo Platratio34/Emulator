@@ -142,4 +142,8 @@ public class ELVariable {
             this.value = value;
         }
     }
+
+    public int sizeofWords() {
+        return Math.ceilDiv(sizeof(), 4);
+    }
 }

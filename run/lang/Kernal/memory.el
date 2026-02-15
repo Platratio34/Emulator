@@ -20,7 +20,7 @@ namespace Kernal.Memory {
     public static void* mallocBlock() {
         uint32 blockId;
         uint32 lastOffset = 0;
-        uint32 pid = SysD.getPID();
+        uint32 pid = SysD.rPID;
         for(uint32 i = 1; i < MMU_MAX_BLOCKS; i++) {
             if(blocks[i].state == 0) {
                 blockId = i;

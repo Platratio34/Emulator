@@ -131,6 +131,8 @@ public abstract class Token {
             DIV("/"),
             INC("++"),
             DEC("--"),
+            LEFT_SHIFT("<<"),
+            RIGHT_SHIFT(">>"),
             BITWISE_NOR("^"),
             BITWISE_AND("&"),
             BITWISE_OR("|"),
@@ -145,7 +147,9 @@ public abstract class Token {
             static {
                 ASSIGN.addNext('=', EQ2);
                 ANGLE_LEFT.addNext('=', LEQ);
+                ANGLE_LEFT.addNext('<', LEFT_SHIFT);
                 ANGLE_RIGHT.addNext('=', GEQ);
+                ANGLE_RIGHT.addNext('>', RIGHT_SHIFT);
                 NOT.addNext('=', NEQ);
                 BITWISE_AND.addNext('&', AND);
                 BITWISE_OR.addNext('|', OR);
@@ -342,6 +346,10 @@ public abstract class Token {
 
         public Identifier asId() {
             return new Identifier(this);
+        }
+
+        public IdentifierToken sub(int i) {
+            return (IdentifierToken)subTokens.get(i);
         }
     }
 

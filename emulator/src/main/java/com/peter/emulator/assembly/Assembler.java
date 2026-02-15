@@ -469,7 +469,7 @@ public class Assembler {
                     }
                     case "MUL" -> {
                         if (parts.length < 4) {
-                            errors.add(new AssemblerError("Invalid mul instruction: SUB [rd] [ra] [rb]", lineN,
+                            errors.add(new AssemblerError("Invalid mul instruction: MUL [rd] [ra] [rb]", lineN,
                                     line.length(), line, source));
                             continue;
                         }
@@ -477,6 +477,61 @@ public class Assembler {
                         int ra = getReg(parts[2]);
                         int rb = getReg(parts[3]);
                         data[addr++] = (Entry.Math(MATH_MUL, rd, ra, rb));
+                    }
+                    case "AND" -> {
+                        if (parts.length < 4) {
+                            errors.add(new AssemblerError("Invalid mul instruction: AND [rd] [ra] [rb]", lineN,
+                                    line.length(), line, source));
+                            continue;
+                        }
+                        int rd = getReg(parts[1]);
+                        int ra = getReg(parts[2]);
+                        int rb = getReg(parts[3]);
+                        data[addr++] = (Entry.Math(MATH_AND, rd, ra, rb));
+                    }
+                    case "OR" -> {
+                        if (parts.length < 4) {
+                            errors.add(new AssemblerError("Invalid mul instruction: OR [rd] [ra] [rb]", lineN,
+                                    line.length(), line, source));
+                            continue;
+                        }
+                        int rd = getReg(parts[1]);
+                        int ra = getReg(parts[2]);
+                        int rb = getReg(parts[3]);
+                        data[addr++] = (Entry.Math(MATH_OR, rd, ra, rb));
+                    }
+                    case "NOR" -> {
+                        if (parts.length < 4) {
+                            errors.add(new AssemblerError("Invalid mul instruction: NOR [rd] [ra] [rb]", lineN,
+                                    line.length(), line, source));
+                            continue;
+                        }
+                        int rd = getReg(parts[1]);
+                        int ra = getReg(parts[2]);
+                        int rb = getReg(parts[3]);
+                        data[addr++] = (Entry.Math(MATH_NOR, rd, ra, rb));
+                    }
+                    case "LSH" -> {
+                        if (parts.length < 4) {
+                            errors.add(new AssemblerError("Invalid mul instruction: LSH [rd] [ra] [rb]", lineN,
+                                    line.length(), line, source));
+                            continue;
+                        }
+                        int rd = getReg(parts[1]);
+                        int ra = getReg(parts[2]);
+                        int rb = getVal(parts[3]);
+                        data[addr++] = (Entry.Math(MATH_LSHIFT, rd, ra, rb));
+                    }
+                    case "RSH" -> {
+                        if (parts.length < 4) {
+                            errors.add(new AssemblerError("Invalid mul instruction: RSH [rd] [ra] [rb]", lineN,
+                                    line.length(), line, source));
+                            continue;
+                        }
+                        int rd = getReg(parts[1]);
+                        int ra = getReg(parts[2]);
+                        int rb = getVal(parts[3]);
+                        data[addr++] = (Entry.Math(MATH_RSHIFT, rd, ra, rb));
                     }
                     case "GOTO" -> {
                         if (parts.length < 2) {

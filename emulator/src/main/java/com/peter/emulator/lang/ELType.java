@@ -545,4 +545,8 @@ public class ELType {
     public Builder builder() {
         return new Builder(this);
     }
+
+    public boolean isIndexable() {
+        return pointer || array;
+	}
 }
