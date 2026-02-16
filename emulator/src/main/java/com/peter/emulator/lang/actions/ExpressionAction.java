@@ -47,6 +47,8 @@ public class ExpressionAction extends ComplexAction {
                             if (lastOp != null) {
                                 if (addressOf)
                                     throw ELAnalysisError.error("Can not get address of address of", tkn);
+                                if (resolvePointer > 0)
+                                    throw ELAnalysisError.error("Can not get address of pointer resolve", tkn);
                                 addressOf = true;
                             } else {
                                 lastOp = ot.type;
@@ -55,6 +57,8 @@ public class ExpressionAction extends ComplexAction {
 
                         case POINTER -> {
                             if (lastOp != null) {
+                                if(addressOf)
+                                    throw ELAnalysisError.error("Can not do pointer resolve after address of", tkn);
                                 resolvePointer++;
                             } else {
                                 lastOp = ot.type;
@@ -83,10 +87,11 @@ public class ExpressionAction extends ComplexAction {
                         throw ELAnalysisError.error("Can't not a number literal", tkn);
                     if (lastType != null) {
                         if (!ELPrimitives.UINT32.canCastTo(lastType))
-                            throw ELAnalysisError.error("Invalid type-cast (uint32 -> " + lastType.toString() + ")",
+                            throw ELAnalysisError.error("Invalid type-cast (uint32 -> " + lastType.typeString() + ")",
                                     tkn);
+                    } else {
+                        lastType = ELPrimitives.UINT32;
                     }
-                    lastType = ELPrimitives.UINT32;
                     int tR = (lastType == null) ? targetReg : scope.firstFree();
                     String str = MachineCode.translateReg(tR);
                     if (lastOp != null) {
@@ -136,11 +141,51 @@ public class ExpressionAction extends ComplexAction {
                 case IdentifierToken it -> {
                     int tR = (lastType == null) ? targetReg : scope.firstFree();
                     String str = MachineCode.translateReg(tR);
-                    ResolveAction rA = scope.loadVar(it, tR, addressOf);
-                    if (rA == null)
-                        throw ELAnalysisError.error("Unable to resolve variable", it);
-                    actions.add(rA);
-                    ELType t = rA.returnType;
+                    ELType t;
+                    switch (it.value) {
+                        case "true", "false" -> {
+                            actions.add(new DirectAction("LOAD %s %d", str, it.value.equals("true") ? 1 : 0));
+                            t = ELPrimitives.BOOL;
+                        }
+
+                        case "nullptr" -> {
+                            actions.add(new DirectAction("LOAD %s 0", str));
+                            t = ELPrimitives.VOID_PTR;
+                        }
+
+                        case "SysD" -> {
+                            if(!it.hasSub() || it.subTokens.size() != 1)
+                                throw ELAnalysisError.error("Unable to resolve variable", it);
+                            String vN = it.sub(0).value;
+                            switch(vN) {
+                                case "rPM" -> {
+                                    actions.add(new DirectAction("COPY rPM %s", str));
+                                    t = ELPrimitives.BOOL;
+                                }
+                                case "rStack", "rMemTbl" -> {
+                                    actions.add(new DirectAction("COPY %s %s", vN, str));
+                                    t = ELPrimitives.VOID_PTR;
+                                }
+                                default -> {
+                                    actions.add(new DirectAction("COPY %s %s", vN, str));
+                                    t = ELPrimitives.UINT32;
+                                }
+                            }
+                        }
+
+                        default -> {
+                            ResolveAction rA = scope.loadVar(it, tR, addressOf);
+                            if (rA == null)
+                                throw ELAnalysisError.error("Unable to resolve variable", it);
+                            actions.add(rA);
+                            t = rA.returnType;
+                        }
+                    }
+                    if(addressOf) {
+                        if(!(t.isPointer() || t.isArray()))
+                            throw ELAnalysisError.error("Can not get address of non-pointer or array (was "+t.typeString()+")", it);
+                        t = t.addressOf();
+                    }
                     while (resolvePointer > 0) {
                         if (!t.isResolvable())
                             throw ELAnalysisError.error(
@@ -153,9 +198,10 @@ public class ExpressionAction extends ComplexAction {
                     if (lastType != null) {
                         if (!t.canCastTo(lastType))
                             throw ELAnalysisError.error(
-                                    "Invalid type-cast (" + t.typeString() + " -> " + lastType.toString() + ")", tkn);
+                                    "Invalid type-cast (" + t.typeString() + " -> " + lastType.typeString() + ")", tkn);
+                    } else {
+                        lastType = t;
                     }
-                    lastType = t;
                     // actions.add(new ResolveAction(scope, tR, it));
                     if (lastOp != null) {
                         switch (lastOp) {
@@ -205,6 +251,8 @@ public class ExpressionAction extends ComplexAction {
                     // but what if this is casting?
                     int tR = (lastType == null) ? targetReg : scope.firstFree();
                     String str = MachineCode.translateReg(tR);
+                    if(st.subTokens.isEmpty())
+                        throw ELAnalysisError.error("Empty expression", st);
                     ExpressionAction expA = new ExpressionAction(scope, st.subTokens, tR);
                     actions.add(expA);
                     ELType t = expA.outType;
@@ -220,9 +268,10 @@ public class ExpressionAction extends ComplexAction {
                     if (lastType != null) {
                         if (!t.canCastTo(lastType))
                             throw ELAnalysisError.error(
-                                    "Invalid type-cast (" + t.typeString() + " -> " + lastType.toString() + ")", tkn);
+                                    "Invalid type-cast (" + t.typeString() + " -> " + lastType.typeString() + ")", tkn);
+                    } else {
+                        lastType = t;
                     }
-                    lastType = t;
                     if (lastOp != null) {
                         switch (lastOp) {
                             case ADD -> {

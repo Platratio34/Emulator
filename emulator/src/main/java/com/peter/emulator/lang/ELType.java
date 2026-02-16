@@ -232,6 +232,16 @@ public class ELType {
     public boolean isPointer() {
         return pointer;
     }
+    public boolean isAddress() {
+        return pointer;
+    }
+    public boolean isArray() {
+        return pointer;
+    }
+
+    public boolean isConstant() {
+        return constant;
+    }
 
     public boolean isResolvable() {
         return pointer | address | array;

@@ -10,7 +10,6 @@ import org.eclipse.lsp4j.services.TextDocumentService;
 
 import com.peter.emulator.lang.ELAnalysisError;
 import com.peter.emulator.lang.ELFunction;
-import com.peter.emulator.lang.ELType;
 import com.peter.emulator.lang.ELVariable;
 import com.peter.emulator.lang.ProgramUnit;
 import com.peter.emulator.lang.annotations.ELAnnotation;
@@ -83,7 +82,7 @@ public class ELTextDocumentService implements TextDocumentService {
                 lspServer.logWarn("Hover was requested for %s, but program unit had no hover-able symbols", uri);
             }
             for (ELVariable var : unit.variables) {
-                if (var.span().contains(hoverPos, lspServer)) {
+                if (var.span().contains(hoverPos, null)) {
                     String content = switch(var.varType) {
                         case CONST -> String.format("### `%s const %s.%s`", var.protection.value, var.namespace.cName, var.name);
                         case STATIC -> String.format("### `%s static %s.%s`", var.protection.value, var.namespace.cName, var.name);

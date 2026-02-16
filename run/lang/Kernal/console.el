@@ -18,7 +18,7 @@ class Console {
         Kernal.peripheralCmd(deviceId, 3, new uint32[] {0x0001,address,consoleSize});
     }
 
-    public void printChar(const char c) {
+    public void printChar(char c) {
         address[index] = c;
         index++;
         address[index] = 0x1;
@@ -28,7 +28,7 @@ class Console {
         }
     }
 
-    public void print(const char* str, uint32 len) {
+    public void print(char* str, uint32 len) {
         if(len == 0) {
             uint32 i = 0;
             while(str[i] != 0) {

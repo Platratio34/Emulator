@@ -84,8 +84,10 @@ namespace Kernal {
 
     public static void peripheralCmd(uint32 deviceId, uint32 cmdSize, uint32* cmd) {
         uint32 addr = CMD_DEVICE;
-        SysD.memSet(addr++, deviceId);
-        SysD.memSet(addr++, cmdSize);
+        SysD.memSet(addr, deviceId);
+        addr++;
+        SysD.memSet(addr, cmdSize);
+        addr++;
         SysD.memCopy(cmd, 0, cmdSize, (uint32*)addr, 0);
         SysD.memSet(CMD_STATUS, CMD_WRITTEN);
     }

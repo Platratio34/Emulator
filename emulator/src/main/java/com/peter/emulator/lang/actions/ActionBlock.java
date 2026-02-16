@@ -134,7 +134,7 @@ public class ActionBlock extends ComplexAction {
                                             tokens.get(wI - 2).endLocation.span());
                                 continue;
                             }
-                            default -> {
+                            default -> { // function call
                                 boolean onStack = true;
                                 wI += 3;
                                 if (id.starts("SysD")) {
@@ -146,6 +146,10 @@ public class ActionBlock extends ComplexAction {
                                         }
                                         case "memCopy" -> {
                                             errors.warning("SysD.copy is not currently implemented", it);
+                                            continue;
+                                        }
+                                        case "interruptReturn" -> {
+                                            actions.add(new DirectAction("INTERRUPT RET"));
                                             continue;
                                         }
                                         case "halt" -> {
@@ -165,7 +169,7 @@ public class ActionBlock extends ComplexAction {
                                     Token t2 = st.subTokens.get(i);
                                     endOfParams = t2.endLocation;
                                     if (t2 instanceof OperatorToken ot && ot.type == OperatorToken.Type.COMMA) {
-                                        if(exp.size() == 0)
+                                        if(exp.isEmpty())
                                             throw ELAnalysisError.error("Empty expression", t2);
                                         ExpressionAction expA = new ExpressionAction(scope, exp, r);
                                         actions.add(expA);
@@ -180,7 +184,7 @@ public class ActionBlock extends ComplexAction {
                                         exp.add(t2);
                                     }
                                 }
-                                if (exp.size() > 0) {
+                                if (!exp.isEmpty()) {
                                     ExpressionAction expA = new ExpressionAction(scope, exp, r);
                                     actions.add(expA);
                                     types.add(expA.outType);
@@ -318,6 +322,8 @@ public class ActionBlock extends ComplexAction {
                                             throw ELAnalysisError.error("Unexpected end of block. Expected `;`", tkn);
                                         tkn = tokens.get(wI++);
                                     }
+                                    if(exp.isEmpty())
+                                        throw ELAnalysisError.error("Empty epxression", tkn);
                                     int r = scope.firstFree();
                                     actions.add(new ExpressionAction(scope, exp, r));
                                     actions.add(new StackAllocAction(scope, r));
@@ -339,13 +345,20 @@ public class ActionBlock extends ComplexAction {
 
                     if (tkn instanceof OperatorToken ot && (ot.type == OperatorToken.Type.ASSIGN || ot.type == OperatorToken.Type.ADD_ASSIGN || ot.type == OperatorToken.Type.SUB_ASSIGN
                             || ot.type == OperatorToken.Type.INC || ot.type == OperatorToken.Type.DEC)) {
-                        int rT = scope.firstFree();
+                        Span actionSpan = tkn.span();
+                                int rT = scope.firstFree();
                         String rTStr = MachineCode.translateReg(rT);
                         ResolveAction rA = scope.loadVar(targetVal, rT, false);
                         if (rA == null) // block stack var
                             throw ELAnalysisError.error("Unable to resolve variable " + targetVal, it.span());
-                        
+                        ELType t = rA.returnType;
+                        ELVariable v = rA.returnVar;
+                        if(v.finalVal || t.isConstant())
+                            throw ELAnalysisError.error("Cannont assign to "+(v.finalVal ? "final variable" : "constant"), it.startLocation.span(actionSpan.end()));
+
                         if (ot.type == OperatorToken.Type.INC) {
+                            if(!(t.isPointer() || t.equals(ELPrimitives.UINT32)))
+                                throw ELAnalysisError.error("Unable to increment type " + t.typeString(), it.span());
                             int r2 = scope.firstFree();
                             String r2Str = MachineCode.translateReg(r2);
                             actions.add(new DirectAction("LOAD MEM %s %s", r2Str, rTStr));
@@ -354,6 +367,8 @@ public class ActionBlock extends ComplexAction {
                             wI += 2;
                             continue;
                         } else if (ot.type == OperatorToken.Type.DEC) {
+                            if(!(t.isPointer() || t.equals(ELPrimitives.UINT32)))
+                                throw ELAnalysisError.error("Unable to decrement type " + t.typeString(), it.span());
                             int r2 = scope.firstFree();
                             String r2Str = MachineCode.translateReg(r2);
                             actions.add(new DirectAction("LOAD MEM %s %s", r2Str, rTStr));
@@ -361,6 +376,11 @@ public class ActionBlock extends ComplexAction {
                             actions.add(new DirectAction("STORE %s %s", r2Str, rTStr));
                             wI += 2;
                             continue;
+                        }
+
+                        if(t.isAddress()) {
+                            actions.add(new DirectAction("LOAD MEM %s %s", rTStr, rTStr)); // resolve the address
+                            t = t.resolve();
                         }
                         
                         ArrayList<Token> exp = new ArrayList<>();
@@ -372,11 +392,17 @@ public class ActionBlock extends ComplexAction {
                                 throw ELAnalysisError.error("Unexpected end of block. Expected `;` " + tkn, tkn);
                             tkn = tokens.get(wI++);
                         }
-
+                        if(exp.isEmpty())
+                            throw ELAnalysisError.error("Empty expression", tkn);
                         
                         scope.reserve(rT);
                         int r = scope.firstFree();
-                        actions.add(new ExpressionAction(scope, exp, r));
+                        ExpressionAction expA = new ExpressionAction(scope, exp, r);
+                        actions.add(expA);
+
+                        if(!expA.outType.canCastTo(t))
+                            throw ELAnalysisError.error("Invalid assign, can not cast " + expA.outType.typeString() + " to " + t.typeString(), it.startLocation.span(actionSpan.end()));
+
                         if (ot.type == OperatorToken.Type.ADD_ASSIGN) {
                             int r2 = scope.firstFree();
                             actions.add(new DirectAction("LOAD MEM %s %s", MachineCode.translateReg(r2), rTStr));

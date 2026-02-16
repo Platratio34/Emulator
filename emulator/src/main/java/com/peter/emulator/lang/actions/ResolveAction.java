@@ -4,6 +4,8 @@ import com.peter.emulator.MachineCode;
 import com.peter.emulator.lang.ELAnalysisError;
 import com.peter.emulator.lang.ELClass;
 import com.peter.emulator.lang.ELType;
+import com.peter.emulator.lang.ELValue.ELNumberValue;
+import com.peter.emulator.lang.ELValue.ELStringValue;
 import com.peter.emulator.lang.ELVariable;
 import com.peter.emulator.lang.Token.IdentifierToken;
 import com.peter.emulator.lang.base.ELPrimitives;
@@ -12,6 +14,7 @@ public class ResolveAction extends ComplexAction {
 
     public final int reg;
     public final ELType returnType;
+    public final ELVariable returnVar;
 
     public ResolveAction(ActionScope scope, int reg, ELVariable var, IdentifierToken id, boolean byValue) {
         super(scope);
@@ -34,7 +37,22 @@ public class ResolveAction extends ComplexAction {
         }
 
         switch (var.varType) {
-            case CONST -> throw ELAnalysisError.error("Can not give constant to Resolve Action", it);
+            case CONST -> {
+                switch(var.startingValue) {
+                    case ELNumberValue nv -> actions.add(new DirectAction("LOAD %s %d", r, nv.value));
+                    case ELStringValue sv -> {
+                        if(sv.type.equals(ELPrimitives.CHAR)) {
+                            actions.add(new DirectAction("LOAD %s '%s'", r, sv.value));
+                            returnType = var.type;
+                            returnVar = var;
+                            return;
+                        } else {
+                            throw ELAnalysisError.error("Can not refernece constant char* right now");
+                        }
+                    }
+                    default -> throw ELAnalysisError.error("Unknown constant type");
+                }
+            }
             case STATIC -> actions.add(new DirectAction("LOAD %s &%s", r, var.getQualifiedName()));
             case MEMBER -> actions.add(new DirectAction("COPY r0 %s\nINC %s %d", r, r, var.offset));
             case SCOPE -> {
@@ -72,7 +90,7 @@ public class ResolveAction extends ComplexAction {
                 if (index == id.subTokens.size() - 1)
                     break;
 
-                if (v.type.isPointer()) {
+                if (t.isPointer() || t.isAddress()) {
                     actions.add(new DirectAction("LOAD MEM %s %s", r, r));
                 }
                 it = id.sub(index - 1);
@@ -80,7 +98,7 @@ public class ResolveAction extends ComplexAction {
                 if (clazz == null)
                     throw ELAnalysisError.fatal("Type was missing class " + t.typeString(), it);
                 if (!clazz.memberVariables.containsKey(it.value))
-                    throw ELAnalysisError.fatal("Type was missing class " + t.typeString(), it);
+                    throw ELAnalysisError.fatal("Unknown member " + it.value + "in type" + clazz.getQualifiedName(), it);
                 v = clazz.memberVariables.get(it.value);
                 t = v.type;
             }
@@ -88,6 +106,7 @@ public class ResolveAction extends ComplexAction {
         if (byValue)
             actions.add(new DirectAction("LOAD MEM %s %s", r, r));
         returnType = t;
+        returnVar = v;
     }
 
     // @Override
