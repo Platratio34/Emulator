@@ -15,6 +15,8 @@ public class ProgramUnit {
     public final ArrayList<ELFunction> functions = new ArrayList<>();
     public final ArrayList<ELClass> classes = new ArrayList<>();
 
+    public final ArrayList<ELSymbol> symbols = new ArrayList<>();
+
     public ProgramUnit(ProgramModule module, String uri) {
         this.module = module;
         this.uri = uri;

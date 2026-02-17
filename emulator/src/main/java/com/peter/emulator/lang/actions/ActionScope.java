@@ -122,4 +122,9 @@ public class ActionScope {
                 return i;
         return -1;
     }
+
+    public ELSymbol addSymbol(ELSymbol symbol) {
+        unit.symbols.add(symbol);
+        return symbol;
+    }
 }

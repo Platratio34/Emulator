@@ -233,10 +233,10 @@ public class ELType {
         return pointer;
     }
     public boolean isAddress() {
-        return pointer;
+        return address;
     }
     public boolean isArray() {
-        return pointer;
+        return array;
     }
 
     public boolean isConstant() {
@@ -244,7 +244,7 @@ public class ELType {
     }
 
     public boolean isResolvable() {
-        return pointer | address | array;
+        return (pointer && !isVoidPtr()) | address | array;
     }
 
     @Override
@@ -565,8 +565,8 @@ public class ELType {
 	}
 
     public ELType resolve() {
-        if(!pointer || array || address)
-            throw new ELCompileException("Can not get resolve a non pointer, address, or array");
+        if(!isResolvable())
+            throw new ELCompileException("Can not resolve a void*, non-pointer, address, or array");
         return subType;
     }
 }

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import com.peter.emulator.MachineCode;
 import com.peter.emulator.lang.ELAnalysisError;
+import com.peter.emulator.lang.ELSymbol;
 import com.peter.emulator.lang.ELType;
 import com.peter.emulator.lang.Token;
 import com.peter.emulator.lang.Token.IdentifierToken;
@@ -81,6 +82,7 @@ public class ExpressionAction extends ComplexAction {
                     }
                 }
                 case NumberToken nt -> {
+                    scope.addSymbol(new ELSymbol(ELSymbol.Type.NUMERIC_LITERAL, nt.span(), "numeric literal\n`%d`", nt.numValue));
                     if (addressOf || resolvePointer > 0)
                         throw ELAnalysisError.error("Invalid pointer operation", tkn);
                     if (not)
@@ -144,19 +146,24 @@ public class ExpressionAction extends ComplexAction {
                     ELType t;
                     switch (it.value) {
                         case "true", "false" -> {
+                            scope.addSymbol(new ELSymbol(ELSymbol.Type.VARIABLE_CONSTANT, it.span(), "### Boolean literal"));
                             actions.add(new DirectAction("LOAD %s %d", str, it.value.equals("true") ? 1 : 0));
                             t = ELPrimitives.BOOL;
                         }
 
                         case "nullptr" -> {
+                            scope.addSymbol(new ELSymbol(ELSymbol.Type.VARIABLE_CONSTANT, it.span(), "### Null pointer literal"));
                             actions.add(new DirectAction("LOAD %s 0", str));
                             t = ELPrimitives.VOID_PTR;
                         }
 
                         case "SysD" -> {
+                            scope.addSymbol(new ELSymbol(ELSymbol.Type.NAMESPACE_NAME, it.spanFirst(), "### `SysD`\nSystem Direct Low-level module"));
                             if(!it.hasSub() || it.subTokens.size() != 1)
                                 throw ELAnalysisError.error("Unable to resolve variable", it);
                             String vN = it.sub(0).value;
+                            if(vN.startsWith("r"))
+                                scope.addSymbol(new ELSymbol(ELSymbol.Type.VARIABLE_NAME, it.sub(0).span(), "### `%s`\nCPU register `%s`", vN, vN));
                             switch(vN) {
                                 case "rPM" -> {
                                     actions.add(new DirectAction("COPY rPM %s", str));

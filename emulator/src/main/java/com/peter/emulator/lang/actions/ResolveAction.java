@@ -3,6 +3,7 @@ package com.peter.emulator.lang.actions;
 import com.peter.emulator.MachineCode;
 import com.peter.emulator.lang.ELAnalysisError;
 import com.peter.emulator.lang.ELClass;
+import com.peter.emulator.lang.ELSymbol;
 import com.peter.emulator.lang.ELType;
 import com.peter.emulator.lang.ELValue.ELNumberValue;
 import com.peter.emulator.lang.ELValue.ELStringValue;
@@ -29,6 +30,7 @@ public class ResolveAction extends ComplexAction {
             while (index < id.subTokens.size() - 1) {
                 if (it.value.equals(var.name))
                     break;
+                scope.addSymbol(new ELSymbol(ELSymbol.Type.NAMESPACE_NAME, it.spanFirst(), "### `%s`", it.value));
                 index++;
                 if (index == id.subTokens.size() - 1)
                     throw ELAnalysisError.fatal("Could not find identifier for provided variable", it);
@@ -39,15 +41,22 @@ public class ResolveAction extends ComplexAction {
         switch (var.varType) {
             case CONST -> {
                 switch(var.startingValue) {
-                    case ELNumberValue nv -> actions.add(new DirectAction("LOAD %s %d", r, nv.value));
+                    case ELNumberValue nv -> {
+                        actions.add(new DirectAction("LOAD %s %d", r, nv.value));
+                        returnType = var.type;
+                        returnVar = var;
+                        scope.addSymbol(new ELSymbol(ELSymbol.Type.VARIABLE_CONSTANT, it.spanFirst(), "### `const %s %s = %d`", var.type.typeString(), it.value, nv.value));
+                        return;
+                    }
                     case ELStringValue sv -> {
                         if(sv.type.equals(ELPrimitives.CHAR)) {
                             actions.add(new DirectAction("LOAD %s '%s'", r, sv.value));
                             returnType = var.type;
                             returnVar = var;
+                            scope.addSymbol(new ELSymbol(ELSymbol.Type.VARIABLE_CONSTANT, it.spanFirst(), "### `const %s %s = '%s'`", var.type.typeString(), it.value, sv.value));
                             return;
                         } else {
-                            throw ELAnalysisError.error("Can not refernece constant char* right now");
+                            throw ELAnalysisError.error("Can not reference constant char* right now");
                         }
                     }
                     default -> throw ELAnalysisError.error("Unknown constant type");
@@ -61,6 +70,7 @@ public class ResolveAction extends ComplexAction {
                     actions.add(new DirectAction("INC %s %d", r, var.offset));
             }
         }
+        scope.addSymbol(new ELSymbol(var.finalVal ? ELSymbol.Type.VARIABLE_FINAL : ELSymbol.Type.VARIABLE_NAME, it.spanFirst(), "### `%s %s`", var.typeString(), it.value));
 
         ELVariable v = var;
         ELType t = v.type;
@@ -89,7 +99,9 @@ public class ResolveAction extends ComplexAction {
                 index++;
                 if (index == id.subTokens.size() - 1)
                     break;
-
+                
+                scope.addSymbol(new ELSymbol(v.finalVal ? ELSymbol.Type.VARIABLE_FINAL : ELSymbol.Type.VARIABLE_NAME, it.spanFirst(), "### `%s %s`", v.typeString(), v.name));
+        
                 if (t.isPointer() || t.isAddress()) {
                     actions.add(new DirectAction("LOAD MEM %s %s", r, r));
                 }

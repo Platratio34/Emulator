@@ -86,10 +86,11 @@ public class ActionBlock extends ComplexAction {
                             }
                             case "for" -> {
                                 wI += 2;
-                                // set is (initilizer; condition; incrementer)
+                                // set is (initializer; condition; incrementor)
                                 // also block
                                 ActionBlock innerBlock = new ActionBlock(scope.createChild(), null);
                                 innerBlock.parse(tokens.get(wI).subTokens, errors);
+                                wI++;
                                 continue;
                             }
                             case "while" -> {
@@ -109,7 +110,7 @@ public class ActionBlock extends ComplexAction {
                                 continue;
                             }
                             case "asm" -> {
-                                wI += 3;
+                                wI += 2;
                                 Token t = st.get(0);
                                 switch (t) {
                                     case null -> throw ELAnalysisError.error("asm function must have a string literal or const parameter", it);
@@ -128,15 +129,15 @@ public class ActionBlock extends ComplexAction {
                                     }
                                     default -> throw ELAnalysisError.error("asm function may only take string literal or const", t);
                                 }
-                                if (!(tokens.get(wI - 1) instanceof OperatorToken ot
+                                if (!(tokens.get(wI) instanceof OperatorToken ot
                                         && ot.type == OperatorToken.Type.SEMICOLON))
                                     throw ELAnalysisError.error("Missing semicolon",
-                                            tokens.get(wI - 2).endLocation.span());
+                                            tokens.get(wI - 1).endLocation.span());
                                 continue;
                             }
                             default -> { // function call
                                 boolean onStack = true;
-                                wI += 3;
+                                wI += 2;
                                 if (id.starts("SysD")) {
                                     switch (id.parts[1]) {
                                         case "memSet" -> {
@@ -288,10 +289,13 @@ public class ActionBlock extends ComplexAction {
                         }
                     }
 
-                    if (!scope.hasVariable(id)) {
+                    if (!scope.hasVariable(id) && !id.first().equals("SysD")) {
                         ELType.Builder b = new ELType.Builder();
                         tkn = tokens.get(wI++);
                         while (b.ingest(tkn)) {
+                            if (tokens.size() == wI) {
+                                throw ELAnalysisError.error("Unexpected end of block", tkn);
+                            }
                             tkn = tokens.get(wI++);
                         }
                         ELType type = b.build();
@@ -323,7 +327,7 @@ public class ActionBlock extends ComplexAction {
                                         tkn = tokens.get(wI++);
                                     }
                                     if(exp.isEmpty())
-                                        throw ELAnalysisError.error("Empty epxression", tkn);
+                                        throw ELAnalysisError.error("Empty expression", tkn);
                                     int r = scope.firstFree();
                                     actions.add(new ExpressionAction(scope, exp, r));
                                     actions.add(new StackAllocAction(scope, r));
@@ -348,13 +352,36 @@ public class ActionBlock extends ComplexAction {
                         Span actionSpan = tkn.span();
                                 int rT = scope.firstFree();
                         String rTStr = MachineCode.translateReg(rT);
-                        ResolveAction rA = scope.loadVar(targetVal, rT, false);
-                        if (rA == null) // block stack var
-                            throw ELAnalysisError.error("Unable to resolve variable " + targetVal, it.span());
-                        ELType t = rA.returnType;
-                        ELVariable v = rA.returnVar;
-                        if(v.finalVal || t.isConstant())
-                            throw ELAnalysisError.error("Cannont assign to "+(v.finalVal ? "final variable" : "constant"), it.startLocation.span(actionSpan.end()));
+                        ELType t;
+                        if (targetVal.value.equals("SysD")) {
+                            scope.addSymbol(new ELSymbol(ELSymbol.Type.NAMESPACE_NAME, it.spanFirst(), "### `SysD`\nSystem Direct Low-level module"));
+                            if(!targetVal.hasSub() || targetVal.subTokens.size() != 1)
+                                throw ELAnalysisError.error("Unable to resolve variable", it);
+                            String vN = targetVal.sub(0).value;
+                            if(vN.startsWith("r"))
+                                scope.addSymbol(new ELSymbol(ELSymbol.Type.VARIABLE_NAME, it.sub(0).span(), "### `%s`\nCPU register `%s`", vN, vN));
+                            switch(vN) {
+                                case "rPM" -> {
+                                    actions.add(new DirectAction("COPY rPM %s", rTStr));
+                                    t = ELPrimitives.BOOL;
+                                }
+                                case "rStack", "rMemTbl" -> {
+                                    actions.add(new DirectAction("COPY %s %s", vN, rTStr));
+                                    t = ELPrimitives.VOID_PTR;
+                                }
+                                default -> {
+                                    actions.add(new DirectAction("COPY %s %s", vN, rTStr));
+                                    t = ELPrimitives.UINT32;
+                                }
+                            }
+                        } else {
+                            ResolveAction rA = scope.loadVar(targetVal, rT, false);
+                            if (rA == null) // block stack var
+                                throw ELAnalysisError.error("Unable to resolve variable " + targetVal, it.span());
+                            t = rA.returnType;
+                            if(rA.returnVar.finalVal || t.isConstant())
+                                throw ELAnalysisError.error("Cannot assign to "+(rA.returnVar.finalVal ? "final variable" : "constant"), it.startLocation.span(actionSpan.end()));
+                        }
 
                         if (ot.type == OperatorToken.Type.INC) {
                             if(!(t.isPointer() || t.equals(ELPrimitives.UINT32)))
@@ -392,6 +419,7 @@ public class ActionBlock extends ComplexAction {
                                 throw ELAnalysisError.error("Unexpected end of block. Expected `;` " + tkn, tkn);
                             tkn = tokens.get(wI++);
                         }
+                        wI--;
                         if(exp.isEmpty())
                             throw ELAnalysisError.error("Empty expression", tkn);
                         
@@ -538,6 +566,12 @@ public class ActionBlock extends ComplexAction {
                         // }
                         // actions.add(new DirectAction("STORE %s r1", srcRegStr));
                     }
+                } else {
+                    if(tkn instanceof OperatorToken ot && ot.type == OperatorToken.Type.SEMICOLON) {
+                        wI++;
+                        continue;
+                    }
+                    throw ELAnalysisError.error("Unexpected token "+tkn.debugString(), tkn);
                 }
             } catch (ELAnalysisError e) {
                 if (e.span == null)

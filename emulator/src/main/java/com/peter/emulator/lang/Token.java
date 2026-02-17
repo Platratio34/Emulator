@@ -351,6 +351,10 @@ public abstract class Token {
         public IdentifierToken sub(int i) {
             return (IdentifierToken)subTokens.get(i);
         }
+
+        public Span spanFirst() {
+            return startLocation.span(startLocation.add(value.length() - 1));
+        }
     }
 
     public static class NumberToken extends Token {
@@ -521,13 +525,13 @@ public abstract class Token {
 
         @Override
         public String debugString() {
-            String out = "";
+            String out = "(";
             for (int i = 0; i < subTokens.size(); i++) {
                 if (i > 0 && subTokens.get(i).wsBefore())
                     out += " ";
                 out += subTokens.get(i).debugString();
             }
-            return out;
+            return out+")";
         }
     }
     

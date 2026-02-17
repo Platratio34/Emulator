@@ -10,6 +10,7 @@ import org.eclipse.lsp4j.services.TextDocumentService;
 
 import com.peter.emulator.lang.ELAnalysisError;
 import com.peter.emulator.lang.ELFunction;
+import com.peter.emulator.lang.ELSymbol;
 import com.peter.emulator.lang.ELVariable;
 import com.peter.emulator.lang.ProgramUnit;
 import com.peter.emulator.lang.annotations.ELAnnotation;
@@ -78,6 +79,15 @@ public class ELTextDocumentService implements TextDocumentService {
                 return null;
             }
             Position hoverPos = params.getPosition();
+            
+            for (ELSymbol symbol : unit.symbols) {
+                if (symbol.contains(hoverPos, null)) {
+                    return new Hover(new MarkupContent("markdown", symbol.text));
+                } else {
+                    // lspServer.logDebug("Hover was requested for %s, but didn't match symbol "+symbol.type+": "+symbol.text, uri);
+                }
+            }
+
             if (unit.variables.size() == 0 && unit.functions.size() == 0) {
                 lspServer.logWarn("Hover was requested for %s, but program unit had no hover-able symbols", uri);
             }

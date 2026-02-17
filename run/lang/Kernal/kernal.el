@@ -112,9 +112,9 @@ namespace Kernal {
     struct ProcessState {
         public uint32 pid;
         public uint32 pgmPtr;
-        public uint32 stackPtr;
-        public uint32 memTablePtr;
-        public uint32 privileged;
+        public void* stackPtr;
+        public void* memTablePtr;
+        public bool privileged;
         public uint32[16] registers;
 
         public void update() {

@@ -14,4 +14,8 @@ public record Location(String file, int line, int col) {
     public Span span() {
         return new Span(this, null);
     }
+
+    public Location add(int chars) {
+        return new Location(file, line, col + chars);
+    }
 }
