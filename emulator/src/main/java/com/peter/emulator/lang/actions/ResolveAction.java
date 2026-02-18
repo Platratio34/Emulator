@@ -79,13 +79,13 @@ public class ResolveAction extends ComplexAction {
                 if (it.index != null) {
                     if (!v.type.isIndexable())
                         throw ELAnalysisError.error(v.type.typeString() + " is not indexable",
-                                it.index.getFirst().startLocation.span(it.index.getLast().endLocation));
+                                it.index.subFirst().startLocation.span(it.index.subLast().endLocation));
                     int r2 = scope.firstFree();
                     String rStr = MachineCode.translateReg(r2);
-                    ExpressionAction indexExp = new ExpressionAction(scope, id.index, r2);
+                    ExpressionAction indexExp = new ExpressionAction(scope, id.index.subTokens, r2);
                     if (!indexExp.outType.equals(ELPrimitives.UINT32))
                         throw ELAnalysisError.error("Index must resolve to a uint32",
-                                id.index.getFirst().startLocation.span(id.index.getLast().endLocation));
+                                id.index.subFirst().startLocation.span(id.index.subLast().endLocation));
                     int wds = v.sizeofWords();
                     if (wds > 1) {
                         String r3 = MachineCode.translateReg(scope.firstFree());

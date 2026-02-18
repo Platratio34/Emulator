@@ -10,7 +10,7 @@ public abstract class Token {
     public Location endLocation;
     public ArrayList<Token> subTokens;
 
-    public abstract boolean ingest(char c, Location location);
+    public abstract Token ingest(char c, Location location);
     
     protected Token(Location location) {
         startLocation = location;
@@ -21,6 +21,17 @@ public abstract class Token {
 
     public boolean hasSub() {
         return subTokens != null && !subTokens.isEmpty();
+    }
+
+    public int subSize() {
+        return (subTokens == null) ? 0 : subTokens.size();
+    }
+
+    public Token subFirst() {
+        return (subTokens == null) ? null : subTokens.getFirst();
+    }
+    public Token subLast() {
+        return (subTokens == null) ? null : subTokens.getLast();
     }
 
     public abstract String debugString();
@@ -48,21 +59,21 @@ public abstract class Token {
         }
 
         @Override
-        public boolean ingest(char c, Location location) {
+        public Token ingest(char c, Location location) {
             if(type.next != null && type.hasNext(c)) {
                 type = type.getNext(c);
-                return true;
+                return this;
             }
             if (type == Type.INDEX && !indexClosed) {
                 if (tk.ingest(c, location))
-                    return true;
+                    return this;
                 if (c == ']') {
                     indexClosed = true;
-                    return true;
+                    return this;
                 }
                 throw new TokenizerError("Found unexpected character in index: '" + c + "'");
             }
-            return false;
+            return null;
         }
 
         @Override
@@ -209,17 +220,17 @@ public abstract class Token {
         }
 
         @Override
-        public boolean ingest(char c, Location location) {
+        public Token ingest(char c, Location location) {
             if (closed)
-                return false;
+                return null;
             if (tk.ingest(c, location)) {
                 endLocation = location;
-                return true;
+                return this;
             }
             if (c == '}') {
                 endLocation = location;
                 closed = true;
-                return true;
+                return this;
             }
             throw new TokenizerError("Found unexpected character in block: '" + c + "'");
         }
@@ -243,8 +254,8 @@ public abstract class Token {
 
     public static class IdentifierToken extends Token {
         public String value;
-        public ArrayList<Token> index = null;
-        protected Tokenizer indexTokenizer;
+        public SetToken index = null;
+        public SetToken params = null;
         protected boolean indexClosed = false;
 
         public IdentifierToken(char c, Location location) {
@@ -256,24 +267,31 @@ public abstract class Token {
         private boolean nextIsDot = false;
         private IdentifierToken nextId = null;
         @Override
-        public boolean ingest(char c, Location location) {
+        public IdentifierToken ingest(char c, Location location) {
             if (nextId != null) {
-                if (nextId.ingest(c, location)) {
+                IdentifierToken tkn = nextId.ingest(c, location);
+                if (tkn != null) {
                     endLocation = location;
-                    return true;
+                    nextId = tkn;
+                    return this;
+                } else {
+                    subTokens.add(nextId);
                 }
-                return false;
-            } else if (indexTokenizer != null) {
-                if (!indexTokenizer.ingest(c, location)) {
-                    if (c == ']') {
-                        indexClosed = true;
-                        indexTokenizer = null;
-                        nextIsDot = true;
-                        return true;
-                    }
-                    throw new TokenizerError("Unexpected character in index");
+                return null;
+            } else if (index != null && !index.closed) {
+                SetToken tkn = index.ingest(c, location);
+                if (tkn != null) {
+                    endLocation = location;
+                    index = tkn;
+                    return this;
                 }
-                return true;
+            } else if(params != null && !params.closed) {
+                SetToken tkn = params.ingest(c, location);
+                if (tkn != null) {
+                    endLocation = location;
+                    params = tkn;
+                    return this;
+                }
             }
             if (nextIsID) {
                 nextIsID = false;
@@ -282,7 +300,7 @@ public abstract class Token {
                     subTokens = new ArrayList<>();
                     subTokens.add(nextId);
                     endLocation = location;
-                    return true;
+                    return this;
                 } else {
                     throw new TokenizerError("Invalid identifier");
                 }
@@ -291,21 +309,26 @@ public abstract class Token {
                     throw new TokenizerError("Unexpected character in identifier, expected `.`");
                 value += c;
                 endLocation = location;
-                return true;
+                return this;
             } else if (c == '.') {
                 nextIsID = true;
                 endLocation = location;
                 nextIsDot = false;
-                return true;
+                return this;
             } else if (c == '[') {
-                if (indexTokenizer != null || indexClosed) {
+                if (index != null || params != null) {
                     throw new TokenizerError("Unexpected `[` in identifier");
                 }
-                indexTokenizer = new Tokenizer("", location);
-                index = indexTokenizer.tokens;
-                return true;
+                index = new SetToken(SetToken.BracketType.SQUARE_BRACKETS, location);
+                return this;
+            } else if (c == '(') {
+                if (params != null || index != null) {
+                    throw new TokenizerError("Unexpected `()` in identifier");
+                }
+                params = new SetToken(SetToken.BracketType.PARENTHESES, location);
+                return this;
             }
-            return false;
+            return null;
         }
 
         @Override
@@ -313,15 +336,10 @@ public abstract class Token {
             String out = "IdentifierToken{value=\"";
             out += value + "\"";
             if (index != null) {
-                out += ", index=[";
-                boolean f = true;
-                for (Token t : index) {
-                    if (!f)
-                        out += ",";
-                    f = false;
-                    out += t;
-                }
-                out += "]";
+                out += ", index=" + index.toString();
+            }
+            if (params != null) {
+                out += ", params=" + params.toString();
             }
             if (subTokens != null)
                 out += ", subTokens=" + subTokens.size();
@@ -369,38 +387,38 @@ public abstract class Token {
         }
 
         @Override
-        public boolean ingest(char c, Location location) {
+        public Token ingest(char c, Location location) {
             if (c == 'x') {
                 if (value.length() == 1) {
                     hex = true;
                     value = "";
                     endLocation = location;
-                    return true;
+                    return this;
                 }
-                return false;
+                return null;
             } else if (c == 'b') {
                 if (value.length() == 1) {
                     bin = true;
                     value = "";
                     endLocation = location;
-                    return true;
+                    return this;
                 }
-                return false;
+                return null;
             }
             if (hex) {
                 if (!(Character.isDigit(c) || ('a' <= c && c <= 'f') || ('A' <= c && c <= 'F') || c == '_'))
-                    return false;
+                    return null;
             } else if (bin) {
                 if (!(c == '0' || c == '1' || c == '_'))
-                    return false;
+                    return null;
             } else {
                 if (!(Character.isDigit(c) || c == '.' || c == 'e' || c == '_'))
-                    return false;
+                    return null;
             }
             value += c;
             endLocation = location;
             numValue = (int)Long.parseLong(value.replace("_",""), bin ? 2 : (hex ? 16 : 10));
-            return true;
+            return this;
         }
         @Override
         public String toString() {
@@ -440,9 +458,9 @@ public abstract class Token {
         }
 
         @Override
-        public boolean ingest(char c, Location location) {
+        public Token ingest(char c, Location location) {
             if (closed)
-                return false;
+                return null;
             endLocation = location;
             if(escape) {
                 if(escapes.containsKey(c)) {
@@ -451,19 +469,19 @@ public abstract class Token {
                     value += c;
                 }
                 escape = false;
-                return true;
+                return this;
             } else if (c == '\'' && ch) {
                 closed = true;
-                return true;
+                return this;
             } else if (c == '"' && !ch) {
                 closed = true;
-                return true;
+                return this;
             } else if (c == '\\') {
                 escape = true;
-                return true;
+                return this;
             }
             value += c;
-            return true;
+            return this;
         }
 
         public String escapedValue() {
@@ -486,27 +504,27 @@ public abstract class Token {
         public boolean closed = false;
         protected Tokenizer tk;
 
-        protected char closer;
+        protected BracketType type;
 
-        public SetToken(char c, Location location) {
+        public SetToken(BracketType type, Location location) {
             super(location);
-            closer = c;
+            this.type = type;
             tk = new Tokenizer("", location);
             subTokens = tk.tokens;
         }
 
         @Override
-        public boolean ingest(char c, Location location) {
+        public SetToken ingest(char c, Location location) {
             if (closed)
-                return false;
+                return null;
             if (tk.ingest(c, location)) {
                 endLocation = location;
-                return true;
+                return this;
             }
-            if (c == closer) {
+            if (c == type.close) {
                 closed = true;
                 endLocation = location;
-                return true;
+                return this;
             }
             throw new TokenizerError("Found unexpected character in set: '" + c + "'");
         }
@@ -519,19 +537,31 @@ public abstract class Token {
 
         @Override
         public String toString() {
-            return String.format("SetToken{closed=%s, numTokens=%d, %s}", closed ? "true" : "false",
-                    subTokens == null ? 0 : subTokens.size(), startLocation);
+            return String.format("SetToken{closed=%s, numTokens=%d, type=%s %s}", closed ? "true" : "false",
+                    subTokens == null ? 0 : subTokens.size(), type, startLocation);
         }
 
         @Override
         public String debugString() {
-            String out = "(";
+            String out = ""+type.open;
             for (int i = 0; i < subTokens.size(); i++) {
                 if (i > 0 && subTokens.get(i).wsBefore())
                     out += " ";
                 out += subTokens.get(i).debugString();
             }
-            return out+")";
+            return out + type.close;
+        }
+
+        public enum BracketType {
+            PARENTHESES('(',')'),
+            SQUARE_BRACKETS('[',']'),
+            ;
+            public final char open;
+            public final char close;
+            private BracketType(char open, char close) {
+                this.open = open;
+                this.close = close;
+            }
         }
     }
     
@@ -545,27 +575,29 @@ public abstract class Token {
         }
 
         @Override
-        public boolean ingest(char c, Location location) {
+        public Token ingest(char c, Location location) {
             boolean isDigit = Character.isDigit(c);
             if (params != null) {
-                if (params.ingest(c, location)) {
+                SetToken tkn = (SetToken)params.ingest(c, location);
+                if (tkn != null) {
                     endLocation = location;
-                    return true;
+                    params = tkn;
+                    return this;
                 }
-                return false;
+                return null;
             } else if (Character.isAlphabetic(c) || Character.isDigit(c) || c == '_') {
                 if (name.length() == 0 && isDigit)
                     throw new TokenizerError("Annotation name can not start with a digit");
                 name += c;
                 endLocation = location;
-                return true;
+                return this;
             } else if (c == '(') {
-                params = new SetToken(')', location);
+                params = new SetToken(SetToken.BracketType.PARENTHESES, location);
                 subTokens = params.subTokens;
                 endLocation = location;
-                return true;
+                return this;
             }
-            return false;
+            return null;
         }
 
         @Override

@@ -319,7 +319,10 @@ public class Parser {
                             continue;
                         }
                         workingI++;
-                        if (tokens.get(workingI) instanceof BlockToken bt) {
+                        if(tokens.size() >= workingI) {
+                            errors.error("Unexpected end of tokens, expected block or `;`", tokens.get(tokens.size()-1).endLocation.span());
+                            continue;
+                        } else if (tokens.get(workingI) instanceof BlockToken bt) {
                             new Parser(unit, namespace).parse(bt.subTokens, errors);
                         } else if (tokens.get(workingI) instanceof OperatorToken ot
                                 && ot.type == OperatorToken.Type.SEMICOLON) {

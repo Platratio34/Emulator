@@ -319,9 +319,9 @@ public class ELType {
                             type.baseClass = b.build();
                         }
                         if (it.index != null) {
-                            if(it.index.size() == 0)
+                            if(it.index.hasSub())
                                 throw new ELCompileException("Array type must have a size");
-                            if(it.index.size() > 1)
+                            if(it.index.subSize() > 1)
                                 throw new ELCompileException("Invalid array size");
                             Token tkn = it.index.get(0);
                             if (tkn instanceof NumberToken nt) {

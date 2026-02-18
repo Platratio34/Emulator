@@ -50,15 +50,16 @@ public class Tokenizer {
             char c = working.charAt(workingI);
             workingI++;
             try {
-                if (c == '\n') {
-                    lineN++;
-                    col = 1;
-                    // System.out.println("\n\\n "+lineN);
-                } else if (c == '\r') {
-                    // System.out.println("\n\\r "+lineN);
-                } else {
-                    col++;
+                switch (c) {
+                    case '\n' -> {
+                        lineN++;
+                        col = 1;
+                        // System.out.println("\n\\n "+lineN);
+                    }
+                    case '\r' -> { }
+                    default -> col++;
                 }
+                // System.out.println("\n\\r "+lineN);
                 // System.out.print("c"+((int)c));
                 if (!ingest(c, new Location(fName, lineN, col))) {
                     return Optional.of("Found unexpected character: '" + c + "' (" + ((int) c) + "); At line " + lineN
@@ -100,7 +101,13 @@ public class Tokenizer {
             return true;
         }
         if (workingToken != null) {
-            if (workingToken.ingest(c, location)) {
+            Token tkn = workingToken.ingest(c, location);
+            if (tkn != null) {
+                if(workingToken != tkn) {
+                    tokens.removeLast();
+                    tokens.add(tkn);
+                    workingToken = tkn;
+                }
                 if (workingToken instanceof OperatorToken ot) {
                     if (ot.type == OperatorToken.Type.COMMENT) {
                         slc = true;
@@ -131,7 +138,7 @@ public class Tokenizer {
         } else if (c == '{' && !id) {
             workingToken = new BlockToken(location);
         } else if (c == '(') {
-            workingToken = new SetToken(')', location);
+            workingToken = new SetToken(SetToken.BracketType.PARENTHESES, location);
         } else if (c == '@' && !id) {
             workingToken = new AnnotationToken(location);
         } else return Character.isWhitespace(c) || c == '\r' || c == '\n';
