@@ -6,12 +6,12 @@ import com.peter.emulator.MachineCode;
 import com.peter.emulator.lang.ELAnalysisError;
 import com.peter.emulator.lang.ELSymbol;
 import com.peter.emulator.lang.ELType;
-import com.peter.emulator.lang.Token;
-import com.peter.emulator.lang.Token.IdentifierToken;
-import com.peter.emulator.lang.Token.NumberToken;
-import com.peter.emulator.lang.Token.OperatorToken;
-import com.peter.emulator.lang.Token.SetToken;
 import com.peter.emulator.lang.base.ELPrimitives;
+import com.peter.emulator.lang.tokens.IdentifierToken;
+import com.peter.emulator.lang.tokens.NumberToken;
+import com.peter.emulator.lang.tokens.OperatorToken;
+import com.peter.emulator.lang.tokens.SetToken;
+import com.peter.emulator.lang.tokens.Token;
 
 public class ExpressionAction extends ComplexAction {
 
@@ -160,7 +160,7 @@ public class ExpressionAction extends ComplexAction {
                         case "SysD" -> {
                             scope.addSymbol(new ELSymbol(ELSymbol.Type.NAMESPACE_NAME, it.spanFirst(), "### `SysD`\nSystem Direct Low-level module"));
                             if(!it.hasSub() || it.subTokens.size() != 1)
-                                throw ELAnalysisError.error("Unable to resolve variable", it);
+                                throw ELAnalysisError.error("Unable to resolve variable `"+it.debugString()+"`", it);
                             String vN = it.sub(0).value;
                             if(vN.startsWith("r"))
                                 scope.addSymbol(new ELSymbol(ELSymbol.Type.VARIABLE_NAME, it.sub(0).span(), "### `%s`\nCPU register `%s`", vN, vN));
@@ -183,7 +183,7 @@ public class ExpressionAction extends ComplexAction {
                         default -> {
                             ResolveAction rA = scope.loadVar(it, tR, addressOf);
                             if (rA == null)
-                                throw ELAnalysisError.error("Unable to resolve variable", it);
+                                throw ELAnalysisError.error("Unable to resolve variable `"+it.debugString()+"`", it);
                             actions.add(rA);
                             t = rA.returnType;
                         }

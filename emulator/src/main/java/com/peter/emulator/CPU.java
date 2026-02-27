@@ -7,6 +7,7 @@ import com.peter.emulator.debug.Debugger;
 
 public class CPU {
 
+    public final int cpuId;
     public final int[] registers = new int[0x20];
 
     public final RAM ram;
@@ -26,7 +27,8 @@ public class CPU {
 
     public Debugger debugger = null;
 
-    public CPU(RAM ram, MMU mmu) {
+    public CPU(int cpuId, RAM ram, MMU mmu) {
+        this.cpuId = cpuId;
         this.ram = ram;
         this.mmu = mmu;
     }
@@ -46,9 +48,11 @@ public class CPU {
             case REG_PID -> pid;
             case REG_MEM_TABLE -> memTablePtr;
 
-            case REG_PRIVILEGED_MODE -> privilegeMode ? 1 : 0;
             case REG_INTERRUPT -> interruptCode;
             case REG_INTR_RSP -> interruptRsp;
+            
+            case REG_CPU_ID -> cpuId;
+            case REG_PRIVILEGED_MODE -> privilegeMode ? 1 : 0;
         
             default -> {
                 throw new RuntimeException("Invalid special register");
@@ -103,6 +107,10 @@ public class CPU {
                     return;
                 }
                 interruptRsp = val;
+            }
+
+            case REG_CPU_ID -> {
+                interrupt(0x8000_0001);
             }
 
             default -> {

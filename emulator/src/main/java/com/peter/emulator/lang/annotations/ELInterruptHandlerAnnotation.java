@@ -1,8 +1,8 @@
 package com.peter.emulator.lang.annotations;
 
-import com.peter.emulator.lang.Token;
-import com.peter.emulator.lang.Token.AnnotationToken;
-import com.peter.emulator.lang.Token.IdentifierToken;
+import com.peter.emulator.lang.tokens.Token;
+import com.peter.emulator.lang.tokens.AnnotationToken;
+import com.peter.emulator.lang.tokens.IdentifierToken;
 
 public class ELInterruptHandlerAnnotation extends ELAnnotation {
 

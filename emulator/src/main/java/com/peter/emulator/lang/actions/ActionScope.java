@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import com.peter.emulator.lang.*;
-import com.peter.emulator.lang.Token.IdentifierToken;
+import com.peter.emulator.lang.tokens.IdentifierToken;
 
 public class ActionScope {
 
@@ -26,25 +26,31 @@ public class ActionScope {
     }
 
     public ELVariable addStackVar(String name, ELType type, Location endLocation, ErrorSet errors) {
-        ELVariable var = new ELVariable(ELProtectionLevel.INTERNAL, ELVariable.Type.SCOPE, type, name, false, namespace, unit, type.location, endLocation);
-        if(stackVars.containsKey(name)) {
-            errors.warning("Duplicate variable name `"+name+"`");
+        ELVariable var = new ELVariable(ELProtectionLevel.INTERNAL, ELVariable.Type.SCOPE, type, name, false, namespace,
+                unit, type.location, endLocation);
+        if (stackVars.containsKey(name)) {
+            errors.warning("Duplicate variable name `" + name + "`");
             return var;
         }
-        var.offset = stackOff++;
+        var.offset = type.sizeofWords();
         stackVars.put(name, var);
         return var;
     }
-
-    public ELVariable addParam(String name, ELType type, int offset, ErrorSet errors) {
-        ELVariable var = new ELVariable(ELProtectionLevel.INTERNAL, ELVariable.Type.SCOPE, type, name, false, namespace, unit, type.location);
-        if(stackVars.containsKey(name)) {
-            errors.warning("Duplicate variable name `"+name+"`");
-            return var;
+    
+    public void addParams(ArrayList<String> names, ArrayList<ELType> types, ErrorSet errors) {
+        int o = - 2;
+        for (int i = names.size() - 1; i >= 0; i--) {
+            String name = names.get(i);
+            ELType type = types.get(i);
+            ELVariable var = new ELVariable(ELProtectionLevel.INTERNAL, ELVariable.Type.SCOPE, type, name, false, namespace, unit, type.location);
+            if(stackVars.containsKey(name)) {
+                errors.warning("Duplicate variable name `"+name+"`");
+                continue;
+            }
+            o -= type.sizeofWords();
+            var.offset = o;
+            stackVars.put(name, var);
         }
-        var.offset = offset - 2; // offseting by 2 to account for return address and r15
-        stackVars.put(name, var);
-        return var;
     }
 
     public int getStackOffDif() {

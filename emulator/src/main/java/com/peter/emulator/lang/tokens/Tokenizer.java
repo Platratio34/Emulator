@@ -1,16 +1,10 @@
-package com.peter.emulator.lang;
+package com.peter.emulator.lang.tokens;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import com.peter.emulator.lang.Token.AnnotationToken;
-import com.peter.emulator.lang.Token.BlockToken;
-import com.peter.emulator.lang.Token.IdentifierToken;
-import com.peter.emulator.lang.Token.NumberToken;
-import com.peter.emulator.lang.Token.OperatorToken;
-import com.peter.emulator.lang.Token.SetToken;
-import com.peter.emulator.lang.Token.StringToken;
+import com.peter.emulator.lang.Location;
 
 public class Tokenizer {
 
@@ -75,7 +69,7 @@ public class Tokenizer {
         return Optional.empty();
     }
 
-    protected boolean ingest(char c, Location location) {
+    public boolean ingest(char c, Location location) {
         if (slc) {
             // if (c == '\n')
             //     System.out.print("\\n");

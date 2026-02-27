@@ -2,10 +2,11 @@ package com.peter.emulator.lang;
 
 import java.util.ArrayList;
 
-import com.peter.emulator.lang.Token.NumberToken;
-import com.peter.emulator.lang.Token.OperatorToken;
-import com.peter.emulator.lang.Token.StringToken;
 import com.peter.emulator.lang.annotations.ELAnnotation;
+import com.peter.emulator.lang.tokens.NumberToken;
+import com.peter.emulator.lang.tokens.OperatorToken;
+import com.peter.emulator.lang.tokens.StringToken;
+import com.peter.emulator.lang.tokens.Token;
 
 public class ELVariable {
 
@@ -44,7 +45,7 @@ public class ELVariable {
     }
 
     public int sizeof() {
-        return 4;
+        return type.sizeof();
     }
 
     public String typeString() {

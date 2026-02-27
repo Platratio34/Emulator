@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
-import com.peter.emulator.lang.Token.IdentifierToken;
+import com.peter.emulator.lang.tokens.IdentifierToken;
 
 public class Namespace {
 

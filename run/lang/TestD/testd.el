@@ -2,6 +2,8 @@ import SysD;
 
 namespace TestD {
 
+    import System;
+
     public static uint32 v = 0;
     public static const char* str = "// Test";
 

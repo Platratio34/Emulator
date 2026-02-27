@@ -5,11 +5,11 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 
-import com.peter.emulator.lang.Token.OperatorToken;
 import com.peter.emulator.lang.annotations.ELAnnotation;
 import com.peter.emulator.lang.annotations.ELOperatorAnnotation;
 import com.peter.emulator.lang.annotations.ELOverrideAnnotation;
 import com.peter.emulator.lang.base.ELPrimitives;
+import com.peter.emulator.lang.tokens.OperatorToken;
 
 public class ELClass extends Namespace {
 
@@ -85,6 +85,10 @@ public class ELClass extends Namespace {
         }
         size += size % 4;
         return size;
+    }
+
+    public int getSizeWords() {
+        return Math.ceilDiv(getSize(), 4);
     }
 
     public int getOffset(String member) {

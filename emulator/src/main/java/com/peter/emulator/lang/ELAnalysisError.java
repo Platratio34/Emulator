@@ -2,6 +2,8 @@ package com.peter.emulator.lang;
 
 import org.eclipse.lsp4j.DiagnosticSeverity;
 
+import com.peter.emulator.lang.tokens.Token;
+
 public class ELAnalysisError extends RuntimeException {
 
     public final Severity severity;

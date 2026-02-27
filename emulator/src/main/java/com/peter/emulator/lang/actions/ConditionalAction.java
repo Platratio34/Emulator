@@ -3,10 +3,10 @@ package com.peter.emulator.lang.actions;
 import java.util.ArrayList;
 
 import com.peter.emulator.lang.ELAnalysisError;
-import com.peter.emulator.lang.Token;
-import com.peter.emulator.lang.Token.IdentifierToken;
-import com.peter.emulator.lang.Token.NumberToken;
-import com.peter.emulator.lang.Token.OperatorToken;
+import com.peter.emulator.lang.tokens.IdentifierToken;
+import com.peter.emulator.lang.tokens.NumberToken;
+import com.peter.emulator.lang.tokens.OperatorToken;
+import com.peter.emulator.lang.tokens.Token;
 
 public class ConditionalAction extends ComplexAction {
 
@@ -22,7 +22,7 @@ public class ConditionalAction extends ComplexAction {
         if(t1 instanceof IdentifierToken it1) {
             ResolveAction r = scope.loadVar(it1, 1, true);
             if (r == null)
-                throw ELAnalysisError.error("Unable to resolve variable", it1);
+                throw ELAnalysisError.error("Unable to resolve variable `"+it1.debugString()+"`", it1);
             actions.add(r);
         } else if (t1 instanceof NumberToken nt1) {
             actions.add(new DirectAction("LOAD r1 %d", nt1.numValue));
@@ -30,7 +30,7 @@ public class ConditionalAction extends ComplexAction {
         if(t2 instanceof IdentifierToken it2) {
             ResolveAction r = scope.loadVar(it2, 2, true);
             if (r == null)
-                throw ELAnalysisError.error("Unable to resolve variable", it2);
+                throw ELAnalysisError.error("Unable to resolve variable `"+it2.debugString()+"`", it2);
             actions.add(r);
         } else if (t2 instanceof NumberToken nt2) {
             actions.add(new DirectAction("LOAD r2 %d", nt2.numValue));

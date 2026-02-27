@@ -6,8 +6,8 @@ import java.util.function.Function;
 
 import com.peter.emulator.lang.Location;
 import com.peter.emulator.lang.Span;
-import com.peter.emulator.lang.Token;
-import com.peter.emulator.lang.Token.AnnotationToken;
+import com.peter.emulator.lang.tokens.AnnotationToken;
+import com.peter.emulator.lang.tokens.Token;
 
 public class ELAnnotation {
 

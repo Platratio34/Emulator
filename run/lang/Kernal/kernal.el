@@ -44,7 +44,7 @@ namespace Kernal {
         stack--; // now points to r15; stack: [...pgmPtr,rPM,r0...r15 [stack*],var(stack,+17) [HEAD]]
         ProcessState* oldState = &processStates[SysD.rPID];
         oldState.stackPtr = stack;
-        stack -= 16;
+        stack -= 16; 
         SysD.memCopy((void*)(oldState.registers), 0, 15, stack, 0);
         for(uint32 i = 15; i >= 0; i--) {
             oldState.registers[i] = *stack; stack--;

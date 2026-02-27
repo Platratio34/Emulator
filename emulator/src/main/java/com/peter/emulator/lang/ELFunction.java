@@ -4,10 +4,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
-import com.peter.emulator.lang.Token.BlockToken;
-import com.peter.emulator.lang.Token.IdentifierToken;
-import com.peter.emulator.lang.Token.OperatorToken;
-import com.peter.emulator.lang.Token.SetToken;
+import com.peter.emulator.lang.tokens.BlockToken;
+import com.peter.emulator.lang.tokens.IdentifierToken;
+import com.peter.emulator.lang.tokens.OperatorToken;
+import com.peter.emulator.lang.tokens.SetToken;
+import com.peter.emulator.lang.tokens.Token;
 import com.peter.emulator.lang.actions.Action;
 import com.peter.emulator.lang.actions.ActionBlock;
 import com.peter.emulator.lang.actions.ActionScope;
@@ -277,9 +278,11 @@ public class ELFunction {
         if (body != null) {
             ActionBlock bodyBlock = new ActionBlock(new ActionScope(namespace, unit, null, 0), this);
             int l = paramOrder.size();
+            ArrayList<ELType> paramList = new ArrayList<>();
             for (int i = 0; i < l; i++) {
-                bodyBlock.scope.addParam(paramOrder.get(i), params.get(paramOrder.get(i)), -(l - i), errors);
+                paramList.add(params.get(paramOrder.get(i)));
             }
+            bodyBlock.scope.addParams(paramOrder, paramList, errors);
             bodyBlock.parse(body, errors);
             actions.add(bodyBlock);
         }

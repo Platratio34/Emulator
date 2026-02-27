@@ -3,11 +3,13 @@ package com.peter.emulator.lang;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import com.peter.emulator.lang.Token.AnnotationToken;
-import com.peter.emulator.lang.Token.BlockToken;
-import com.peter.emulator.lang.Token.IdentifierToken;
-import com.peter.emulator.lang.Token.OperatorToken;
-import com.peter.emulator.lang.Token.SetToken;
+import com.peter.emulator.lang.tokens.AnnotationToken;
+import com.peter.emulator.lang.tokens.BlockToken;
+import com.peter.emulator.lang.tokens.IdentifierToken;
+import com.peter.emulator.lang.tokens.OperatorToken;
+import com.peter.emulator.lang.tokens.Token;
+import com.peter.emulator.lang.ELSymbol.ELTypeSymbol;
+import com.peter.emulator.lang.ELSymbol.ELVarSymbol;
 import com.peter.emulator.lang.annotations.ELAnnotation;
 import com.peter.emulator.lang.annotations.ELEntrypointAnnotation;
 
@@ -19,7 +21,6 @@ public class Parser {
     public HashMap<String, Identifier> identifiers = new HashMap<>();
     public Namespace currentNamespace = null;
     public ArrayList<Namespace> namespaces = new ArrayList<>();
-    public HashMap<String, String> imports = new HashMap<>();
 
     private final ProgramUnit unit;
 
@@ -62,6 +63,7 @@ public class Parser {
                 if (t instanceof IdentifierToken idt) {
                     if (idt.value.equals("import")) {
                         workingI++;
+                        unit.symbols.add(new ELSymbol(ELSymbol.Type.KEYWORD, idt.span()));
                         String imp;
                         String name;
                         if (tokens.get(workingI) instanceof IdentifierToken idt2) {
@@ -79,10 +81,16 @@ public class Parser {
                         workingI++;
                         if (tokens.get(workingI) instanceof IdentifierToken idt3 && idt3.value.equals("as")) {
                             workingI++;
+                            unit.symbols.add(new ELSymbol(ELSymbol.Type.KEYWORD, idt3.span()));
                             if (tokens.get(workingI) instanceof IdentifierToken idt4) {
                                 workingI++;
                                 name = idt4.value;
-                                imports.put(name, imp);
+                                if (currentNamespace != null) {
+                                    errors.error("Import must be outside of namespace", idt);
+                                    continue;
+                                }
+                                unit.symbols.add(new ELSymbol(ELSymbol.Type.NAMESPACE_NAME, idt2.span(), "`%s` as `%s`", name, imp));
+                                unit.addImport(name, imp);
                             } else {
                                 errors.error("Unexpected token found in import (expected alias)", tokens.get(workingI).span());
                                 continue;
@@ -94,13 +102,17 @@ public class Parser {
                             }
                         } else if (tokens.get(workingI) instanceof OperatorToken ot
                                 && ot.type == OperatorToken.Type.SEMICOLON) {
-                            imports.put(name, imp);
+                            if (currentNamespace != null) {
+                                errors.error("Import must be outside of namespace", idt);
+                                continue;
+                            }
+                            unit.symbols.add(new ELSymbol(ELSymbol.Type.NAMESPACE_NAME, idt2.span(), "`%s`", name));
+                            unit.addImport(name, imp);
                         } else {
                             errors.error("Unexpected token found in import (expected `as` or `;`)", tokens.get(workingI).span());
                             continue;
                         }
-                    } else if (idt.value.equals("static") || idt.value.equals("const") || idt.value.equals("operator") || idt.value.equals("extern")
-                            || ELProtectionLevel.valid(idt.value)) {
+                    } else if (idt.value.equals("static") || idt.value.equals("const") || idt.value.equals("operator") || idt.value.equals("extern") || ELProtectionLevel.valid(idt.value)) {
                         Location loc = idt.startLocation;
                         workingI++;
                         ELProtectionLevel level = ELProtectionLevel.get(idt.value, ELProtectionLevel.PROTECTED);
@@ -150,25 +162,19 @@ public class Parser {
                             destructor = true;
                             workingI++;
                         }
-                        ELType.Builder typeBuilder = new ELType.Builder();
-                        boolean ingestOne = false;
-                        while (typeBuilder.ingest(tokens.get(workingI))) {
-                            ingestOne = true;
-                            workingI++;
-                        }
-                        if (!ingestOne) {
-                            errors.error("Type building didn't ingest any tokens", tokens.get(workingI));
-                            continue;
-                        }
-                        ELType type = typeBuilder.build();
-                        String name;
-                        if (currentNamespace instanceof ELClass currentClass && type.equals(currentClass.getType())
-                                && tokens.get(workingI) instanceof SetToken set) {
-                            // this is a constructor;
+                        if (tokens.get(workingI) instanceof IdentifierToken it && it.hasParams()) {
+                            // Constructor/destructor
+                            if (!(currentNamespace instanceof ELClass)) {
+                                throw ELAnalysisError.error((destructor?"Destructor":"Constructor")+" only allowed in class", it);
+                            }
+                            ELClass currentClass = (ELClass) currentNamespace;
+                            if (!currentClass.cName.equals(it.value)) {
+                                throw ELAnalysisError.error("Invalid function definition", it);
+                            }
                             ELFunction function = new ELFunction(level, extern, currentClass,
                                     currentClass.cName, destructor ? ELFunction.FunctionType.DESTRUCTOR : ELFunction.FunctionType.CONSTRUCTOR, false, unit, loc);
-                            function.ret = type;
-                            function.ingestParams(set);
+                            function.ret = currentClass.getType();
+                            function.ingestParams(it.params);
                             if (annotations != null)
                                 function.annotations = annotations;
                             if (destructor) {
@@ -195,17 +201,33 @@ public class Parser {
                                 continue;
                             }
                             continue;
-                        } else {
-                            if (tokens.get(workingI) instanceof IdentifierToken it4) {
-                                name = it4.value;
-                                workingI++;
-                            } else {
-                                errors.error("Unexpected token found for name (expected identifier)", tokens.get(workingI).span());
-                                continue;
-                            }
                         }
-                        if (tokens.get(workingI) instanceof SetToken set) { // function
+                        ELType.Builder typeBuilder = new ELType.Builder();
+                        boolean ingestOne = false;
+                        while (typeBuilder.ingest(tokens.get(workingI))) {
+                            ingestOne = true;
                             workingI++;
+                        }
+                        if (!ingestOne) {
+                            errors.error("Type building didn't ingest any tokens", tokens.get(workingI));
+                            continue;
+                        }
+                        ELType type = typeBuilder.build();
+                        unit.symbols.add(new ELTypeSymbol(type));
+                        String name;
+                        IdentifierToken nameToken;
+
+                        if (tokens.get(workingI) instanceof IdentifierToken it4) {
+                            nameToken = it4;
+                            name = it4.value;
+                            workingI++;
+                        } else {
+                            errors.error("Unexpected token found for name (expected identifier)", tokens.get(workingI));
+                            continue;
+                        }
+                        
+                        if (nameToken.hasParams()) { // function
+                            // workingI++;
                             ELFunction.FunctionType funcType = stat ? ELFunction.FunctionType.STATIC
                                     : ELFunction.FunctionType.INSTANCE;
                             if(operator)
@@ -221,7 +243,7 @@ public class Parser {
                             if (!type.isVoid())
                                 function.ret = type;
                             function.abstractFunction = abs;
-                            function.ingestParams(set);
+                            function.ingestParams(nameToken.params);
                             
                             if (stat) {
                                 currentNamespace.addStaticFunction(function);
@@ -289,11 +311,15 @@ public class Parser {
                             while (var.ingestValue(tokens.get(workingI))) {
                                 workingI++;
                             }
+                            unit.symbols.add(new ELVarSymbol(var, nameToken.span()));
                         }
                     } else if (idt.value.equals("namespace")) {
                         workingI++;
                         Namespace namespace = null;
                         if (tokens.get(workingI) instanceof IdentifierToken it) {
+                            if (!it.simple()) {
+                                throw ELAnalysisError.error("Namespace name can not contain index or params", it);
+                            }
                             namespace = makeNamespace(it.value, namespace);
                             // System.out.println(namespace.getQualifiedName());
                             boolean err = false;
@@ -310,16 +336,16 @@ public class Parser {
                                     break;
                                 }
                             }
+                            unit.symbols.add(new ELSymbol(ELSymbol.Type.NAMESPACE_NAME, it.span(), "### `%s`", namespace.getQualifiedName()));
                             if(err)
                                 continue;
                             namespaces.add(namespace);
-                            unit.addImports(imports);
                         } else {
                             errors.error("Unknown token found (expected identifier)", tokens.get(workingI));
                             continue;
                         }
                         workingI++;
-                        if(tokens.size() >= workingI) {
+                        if(tokens.size() <= workingI) {
                             errors.error("Unexpected end of tokens, expected block or `;`", tokens.get(tokens.size()-1).endLocation.span());
                             continue;
                         } else if (tokens.get(workingI) instanceof BlockToken bt) {
@@ -331,8 +357,7 @@ public class Parser {
                             errors.error("Unexpected token found, expected block or `;`", tokens.get(workingI));
                             continue;
                         }
-                    } else if (idt.value.equals("abstract") || idt.value.equals("class")
-                            || idt.value.equals("struct")) {
+                    } else if (idt.value.equals("abstract") || idt.value.equals("class") || idt.value.equals("struct")) {
                         boolean abs = idt.value.equals("abstract");
                         if (abs) {
                             workingI++;

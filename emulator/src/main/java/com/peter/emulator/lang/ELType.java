@@ -2,9 +2,10 @@ package com.peter.emulator.lang;
 
 import java.util.ArrayList;
 
-import com.peter.emulator.lang.Token.IdentifierToken;
-import com.peter.emulator.lang.Token.NumberToken;
-import com.peter.emulator.lang.Token.OperatorToken;
+import com.peter.emulator.lang.tokens.IdentifierToken;
+import com.peter.emulator.lang.tokens.NumberToken;
+import com.peter.emulator.lang.tokens.OperatorToken;
+import com.peter.emulator.lang.tokens.Token;
 import com.peter.emulator.lang.base.ELPrimitives;
 
 public class ELType {
@@ -318,8 +319,8 @@ public class ELType {
                             }
                             type.baseClass = b.build();
                         }
-                        if (it.index != null) {
-                            if(it.index.hasSub())
+                        if (it.indexed()) {
+                            if(!it.index.hasSub())
                                 throw new ELCompileException("Array type must have a size");
                             if(it.index.subSize() > 1)
                                 throw new ELCompileException("Invalid array size");
@@ -565,8 +566,35 @@ public class ELType {
 	}
 
     public ELType resolve() {
-        if(!isResolvable())
+        if (!isResolvable())
             throw new ELCompileException("Can not resolve a void*, non-pointer, address, or array");
         return subType;
+    }
+    
+    public int sizeof() {
+        if(pointer || address)
+            return 4;
+        if (array) {
+            return arraySize * subType.sizeofWords() * 4;
+        }
+        if(clazz == null)
+            return 4;
+        return clazz.getSize();
+    }
+
+    public int sizeofWords() {
+        return Math.ceilDiv(sizeof(), 4);
+    }
+
+    public int stepSize() {
+        if(!(array || pointer))
+            throw new ELCompileException("Can not get step size of non array or pointer");
+        return subType.sizeofWords();
+    }
+
+    public int arraySize() {
+        if (!array)
+            return -1;
+        return arraySize;
     }
 }

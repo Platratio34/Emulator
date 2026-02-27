@@ -2,8 +2,8 @@ package com.peter.emulator.lang;
 
 import java.util.ArrayList;
 
-import com.peter.emulator.lang.Token.NumberToken;
-import com.peter.emulator.lang.Token.StringToken;
+import com.peter.emulator.lang.tokens.NumberToken;
+import com.peter.emulator.lang.tokens.StringToken;
 import com.peter.emulator.lang.base.ELPrimitives;
 
 public abstract class ELValue {

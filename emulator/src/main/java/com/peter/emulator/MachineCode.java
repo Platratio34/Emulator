@@ -102,6 +102,7 @@ public class MachineCode {
     public static final int REG_INTERRUPT = 0xfa;
     public static final int REG_INTR_RSP = 0xfb;
     
+    public static final int REG_CPU_ID = 0xfe;
     public static final int REG_PRIVILEGED_MODE = 0xff;
 
     public static String translateReg(int reg) {
@@ -116,6 +117,8 @@ public class MachineCode {
             
             case REG_INTERRUPT -> "rIC";
             case REG_INTR_RSP -> "rIR";
+
+            case REG_CPU_ID -> "rID";
         
             default -> String.format("r%d", reg);
         };

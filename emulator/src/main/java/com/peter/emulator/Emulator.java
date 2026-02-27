@@ -14,7 +14,7 @@ public class Emulator {
     public float tickSpeed = 60;
 
     public final CPU[] cores = new CPU[] {
-        new CPU(ram, mmu)
+        new CPU(0, ram, mmu)
     };
     public PeripheralManager peripheralManager = new PeripheralManager(ram);
     public final EmulatorGui gui;

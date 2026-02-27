@@ -1,4 +1,4 @@
-package com.peter.emulator.lang;
+package com.peter.emulator.lang.tokens;
 
 public class TokenizerError extends RuntimeException {
     public String reason;

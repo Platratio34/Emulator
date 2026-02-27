@@ -1,6 +1,6 @@
 package com.peter.emulator.lang.annotations;
 
-import com.peter.emulator.lang.Token.AnnotationToken;
+import com.peter.emulator.lang.tokens.AnnotationToken;
 
 public class ELEntrypointAnnotation extends ELAnnotation {
 

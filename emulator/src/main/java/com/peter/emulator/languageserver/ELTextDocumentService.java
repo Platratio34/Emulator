@@ -82,15 +82,17 @@ public class ELTextDocumentService implements TextDocumentService {
             
             for (ELSymbol symbol : unit.symbols) {
                 if (symbol.contains(hoverPos, null)) {
-                    return new Hover(new MarkupContent("markdown", symbol.text));
+                    return new Hover(new MarkupContent("markdown", symbol.getText()));
                 } else {
                     // lspServer.logDebug("Hover was requested for %s, but didn't match symbol "+symbol.type+": "+symbol.text, uri);
                 }
             }
 
-            if (unit.variables.size() == 0 && unit.functions.size() == 0) {
+            if (unit.variables.isEmpty() && unit.functions.isEmpty() && unit.symbols.isEmpty()) {
                 lspServer.logWarn("Hover was requested for %s, but program unit had no hover-able symbols", uri);
+                return null;
             }
+            
             for (ELVariable var : unit.variables) {
                 if (var.span().contains(hoverPos, null)) {
                     String content = switch(var.varType) {

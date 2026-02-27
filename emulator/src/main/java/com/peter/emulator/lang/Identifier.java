@@ -3,7 +3,7 @@ package com.peter.emulator.lang;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import com.peter.emulator.lang.Token.IdentifierToken;
+import com.peter.emulator.lang.tokens.IdentifierToken;
 
 public class Identifier {
 

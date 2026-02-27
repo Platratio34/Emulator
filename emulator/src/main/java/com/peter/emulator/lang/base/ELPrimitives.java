@@ -12,7 +12,13 @@ public class ELPrimitives {
     private static final ProgramUnit INTERNAL_UNIT = new ProgramUnit(null, "<Base>");
     private static final Location INTERNAL_LOCATION = new Location("<Base>", 0, 0);
 
-    public static final ELClass OBJECT_CLASS = new ELClass("Object", null, INTERNAL_UNIT);
+    public static final ELClass OBJECT_CLASS = new ELClass("Object", null, INTERNAL_UNIT) {
+        
+        @Override
+        public int getSize() {
+            return 4;
+        };
+    };
     public static final ELType OBJECT = new ELType("Object", OBJECT_CLASS, INTERNAL_LOCATION);
 
     // bool
@@ -24,6 +30,11 @@ public class ELPrimitives {
         public boolean canStaticCast(ELType target) {
             return target.equals(CHAR) || target.equals(UINT16) || target.equals(UINT32);
         }
+
+        @Override
+        public int getSize() {
+            return 4;
+        };
     };
     public static final ELType UINT8 = new ELType("uint8", UINT8_CLASS, INTERNAL_LOCATION);
     // char
@@ -32,6 +43,11 @@ public class ELPrimitives {
         public boolean canStaticCast(ELType target) {
             return target.equals(UINT8) || target.equals(UINT16) || target.equals(UINT32);
         }
+
+        @Override
+        public int getSize() {
+            return 4;
+        };
     };
     public static final ELType CHAR = new ELType("char", CHAR_CLASS, INTERNAL_LOCATION);
     // uint16
@@ -40,6 +56,10 @@ public class ELPrimitives {
         public boolean canStaticCast(ELType target) {
             return target.equals(UINT32);
         }
+
+        public int getSize() {
+            return 4;
+        };
     };
     public static final ELType UINT16 = new ELType("uint16", UINT16_CLASS, INTERNAL_LOCATION);
     // uint32
@@ -48,6 +68,11 @@ public class ELPrimitives {
         public boolean canStaticCast(ELType target) {
             return target.equals(VOID_PTR);
         }
+
+        @Override
+        public int getSize() {
+            return 4;
+        };
     };
     public static final ELType UINT32 = new ELType("uint32", UINT32_CLASS, INTERNAL_LOCATION);
     // void*

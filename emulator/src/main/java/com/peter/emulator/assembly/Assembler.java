@@ -795,6 +795,10 @@ public class Assembler {
             case "rIR" -> {
                 r = REG_INTR_RSP;
             }
+            
+            case "rID" -> {
+                r = REG_CPU_ID;
+            }
         
             default -> {
                 if (reg.charAt(0) == 'r') {

@@ -13,6 +13,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.peter.emulator.lang.tokens.Tokenizer;
+
 public class ProgramModule {
 
     protected final File root;

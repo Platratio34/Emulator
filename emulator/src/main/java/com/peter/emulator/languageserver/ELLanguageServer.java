@@ -11,7 +11,6 @@ import org.eclipse.lsp4j.services.*;
 
 import com.peter.emulator.lang.ELAnalysisError;
 import com.peter.emulator.lang.ErrorSet;
-import com.peter.emulator.lang.ProgramModule;
 import com.peter.emulator.lang.ProgramUnit;
 
 public class ELLanguageServer extends LSPServer implements LanguageServer, LanguageClientAware {

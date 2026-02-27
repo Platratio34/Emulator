@@ -2,6 +2,8 @@ package com.peter.emulator.lang;
 
 import java.util.ArrayList;
 
+import com.peter.emulator.lang.tokens.Token;
+
 public class ErrorSet extends ArrayList<ELAnalysisError> {
 
     private boolean hadError = false;

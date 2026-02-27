@@ -1,14 +1,14 @@
 package com.peter.emulator.lang.annotations;
 
 import com.peter.emulator.lang.ELCompileException;
-import com.peter.emulator.lang.Token;
-import com.peter.emulator.lang.Token.AnnotationToken;
-import com.peter.emulator.lang.Token.IdentifierToken;
-import com.peter.emulator.lang.Token.OperatorToken;
+import com.peter.emulator.lang.tokens.Token;
+import com.peter.emulator.lang.tokens.AnnotationToken;
+import com.peter.emulator.lang.tokens.IdentifierToken;
+import com.peter.emulator.lang.tokens.OperatorToken;
 
 public class ELOperatorAnnotation extends ELAnnotation {
 
-    public final OperatorToken.Type type;
+    public final com.peter.emulator.lang.tokens.OperatorToken.Type type;
     public final boolean cast;
 
     public ELOperatorAnnotation(AnnotationToken token) {

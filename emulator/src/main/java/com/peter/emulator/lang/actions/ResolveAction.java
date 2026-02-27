@@ -4,11 +4,12 @@ import com.peter.emulator.MachineCode;
 import com.peter.emulator.lang.ELAnalysisError;
 import com.peter.emulator.lang.ELClass;
 import com.peter.emulator.lang.ELSymbol;
+import com.peter.emulator.lang.ELSymbol.ELVarSymbol;
 import com.peter.emulator.lang.ELType;
 import com.peter.emulator.lang.ELValue.ELNumberValue;
 import com.peter.emulator.lang.ELValue.ELStringValue;
 import com.peter.emulator.lang.ELVariable;
-import com.peter.emulator.lang.Token.IdentifierToken;
+import com.peter.emulator.lang.tokens.IdentifierToken;
 import com.peter.emulator.lang.base.ELPrimitives;
 
 public class ResolveAction extends ComplexAction {
@@ -40,20 +41,22 @@ public class ResolveAction extends ComplexAction {
 
         switch (var.varType) {
             case CONST -> {
-                switch(var.startingValue) {
+                switch (var.startingValue) {
                     case ELNumberValue nv -> {
                         actions.add(new DirectAction("LOAD %s %d", r, nv.value));
                         returnType = var.type;
                         returnVar = var;
-                        scope.addSymbol(new ELSymbol(ELSymbol.Type.VARIABLE_CONSTANT, it.spanFirst(), "### `const %s %s = %d`", var.type.typeString(), it.value, nv.value));
+                        scope.addSymbol(new ELSymbol(ELSymbol.Type.VARIABLE_CONSTANT, it.spanFirst(),
+                                "### `const %s %s = %d`", var.type.typeString(), it.value, nv.value));
                         return;
                     }
                     case ELStringValue sv -> {
-                        if(sv.type.equals(ELPrimitives.CHAR)) {
+                        if (sv.type.equals(ELPrimitives.CHAR)) {
                             actions.add(new DirectAction("LOAD %s '%s'", r, sv.value));
                             returnType = var.type;
                             returnVar = var;
-                            scope.addSymbol(new ELSymbol(ELSymbol.Type.VARIABLE_CONSTANT, it.spanFirst(), "### `const %s %s = '%s'`", var.type.typeString(), it.value, sv.value));
+                            scope.addSymbol(new ELSymbol(ELSymbol.Type.VARIABLE_CONSTANT, it.spanFirst(),
+                                    "### `const %s %s = '%s'`", var.type.typeString(), it.value, sv.value));
                             return;
                         } else {
                             throw ELAnalysisError.error("Can not reference constant char* right now");
@@ -66,11 +69,12 @@ public class ResolveAction extends ComplexAction {
             case MEMBER -> actions.add(new DirectAction("COPY r0 %s\nINC %s %d", r, r, var.offset));
             case SCOPE -> {
                 actions.add(new DirectAction("COPY r15 %s", r));
-                if(var.offset > 0)
+                if (var.offset > 0)
                     actions.add(new DirectAction("INC %s %d", r, var.offset));
             }
         }
-        scope.addSymbol(new ELSymbol(var.finalVal ? ELSymbol.Type.VARIABLE_FINAL : ELSymbol.Type.VARIABLE_NAME, it.spanFirst(), "### `%s %s`", var.typeString(), it.value));
+        scope.addSymbol(new ELVarSymbol(var, it.spanFirst()));
+        // scope.addSymbol(new ELSymbol(var.finalVal ? ELSymbol.Type.VARIABLE_FINAL : ELSymbol.Type.VARIABLE_NAME, it.spanFirst(), "### `%s %s`", var.typeString(), it.value));
 
         ELVariable v = var;
         ELType t = v.type;
@@ -100,7 +104,8 @@ public class ResolveAction extends ComplexAction {
                 if (index == id.subTokens.size() - 1)
                     break;
                 
-                scope.addSymbol(new ELSymbol(v.finalVal ? ELSymbol.Type.VARIABLE_FINAL : ELSymbol.Type.VARIABLE_NAME, it.spanFirst(), "### `%s %s`", v.typeString(), v.name));
+                scope.addSymbol(new ELVarSymbol(v, it.spanFirst()));
+                // scope.addSymbol(new ELSymbol(v.finalVal ? ELSymbol.Type.VARIABLE_FINAL : ELSymbol.Type.VARIABLE_NAME, it.spanFirst(), "### `%s %s`", v.typeString(), v.name));
         
                 if (t.isPointer() || t.isAddress()) {
                     actions.add(new DirectAction("LOAD MEM %s %s", r, r));
