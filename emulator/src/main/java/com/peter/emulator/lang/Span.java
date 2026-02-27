@@ -13,21 +13,25 @@ public record Span(Location start, Location end) {
 
     @Override
     public final String toString() {
-        if(end != null)
+        if (end != null)
             return String.format("Span{start={%s}, end={%s}}", start, end);
         return String.format("Span{start={%s}, end=null}", start);
     }
+    
+    public final String debugString() {
+        return String.format("%d:%d - %d:%d", start.line(), start.col(), end.line(), end.col());
+    } 
 
     public Range toRange() {
         if(end == null) {
             return new Range(
-                new Position(start.line()-1, start.col()),
-                new Position(start.line()-1, start.col())
+                new Position(start.line()-1, start.col()-2),
+                new Position(start.line()-1, start.col()-1)
             );
         }
         return new Range(
-            new Position(start.line()-1, start.col()),
-            new Position(end.line()-1, end.col())
+            new Position(start.line()-1, start.col()-2),
+            new Position(end.line()-1, end.col()-1)
         );
     }
 
@@ -41,6 +45,6 @@ public record Span(Location start, Location end) {
     
 
     public boolean contains(Position position, ELLanguageServer lServer) {
-        return contains(position.getLine() + 1, position.getCharacter(), lServer);
+        return contains(position.getLine() + 1, position.getCharacter()+2, lServer);
     }
 }

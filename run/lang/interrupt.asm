@@ -1,5 +1,5 @@
 :main
-LOAD rIR :interrupt
+LOAD rIH :interrupt
 SYSCALL 0x0001
 HALT
 

@@ -43,7 +43,7 @@ public class MachineCode {
     public static final int GOTO = 0x05 << 24;
     public static final int MASK_GOTO_OP = 0x00ff_0000;
     public static final int MASK_GOTO_RA = 0x0000_ff00;
-    public static final int MASK_GOTO_RO = 0x0000_00ff;
+    public static final int MASK_GOTO_RG = 0x0000_00ff;
     public static final int GOTO_UNCD = 0x00 << 16;
     public static final int GOTO_EQ_ZERO = 0x01 << 16;
     public static final int GOTO_LEQ_ZERO = 0x02 << 16;
@@ -69,6 +69,12 @@ public class MachineCode {
     public static final int GOTO_POP_LEQ_ZERO = 0x22 << 16;
     public static final int GOTO_POP_GT_ZERO = 0x23 << 16;
     public static final int GOTO_POP_NOT_ZERO = 0x24 << 16;
+    
+    public static final int SET = 0x06 << 24;
+    public static final int MASK_SET_OP = 0x000f_0000;
+    public static final int MASK_SET_RD = 0x0000_ff00;
+    public static final int MASK_SET_RG = 0x0000_00ff;
+    public static final int SET_FORCED = 0x0010_0000;
 
     public static final int STACK = 0x10 << 24;
     public static final int MASK_STACK_RG = 0x00ff_0000;
@@ -100,7 +106,7 @@ public class MachineCode {
     public static final int REG_MEM_TABLE = 0xf9;
 
     public static final int REG_INTERRUPT = 0xfa;
-    public static final int REG_INTR_RSP = 0xfb;
+    public static final int REG_INTR_HANDLER = 0xfb;
     
     public static final int REG_CPU_ID = 0xfe;
     public static final int REG_PRIVILEGED_MODE = 0xff;
@@ -116,7 +122,7 @@ public class MachineCode {
             case REG_PRIVILEGED_MODE -> "rPM";
             
             case REG_INTERRUPT -> "rIC";
-            case REG_INTR_RSP -> "rIR";
+            case REG_INTR_HANDLER -> "rIH";
 
             case REG_CPU_ID -> "rID";
         
@@ -170,7 +176,6 @@ public class MachineCode {
                 if ((inc & 0x8000) != 0) {
                     inc &= 0x7fff;
                     inc *= -1;
-                    inc -= 1;
                 } else {
                     inc += 1;
                 }
@@ -196,7 +201,7 @@ public class MachineCode {
                 int op = instruction & MASK_GOTO_OP;
                 int raV = (instruction & MASK_GOTO_RA) >> 8;
                 String ra = translateReg(raV);
-                String ro = translateReg(instruction & MASK_GOTO_RO);
+                String rg = translateReg(instruction & MASK_GOTO_RG);
                 return switch (op) {
                     case GOTO_UNCD -> String.format("GOTO %s", ra);
                     case GOTO_REL_UNCD -> String.format("GOTO pPtr + %d", int8(raV));
@@ -204,31 +209,46 @@ public class MachineCode {
                     case GOTO_PUSH_REL_UNCD -> String.format("GOTO PUSH pPtr + %d", int8(raV));
                     case GOTO_POP_UNCD -> String.format("GOTO POP");
 
-                    case GOTO_EQ_ZERO -> String.format("GOTO %s ? %s == 0", ra, ro);
-                    case GOTO_REL_EQ_ZERO -> String.format("GOTO pPtr + %d ? %s == 0", int8(raV), ro);
-                    case GOTO_PUSH_EQ_ZERO -> String.format("GOTO PUSH %s ? %s == 0", ra, ro);
-                    case GOTO_PUSH_REL_EQ_ZERO -> String.format("GOTO PUSH pPtr + %d ? %s == 0", int8(raV), ro);
-                    case GOTO_POP_EQ_ZERO -> String.format("GOTO POP ? %s == 0", ro);
+                    case GOTO_EQ_ZERO -> String.format("GOTO %s ? %s == 0", ra, rg);
+                    case GOTO_REL_EQ_ZERO -> String.format("GOTO pPtr + %d ? %s == 0", int8(raV), rg);
+                    case GOTO_PUSH_EQ_ZERO -> String.format("GOTO PUSH %s ? %s == 0", ra, rg);
+                    case GOTO_PUSH_REL_EQ_ZERO -> String.format("GOTO PUSH pPtr + %d ? %s == 0", int8(raV), rg);
+                    case GOTO_POP_EQ_ZERO -> String.format("GOTO POP ? %s == 0", rg);
 
-                    case GOTO_LEQ_ZERO -> String.format("GOTO %s ? %s <= 0", ra, ro);
-                    case GOTO_REL_LEQ_ZERO -> String.format("GOTO pPtr + %d ? %s <= 0", int8(raV), ro);
-                    case GOTO_PUSH_LEQ_ZERO -> String.format("GOTO PUSH %s ? %s <= 0", ra, ro);
-                    case GOTO_PUSH_REL_LEQ_ZERO -> String.format("GOTO PUSH pPtr + %d ? %s <= 0", int8(raV), ro);
-                    case GOTO_POP_LEQ_ZERO -> String.format("GOTO POP ? %s <= 0", ro);
+                    case GOTO_LEQ_ZERO -> String.format("GOTO %s ? %s <= 0", ra, rg);
+                    case GOTO_REL_LEQ_ZERO -> String.format("GOTO pPtr + %d ? %s <= 0", int8(raV), rg);
+                    case GOTO_PUSH_LEQ_ZERO -> String.format("GOTO PUSH %s ? %s <= 0", ra, rg);
+                    case GOTO_PUSH_REL_LEQ_ZERO -> String.format("GOTO PUSH pPtr + %d ? %s <= 0", int8(raV), rg);
+                    case GOTO_POP_LEQ_ZERO -> String.format("GOTO POP ? %s <= 0", rg);
 
-                    case GOTO_GT_ZERO -> String.format("GOTO %s ? %s > 0", ra, ro);
-                    case GOTO_REL_GT_ZERO -> String.format("GOTO pPtr + %d ? %s > 0", int8(raV), ro);
-                    case GOTO_PUSH_GT_ZERO -> String.format("GOTO PUSH %s ? %s > 0", ra, ro);
-                    case GOTO_PUSH_REL_GT_ZERO -> String.format("GOTO PUSH pPtr + %d ? %s > 0", int8(raV), ro);
-                    case GOTO_POP_GT_ZERO -> String.format("GOTO POP ? %s > 0", ro);
+                    case GOTO_GT_ZERO -> String.format("GOTO %s ? %s > 0", ra, rg);
+                    case GOTO_REL_GT_ZERO -> String.format("GOTO pPtr + %d ? %s > 0", int8(raV), rg);
+                    case GOTO_PUSH_GT_ZERO -> String.format("GOTO PUSH %s ? %s > 0", ra, rg);
+                    case GOTO_PUSH_REL_GT_ZERO -> String.format("GOTO PUSH pPtr + %d ? %s > 0", int8(raV), rg);
+                    case GOTO_POP_GT_ZERO -> String.format("GOTO POP ? %s > 0", rg);
 
-                    case GOTO_NOT_ZERO -> String.format("GOTO %s ? %s != 0", ra, ro);
-                    case GOTO_REL_NOT_ZERO -> String.format("GOTO pPtr + %d ? %s != 0", int8(raV), ro);
-                    case GOTO_PUSH_NOT_ZERO -> String.format("GOTO PUSH %s ? %s != 0", ra, ro);
-                    case GOTO_PUSH_REL_NOT_ZERO -> String.format("GOTO PUSH pPtr + %d ? %s != 0", int8(raV), ro);
-                    case GOTO_POP_NOT_ZERO -> String.format("GOTO POP ? %s != 0", ro);
+                    case GOTO_NOT_ZERO -> String.format("GOTO %s ? %s != 0", ra, rg);
+                    case GOTO_REL_NOT_ZERO -> String.format("GOTO pPtr + %d ? %s != 0", int8(raV), rg);
+                    case GOTO_PUSH_NOT_ZERO -> String.format("GOTO PUSH %s ? %s != 0", ra, rg);
+                    case GOTO_PUSH_REL_NOT_ZERO -> String.format("GOTO PUSH pPtr + %d ? %s != 0", int8(raV), rg);
+                    case GOTO_POP_NOT_ZERO -> String.format("GOTO POP ? %s != 0", rg);
 
                     default -> String.format("GOTO (%x)", instruction);
+                };
+            }
+            case SET -> {
+                int op = instruction & MASK_SET_OP;
+                int rdV = (instruction & MASK_SET_RD) >> 8;
+                String rd = translateReg(rdV);
+                String rg = translateReg(instruction & MASK_SET_RG);
+                String forced = ((instruction & SET_FORCED) != 0) ? "FORCED " : "";
+                return switch (op) {
+                    case GOTO_EQ_ZERO -> String.format("SET %s%s ? %s == 0", forced, rd, rg);
+                    case GOTO_LEQ_ZERO -> String.format("SET %s%s ? %s <= 0", forced, rd, rg);
+                    case GOTO_GT_ZERO -> String.format("SET %s%s ? %s > 0", forced, rd, rg);
+                    case GOTO_NOT_ZERO -> String.format("SET %s%s ? %s != 0", forced, rd, rg);
+
+                    default -> String.format("SET (%x)", instruction);
                 };
             }
             case STACK -> {
@@ -284,5 +304,40 @@ public class MachineCode {
         } else {
             return val & 0x7f;
         }
+    }
+
+    public static String regDesc(String vN) {
+        return switch (vN) {
+            case "r0" -> "User register 0";
+            case "r1" -> "User register 0";
+            case "r2" -> "User register 0";
+            case "r3" -> "User register 0";
+            case "r4" -> "User register 0";
+            case "r5" -> "User register 0";
+            case "r6" -> "User register 0";
+            case "r7" -> "User register 0";
+            case "r8" -> "User register 0";
+            case "r9" -> "User register 0";
+            case "r10" -> "User register 0";
+            case "r11" -> "User register 0";
+            case "r12" -> "User register 0";
+            case "r13" -> "User register 0";
+            case "r14" -> "User register 0";
+            case "r15" -> "User register 0";
+            
+            case "rPgm" -> "Program pointer (next address)";
+            case "rStack" -> "Stack pointer";
+
+            case "rPID" -> "Process ID (Kernal set) (PM required)";
+            case "rMemTbl" -> "Memory Map Table pointer  (PM required)";
+            case "rID" -> "Core ID (Read only)";
+            
+            case "rIC" -> "Interrupt code (PM required)";
+            case "rIH" -> "Interrupt handler pointer (PM required)";
+
+            case "rPM" -> "Privileged Mode (PM required)";
+        
+            default -> "Unknown register";
+        };
     }
 }

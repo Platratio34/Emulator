@@ -66,19 +66,30 @@ public class ActionBlock extends ComplexAction {
                                 int index = subIndex++;
                                 boolean elsePresent = wI < tokens.size() && tokens.get(wI) instanceof IdentifierToken it3
                                         && it3.value.equals("else");
-                                actions.add(new ConditionalAction(scope, ":if_true_" + index, elsePresent ? (":if_false_" + index) : (":if_end_" + index),
-                                        it.params.subTokens));
-                                actions.add(new DirectAction(":if_true_%d", index));
+                                // actions.add(new ConditionalAction(scope, ":if_true_" + index, elsePresent ? (":if_false_" + index) : (":if_end_" + index),
+                                //         it.params.subTokens));
+
+                                int r = scope.firstFree();
+                                scope.reserve(r);
+                                actions.add(new ExpressionAction(scope, it.params.subTokens, r));
+                                // actions.add(new ConditionalAction(scope, ":while_body_"+index, ":while_end_"+index, it.params.subTokens));
+                                // actions.add(new DirectAction(":while_body_%d",index));
+                                if(elsePresent)
+                                    actions.add(new DirectAction("GOTO EQ %s :if_else_%d", MachineCode.translateReg(r), index));
+                                else
+                                    actions.add(new DirectAction("GOTO EQ %s :if_end_%d", MachineCode.translateReg(r), index));
+                                
+                                // actions.add(new DirectAction(":if_true_%d", index));
                                 actions.add(innerBlock);
                                 if (elsePresent) {
                                     actions.add(new DirectAction("GOTO :if_end_%d", index));
                                     wI++;
                                     if (!(tokens.get(wI) instanceof BlockToken))
                                         throw ELAnalysisError.error("Expected block after else", tokens.get(wI).span());
-                                    actions.add(new DirectAction(":if_false_%d", index));
-                                    ActionBlock falseBlock = new ActionBlock(scope.createChild(), null);
-                                    falseBlock.parse(tokens.get(wI).subTokens, errors);
-                                    actions.add(falseBlock);
+                                    actions.add(new DirectAction(":if_else_%d", index));
+                                    ActionBlock elseBlock = new ActionBlock(scope.createChild(), null);
+                                    elseBlock.parse(tokens.get(wI).subTokens, errors);
+                                    actions.add(elseBlock);
                                     wI++;
                                 }
                                 
@@ -101,9 +112,20 @@ public class ActionBlock extends ComplexAction {
                                 ActionBlock innerBlock = new ActionBlock(scope.createChild(), null);
                                 innerBlock.parse(tokens.get(wI).subTokens, errors);
                                 int index = subIndex++;
-                                actions.add(new DirectAction(":while_condition_%d",index));
-                                actions.add(new ConditionalAction(scope, ":while_body_"+index, ":while_end_"+index, it.params.subTokens));
-                                actions.add(new DirectAction(":while_body_%d",index));
+
+                                // :while_condition_%d
+                                // r[x] = [expression]
+                                // GOTO EQ r[x] :while_end_%d
+                                // ...body...
+                                // :while_end_%d
+                                
+                                actions.add(new DirectAction(":while_condition_%d", index));
+                                int r = scope.firstFree();
+                                scope.reserve(r);
+                                actions.add(new ExpressionAction(scope, it.params.subTokens, r));
+                                // actions.add(new ConditionalAction(scope, ":while_body_"+index, ":while_end_"+index, it.params.subTokens));
+                                // actions.add(new DirectAction(":while_body_%d",index));
+                                actions.add(new DirectAction("GOTO EQ %s :while_end_%d", MachineCode.translateReg(r), index));
                                 actions.add(innerBlock);
                                 actions.add(new DirectAction("GOTO :while_condition_%d",index));
                                 actions.add(new DirectAction(":while_end_%d",index));
@@ -152,10 +174,12 @@ public class ActionBlock extends ComplexAction {
                                         }
                                         case "interruptReturn" -> {
                                             actions.add(new DirectAction("INTERRUPT RET"));
+                                            scope.addSymbol(ELSymbol.Type.NAMESPACE_NAME, it.span(), "### `SysD.interruptReturn()`\n\nReturn from an interrupt, resuming execution at the memory address popped to the stack when the interrupt was triggered.\n\n**ONLY USE IN LOW-LEVEL PROGRAMMING**. *Privileged Mode only*");
                                             continue;
                                         }
                                         case "halt" -> {
                                             actions.add(new DirectAction("HALT"));
+                                            scope.addSymbol(ELSymbol.Type.NAMESPACE_NAME, it.span(), "### `SysD.halt()`\n\nHalt the CPU.\n\n**ONLY USE IN LOW-LEVEL PROGRAMMING**. *Privileged Mode only*");
                                             continue;
                                         }
                                     }
@@ -163,6 +187,8 @@ public class ActionBlock extends ComplexAction {
                                 // function call; set is parameters
                                 ArrayList<ELType> types = new ArrayList<>();
                                 Location endOfParams = null;
+                                Location startOfParams = it.params.get(0).startLocation;
+                                Span nameSpan = it.span();
                                 // boolean vNext = true;
                                 // boolean addr = false;
                                 ArrayList<Token> exp = new ArrayList<>();
@@ -209,10 +235,12 @@ public class ActionBlock extends ComplexAction {
                                     switch (id.parts[1]) {
                                         case "memSet" -> {
                                             // SysD.memSet(uint32 addr, uint32 value);
-                                            if(types.size() != 2 || !(types.get(0).canCastTo(ELPrimitives.UINT32) && types.get(1).canCastTo(ELPrimitives.UINT32))) {
-                                                
+                                            if (types.size() != 2 || !(types.get(0).canCastTo(ELPrimitives.UINT32)
+                                                    && types.get(1).canCastTo(ELPrimitives.UINT32))) {
+
                                                 throw ELAnalysisError.error(String.format(
-                                                "Found no overload of SysD.memSet matching %s; Found SysD.memSet(uint32 addr, uint32 value)", tStr), it.endLocation.span(endOfParams));
+                                                        "Found no overload of SysD.memSet matching %s; Found SysD.memSet(uint32 addr, uint32 value)",
+                                                        tStr), startOfParams.span(endOfParams));
                                             }
                                             actions.add(new DirectAction("STORE MEM r1 r2"));
                                             continue;
@@ -225,6 +253,9 @@ public class ActionBlock extends ComplexAction {
                                             actions.add(new DirectAction("HALT"));
                                             continue;
                                         }
+                                        default -> {
+                                            throw ELAnalysisError.error("Unknown SysD function: `"+id.parts[1]+"`", nameSpan);
+                                        }
                                     }
                                 }
                                 ELFunction f = scope.namespace.findFunction(id, types);
@@ -233,9 +264,9 @@ public class ActionBlock extends ComplexAction {
                                     f = scope.namespace.getFunction(id);
                                     if (f != null) {
                                         throw ELAnalysisError.error(String.format(
-                                                "Found no overload of %s matching %s; Found %s", id.fullName, tStr, f.debugString("")), it.endLocation.span(endOfParams));
+                                                "Found no overload of %s matching %s; Found %s", id.fullName, tStr, f.debugString("")), startOfParams.span(endOfParams));
                                     } else {
-                                        throw ELAnalysisError.error("Unknown function " + id.fullName + tStr, it.startLocation.span(endOfParams));
+                                        throw ELAnalysisError.error("Unknown function " + id.fullName + tStr, nameSpan);
                                     }
                                 }
                                 actions.add(new DirectAction("GOTO PUSH :%s", f.getQualifiedName(true)));
@@ -368,6 +399,7 @@ public class ActionBlock extends ComplexAction {
                                         int r = scope.firstFree();
                                         actions.add(new ExpressionAction(scope, exp, r));
                                         actions.add(new StackAllocAction(scope, var, r));
+                                        scope.release(r);
                                     }
                                 }
                                 default ->
@@ -388,7 +420,8 @@ public class ActionBlock extends ComplexAction {
                     if (tkn instanceof OperatorToken ot && (ot.type == OperatorToken.Type.ASSIGN || ot.type == OperatorToken.Type.ADD_ASSIGN || ot.type == OperatorToken.Type.SUB_ASSIGN
                             || ot.type == OperatorToken.Type.INC || ot.type == OperatorToken.Type.DEC)) {
                         Span actionSpan = tkn.span();
-                                int rT = scope.firstFree();
+                        int rT = scope.firstFree();
+                        scope.reserve(rT);
                         String rTStr = MachineCode.translateReg(rT);
                         ELType t;
                         if (targetVal.value.equals("SysD")) {
@@ -396,26 +429,29 @@ public class ActionBlock extends ComplexAction {
                             if(!targetVal.hasSub() || targetVal.subTokens.size() != 1)
                                 throw ELAnalysisError.error("Unable to resolve variable `"+it.debugString()+"`", it);
                             String vN = targetVal.sub(0).value;
-                            if(vN.startsWith("r"))
-                                scope.addSymbol(new ELSymbol(ELSymbol.Type.VARIABLE_NAME, it.sub(0).span(), "### `%s`\nCPU register `%s`", vN, vN));
-                            switch(vN) {
-                                case "rPM" -> {
-                                    actions.add(new DirectAction("COPY rPM %s", rTStr));
-                                    t = ELPrimitives.BOOL;
+                            if(vN.startsWith("r")) {
+                                switch(vN) {
+                                    case "rPM" -> {
+                                        actions.add(new DirectAction("COPY rPM %s", rTStr));
+                                        t = ELPrimitives.BOOL;
+                                    }
+                                    case "rStack", "rMemTbl" -> {
+                                        actions.add(new DirectAction("COPY %s %s", vN, rTStr));
+                                        t = ELPrimitives.VOID_PTR;
+                                    }
+                                    case "rID" -> {
+                                        actions.add(new DirectAction("COPY %s %s", vN, rTStr));
+                                        t = ELPrimitives.VOID_PTR;
+                                        throw ELAnalysisError.error("`rID` is read-only", targetVal.span());
+                                    }
+                                    default -> {
+                                        actions.add(new DirectAction("COPY %s %s", vN, rTStr));
+                                        t = ELPrimitives.UINT32;
+                                    }
                                 }
-                                case "rStack", "rMemTbl" -> {
-                                    actions.add(new DirectAction("COPY %s %s", vN, rTStr));
-                                    t = ELPrimitives.VOID_PTR;
-                                }
-                                case "rID" -> {
-                                    actions.add(new DirectAction("COPY %s %s", vN, rTStr));
-                                    t = ELPrimitives.VOID_PTR;
-                                    throw ELAnalysisError.error("`rID` is read-only", targetVal.span());
-                                }
-                                default -> {
-                                    actions.add(new DirectAction("COPY %s %s", vN, rTStr));
-                                    t = ELPrimitives.UINT32;
-                                }
+                                scope.addSymbol(new ELSymbol(ELSymbol.Type.VARIABLE_NAME, it.sub(0).span(), "### `%s %s`\nCPU register `%s`\n\n"+MachineCode.regDesc(vN), t.typeString(), vN, vN));
+                            } else {
+                                throw ELAnalysisError.error("Unknown SysD variable `" + vN + "`", it);
                             }
                         } else {
                             ResolveAction rA = scope.loadVar(targetVal, rT, false);
@@ -424,6 +460,7 @@ public class ActionBlock extends ComplexAction {
                             t = rA.returnType;
                             if(rA.returnVar.finalVal || t.isConstant())
                                 throw ELAnalysisError.error("Cannot assign to "+(rA.returnVar.finalVal ? "final variable" : "constant"), it.startLocation.span(actionSpan.end()));
+                            actions.add(rA);
                         }
 
                         if (ot.type == OperatorToken.Type.INC) {
@@ -547,8 +584,9 @@ public class ActionBlock extends ComplexAction {
             case "rPid" -> MachineCode.REG_PID;
             case "rMemTbl" -> MachineCode.REG_MEM_TABLE;
             case "rIC" -> MachineCode.REG_INTERRUPT;
-            case "rIR" -> MachineCode.REG_INTR_RSP;
+            case "rIH" -> MachineCode.REG_INTR_HANDLER;
             case "rPM" -> MachineCode.REG_PRIVILEGED_MODE;
+            case "rID" -> MachineCode.REG_CPU_ID;
             default -> -1;
         };
     }

@@ -28,23 +28,24 @@ namespace Kernal {
     static const void* HEAP_START = (void*) 0x9001;
     static void* heepPtr = (void*) HEAP_START;
 
-    @Entrypoint(raw = true)
+    @Entrypoint(raw)
     internal static void _main() {
-        // SysD.rIR = &Kernal::_interrupt;
+        // SysD.rIH = &Kernal::_interrupt;
         peripheralCmd(0x0001, 3, &CONSOLE_SETUP_CMD);
         SysD.memSet(CONSOLE_START, CONSOLE_PNTR);
         Memory._setup();
-        System.console = new Console(0x0800, 0x0001, 0x0020);
+        // System.console = new Console(0x0800, 0x0001, 0x0020);
+        // Probably should't be referencing System module in the kernal
     }
 
     @InterruptHandler(raw)
     internal static void _interrupt() {
         // stack: [...pgmPtr,rPM,r0...r15 [HEAD]]
-        void* stack = SysD.rStack; // stack: [...pgmPtr,rPM,r0...r15,var(stack) [HEAD]]
-        stack--; // now points to r15; stack: [...pgmPtr,rPM,r0...r15 [stack*],var(stack,+17) [HEAD]]
+        void* stack = SysD.rStack; // stack: [...pgmPtr,rPM,r0...r15,var(stack) [HEAD], [stack*]]
+        stack -= 2; // now points to r15; stack: [...pgmPtr,rPM,r0...r15 [stack*],var(stack,+17) [HEAD]]
         ProcessState* oldState = &processStates[SysD.rPID];
         oldState.stackPtr = stack;
-        stack -= 16; 
+        stack -= 16;
         SysD.memCopy((void*)(oldState.registers), 0, 15, stack, 0);
         for(uint32 i = 15; i >= 0; i--) {
             oldState.registers[i] = *stack; stack--;
@@ -56,7 +57,8 @@ namespace Kernal {
         uint32 code = SysD.rIC;
         if((code & 0x8000_0000) == 0) { // system interrupt in the active process
             SysD.rPM = false;
-            System.onInterrupt(code);
+            // System.onInterrupt(code);
+            // need to get interrupt handler for the current process here
         } else {
             if(code == 0x8000_0001) { // privileged mode failure
                 SysD.halt(); // this is a breaking instruct, we just don't know it

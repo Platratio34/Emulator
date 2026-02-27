@@ -98,10 +98,10 @@ public class ELSymbol {
                 out += "final ";
             else if (var.varType == ELVariable.Type.CONST)
                 out += "const ";
-            out += String.format("%s %s`", var.typeString(), var.getQualifiedName());
+            out += String.format("%s %s`", var.typeString(), (var.varType == ELVariable.Type.SCOPE) ? var.name : var.getQualifiedName());
             if ((var.finalVal || var.varType == ELVariable.Type.CONST) && var.hasValue())
                 out += "\n\nValue: `"+var.getValueDebug()+"`";
-            return out;
+            return out/* + "\n\n\n\n"+span.debugString()*/;
         }
 
     }

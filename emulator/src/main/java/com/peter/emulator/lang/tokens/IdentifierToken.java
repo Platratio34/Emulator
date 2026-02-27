@@ -54,7 +54,7 @@ public class IdentifierToken extends Token {
             if (validStart(c)) {
                 nextId = new IdentifierToken(c, location);
                 subTokens = new ArrayList<>();
-                subTokens.add(nextId);
+                // subTokens.add(nextId);
                 endLocation = location;
                 return this;
             } else {

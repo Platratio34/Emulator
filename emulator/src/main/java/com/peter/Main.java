@@ -9,6 +9,7 @@ import java.nio.file.StandardOpenOption;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
 import org.eclipse.lsp4j.launch.LSPLauncher;
 import org.eclipse.lsp4j.services.LanguageClient;
+import org.json.JSONException;
 
 import com.peter.emulator.Emulator;
 import com.peter.emulator.assembly.Assembler;
@@ -41,14 +42,30 @@ public class Main {
 
         LanguageServer ls = new LanguageServer();
 
-        ProgramModule kernal = ls.addModule("Kernal");
-        kernal.addRefModule("SysD");
-        kernal.addFiles(ROOT_PATH.resolve("lang/Kernal"));
+        // ProgramModule kernal;
+        // try {
+        //     kernal = ls.addModule(ROOT_PATH.resolve("lang/Kernal").toFile());
+        //     kernal.addRefModule("SysD");
+        // } catch (JSONException e) {
+        //     // TODO Auto-generated catch block
+        //     e.printStackTrace();
+        // } catch (IOException e) {
+        //     // TODO Auto-generated catch block
+        //     e.printStackTrace();
+        // }
 
-        ProgramModule system = ls.addModule("System");
-        system.addRefModule("SysD");
-        system.addRefModule("Kernal");
-        system.addFiles(ROOT_PATH.resolve("lang/System"));
+        // ProgramModule system;
+        // try {
+        //     system = ls.addModule(ROOT_PATH.resolve("lang/System").toFile());
+        //     system.addRefModule("SysD");
+        //     system.addRefModule("Kernal");
+        // } catch (JSONException e) {
+        //     // TODO Auto-generated catch block
+        //     e.printStackTrace();
+        // } catch (IOException e) {
+        //     // TODO Auto-generated catch block
+        //     e.printStackTrace();
+        // }
         
         // ProgramModule testMod = ls.addModule("Test");
         // testMod.addRefModule("SysD");
@@ -56,9 +73,19 @@ public class Main {
         // testMod.addRefModule("System");
         // testMod.addFiles(ROOT_PATH.resolve("lang/Test"));
         
-        ProgramModule testD = ls.addModule("TestD");
-        testD.addRefModule("SysD");
-        testD.addFiles(ROOT_PATH.resolve("lang/TestD"));
+        ProgramModule testD = null;
+        try {
+            testD = ls.addModule(ROOT_PATH.resolve("lang/TestD").toFile());
+            testD.addRefModule("SysD");
+        } catch (JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            return;
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            return;
+        }
 
         System.out.println("\nParsing:");
         for (ELAnalysisError err : ls.parse()) {

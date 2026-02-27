@@ -11,6 +11,7 @@ public class NumberToken extends Token {
     public NumberToken(char c, Location location) {
         super(location);
         value = c + "";
+        numValue = (int)Long.parseLong(value, 10);
     }
 
     @Override
@@ -19,6 +20,7 @@ public class NumberToken extends Token {
             if (value.length() == 1) {
                 hex = true;
                 value = "";
+                numValue = 0;
                 endLocation = location;
                 return this;
             }
@@ -27,6 +29,7 @@ public class NumberToken extends Token {
             if (value.length() == 1) {
                 bin = true;
                 value = "";
+                numValue = 0;
                 endLocation = location;
                 return this;
             }

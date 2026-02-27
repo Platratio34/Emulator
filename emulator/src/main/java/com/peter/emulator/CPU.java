@@ -49,7 +49,7 @@ public class CPU {
             case REG_MEM_TABLE -> memTablePtr;
 
             case REG_INTERRUPT -> interruptCode;
-            case REG_INTR_RSP -> interruptRsp;
+            case REG_INTR_HANDLER -> interruptRsp;
             
             case REG_CPU_ID -> cpuId;
             case REG_PRIVILEGED_MODE -> privilegeMode ? 1 : 0;
@@ -101,7 +101,7 @@ public class CPU {
                 }
                 interruptCode = val;
             }
-            case REG_INTR_RSP -> {
+            case REG_INTR_HANDLER -> {
                 if (!privilegeMode) {
                     interrupt(0x8000_0001);
                     return;
@@ -230,13 +230,10 @@ public class CPU {
                     case MATH_INC -> {
                         int inc = op & MASK_MATH_INC;
                         if ((inc & 0x8000) != 0) {
-                            inc &= 0x7fff;
-                            inc *= -1;
-                            inc -= 1;
+                            setReg(rd, getReg(rd) - (inc & 0x7fff));
                         } else {
-                            inc += 1;
+                            setReg(rd, getReg(rd) + inc + 1);
                         }
-                        setReg(rd, getReg(rd) + inc);
                     }
                     case MATH_AND -> {
                         setReg(rd, getReg(ra) & getReg(rb));
@@ -267,28 +264,28 @@ public class CPU {
             case GOTO -> {
                 int type = op & MASK_GOTO_OP;
                 int ra = (op & MASK_GOTO_RA) >> 8;
-                int ro = op & MASK_GOTO_RO;
+                int rg = op & MASK_GOTO_RG;
                 switch (type) {
                     case GOTO_UNCD -> {
                         pgmPtr = getReg(ra);
                     }
                     case GOTO_EQ_ZERO -> {
-                        if (getReg(ro) == 0) {
+                        if (getReg(rg) == 0) {
                             pgmPtr = getReg(ra);
                         }
                     }
                     case GOTO_LEQ_ZERO -> {
-                        if (getReg(ro) <= 0) {
+                        if (getReg(rg) <= 0) {
                             pgmPtr = getReg(ra);
                         }
                     }
                     case GOTO_GT_ZERO -> {
-                        if (getReg(ro) > 0) {
+                        if (getReg(rg) > 0) {
                             pgmPtr = getReg(ra);
                         }
                     }
                     case GOTO_NOT_ZERO -> {
-                        if (getReg(ro) != 0) {
+                        if (getReg(rg) != 0) {
                             pgmPtr = getReg(ra);
                         }
                     }
@@ -297,22 +294,22 @@ public class CPU {
                         pgmPtr += int8(ra);
                     }
                     case GOTO_REL_EQ_ZERO -> {
-                        if (getReg(ro) == 0) {
+                        if (getReg(rg) == 0) {
                             pgmPtr += int8(ra);
                         }
                     }
                     case GOTO_REL_LEQ_ZERO -> {
-                        if (getReg(ro) <= 0) {
+                        if (getReg(rg) <= 0) {
                             pgmPtr += int8(ra);
                         }
                     }
                     case GOTO_REL_GT_ZERO -> {
-                        if (getReg(ro) > 0) {
+                        if (getReg(rg) > 0) {
                             pgmPtr += int8(ra);
                         }
                     }
                     case GOTO_REL_NOT_ZERO -> {
-                        if (registers[ro] != 0) {
+                        if (registers[rg] != 0) {
                             pgmPtr += int8(ra);
                         }
                     }
@@ -322,25 +319,25 @@ public class CPU {
                         pgmPtr = getReg(ra);
                     }
                     case GOTO_PUSH_EQ_ZERO -> {
-                        if (getReg(ro) == 0) {
+                        if (getReg(rg) == 0) {
                             stackPush(pgmPtr);
                             pgmPtr = getReg(ra);
                         }
                     }
                     case GOTO_PUSH_LEQ_ZERO -> {
-                        if (getReg(ro) <= 0) {
+                        if (getReg(rg) <= 0) {
                             stackPush(pgmPtr);
                             pgmPtr = getReg(ra);
                         }
                     }
                     case GOTO_PUSH_GT_ZERO -> {
-                        if (getReg(ro) > 0) {
+                        if (getReg(rg) > 0) {
                             stackPush(pgmPtr);
                             pgmPtr = getReg(ra);
                         }
                     }
                     case GOTO_PUSH_NOT_ZERO -> {
-                        if (getReg(ro) != 0) {
+                        if (getReg(rg) != 0) {
                             stackPush(pgmPtr);
                             pgmPtr = getReg(ra);
                         }
@@ -351,25 +348,25 @@ public class CPU {
                         pgmPtr += int8(ra);
                     }
                     case GOTO_PUSH_REL_EQ_ZERO -> {
-                        if (getReg(ro) == 0) {
+                        if (getReg(rg) == 0) {
                             stackPush(pgmPtr);
                             pgmPtr += int8(ra);
                         }
                     }
                     case GOTO_PUSH_REL_LEQ_ZERO -> {
-                        if (getReg(ro) <= 0) {
+                        if (getReg(rg) <= 0) {
                             stackPush(pgmPtr);
                             pgmPtr += int8(ra);
                         }
                     }
                     case GOTO_PUSH_REL_GT_ZERO -> {
-                        if (getReg(ro) > 0) {
+                        if (getReg(rg) > 0) {
                             stackPush(pgmPtr);
                             pgmPtr += int8(ra);
                         }
                     }
                     case GOTO_PUSH_REL_NOT_ZERO -> {
-                        if (registers[ro] != 0) {
+                        if (registers[rg] != 0) {
                             stackPush(pgmPtr);
                             pgmPtr += int8(ra);
                         }
@@ -379,23 +376,59 @@ public class CPU {
                         pgmPtr = stackPop();
                     }
                     case GOTO_POP_EQ_ZERO -> {
-                        if (getReg(ro) == 0) {
+                        if (getReg(rg) == 0) {
                             pgmPtr = stackPop();
                         }
                     }
                     case GOTO_POP_LEQ_ZERO -> {
-                        if (getReg(ro) <= 0) {
+                        if (getReg(rg) <= 0) {
                             pgmPtr = stackPop();
                         }
                     }
                     case GOTO_POP_GT_ZERO -> {
-                        if (getReg(ro) > 0) {
+                        if (getReg(rg) > 0) {
                             pgmPtr = stackPop();
                         }
                     }
                     case GOTO_POP_NOT_ZERO -> {
-                        if (registers[ro] != 0) {
+                        if (registers[rg] != 0) {
                             pgmPtr = stackPop();
+                        }
+                    }
+                }
+            }
+            case SET -> {
+                boolean forced = (op & SET_FORCED) != 0;
+                int type = op & MASK_SET_OP;
+                int rd = (op & MASK_SET_RD) >> 8;
+                int rg = op & MASK_SET_RG;
+                switch (type) {
+                    case GOTO_EQ_ZERO -> {
+                        if (getReg(rg) == 0) {
+                            setReg(rd, 1);
+                        } else if (forced) {
+                            setReg(rd, 0);
+                        }
+                    }
+                    case GOTO_LEQ_ZERO -> {
+                        if (getReg(rg) <= 0) {
+                            setReg(rd, 1);
+                        } else if (forced) {
+                            setReg(rd, 0);
+                        }
+                    }
+                    case GOTO_GT_ZERO -> {
+                        if (getReg(rg) > 0) {
+                            setReg(rd, 1);
+                        } else if (forced) {
+                            setReg(rd, 0);
+                        }
+                    }
+                    case GOTO_NOT_ZERO -> {
+                        if (getReg(rg) != 0) {
+                            setReg(rd, 1);
+                        } else if (forced) {
+                            setReg(rd, 0);
                         }
                     }
                 }

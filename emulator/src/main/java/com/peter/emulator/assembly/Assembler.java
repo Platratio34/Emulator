@@ -630,6 +630,29 @@ public class Assembler {
                         }
                         data[addr++] = (entry);
                     }
+                    case "SET" -> {
+                        boolean forced = false;
+                        if (parts.length == 5) {
+                            if(!parts[1].equals("FORCE")) {
+                                errors.add(new AssemblerError("Invalid set instruction: SET (FORCED) <EQ|LEQ|GEQ|NEQ> [rg] [rd]", lineN, 0, line, source));
+                                continue;
+                            }
+                            forced = true;
+                        }
+                        String op = parts[forced ? 2 : 1];
+                        int rg = getReg(parts[forced ? 3 : 2]);
+                        int rd = getReg(parts[forced ? 4 : 3]);
+                        switch (op) {
+                            case "EQ" -> data[addr++] = Entry.Set(forced, GOTO_EQ_ZERO, rg, rd);
+                            case "LEQ" -> data[addr++] = Entry.Set(forced, GOTO_LEQ_ZERO, rg, rd);
+                            case "GT" -> data[addr++] = Entry.Set(forced, GOTO_GT_ZERO, rg, rd);
+                            case "NEQ" -> data[addr++] = Entry.Set(forced, GOTO_NOT_ZERO, rg, rd);
+                            default -> {
+                                errors.add(new AssemblerError("Invalid set instruction operator: SET (FORCED) <EQ|LEQ|GEQ|NEQ> [rg] [rd]", lineN, line.length(), line, source));
+                                continue;
+                            }
+                        };
+                    }
                     case "STACK" -> {
                         if(parts.length == 2) {
                             if(parts[1].equals("INC")) {
@@ -792,8 +815,8 @@ public class Assembler {
             case "rIC" -> {
                 r = REG_INTERRUPT;
             }
-            case "rIR" -> {
-                r = REG_INTR_RSP;
+            case "rIH" -> {
+                r = REG_INTR_HANDLER;
             }
             
             case "rID" -> {
@@ -914,7 +937,6 @@ public class Assembler {
 
         public static Entry MathInc(int rd, int inc) {
             if (inc < 0) {
-                inc += 1;
                 inc *= -1;
                 inc &= 0x7fff;
                 inc |= 0x8000;
@@ -951,6 +973,10 @@ public class Assembler {
 
         public static Entry Interrupt(int op, int rg) {
             return new Entry(SYSCALL | SYSCALL_INTERRUPT | op | (rg & MASK_SYSCALL_RG));
+        }
+
+        public static Entry Set(boolean forced, int op, int rg, int rd) {
+            return new Entry(SET | (forced ? SET_FORCED : 0x00) | op | (rg << 8) | rd);
         }
     }
 

@@ -51,7 +51,10 @@ public class ELAssembler {
         ELFunction ent = module.entrypoint;
         if(ent == null)
             throw new ELCompileException("Module had no entry point");
-        out+="\n// text";
+        out += "\n//--------\n// text";
+        // out += "\n\n#function <init>\\n:__start";
+        // out += "\nGOTO :" + ent.getQualifiedName(true);
+        // out += "\n#endfunction void";
         for(Namespace ns : module.namespaces.values()) {
             for (ELFunction f : ns.staticFunctions.values()) {
                 out += assembleFunction(f);

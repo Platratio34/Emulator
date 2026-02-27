@@ -71,7 +71,7 @@ public class CPUPanel extends JPanel {
         regPanel.add(new JLabel(MachineCode.translateReg(MachineCode.REG_MEM_TABLE)));
 
         regPanel.add(new JLabel(MachineCode.translateReg(MachineCode.REG_INTERRUPT)));
-        regPanel.add(new JLabel(MachineCode.translateReg(MachineCode.REG_INTR_RSP)));
+        regPanel.add(new JLabel(MachineCode.translateReg(MachineCode.REG_INTR_HANDLER)));
 
         regPanel.add(new JLabel(MachineCode.translateReg(MachineCode.REG_PRIVILEGED_MODE)));
         regPanel.add(new JLabel(""));

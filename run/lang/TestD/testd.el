@@ -2,20 +2,18 @@ import SysD;
 
 namespace TestD {
 
-    import System;
-
     public static uint32 v = 0;
     public static const char* str = "// Test";
 
-    @Entrypoint
+    @Entrypoint(raw)
     public static void main() {
-        asm("LOAD rIR &:TestD.onInterrupt");
+        asm("LOAD rIH &:TestD.onInterrupt");
         uint32 b;
         uint32 a = SysD.rPgm;
         v = a;
         char c;
         c = b;
-        c++;
+        // c++;
         b = a + 1 + c;
         c = 32;
         funcb(c);

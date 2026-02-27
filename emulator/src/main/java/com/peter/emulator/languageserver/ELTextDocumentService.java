@@ -93,35 +93,35 @@ public class ELTextDocumentService implements TextDocumentService {
                 return null;
             }
             
-            for (ELVariable var : unit.variables) {
-                if (var.span().contains(hoverPos, null)) {
-                    String content = switch(var.varType) {
-                        case CONST -> String.format("### `%s const %s.%s`", var.protection.value, var.namespace.cName, var.name);
-                        case STATIC -> String.format("### `%s static %s.%s`", var.protection.value, var.namespace.cName, var.name);
-                        case MEMBER -> String.format("### `%s %s.%s`", var.protection.value, var.namespace.cName, var.name);
-                        case SCOPE -> String.format("### `%s %s.%s` (Scope)", var.protection.value, var.namespace.cName, var.name);
-                    };
-                    content += "\n" + var.debugString();
-                    return new Hover(new MarkupContent("markdown", content));
-                }
-            }
-            for (ELFunction func : unit.functions) {
-                if (func.startLocation.span(func.bodyLocation).contains(hoverPos, null)) {
-                    String retStr = (func.ret == null ? "void" : func.ret.typeString());
-                    String content = switch (func.type) {
-                        case CONSTRUCTOR -> String.format("### `%s %s(%s)`", func.protection.value, func.namespace.cName, func.getParamString());
-                        case DESTRUCTOR -> String.format("### `%s ~%s(%s)`", func.protection.value, func.namespace.cName, func.getParamString());
-                        case INSTANCE -> String.format("### `%s %s %s.%s(%s)`", func.protection.value, retStr, func.namespace.cName, func.cName, func.getParamString());
-                        case STATIC -> String.format("### `%s static %s %s.%s(%s)`", func.protection.value, retStr, func.namespace.cName, func.cName, func.getParamString());
-                        case OPERATOR -> String.format("### `%s operator %s %s.%s(%s)`", func.protection.value, retStr, func.namespace.cName, func.cName, func.getParamString());
-                    };
-                    if(func.annotations != null)
-                        for (ELAnnotation annotation : func.annotations) {
-                            content += String.format("\n`%s`", annotation.debugString());
-                        }
-                    return new Hover(new MarkupContent("markdown", content));
-                }
-            }
+            // for (ELVariable var : unit.variables) {
+            //     if (var.span().contains(hoverPos, null)) {
+            //         String content = switch(var.varType) {
+            //             case CONST -> String.format("### `%s const %s.%s`", var.protection.value, var.namespace.cName, var.name);
+            //             case STATIC -> String.format("### `%s static %s.%s`", var.protection.value, var.namespace.cName, var.name);
+            //             case MEMBER -> String.format("### `%s %s.%s`", var.protection.value, var.namespace.cName, var.name);
+            //             case SCOPE -> String.format("### `%s %s.%s` (Scope)", var.protection.value, var.namespace.cName, var.name);
+            //         };
+            //         content += "\n" + var.debugString();
+            //         return new Hover(new MarkupContent("markdown", content));
+            //     }
+            // }
+            // for (ELFunction func : unit.functions) {
+            //     if (func.startLocation.span(func.bodyLocation).contains(hoverPos, null)) {
+            //         String retStr = (func.ret == null ? "void" : func.ret.typeString());
+            //         String content = switch (func.type) {
+            //             case CONSTRUCTOR -> String.format("### `%s %s(%s)`", func.protection.value, func.namespace.cName, func.getParamString());
+            //             case DESTRUCTOR -> String.format("### `%s ~%s(%s)`", func.protection.value, func.namespace.cName, func.getParamString());
+            //             case INSTANCE -> String.format("### `%s %s %s.%s(%s)`", func.protection.value, retStr, func.namespace.cName, func.cName, func.getParamString());
+            //             case STATIC -> String.format("### `%s static %s %s.%s(%s)`", func.protection.value, retStr, func.namespace.cName, func.cName, func.getParamString());
+            //             case OPERATOR -> String.format("### `%s operator %s %s.%s(%s)`", func.protection.value, retStr, func.namespace.cName, func.cName, func.getParamString());
+            //         };
+            //         if(func.annotations != null)
+            //             for (ELAnnotation annotation : func.annotations) {
+            //                 content += String.format("\n`%s`", annotation.debugString());
+            //             }
+            //         return new Hover(new MarkupContent("markdown", content));
+            //     }
+            // }
             // for (ELClass var : unit.classes) {
             //     if (var.span().contains(hoverPos.getLine(), hoverPos.getCharacter())) {
             //         String content = "## " + var.cName;

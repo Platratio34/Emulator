@@ -19,6 +19,7 @@ public class LanguageServer {
         sysD.namespaces.put("SysD", new SysD(sysD));
     }
 
+    @Deprecated
     public ProgramModule addModule(String name) {
         ProgramModule module = new ProgramModule(name, this);
         modules.put(name, module);

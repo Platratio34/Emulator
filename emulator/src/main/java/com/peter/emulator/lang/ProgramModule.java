@@ -98,7 +98,7 @@ public class ProgramModule {
     }
 
     protected void parse(ErrorSet errors, File dir) {
-        for (File f : root.listFiles()) {
+        for (File f : dir.listFiles()) {
             if (f.isFile() && f.getName().endsWith(".el")) {
                 try {
                     Path path = f.toPath();

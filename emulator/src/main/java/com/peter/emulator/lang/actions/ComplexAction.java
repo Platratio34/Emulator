@@ -15,7 +15,7 @@ public class ComplexAction extends Action {
         String out = "";
         boolean f = true;
         for (Action action : actions) {
-            out += f ? "" : "\n" + action.toAssembly();
+            out += (f ? "" : "\n") + action.toAssembly();
             f = false;
         }
         return out;

@@ -32,7 +32,8 @@ public class ActionScope {
             errors.warning("Duplicate variable name `" + name + "`");
             return var;
         }
-        var.offset = type.sizeofWords();
+        var.offset = stackOff;
+        stackOff += type.sizeofWords();
         stackVars.put(name, var);
         return var;
     }
@@ -130,6 +131,12 @@ public class ActionScope {
     }
 
     public ELSymbol addSymbol(ELSymbol symbol) {
+        unit.symbols.add(symbol);
+        return symbol;
+    }
+
+    public ELSymbol addSymbol(ELSymbol.Type type, Span span, String text) {
+        ELSymbol symbol = new ELSymbol(type, span, text);
         unit.symbols.add(symbol);
         return symbol;
     }

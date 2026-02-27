@@ -232,6 +232,24 @@
             }
         },
         {
+            "match": "^(SET(?:\\s+(?:EQ|LEQ|GT|NEQ))?)(?:\\s+(r\\S+)(?:\\s+(\\S+))?)?",
+            "captures": {
+                "1": {
+                    "name": "keyword.control.instruction"
+                },
+                "2": {
+                    "patterns": [
+                        { "include": "#register" }
+                    ]
+                },
+                "3": {
+                    "patterns": [
+                        { "include": "#register" }
+                    ]
+                }
+            }
+        },
+        {
             "match": "^(SYSCALL)(?:\\s+(\\S+))?",
             "captures": {
                 "1": {
@@ -397,7 +415,7 @@
         },
         "register": {
             "name": "variable.language.register",
-            "match": "\\b(r\\d+|rPgm|rStack|rPM|rIC|rIR|rMemTbl)\\b"
+            "match": "\\b(r\\d+|rPgm|rStack|rPM|rIC|rIH|rID|rMemTbl)\\b"
         },
         "label": {
             "name": "variable.other.event",

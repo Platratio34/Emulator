@@ -69,7 +69,7 @@ public class ResolveAction extends ComplexAction {
             case MEMBER -> actions.add(new DirectAction("COPY r0 %s\nINC %s %d", r, r, var.offset));
             case SCOPE -> {
                 actions.add(new DirectAction("COPY r15 %s", r));
-                if (var.offset > 0)
+                if (var.offset != 0)
                     actions.add(new DirectAction("INC %s %d", r, var.offset));
             }
         }

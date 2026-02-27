@@ -87,6 +87,7 @@ public class ExpressionAction extends ComplexAction {
                         throw ELAnalysisError.error("Invalid pointer operation", tkn);
                     if (not)
                         throw ELAnalysisError.error("Can't not a number literal", tkn);
+                    int tR = (lastType == null) ? targetReg : scope.firstFree();
                     if (lastType != null) {
                         if (!ELPrimitives.UINT32.canCastTo(lastType))
                             throw ELAnalysisError.error("Invalid type-cast (uint32 -> " + lastType.typeString() + ")",
@@ -94,7 +95,6 @@ public class ExpressionAction extends ComplexAction {
                     } else {
                         lastType = ELPrimitives.UINT32;
                     }
-                    int tR = (lastType == null) ? targetReg : scope.firstFree();
                     String str = MachineCode.translateReg(tR);
                     if (lastOp != null) {
                         switch (lastOp) {
@@ -102,7 +102,7 @@ public class ExpressionAction extends ComplexAction {
                                 actions.add(new DirectAction("INC %s %d", tRegStr, nt.numValue));
                             }
                             case SUB -> {
-                                actions.add(new DirectAction("DEC %s %d", tRegStr, nt.numValue));
+                                actions.add(new DirectAction("INC %s %d", tRegStr, -nt.numValue));
                             }
                             case POINTER -> {
                                 actions.add(new DirectAction("LOAD %s %d", str, nt.numValue));
@@ -127,6 +127,42 @@ public class ExpressionAction extends ComplexAction {
                             }
                             case RIGHT_SHIFT -> {
                                 actions.add(new DirectAction("RSH %s %d", tRegStr, nt.numValue));
+                            }
+
+                            case EQ2 -> {
+                                if (nt.numValue != 0)
+                                    actions.add(new DirectAction("INC %s %d", tRegStr, -nt.numValue));
+                                actions.add(new DirectAction("SET FORCE EQ %s %s", tRegStr, tRegStr));
+                            }
+                            case NEQ -> {
+                                if (nt.numValue != 0)
+                                    actions.add(new DirectAction("INC %s %d", tRegStr, -nt.numValue));
+                                actions.add(new DirectAction("SET FORCE NEQ %s %s", tRegStr, tRegStr));
+                            }
+                            case LEQ -> {
+                                if (nt.numValue != 0)
+                                    actions.add(new DirectAction("INC %s %d", tRegStr, -nt.numValue));
+                                actions.add(new DirectAction("SET FORCE LEQ %s %s", tRegStr, tRegStr));
+                            }
+                            case ANGLE_RIGHT -> {
+                                if (nt.numValue != 0)
+                                    actions.add(new DirectAction("INC %s %d", tRegStr, -nt.numValue));
+                                actions.add(new DirectAction("SET FORCE GT %s %s", tRegStr, tRegStr));
+                            }
+                            
+                            case GEQ -> {
+                                if (nt.numValue != 0) {
+                                    actions.add(new DirectAction("LOAD %s %d", str, nt.numValue));
+                                    actions.add(new DirectAction("SUB %s %s %s", tRegStr, str, tRegStr));
+                                }
+                                actions.add(new DirectAction("SET FORCE LEQ %s %s", tRegStr, tRegStr));
+                            }
+                            case ANGLE_LEFT -> {
+                                if (nt.numValue != 0) {
+                                    actions.add(new DirectAction("LOAD %s %d", str, nt.numValue));
+                                    actions.add(new DirectAction("SUB %s %s %s", tRegStr, str, tRegStr));
+                                }
+                                actions.add(new DirectAction("SET FORCE GT %s %s", tRegStr, tRegStr));
                             }
 
                             default -> {
@@ -162,8 +198,6 @@ public class ExpressionAction extends ComplexAction {
                             if(!it.hasSub() || it.subTokens.size() != 1)
                                 throw ELAnalysisError.error("Unable to resolve variable `"+it.debugString()+"`", it);
                             String vN = it.sub(0).value;
-                            if(vN.startsWith("r"))
-                                scope.addSymbol(new ELSymbol(ELSymbol.Type.VARIABLE_NAME, it.sub(0).span(), "### `%s`\nCPU register `%s`", vN, vN));
                             switch(vN) {
                                 case "rPM" -> {
                                     actions.add(new DirectAction("COPY rPM %s", str));
@@ -178,10 +212,12 @@ public class ExpressionAction extends ComplexAction {
                                     t = ELPrimitives.UINT32;
                                 }
                             }
+                            if(vN.startsWith("r"))
+                                scope.addSymbol(new ELSymbol(ELSymbol.Type.VARIABLE_NAME, it.sub(0).span(), "### `%s %s`\nCPU register `%s`\n\n"+MachineCode.regDesc(vN), t.typeString(), vN, vN));
                         }
 
                         default -> {
-                            ResolveAction rA = scope.loadVar(it, tR, addressOf);
+                            ResolveAction rA = scope.loadVar(it, tR, !addressOf);
                             if (rA == null)
                                 throw ELAnalysisError.error("Unable to resolve variable `"+it.debugString()+"`", it);
                             actions.add(rA);
@@ -237,6 +273,32 @@ public class ExpressionAction extends ComplexAction {
                             }
                             case RIGHT_SHIFT -> {
                                 throw ELAnalysisError.error("Non-constant values not allowed as amount for shift", tkn);
+                            }
+
+                            case EQ2 -> {
+                                actions.add(new DirectAction("SUB %s %s %s", tRegStr, tRegStr, str));
+                                actions.add(new DirectAction("SET FORCE EQ %s %s", tRegStr, tRegStr));
+                            }
+                            case NEQ -> {
+                                actions.add(new DirectAction("SUB %s %s %s", tRegStr, tRegStr, str));
+                                actions.add(new DirectAction("SET FORCE NEQ %s %s", tRegStr, tRegStr));
+                            }
+                            case LEQ -> {
+                                actions.add(new DirectAction("SUB %s %s %s", tRegStr, tRegStr, str));
+                                actions.add(new DirectAction("SET FORCE LEQ %s %s", tRegStr, tRegStr));
+                            }
+                            case ANGLE_RIGHT -> {
+                                actions.add(new DirectAction("SUB %s %s %s", tRegStr, tRegStr, str));
+                                actions.add(new DirectAction("SET FORCE GT %s %s", tRegStr, tRegStr));
+                            }
+                            
+                            case GEQ -> {
+                                actions.add(new DirectAction("SUB %s %s %s", tRegStr, str, tRegStr));
+                                actions.add(new DirectAction("SET FORCE LEQ %s %s", tRegStr, tRegStr));
+                            }
+                            case ANGLE_LEFT -> {
+                                actions.add(new DirectAction("SUB %s %s %s", tRegStr, str, tRegStr));
+                                actions.add(new DirectAction("SET FORCE GT %s %s", tRegStr, tRegStr));
                             }
 
                             default -> {
@@ -302,6 +364,32 @@ public class ExpressionAction extends ComplexAction {
                             }
                             case RIGHT_SHIFT -> {
                                 throw ELAnalysisError.error("Non-constant values not allowed as amount for shift", tkn);
+                            }
+
+                            case EQ2 -> {
+                                actions.add(new DirectAction("SUB %s %s %s", tRegStr, tRegStr, str));
+                                actions.add(new DirectAction("SET FORCE EQ %s %s", tRegStr, tRegStr));
+                            }
+                            case NEQ -> {
+                                actions.add(new DirectAction("SUB %s %s %s", tRegStr, tRegStr, str));
+                                actions.add(new DirectAction("SET FORCE NEQ %s %s", tRegStr, tRegStr));
+                            }
+                            case LEQ -> {
+                                actions.add(new DirectAction("SUB %s %s %s", tRegStr, tRegStr, str));
+                                actions.add(new DirectAction("SET FORCE LEQ %s %s", tRegStr, tRegStr));
+                            }
+                            case ANGLE_RIGHT -> {
+                                actions.add(new DirectAction("SUB %s %s %s", tRegStr, tRegStr, str));
+                                actions.add(new DirectAction("SET FORCE GT %s %s", tRegStr, tRegStr));
+                            }
+                            
+                            case GEQ -> {
+                                actions.add(new DirectAction("SUB %s %s %s", tRegStr, str, tRegStr));
+                                actions.add(new DirectAction("SET FORCE LEQ %s %s", tRegStr, tRegStr));
+                            }
+                            case ANGLE_LEFT -> {
+                                actions.add(new DirectAction("SUB %s %s %s", tRegStr, str, tRegStr));
+                                actions.add(new DirectAction("SET FORCE GT %s %s", tRegStr, tRegStr));
                             }
 
                             default -> {

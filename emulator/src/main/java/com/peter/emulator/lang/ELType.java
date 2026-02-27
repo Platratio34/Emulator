@@ -494,12 +494,18 @@ public class ELType {
 
     public boolean canCastTo(ELType target) {
         // check modifiers
+        if ((isVoidPtr() && target.equals(ELPrimitives.UINT32)) || (target.isVoidPtr() && equals(ELPrimitives.UINT32)))
+            return true;
+        if (subType == null && target.subType == null) {
+            
+        }
         if ((subType == null) != (target.subType == null)) {
             return false;
         }
         if(subType != null) {
             ELType t = this;
             ELType tt = target;
+            boolean valid = true;
             while (t.subType != null) {
                 /*
                 * -> *
@@ -507,16 +513,18 @@ public class ELType {
                 & -> *
                 [] -> []
                 */
-                boolean valid = false;
+                valid = false;
                 valid |= t.pointer && tt.pointer;
                 valid |= t.address && (tt.address || tt.pointer);
                 valid |= t.array && tt.array && (t.arraySize == tt.arraySize);
-                if (!valid) {
-                    return false;
+                if (valid) {
+                    break;
                 }
                 t = t.subType;
                 tt = tt.subType;
             }
+            if(!valid)
+                return false;
         }
 
         // check base
