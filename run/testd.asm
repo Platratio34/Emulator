@@ -128,10 +128,10 @@ STORE r2 r1
 //  c = 32;
 
 // 9 19:10
-COPY r15 r2
-INC r2 2
-LOAD MEM r2 r2
-STACK PUSH r2
+COPY r15 r1
+INC r1 2
+LOAD MEM r1 r1
+STACK PUSH r1
 GOTO PUSH :TestD.funcb_uint32
 STACK DEC 1
 //  funcb(c)
