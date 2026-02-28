@@ -369,6 +369,8 @@ public class ELClass extends Namespace {
     
     @Override
     public ArrayList<ELVariable> getVarStack(Identifier identifier, ArrayList<ELVariable> stack) {
+        if (identifier.parts.length <= stack.size())
+            return stack;
         if (memberVariables.containsKey(identifier.parts[stack.size()])) {
             ELVariable v = memberVariables.get(identifier.parts[stack.size()]);
             stack.add(v);

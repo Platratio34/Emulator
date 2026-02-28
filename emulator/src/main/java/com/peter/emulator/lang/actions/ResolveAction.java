@@ -46,8 +46,9 @@ public class ResolveAction extends ComplexAction {
                         actions.add(new DirectAction("LOAD %s %d", r, nv.value));
                         returnType = var.type;
                         returnVar = var;
-                        scope.addSymbol(new ELSymbol(ELSymbol.Type.VARIABLE_CONSTANT, it.spanFirst(),
-                                "### `const %s %s = %d`", var.type.typeString(), it.value, nv.value));
+                        // scope.addSymbol(new ELSymbol(ELSymbol.Type.VARIABLE_CONSTANT, it.spanFirst(),
+                        //         "### `const %s %s = %d`", var.type.typeString(), it.value, nv.value));
+                        scope.addSymbol(new ELVarSymbol(var, it.spanFirst()));
                         return;
                     }
                     case ELStringValue sv -> {
@@ -55,8 +56,9 @@ public class ResolveAction extends ComplexAction {
                             actions.add(new DirectAction("LOAD %s '%s'", r, sv.value));
                             returnType = var.type;
                             returnVar = var;
-                            scope.addSymbol(new ELSymbol(ELSymbol.Type.VARIABLE_CONSTANT, it.spanFirst(),
-                                    "### `const %s %s = '%s'`", var.type.typeString(), it.value, sv.value));
+                            // scope.addSymbol(new ELSymbol(ELSymbol.Type.VARIABLE_CONSTANT, it.spanFirst(),
+                            //         "### `const %s %s = '%s'`", var.type.typeString(), it.value, sv.value));
+                            scope.addSymbol(new ELVarSymbol(var, it.spanFirst()));
                             return;
                         } else {
                             throw ELAnalysisError.error("Can not reference constant char* right now");

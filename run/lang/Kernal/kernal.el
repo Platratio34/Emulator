@@ -59,6 +59,9 @@ namespace Kernal {
             SysD.rPM = false;
             // System.onInterrupt(code);
             // need to get interrupt handler for the current process here
+            oldState.interruptHandler.call(code);
+            SysD.interruptReturn();
+            return; // only including this for clarity, it is tactically unreachable
         } else {
             if(code == 0x8000_0001) { // privileged mode failure
                 SysD.halt(); // this is a breaking instruct, we just don't know it
@@ -94,21 +97,37 @@ namespace Kernal {
         SysD.memSet(CMD_STATUS, CMD_WRITTEN);
     }
 
-    public static uint32 getPeripheral(uint32 type) {
-        uint32[1] cmd = {0x1};
-        peripheralCmd(0, 0x1, &cmd);
-        while(SysD.memGet(0x8080) != 0x1) {
-            asm("NO OP");
-        }
-        uint32 numDevices = SysD.memGet(0x8082);
-        for(int i = 0; i < numDevices; i++) {
-            uint32 addr = 0x8083 + ( i * 2 );
-            uint32 deviceType = SysD.memGet(addr+1);
-            if(deviceType == type) {
-                return SysD.memGet(addr);
+    // public static uint32 getPeripheral(uint32 type) {
+    //     uint32[1] cmd = {0x1};
+    //     peripheralCmd(0, 0x1, &cmd);
+    //     while(SysD.memGet(0x8080) != 0x1) {
+    //         asm("NO OP");
+    //     }
+    //     uint32 numDevices = SysD.memGet(0x8082);
+    //     for(int i = 0; i < numDevices; i++) {
+    //         uint32 addr = 0x8083 + ( i * 2 );
+    //         uint32 deviceType = SysD.memGet(addr+1);
+    //         if(deviceType == type) {
+    //             return SysD.memGet(addr);
+    //         }
+    //     }
+    //     return 0;
+    // }
+
+    static uint32 lastPID = 0;
+
+    public static ProcessState* createProcess() {
+        uint32 nextPID = lastPID + 1;
+        if(nextPID == 1024) {
+            nextPID = 1;
+            while(processStates[nextPID].status != 0) {
+                nextPID ++;
+                if(nextPID == 1024) {
+                    return nullptr;
+                }
             }
         }
-        return 0;
+        return &(processStates[nextPID]);
     }
 
     struct ProcessState {
@@ -118,6 +137,9 @@ namespace Kernal {
         public void* memTablePtr;
         public bool privileged;
         public uint32[16] registers;
+
+        public uint32 status;
+        public method<uint32>* interruptHandler;
 
         public void update() {
             pgmPtr = SysD.rPgm;
@@ -142,6 +164,7 @@ namespace Kernal {
         public static void create(ProcessState& state) {
             state.pid = SysD.rPID;
             state.update();
+            status = 1;
             return state;
         }
     }

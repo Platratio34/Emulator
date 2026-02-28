@@ -10,7 +10,7 @@ import com.peter.emulator.lang.ProgramUnit;
 public class ELPrimitives {
 
     private static final ProgramUnit INTERNAL_UNIT = new ProgramUnit(null, "<Base>");
-    private static final Location INTERNAL_LOCATION = new Location("<Base>", 0, 0);
+    protected static final Location INTERNAL_LOCATION = new Location("<Base>", 0, 0);
 
     public static final ELClass OBJECT_CLASS = new ELClass("Object", null, INTERNAL_UNIT) {
         
@@ -77,6 +77,14 @@ public class ELPrimitives {
     public static final ELType UINT32 = new ELType("uint32", UINT32_CLASS, INTERNAL_LOCATION);
     // void*
     public static final ELType VOID_PTR = new ELType.Builder("void").pointer().location(INTERNAL_LOCATION).build();
+
+    // method
+    // public static final ELType VOID_METHOD = new ELType("method", METHOD_CLASS, INTERNAL_LOCATION);
+    // method<A>
+    public static final ELClass METHOD_CLASS = new Method("method", OBJECT_CLASS, INTERNAL_UNIT, "A");
+    public static final ELType METHOD = new ELType("method", METHOD_CLASS, INTERNAL_LOCATION);
+    // provider<R(,A,B,C...)>
+    // public static final ELType PROVIDER = new ELType("provider");
 
     // public static final ELType STRING = new ELType("string");
 
@@ -193,5 +201,6 @@ public class ELPrimitives {
         PRIMITIVE_TYPES.put(UINT32, UINT32_CLASS);
         // PRIMITIVE_TYPES.put(STRING, null);
         PRIMITIVE_TYPES.put(OBJECT, OBJECT_CLASS);
+        PRIMITIVE_TYPES.put(METHOD, METHOD_CLASS);
     }
 }

@@ -64,4 +64,11 @@ namespace Kernal.Memory {
         }
         return num;
     }
+
+    struct PageMapTable {
+
+        public uint32 numPages;
+        public uint32* pagePointers;
+
+    }
 }
