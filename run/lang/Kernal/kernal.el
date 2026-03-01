@@ -130,6 +130,10 @@ namespace Kernal {
         return &(processStates[nextPID]);
     }
 
+    class Method<P1> {
+
+    }
+
     struct ProcessState {
         public uint32 pid;
         public uint32 pgmPtr;
@@ -139,7 +143,7 @@ namespace Kernal {
         public uint32[16] registers;
 
         public uint32 status;
-        public method<uint32>* interruptHandler;
+        public Method<uint32>* interruptHandler;
 
         public void update() {
             pgmPtr = SysD.rPgm;

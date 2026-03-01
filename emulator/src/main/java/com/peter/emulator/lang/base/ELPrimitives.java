@@ -14,6 +14,10 @@ public class ELPrimitives {
 
     public static final ELClass OBJECT_CLASS = new ELClass("Object", null, INTERNAL_UNIT) {
         
+        public boolean canStaticCast(ELType target) {
+            return true;
+        };
+
         @Override
         public int getSize() {
             return 4;

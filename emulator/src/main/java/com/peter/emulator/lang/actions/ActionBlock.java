@@ -160,121 +160,7 @@ public class ActionBlock extends ComplexAction {
                             }
                             default -> { // function call
                                 actions.add(new FunctionAction(scope, -1, it, errors));
-                                // boolean onStack = true;
                                 wI += 1;
-                                // if (id.starts("SysD")) {
-                                //     switch (id.parts[1]) {
-                                //         case "memSet" -> {
-                                //             // SysD.memSet(uint32 addr, uint32 value);
-                                //             errors.warning("SysD.memSet is not currently implemented", it);
-                                //             onStack = false;
-                                //         }
-                                //         case "memCopy" -> {
-                                //             errors.warning("SysD.copy is not currently implemented", it);
-                                //             continue;
-                                //         }
-                                //         case "interruptReturn" -> {
-                                //             actions.add(new DirectAction("INTERRUPT RET"));
-                                //             scope.addSymbol(ELSymbol.Type.NAMESPACE_NAME, it.span(), "### `SysD.interruptReturn()`\n\nReturn from an interrupt, resuming execution at the memory address popped to the stack when the interrupt was triggered.\n\n**ONLY USE IN LOW-LEVEL PROGRAMMING**. *Privileged Mode only*");
-                                //             continue;
-                                //         }
-                                //         case "halt" -> {
-                                //             actions.add(new DirectAction("HALT"));
-                                //             scope.addSymbol(ELSymbol.Type.NAMESPACE_NAME, it.span(), "### `SysD.halt()`\n\nHalt the CPU.\n\n**ONLY USE IN LOW-LEVEL PROGRAMMING**. *Privileged Mode only*");
-                                //             continue;
-                                //         }
-                                //     }
-                                // }
-                                // // function call; set is parameters
-                                // ArrayList<ELType> types = new ArrayList<>();
-                                // Location endOfParams = null;
-                                // Location startOfParams = it.params.get(0).startLocation;
-                                // Span nameSpan = it.span();
-                                // // boolean vNext = true;
-                                // // boolean addr = false;
-                                // ArrayList<Token> exp = new ArrayList<>();
-                                // int r = 2;
-                                // for (int i = 0; i < it.params.subTokens.size(); i++) {
-                                //     Token t2 = it.params.subTokens.get(i);
-                                //     endOfParams = t2.endLocation;
-                                //     if (t2 instanceof OperatorToken ot && ot.type == OperatorToken.Type.COMMA) {
-                                //         if(exp.isEmpty())
-                                //             throw ELAnalysisError.error("Empty expression", t2);
-                                //         ExpressionAction expA = new ExpressionAction(scope, exp, r);
-                                //         actions.add(expA);
-                                //         types.add(expA.outType);
-                                //         if(onStack)
-                                //             actions.add(new DirectAction("STACK PUSH %s", MachineCode.translateReg(r)));
-                                //         else
-                                //             actions.add(new DirectAction("COPY %s %s", MachineCode.translateReg(r),
-                                //                     MachineCode.translateReg(r++)));
-                                //         exp = new ArrayList<>();
-                                //     } else {
-                                //         exp.add(t2);
-                                //     }
-                                // }
-                                // if (!exp.isEmpty()) {
-                                //     ExpressionAction expA = new ExpressionAction(scope, exp, r);
-                                //     actions.add(expA);
-                                //     types.add(expA.outType);
-                                //     if (onStack)
-                                //         actions.add(new DirectAction("STACK PUSH %s", MachineCode.translateReg(r)));
-                                //     else
-                                //         actions.add(new DirectAction("COPY %s %s", MachineCode.translateReg(r),
-                                //                 MachineCode.translateReg(r++)));
-                                // }
-
-                                // String tStr = "(";
-                                // for (int i = 0; i < types.size(); i++) {
-                                //     if (i > 0)
-                                //         tStr += ",";
-                                //     tStr += types.get(i).typeString();
-                                // }
-                                // tStr += ")";
-
-                                // if (id.starts("SysD")) {
-                                //     switch (id.parts[1]) {
-                                //         case "memSet" -> {
-                                //             // SysD.memSet(uint32 addr, uint32 value);
-                                //             if (types.size() != 2 || !(types.get(0).canCastTo(ELPrimitives.UINT32)
-                                //                     && types.get(1).canCastTo(ELPrimitives.UINT32))) {
-
-                                //                 throw ELAnalysisError.error(String.format(
-                                //                         "Found no overload of SysD.memSet matching %s; Found SysD.memSet(uint32 addr, uint32 value)",
-                                //                         tStr), startOfParams.span(endOfParams));
-                                //             }
-                                //             actions.add(new DirectAction("STORE MEM r1 r2"));
-                                //             continue;
-                                //         }
-                                //         case "memCopy" -> {
-                                //             errors.warning("SysD.copy is not currently implemented", it);
-                                //             continue;
-                                //         }
-                                //         case "halt" -> {
-                                //             actions.add(new DirectAction("HALT"));
-                                //             continue;
-                                //         }
-                                //         default -> {
-                                //             throw ELAnalysisError.error("Unknown SysD function: `"+id.parts[1]+"`", nameSpan);
-                                //         }
-                                //     }
-                                // }
-                                // ELFunction f = scope.namespace.findFunction(id, types);
-                                // if (f == null) {
-
-                                //     f = scope.namespace.getFunction(id);
-                                //     if (f != null) {
-                                //         throw ELAnalysisError.error(String.format(
-                                //                 "Found no overload of %s matching %s; Found %s", id.fullName, tStr, f.debugString("")), startOfParams.span(endOfParams));
-                                //     } else {
-                                //         throw ELAnalysisError.error("Unknown function " + id.fullName + tStr, nameSpan);
-                                //     }
-                                // }
-                                // actions.add(new DirectAction("GOTO PUSH :%s", f.getQualifiedName(true)));
-                                // actions.add(new DirectAction("STACK DEC %d", types.size()));
-                                // STACK PUSH param 0
-                                // GOTO PUSH :funcName_paramTypes
-                                // STACK DEC 1
                                 continue;
                             }
                         }
@@ -509,7 +395,7 @@ public class ActionBlock extends ComplexAction {
                         ExpressionAction expA = new ExpressionAction(scope, exp, r);
                         actions.add(expA);
 
-                        if(!expA.outType.canCastTo(t))
+                        if(expA.outType != null && !expA.outType.canCastTo(t))
                             throw ELAnalysisError.error("Invalid assign, can not cast " + expA.outType.typeString() + " to " + t.typeString(), it.startLocation.span(actionSpan.end()));
 
                         if (ot.type == OperatorToken.Type.ADD_ASSIGN) {

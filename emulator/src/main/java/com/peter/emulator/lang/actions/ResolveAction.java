@@ -89,7 +89,7 @@ public class ResolveAction extends ComplexAction {
                     int r2 = scope.firstFree();
                     String rStr = MachineCode.translateReg(r2);
                     ExpressionAction indexExp = new ExpressionAction(scope, id.index.subTokens, r2);
-                    if (!indexExp.outType.equals(ELPrimitives.UINT32))
+                    if (indexExp.outType != null && !indexExp.outType.equals(ELPrimitives.UINT32))
                         throw ELAnalysisError.error("Index must resolve to a uint32",
                                 id.index.subFirst().startLocation.span(id.index.subLast().endLocation));
                     int wds = v.sizeofWords();

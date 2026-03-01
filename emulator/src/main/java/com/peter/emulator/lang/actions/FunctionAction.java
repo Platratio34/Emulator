@@ -76,7 +76,7 @@ public class FunctionAction extends ComplexAction {
                 }
                 ExpressionAction expA = new ExpressionAction(scope, exp, r);
                 actions.add(expA);
-                types.add(expA.outType);
+                types.add(expA.outType == null ? ELPrimitives.OBJECT : expA.outType);
                 if(onStack)
                     actions.add(new DirectAction("STACK PUSH %s", MachineCode.translateReg(r)));
                 else {
@@ -93,7 +93,7 @@ public class FunctionAction extends ComplexAction {
         if (!exp.isEmpty()) {
             ExpressionAction expA = new ExpressionAction(scope, exp, r);
             actions.add(expA);
-            types.add(expA.outType);
+            types.add(expA.outType == null ? ELPrimitives.OBJECT : expA.outType);
             if (onStack)
                 actions.add(new DirectAction("STACK PUSH %s", MachineCode.translateReg(r)));
             else

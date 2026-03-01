@@ -245,7 +245,7 @@ public class ELType {
     }
 
     public boolean isResolvable() {
-        return (pointer && !isVoidPtr()) | address | array;
+        return pointer | address | array;
     }
 
     @Override
@@ -528,7 +528,7 @@ public class ELType {
         }
 
         // check base
-        if (ELPrimitives.OBJECT.equals(target))
+        if (ELPrimitives.OBJECT.equals(target) || equals(ELPrimitives.OBJECT))
             return true;
         ELType base = base();
         ELType tgtBase = base();

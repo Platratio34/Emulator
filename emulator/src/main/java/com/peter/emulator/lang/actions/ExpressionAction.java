@@ -42,10 +42,14 @@ public class ExpressionAction extends ComplexAction {
                                 throw ELAnalysisError.error(
                                         "Unknown or unsupported operation: " + ot.type + " (op, after " + lastOp + ")",
                                         tkn);
+                            if (lastType == null)
+                                throw ELAnalysisError.error(
+                                        "Unknown or unsupported operation: " + ot.type + " (op at beginning of expression)",
+                                        tkn);
                             lastOp = ot.type;
                         }
                         case BITWISE_AND -> {
-                            if (lastOp != null) {
+                            if (lastOp != null || lastType == null) {
                                 if (addressOf)
                                     throw ELAnalysisError.error("Can not get address of address of", tkn);
                                 if (resolvePointer > 0)
@@ -57,7 +61,7 @@ public class ExpressionAction extends ComplexAction {
                         }
 
                         case POINTER -> {
-                            if (lastOp != null) {
+                            if (lastOp != null || lastType == null) {
                                 if(addressOf)
                                     throw ELAnalysisError.error("Can not do pointer resolve after address of", tkn);
                                 resolvePointer++;
@@ -66,7 +70,7 @@ public class ExpressionAction extends ComplexAction {
                             }
                         }
                         case NOT -> {
-                            if (lastOp != null) {
+                            if (lastOp != null || lastType == null) {
                                 if (not)
                                     throw ELAnalysisError.error("Can not have more that one `!` in a row", tkn);
                                 not = true;
@@ -236,10 +240,13 @@ public class ExpressionAction extends ComplexAction {
                                     it);
                         actions.add(new DirectAction("LOAD MEM %s %s", str, str));
                         resolvePointer--;
-                        t = t.resolve();
+                        if(!t.isVoidPtr())
+                            t = t.resolve();
+                        else
+                            t = null;
                     }
                     if (lastType != null) {
-                        if (!t.canCastTo(lastType))
+                        if (t != null && !t.canCastTo(lastType))
                             throw ELAnalysisError.error(
                                     "Invalid type-cast (" + t.typeString() + " -> " + lastType.typeString() + ")", tkn);
                     } else {
@@ -326,16 +333,19 @@ public class ExpressionAction extends ComplexAction {
                     actions.add(expA);
                     ELType t = expA.outType;
                     while (resolvePointer > 0) {
-                        if (!t.isResolvable())
+                        if (t == null || !t.isResolvable())
                             throw ELAnalysisError.error(
                                     "Unable to resolve non-pointer, address, or array (was " + t.typeString() + ")",
                                     st);
                         actions.add(new DirectAction("LOAD MEM %s %s", str, str));
                         resolvePointer--;
-                        t = t.resolve();
+                        if(t != null && !t.isVoidPtr())
+                            t = t.resolve();
+                        else
+                            t = null;
                     }
                     if (lastType != null) {
-                        if (!t.canCastTo(lastType))
+                        if (t != null && !t.canCastTo(lastType))
                             throw ELAnalysisError.error(
                                     "Invalid type-cast (" + t.typeString() + " -> " + lastType.typeString() + ")", tkn);
                     } else {
@@ -410,8 +420,8 @@ public class ExpressionAction extends ComplexAction {
             }
             wI++;
         }
-        if (lastType == null)
-            throw ELAnalysisError.error("Un-typed expression", tokens.getFirst().startLocation.span(tokens.getLast().endLocation));
+        // if (lastType == null)
+        //     throw ELAnalysisError.error("Un-typed expression", tokens.getFirst().startLocation.span(tokens.getLast().endLocation));
         outType = lastType;
     }
 
