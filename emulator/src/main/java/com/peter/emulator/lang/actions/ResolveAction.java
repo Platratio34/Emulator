@@ -1,16 +1,12 @@
 package com.peter.emulator.lang.actions;
 
 import com.peter.emulator.MachineCode;
-import com.peter.emulator.lang.ELAnalysisError;
-import com.peter.emulator.lang.ELClass;
-import com.peter.emulator.lang.ELSymbol;
 import com.peter.emulator.lang.ELSymbol.ELVarSymbol;
-import com.peter.emulator.lang.ELType;
 import com.peter.emulator.lang.ELValue.ELNumberValue;
 import com.peter.emulator.lang.ELValue.ELStringValue;
-import com.peter.emulator.lang.ELVariable;
-import com.peter.emulator.lang.tokens.IdentifierToken;
+import com.peter.emulator.lang.*;
 import com.peter.emulator.lang.base.ELPrimitives;
+import com.peter.emulator.lang.tokens.IdentifierToken;
 
 public class ResolveAction extends ComplexAction {
 
@@ -81,8 +77,8 @@ public class ResolveAction extends ComplexAction {
         ELVariable v = var;
         ELType t = v.type;
         if(id.subTokens != null) {
-            while (index < id.subTokens.size() - 1) {
-                if (it.index != null) {
+            while (index < id.subTokens.size()) {
+                if (it.indexed()) {
                     if (!v.type.isIndexable())
                         throw ELAnalysisError.error(v.type.typeString() + " is not indexable",
                                 it.index.subFirst().startLocation.span(it.index.subLast().endLocation));
@@ -98,6 +94,7 @@ public class ResolveAction extends ComplexAction {
                         actions.add(new DirectAction("LOAD %s %d\nMUL %s %s %s", r3, v.sizeofWords(), rStr, rStr, r3));
                     }
                     actions.add(new DirectAction("ADD %s %s %s", r, r, rStr));
+                    actions.add(new DirectAction("LOAD MEM %s %s", r, r));
                     scope.release(r2);
                     t = t.resolve();
                 }
@@ -111,6 +108,7 @@ public class ResolveAction extends ComplexAction {
         
                 if (t.isPointer() || t.isAddress()) {
                     actions.add(new DirectAction("LOAD MEM %s %s", r, r));
+                    t = t.resolve();
                 }
                 it = id.sub(index - 1);
                 ELClass clazz = t.clazz;
