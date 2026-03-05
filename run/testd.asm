@@ -8,34 +8,35 @@
 #function TestD.onInterrupt
 STACK PUSH r15
 COPY rStack r15
-// 0 36:10
+// 0 40:10
 COPY rIC r1
 STACK PUSH r1
 //  uint32 code = SysD.rIC;
 
-// 1 37:10
+// 1 41:10
 LOAD rIC 0
 //  asm("LOAD rIC 0")
 
-// 2 37:27
+// 2 41:27
 // ;
 
-// 3 38:10
+// 3 42:10
 COPY r15 r1
 LOAD MEM r1 r1
 INC r1 -255
 SET FORCE EQ r1 r1
 GOTO EQ r1 :if_end_0
-// 0 39:14
+// 0 43:14
 HALT
 //  asm("HALT")
 
-// 1 39:25
+// 1 43:25
 // ;
 
 :if_end_0
 //  if(code == 0xff) {asm("HALT");}
 
+:func_exit_TestD.onInterrupt
 STACK DEC 1
 STACK POP r15
 INTERRUPT RET
@@ -44,14 +45,14 @@ INTERRUPT RET
 #function TestD.wait_uint32 time uint32
 STACK PUSH r15
 COPY rStack r15
-// 0 44:10
+// 0 48:10
 :while_condition_1
 COPY r15 r1
 INC r1 -3
 LOAD MEM r1 r1
 SET FORCE GT r1 r1
 GOTO EQ r1 :while_end_1
-// 0 45:14
+// 0 49:14
 COPY r15 r1
 INC r1 -3
 LOAD MEM r2 r1
@@ -63,6 +64,7 @@ GOTO :while_condition_1
 :while_end_1
 //  while(time > 0) {time--;}
 
+:func_exit_TestD.wait_uint32
 STACK POP r15
 GOTO POP
 #endfunction void
@@ -155,17 +157,33 @@ STORE r1 r2
 // 14 21:18
 // ;
 
-// 15 22:10
-LOAD r2 1000
+// 15 23:10
+STACK INC 2
+//  StructA sA;
+
+// 16 24:10
+STACK INC 1
+COPY r15 r2
+INC r2 3
 STACK PUSH r2
+GOTO PUSH :TestD.testA_StructA&
+//  testA(& sA)
+
+// 17 24:20
+// ;
+
+// 18 26:10
+LOAD r1 1000
+STACK PUSH r1
 GOTO PUSH :TestD.wait_uint32
 STACK DEC 1
 //  wait(1000)
 
-// 16 22:20
+// 19 26:20
 // ;
 
-STACK DEC 3
+:func_exit_TestD.main
+STACK DEC 4
 STACK POP r15
 HALT
 #endfunction void
@@ -173,7 +191,7 @@ HALT
 #function TestD.funcb_uint32 a uint32
 STACK PUSH r15
 COPY rStack r15
-// 0 27:10
+// 0 31:10
 LOAD r1 &TestD.v
 COPY r15 r2
 INC r2 -3
@@ -183,6 +201,7 @@ ADD r1 r3 r1
 STORE r2 r1
 //  v += a;
 
+:func_exit_TestD.funcb_uint32
 STACK POP r15
 GOTO POP
 #endfunction void
@@ -190,7 +209,7 @@ GOTO POP
 #function TestD.funcb_uint32_uint32* a uint32, b uint32*
 STACK PUSH r15
 COPY rStack r15
-// 0 31:10
+// 0 35:10
 LOAD r1 &TestD.v
 COPY r15 r2
 INC r2 -4
@@ -200,8 +219,46 @@ ADD r1 r3 r1
 STORE r2 r1
 //  v += a;
 
+:func_exit_TestD.funcb_uint32_uint32*
 STACK POP r15
 GOTO POP
 #endfunction void
+
+#function TestD.testA_StructA& str StructA&
+STACK PUSH r15
+COPY rStack r15
+// 0 54:10
+COPY r15 r1
+INC r1 -3
+LOAD MEM r1 r1
+LOAD r2 32
+STORE r2 r1
+//  str.a = 32;
+
+// 1 55:10
+COPY r15 r1
+INC r1 -3
+LOAD MEM r1 r1
+LOAD r2 -1
+STORE r2 r1
+//  str.b = 0xffffffff;
+
+// 2 56:10
+COPY r15 r1
+INC r1 -3
+LOAD MEM r1 r1
+COPY r15 r2
+INC r2 -3
+LOAD MEM r2 r2
+COPY r15 r3
+INC r3 -4
+STORE r1 r3
+GOTO :func_exit_TestD.testA_StructA&
+//  return str;
+
+:func_exit_TestD.testA_StructA&
+STACK POP r15
+GOTO POP
+#endfunction StructA*
 
 HALT

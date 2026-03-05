@@ -229,8 +229,8 @@ public class ExpressionAction extends ComplexAction {
                         }
                     }
                     if(addressOf) {
-                        if(!(t.isPointer() || t.isArray()))
-                            throw ELAnalysisError.error("Can not get address of non-pointer or array (was "+t.typeString()+")", it);
+                        if(t.isConstant())
+                            throw ELAnalysisError.error("Can not get address of constant value (was "+t.typeString()+")", it);
                         t = t.addressOf();
                     }
                     while (resolvePointer > 0) {

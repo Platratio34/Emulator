@@ -19,6 +19,10 @@ namespace TestD {
         funcb(c);
         asm("LOAD r1 64\nLOAD r2 &TestD.v\nSTORE r1 r2");
         asm(str);
+
+        StructA sA;
+        testA(&sA);
+
         wait(1000);
         // funcC();
     }
@@ -44,5 +48,16 @@ namespace TestD {
         while(time > 0) {
             time--;
         }
+    }
+
+    public static StructA* testA(StructA& str) {
+        str.a = 32;
+        str.b = 0xffffffff;
+        return str;
+    }
+
+    struct StructA {
+        public uint32 a;
+        public uint32 b;
     }
 }

@@ -264,8 +264,11 @@ public class ELFunction {
         for (Entry<String, ELType> entry : params.entrySet()) {
             entry.getValue().analyze(errors, namespace, unit);
         }
-        if (ret != null)
+        if (ret != null) {
             ret.analyze(errors, namespace, unit);
+            if (ret.sizeofWords() > 1)
+                errors.error("Function returns must be 1 word", ret.span());
+        }
         if (body == null && !(extern || abstractFunction)) {
             errors.error("Non-abstract or external functions must have a body", startLocation.span());
         } else if (body != null && (extern || abstractFunction)) {
@@ -276,13 +279,13 @@ public class ELFunction {
         }
 
         if (body != null) {
-            ActionBlock bodyBlock = new ActionBlock(new ActionScope(namespace, unit, null, 0), this);
-            int l = paramOrder.size();
-            ArrayList<ELType> paramList = new ArrayList<>();
-            for (int i = 0; i < l; i++) {
-                paramList.add(params.get(paramOrder.get(i)));
-            }
-            bodyBlock.scope.addParams(paramOrder, paramList, errors);
+            ActionBlock bodyBlock = new ActionBlock(new ActionScope(namespace, unit, this));
+            // int l = paramOrder.size();
+            // ArrayList<ELType> paramList = new ArrayList<>();
+            // for (int i = 0; i < l; i++) {
+            //     paramList.add(params.get(paramOrder.get(i)));
+            // }
+            // bodyBlock.scope.addParams(paramOrder, paramList, errors);
             bodyBlock.parse(body, errors);
             actions.add(bodyBlock);
         }

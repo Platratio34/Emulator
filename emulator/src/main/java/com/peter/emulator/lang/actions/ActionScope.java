@@ -9,20 +9,51 @@ import com.peter.emulator.lang.tokens.IdentifierToken;
 public class ActionScope {
 
     protected int stackOff = 0;
+    protected int returnOffset = 0;
     public final int stackOffStart;
     protected final HashMap<String, ELVariable> stackVars = new HashMap<>();
     public final Namespace namespace;
     public final ProgramUnit unit;
 
     public final ActionScope parent;
+    public final ELFunction function;
     public final boolean[] reservedRegisters = new boolean[16];
 
-    public ActionScope(Namespace namespace, ProgramUnit unit, ActionScope parent, int stackOffset) {
+    public ActionScope(Namespace namespace, ProgramUnit unit, ELFunction function) {
+        this.parent = null;
+        this.unit = unit;
+        this.namespace = namespace;
+        stackOffStart = 0;
+        stackOff = 0;
+        this.function = function;
+        if (function != null) {
+            int o = - 2;
+            for (int i = function.paramOrder.size() - 1; i >= 0; i--) {
+                String name = function.paramOrder.get(i);
+                ELType type = function.params.get(name);
+                ELVariable var = new ELVariable(ELProtectionLevel.INTERNAL, ELVariable.Type.SCOPE, type, name, false,
+                        namespace, unit, type.location);
+                if (stackVars.containsKey(name)) {
+                    unit.errors.warning("Duplicate variable name `" + name + "`");
+                    continue;
+                }
+                o -= type.sizeofWords();
+                var.offset = o;
+                stackVars.put(name, var);
+            }
+            if (function.ret != null) {
+                returnOffset = o - function.ret.sizeofWords();
+            }
+        }
+    }
+    public ActionScope(Namespace namespace, ProgramUnit unit, ActionScope parent, int stackOffset, int returnOffset) {
         this.parent = parent;
         this.unit = unit;
         this.namespace = namespace;
         stackOffStart = stackOffset;
         stackOff = stackOffset;
+        this.returnOffset = returnOffset;
+        function = null;
     }
 
     public ELVariable addStackVar(String name, ELType type, Location endLocation, ErrorSet errors) {
@@ -38,21 +69,26 @@ public class ActionScope {
         return var;
     }
     
-    public void addParams(ArrayList<String> names, ArrayList<ELType> types, ErrorSet errors) {
-        int o = - 2;
-        for (int i = names.size() - 1; i >= 0; i--) {
-            String name = names.get(i);
-            ELType type = types.get(i);
-            ELVariable var = new ELVariable(ELProtectionLevel.INTERNAL, ELVariable.Type.SCOPE, type, name, false, namespace, unit, type.location);
-            if(stackVars.containsKey(name)) {
-                errors.warning("Duplicate variable name `"+name+"`");
-                continue;
-            }
-            o -= type.sizeofWords();
-            var.offset = o;
-            stackVars.put(name, var);
-        }
-    }
+    // public void addParams(ArrayList<String> names, ArrayList<ELType> types, ErrorSet errors, ELType retType) {
+    //     int o = - 2;
+    //     for (int i = names.size() - 1; i >= 0; i--) {
+    //         String name = names.get(i);
+    //         ELType type = types.get(i);
+    //         ELVariable var = new ELVariable(ELProtectionLevel.INTERNAL, ELVariable.Type.SCOPE, type, name, false,
+    //                 namespace, unit, type.location);
+    //         if (stackVars.containsKey(name)) {
+    //             errors.warning("Duplicate variable name `" + name + "`");
+    //             continue;
+    //         }
+    //         o -= type.sizeofWords();
+    //         var.offset = o;
+    //         returnOffset = o;
+    //         stackVars.put(name, var);
+    //     }
+    //     if (retType != null) {
+            
+    //     }
+    // }
 
     public int getStackOffDif() {
         return stackOff - stackOffStart;
@@ -70,7 +106,7 @@ public class ActionScope {
     }
 
     public ActionScope createChild() {
-        return new ActionScope(namespace, unit, this, stackOff);
+        return new ActionScope(namespace, unit, this, stackOff, returnOffset);
     }
 
     public ArrayList<ELVariable> getVarStack(Identifier id) {
@@ -86,9 +122,9 @@ public class ActionScope {
         vars.add(v);
         ELType t = v.type;
         for (int i = 1; i < id.parts.length; i++) {
-            ELClass clazz = t.clazz;
+            ELClass clazz = t.getELClass();
             if(clazz == null)
-                throw ELAnalysisError.fatal("Type was missing class " + t.typeString());
+                throw ELAnalysisError.fatal("Type was missing class (type was `" + t.typeString()+"`)");
             if(!clazz.memberVariables.containsKey(id.parts[i]))
                 throw ELAnalysisError.fatal("Class " + clazz.getQualifiedName() + " does not contain member variable "+id.parts[i]);
             ELVariable v2 = clazz.memberVariables.get(id.parts[i]);
@@ -139,5 +175,9 @@ public class ActionScope {
         ELSymbol symbol = new ELSymbol(type, span, text);
         unit.symbols.add(symbol);
         return symbol;
+    }
+
+    public ELFunction getFunction() {
+        return (parent != null) ? parent.getFunction() : function;
     }
 }

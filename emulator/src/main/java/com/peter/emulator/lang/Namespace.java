@@ -330,12 +330,12 @@ public class Namespace {
         if (staticVariables.containsKey(identifier.parts[stack.size()])) {
             ELVariable v = staticVariables.get(identifier.parts[stack.size()]);
             stack.add(v);
-            if (v.type.clazz == null) {
+            if (v.type.getELClass() == null) {
                 if (stack.size() == identifier.numParts())
                     return stack;
                 throw ELAnalysisError.error("Could not resolve variable " + identifier.fullName, v.span());
             }
-            return v.type.clazz.getVarStack(identifier, stack);
+            return v.type.getELClass().getVarStack(identifier, stack);
         }
         if (namespace != null)
             return namespace.getVarStack(identifier, stack);

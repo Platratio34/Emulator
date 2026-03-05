@@ -33,9 +33,10 @@ namespace Kernal {
         // SysD.rIH = &Kernal::_interrupt;
         peripheralCmd(0x0001, 3, &CONSOLE_SETUP_CMD);
         SysD.memSet(CONSOLE_START, CONSOLE_PNTR);
-        Memory._setup();
+        // Memory._setup();
         // System.console = new Console(0x0800, 0x0001, 0x0020);
         // Probably should't be referencing System module in the kernal
+        uint32 a = Kernal.CONSOLE_PNTR;
     }
 
     @InterruptHandler(raw)
@@ -165,7 +166,7 @@ namespace Kernal {
             SysD.rPM = privileged;
         }
 
-        public static void create(ProcessState& state) {
+        public static ProcessState* create(ProcessState& state) {
             state.pid = SysD.rPID;
             state.update();
             status = 1;

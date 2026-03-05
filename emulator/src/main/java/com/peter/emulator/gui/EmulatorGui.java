@@ -1,6 +1,7 @@
 package com.peter.emulator.gui;
 
 import java.awt.BorderLayout;
+import java.awt.Font;
 import java.awt.GridLayout;
 
 import javax.swing.*;
@@ -22,6 +23,8 @@ public class EmulatorGui {
     protected JButton interruptButton;
     protected JTextArea interruptCode;
 
+    public static final Font monFont = new Font("Monospaced", Font.PLAIN, 12);
+    
     public EmulatorGui(Emulator emulator) {
         SwingUtilities.invokeLater(() -> {
             frame = new JFrame("Emulator");

@@ -20,18 +20,21 @@ public class ResolveAction extends ComplexAction {
         String r = MachineCode.translateReg(reg);
 
         IdentifierToken it = id;
-        int index = 0;
         if (!id.value.equals(var.name)) {
             if (id.subTokens == null)
                 throw ELAnalysisError.fatal("Could not find identifier for provided variable", it);
-            while (index < id.subTokens.size() - 1) {
+            while (it != null) {
                 if (it.value.equals(var.name))
                     break;
                 scope.addSymbol(new ELSymbol(ELSymbol.Type.NAMESPACE_NAME, it.spanFirst(), "### `%s`", it.value));
-                index++;
-                if (index == id.subTokens.size() - 1)
-                    throw ELAnalysisError.fatal("Could not find identifier for provided variable", it);
-                it = id.sub(index - 1);
+                if (it.hasSub())
+                    it = it.sub(0);
+                else
+                    throw ELAnalysisError.fatal("Could not find identifier for provided variable", it); 
+                // index++;
+                // if (index == id.subTokens.size() - 1)
+                //     throw ELAnalysisError.fatal("Could not find identifier for provided variable", it);
+                // it = id.sub(index - 1);
             }
         }
 
@@ -76,8 +79,8 @@ public class ResolveAction extends ComplexAction {
 
         ELVariable v = var;
         ELType t = v.type;
-        if(id.subTokens != null) {
-            while (index < id.subTokens.size()) {
+        if(id.hasSub()) {
+            while (it != null) {
                 if (it.indexed()) {
                     if (!v.type.isIndexable())
                         throw ELAnalysisError.error(v.type.typeString() + " is not indexable",
@@ -98,10 +101,6 @@ public class ResolveAction extends ComplexAction {
                     scope.release(r2);
                     t = t.resolve();
                 }
-
-                index++;
-                if (index == id.subTokens.size() - 1)
-                    break;
                 
                 scope.addSymbol(new ELVarSymbol(v, it.spanFirst()));
                 // scope.addSymbol(new ELSymbol(v.finalVal ? ELSymbol.Type.VARIABLE_FINAL : ELSymbol.Type.VARIABLE_NAME, it.spanFirst(), "### `%s %s`", v.typeString(), v.name));
@@ -110,10 +109,15 @@ public class ResolveAction extends ComplexAction {
                     actions.add(new DirectAction("LOAD MEM %s %s", r, r));
                     t = t.resolve();
                 }
-                it = id.sub(index - 1);
-                ELClass clazz = t.clazz;
+
+                if(it.hasSub())
+                    it = it.sub(0);
+                else
+                    break;
+
+                ELClass clazz = t.getELClass();
                 if (clazz == null)
-                    throw ELAnalysisError.fatal("Type was missing class " + t.typeString(), it);
+                    throw ELAnalysisError.fatal("Type was missing class (type was `" + t.typeString()+"`; "+t.toString()+")", it);
                 if (!clazz.memberVariables.containsKey(it.value))
                     throw ELAnalysisError.fatal("Unknown member " + it.value + "in type" + clazz.getQualifiedName(), it);
                 v = clazz.memberVariables.get(it.value);

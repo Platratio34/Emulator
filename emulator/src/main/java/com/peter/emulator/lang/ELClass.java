@@ -374,12 +374,12 @@ public class ELClass extends Namespace {
         if (memberVariables.containsKey(identifier.parts[stack.size()])) {
             ELVariable v = memberVariables.get(identifier.parts[stack.size()]);
             stack.add(v);
-            if (v.type.clazz == null) {
+            if (v.type.getELClass() == null) {
                 if (stack.size() == identifier.numParts())
                     return stack;
                 throw ELAnalysisError.error("Could not resolve variable " + identifier.fullName, v.span());
             }
-            return v.type.clazz.getVarStack(identifier, stack);
+            return v.type.getELClass().getVarStack(identifier, stack);
         }
         return super.getVarStack(identifier, stack);
     }

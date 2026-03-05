@@ -279,6 +279,7 @@ public class Parser {
                             ELVariable var = new ELVariable(level, const_ ? ELVariable.Type.CONST : (stat ? ELVariable.Type.STATIC : ELVariable.Type.MEMBER), type, name, final_, currentNamespace, unit, loc, endLocation);
                             if (annotations != null)
                                 var.annotations = annotations;
+                            unit.symbols.add(new ELVarSymbol(var, nameToken.span()));
                             if (currentNamespace == null) {
                                 errors.error("Can not have a variable outside of namespace or class", var.span());
                                 continue;
@@ -311,7 +312,6 @@ public class Parser {
                             while (var.ingestValue(tokens.get(workingI))) {
                                 workingI++;
                             }
-                            unit.symbols.add(new ELVarSymbol(var, nameToken.span()));
                         }
                     } else if (idt.value.equals("namespace")) {
                         workingI++;

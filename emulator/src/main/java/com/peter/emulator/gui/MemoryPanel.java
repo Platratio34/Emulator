@@ -31,7 +31,8 @@ public class MemoryPanel extends JPanel {
 
         labels = new JLabel[8*rows];
         for(int i = 0; i < 8*rows; i++) {
-            labels[i] = new JLabel(EmulatorGui.toHex(cpu.readMem(i+start)));
+            labels[i] = new JLabel(EmulatorGui.toHex(cpu.readMem(i + start)));
+            labels[i].setFont(EmulatorGui.monFont);
             panel.add(labels[i]);
             if(stack) {
                 labels[i].setForeground(cpu.stackPtr == (i+start) ? Color.red : Color.black);

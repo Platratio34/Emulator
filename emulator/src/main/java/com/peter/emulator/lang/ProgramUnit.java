@@ -17,6 +17,8 @@ public class ProgramUnit {
 
     public final ArrayList<ELSymbol> symbols = new ArrayList<>();
 
+    public ErrorSet errors;
+
     public ProgramUnit(ProgramModule module, String uri) {
         this.module = module;
         this.uri = uri;
@@ -40,6 +42,7 @@ public class ProgramUnit {
     }
     
     public void resolve(ErrorSet errors) {
+        this.errors = errors;
         for (String ns : imports.values()) {
             if(module.getNamespaceIncluded(ns) == null) {
                 String[] p = ns.split("\\.");

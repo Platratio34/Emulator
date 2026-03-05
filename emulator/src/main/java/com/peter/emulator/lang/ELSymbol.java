@@ -100,7 +100,10 @@ public class ELSymbol {
                 out += "const ";
             out += String.format("%s %s`", var.typeString(), (var.varType == ELVariable.Type.SCOPE) ? var.name : var.getQualifiedName());
             if ((var.finalVal || var.varType == ELVariable.Type.CONST) && var.hasValue())
-                out += "\n\nValue: `"+var.getValueDebug()+"`";
+                out += "\n\nValue: `" + var.getValueDebug() + "`";
+            if (var.type.getELClass() != null) {
+                out += "\n\nBase Class: `"+var.type.getELClass().getQualifiedName()+"`";
+            }
             return out/* + "\n\n\n\n"+span.debugString()*/;
         }
 

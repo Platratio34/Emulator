@@ -23,7 +23,7 @@ public class ELType {
     public Location genericLocation = null;
     public Location endLocation;
 
-    public ELClass clazz;
+    private ELClass clazz;
 
     protected ELType() {
 
@@ -63,6 +63,10 @@ public class ELType {
     public ELType(String base, ArrayList<ELType> genericTypes) {
         this(base);
         this.genericTypes = genericTypes;
+    }
+
+    public ELClass getELClass() {
+        return (subType != null) ? subType.getELClass() : clazz;
     }
 
     @Override
@@ -302,23 +306,23 @@ public class ELType {
                         return true;
                     } else if (!baseSet) {
                         baseSet = true;
-                        type.baseClass = new Identifier(it.value);
+                        type.baseClass = new Identifier(it);
                         type.location = token.startLocation;
                         type.endLocation = token.endLocation;
-                        if (it.hasSub()) {
-                            Identifier.Builder b = type.baseClass.builder();
-                            while (it.hasSub()) {
-                                Token tkn = it.subTokens.get(0);
-                                if (tkn instanceof IdentifierToken it2) {
-                                    it = it2;
-                                    b.ingest(it2.value);
-                                    type.endLocation = token.endLocation;
-                                } else {
-                                    throw new ELCompileException("Unexpected token found, expected identifier: " + tkn);
-                                }
-                            }
-                            type.baseClass = b.build();
-                        }
+                        // if (it.hasSub()) {
+                        //     Identifier.Builder b = type.baseClass.builder();
+                        //     while (it.hasSub()) {
+                        //         Token tkn = it.subTokens.get(0);
+                        //         if (tkn instanceof IdentifierToken it2) {
+                        //             it = it2;
+                        //             b.ingest(it2.value);
+                        //             type.endLocation = token.endLocation;
+                        //         } else {
+                        //             throw new ELCompileException("Unexpected token found, expected identifier: " + tkn);
+                        //         }
+                        //     }
+                        //     type.baseClass = b.build();
+                        // }
                         if (it.indexed()) {
                             if(!it.index.hasSub())
                                 throw new ELCompileException("Array type must have a size");
@@ -455,28 +459,28 @@ public class ELType {
             type.analyze(errors, namespace, unit);
         ELType base = base();
         if (ELPrimitives.PRIMITIVE_TYPES.containsKey(base)) {
-            clazz = ELPrimitives.PRIMITIVE_TYPES.get(base);
+            base.clazz = ELPrimitives.PRIMITIVE_TYPES.get(base);
             return;
         }
-        ELClass clazz = namespace.getType(base, namespace, unit);
-        if (clazz == null) {
-            clazz = unit.module.getType(base, namespace, unit);
+        ELClass testClazz = namespace.getType(base, namespace, unit);
+        if (testClazz == null) {
+            testClazz = unit.module.getType(base, namespace, unit);
         }
-        if (clazz == null) {
+        if (testClazz == null) {
             errors.error("Unknown type: " + base.typeString(), base.span());
             return;
         }
-        if (clazz.genericsOrder.isEmpty() && !base.genericTypes.isEmpty()) {
+        if (testClazz.genericsOrder.isEmpty() && !base.genericTypes.isEmpty()) {
             errors.error("Class " + base.typeString() + " does not have type parameters", base.genericLocation.span(base.endLocation));
             return;
         }
-        if (clazz.genericsOrder.size() != base.genericTypes.size()) {
-            errors.error("Incorrect number of type parameters: expected "+clazz.genericsOrder.size()+", found "+base.genericTypes.size(), base.endLocation.span());
+        if (testClazz.genericsOrder.size() != base.genericTypes.size()) {
+            errors.error("Incorrect number of type parameters: expected "+testClazz.genericsOrder.size()+", found "+base.genericTypes.size(), base.endLocation.span());
             return;
         }
-        for (int i = 0; i < clazz.genericsOrder.size(); i++) {
-            String gN = clazz.genericsOrder.get(i);
-            ELType gT = clazz.generics.get(gN);
+        for (int i = 0; i < testClazz.genericsOrder.size(); i++) {
+            String gN = testClazz.genericsOrder.get(i);
+            ELType gT = testClazz.generics.get(gN);
             ELType pT = base.genericTypes.get(i);
             if(gT == null) // fully generic type
                 continue;
@@ -489,7 +493,7 @@ public class ELType {
         if(array && arraySize == 0) {
             errors.error("Array type must specify size", location.span());
         }
-        this.clazz = clazz;
+        base.clazz = testClazz;
     }
 
     public boolean canCastTo(ELType target) {

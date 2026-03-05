@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import com.peter.emulator.MachineCode;
 import com.peter.emulator.lang.ELValue.ELStringValue;
 import com.peter.emulator.lang.*;
+import com.peter.emulator.lang.ELAnalysisError.Severity;
 import com.peter.emulator.lang.ELSymbol.ELVarSymbol;
 import com.peter.emulator.lang.tokens.BlockToken;
 import com.peter.emulator.lang.tokens.IdentifierToken;
@@ -15,19 +16,16 @@ import com.peter.emulator.lang.base.ELPrimitives;
 
 public class ActionBlock extends ComplexAction {
 
-    public final ELFunction func;
-
     protected static int subIndex = 0;
 
-    public ActionBlock(ActionScope scope, ELFunction func) {
+    public ActionBlock(ActionScope scope) {
         super(scope);
-        this.func = func;
     }
 
     public void parse(ArrayList<Token> tokens, ErrorSet errors) {
         int wI = 0;
         int l = 0;
-        if(func != null) {
+        if(scope.function != null) {
             actions.add(new DirectAction("STACK PUSH r15"));
             actions.add(new DirectAction("COPY rStack r15"));
         }
@@ -58,7 +56,7 @@ public class ActionBlock extends ComplexAction {
                                 wI += 1;
                                 // set is the condition
                                 // also block
-                                ActionBlock innerBlock = new ActionBlock(scope.createChild(), null);
+                                ActionBlock innerBlock = new ActionBlock(scope.createChild());
                                 if (!(tokens.get(wI) instanceof BlockToken))
                                         throw ELAnalysisError.error("Expected block after if", tokens.get(wI).span());
                                 innerBlock.parse(tokens.get(wI).subTokens, errors);
@@ -87,7 +85,7 @@ public class ActionBlock extends ComplexAction {
                                     if (!(tokens.get(wI) instanceof BlockToken))
                                         throw ELAnalysisError.error("Expected block after else", tokens.get(wI).span());
                                     actions.add(new DirectAction(":if_else_%d", index));
-                                    ActionBlock elseBlock = new ActionBlock(scope.createChild(), null);
+                                    ActionBlock elseBlock = new ActionBlock(scope.createChild());
                                     elseBlock.parse(tokens.get(wI).subTokens, errors);
                                     actions.add(elseBlock);
                                     wI++;
@@ -100,7 +98,7 @@ public class ActionBlock extends ComplexAction {
                                 wI += 1;
                                 // set is (initializer; condition; incrementor)
                                 // also block
-                                ActionBlock innerBlock = new ActionBlock(scope.createChild(), null);
+                                ActionBlock innerBlock = new ActionBlock(scope.createChild());
                                 innerBlock.parse(tokens.get(wI).subTokens, errors);
                                 wI++;
                                 continue;
@@ -109,7 +107,7 @@ public class ActionBlock extends ComplexAction {
                                 wI += 1;
                                 //set is condition
                                 // also block
-                                ActionBlock innerBlock = new ActionBlock(scope.createChild(), null);
+                                ActionBlock innerBlock = new ActionBlock(scope.createChild());
                                 innerBlock.parse(tokens.get(wI).subTokens, errors);
                                 int index = subIndex++;
 
@@ -185,11 +183,30 @@ public class ActionBlock extends ComplexAction {
                         case "return" -> {
                             wI++;
                             tkn = tokens.get(wI);
+                            ArrayList<Token> exp = new ArrayList<>();
                             while (!(tkn instanceof OperatorToken ot && ot.type == OperatorToken.Type.SEMICOLON)) {
                                 if (wI == tokens.size())
-                                    throw ELAnalysisError.error("Expected semicolon", tokens.get(wI-1).endLocation.span());
+                                    throw ELAnalysisError.error("Expected semicolon",
+                                            tokens.get(wI - 1).endLocation.span());
+                                exp.add(tkn);
                                 tkn = tokens.get(wI++);
                             }
+                            ELFunction func = scope.getFunction();
+                            ELType funcRet = func.ret;
+                            if (funcRet == null) {
+                                if(!exp.isEmpty())
+                                    throw ELAnalysisError.error("Function returns void",
+                                            exp.getFirst().startLocation.span(exp.getLast().endLocation));
+                                actions.add(new DirectAction("GOTO :func_exit_"+func.getQualifiedName(true)));
+                                continue;
+                            }
+                            int r = scope.firstFree();
+                            ExpressionAction eA = new ExpressionAction(scope, exp, r);
+                            if(eA.outType.canCastTo(scope.getFunction().ret))
+                            actions.add(eA);
+                            String r2Str = MachineCode.translateReg(scope.firstFree());
+                            actions.add(new DirectAction("COPY r15 %s\nINC %s %d\nSTORE %s %s", r2Str, r2Str, scope.returnOffset, MachineCode.translateReg(r), r2Str));
+                            actions.add(new DirectAction("GOTO :func_exit_"+func.getQualifiedName(true)));
                             continue;
                         }
                         case "continue" -> {
@@ -276,7 +293,7 @@ public class ActionBlock extends ComplexAction {
                                         while (!(tkn instanceof OperatorToken ot2
                                                 && ot2.type == OperatorToken.Type.SEMICOLON)) {
                                             exp.add(tkn);
-                                            if (wI + 1 == tokens.size())
+                                            if (wI == tokens.size())
                                                 throw ELAnalysisError.error("Unexpected end of block. Expected `;`",
                                                         tkn);
                                             tkn = tokens.get(wI++);
@@ -345,7 +362,7 @@ public class ActionBlock extends ComplexAction {
                             if (rA == null) // block stack var
                                 throw ELAnalysisError.error("Unable to resolve variable `"+targetVal.debugString()+"`", it.span());
                             t = rA.returnType;
-                            if(rA.returnVar.finalVal || t.isConstant())
+                            if(rA.returnVar != null && (rA.returnVar.finalVal || t.isConstant()))
                                 throw ELAnalysisError.error("Cannot assign to "+(rA.returnVar.finalVal ? "final variable" : "constant"), it.startLocation.span(actionSpan.end()));
                             actions.add(rA);
                         }
@@ -420,7 +437,7 @@ public class ActionBlock extends ComplexAction {
                     throw ELAnalysisError.error("Unexpected token "+tkn.debugString(), tkn);
                 }
             } catch (ELAnalysisError e) {
-                Token tkn = tokens.get((wI >= tokens.size()) ? wI-1 : wI);
+                Token tkn = (wI >= tokens.size()) ? tokens.getLast() : tokens.get(wI);
                 if (e.span == null)
                     e = new ELAnalysisError(e.severity, e.reason, tkn.span());
                 errors.add(e);
@@ -442,9 +459,11 @@ public class ActionBlock extends ComplexAction {
             line += t2.debugString();
         }
         actions.add(new DirectAction("// " + line + "\n"));
+        if(scope.function != null) 
+            actions.add(new DirectAction(":func_exit_"+scope.function.getQualifiedName(true)));
         if(scope.getStackOffDif() > 0)
             actions.add(scope.getStackResetAction());
-        if(func != null)
+        if(scope.function != null)
             actions.add(new DirectAction("STACK POP r15"));
     }
 

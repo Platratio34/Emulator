@@ -64,6 +64,7 @@ public class FunctionAction extends ComplexAction {
         if (!onStack)
             scope.reserve(r);
         boolean[] reserved = new boolean[16];
+        ArrayList<Action> tempActions = new ArrayList<>();
         for (int i = 0; i < it.params.subTokens.size(); i++) {
             Token t2 = it.params.subTokens.get(i);
             endOfParams = t2.endLocation;
@@ -71,14 +72,14 @@ public class FunctionAction extends ComplexAction {
                 if(exp.isEmpty())
                     throw ELAnalysisError.error("Empty expression", t2);
                 if (!onStack && scope.isReserved(r)) {
-                    actions.add(new DirectAction("STACK PUSH %s", MachineCode.translateReg(r)));
+                    tempActions.add(new DirectAction("STACK PUSH %s", MachineCode.translateReg(r)));
                     reserved[r] = true;
                 }
                 ExpressionAction expA = new ExpressionAction(scope, exp, r);
-                actions.add(expA);
+                tempActions.add(expA);
                 types.add(expA.outType == null ? ELPrimitives.OBJECT : expA.outType);
                 if(onStack)
-                    actions.add(new DirectAction("STACK PUSH %s", MachineCode.translateReg(r)));
+                    tempActions.add(new DirectAction("STACK PUSH %s", MachineCode.translateReg(r)));
                 else {
                     // actions.add(new DirectAction("COPY %s %s", MachineCode.translateReg(r),
                     //         MachineCode.translateReg(r++)));
@@ -92,12 +93,12 @@ public class FunctionAction extends ComplexAction {
         }
         if (!exp.isEmpty()) {
             ExpressionAction expA = new ExpressionAction(scope, exp, r);
-            actions.add(expA);
+            tempActions.add(expA);
             types.add(expA.outType == null ? ELPrimitives.OBJECT : expA.outType);
             if (onStack)
-                actions.add(new DirectAction("STACK PUSH %s", MachineCode.translateReg(r)));
+                tempActions.add(new DirectAction("STACK PUSH %s", MachineCode.translateReg(r)));
             else
-                actions.add(new DirectAction("COPY %s %s", MachineCode.translateReg(r),
+                tempActions.add(new DirectAction("COPY %s %s", MachineCode.translateReg(r),
                         MachineCode.translateReg(r++)));
         }
 
@@ -110,9 +111,10 @@ public class FunctionAction extends ComplexAction {
         tStr += ")";
 
         if (id.starts("SysD")) {
+            actions.addAll(tempActions);
             switch (id.parts[1]) {
                 case "memSet" -> {
-                    // SysD.memSet(uint32 addr, uint32 value);
+                    // void SysD.memSet(uint32 addr, uint32 value);
                     if (types.size() != 2 || !(types.get(0).canCastTo(ELPrimitives.UINT32)
                             && types.get(1).canCastTo(ELPrimitives.UINT32))) {
 
@@ -121,6 +123,23 @@ public class FunctionAction extends ComplexAction {
                                 tStr), startOfParams.span(endOfParams));
                     }
                     actions.add(new DirectAction("STORE MEM r1 r2"));
+                    for (int i = r-1; i > 0; i--) {
+                        if(reserved[r])
+                            actions.add(new DirectAction("STACK POP %s", MachineCode.translateReg(i)));
+                        else
+                            scope.release(i);
+                    }
+                    return;
+                }
+                case "memGet" -> {
+                    // uint32 SysD.memGet(uint32 addr);
+                    if (types.size() != 1 || !(types.get(0).canCastTo(ELPrimitives.UINT32))) {
+
+                        throw ELAnalysisError.error(String.format(
+                                "Found no overload of SysD.memSet matching %s; Found SysD.memSet(uint32 addr, uint32 value)",
+                                tStr), startOfParams.span(endOfParams));
+                    }
+                    actions.add(new DirectAction("LOAD r1 %s", MachineCode.translateReg(targetReg)));
                     for (int i = r-1; i > 0; i--) {
                         if(reserved[r])
                             actions.add(new DirectAction("STACK POP %s", MachineCode.translateReg(i)));
@@ -141,15 +160,14 @@ public class FunctionAction extends ComplexAction {
                     
                     // r2 = uint32 temp
                     :loopStart
-                    LOAD MEM r2 r1 // temp = mem[src]
-                    STORE r2 r4 // mem[dest] = temp
+                    COPY MEM r1 r4 // mem[dest] = msm[src]
                     DEC r3 // end--
                     GOTO GT r3 :loopStart // if(end > 0) goto :loopStart
                     
                     */
                     String loopLabel = String.format("loop_%d", ActionBlock.subIndex++);
 
-                    actions.add(new DirectAction("ADD r1 r1 r2\nADD r4 r4 r5\nSUB r3 r3 r2\n:%s\nLOAD MEM r2 r1\n STORE r2 r4\nINC r3 -1\nGOTO GT r3 :%s", loopLabel, loopLabel));
+                    actions.add(new DirectAction("ADD r1 r1 r2\nADD r4 r4 r5\nSUB r3 r3 r2\n:%s\nCOPY MEM r1 r4\nINC r3 -1\nGOTO GT r3 :%s", loopLabel, loopLabel));
                     
                     for (int i = r-1; i > 0; i--) {
                         if(reserved[r])
@@ -174,11 +192,15 @@ public class FunctionAction extends ComplexAction {
             f = scope.namespace.getFunction(id);
             if (f != null) {
                 throw ELAnalysisError.error(String.format(
-                        "Found no overload of %s matching %s; Found %s", id.fullName, tStr, f.debugString("")), startOfParams.span(endOfParams));
+                        "Found no overload of %s matching %s; Found %s", id.fullName, tStr, f.debugString("")),
+                        startOfParams.span(endOfParams));
             } else {
                 throw ELAnalysisError.error("Unknown function " + id.fullName + tStr, nameSpan);
             }
         }
+        if (f.ret != null)
+            actions.add(new DirectAction("STACK INC %d", f.ret.sizeofWords()));
+        actions.addAll(tempActions);
         actions.add(new DirectAction("GOTO PUSH :%s", f.getQualifiedName(true)));
         if (f.ret == null) {
             if (onStack)
