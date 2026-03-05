@@ -5,14 +5,16 @@ import java.util.HashMap;
 import com.peter.emulator.lang.ELClass;
 import com.peter.emulator.lang.ELType;
 import com.peter.emulator.lang.Location;
+import com.peter.emulator.lang.Namespace;
 import com.peter.emulator.lang.ProgramUnit;
 
 public class ELPrimitives {
 
     private static final ProgramUnit INTERNAL_UNIT = new ProgramUnit(null, "<Base>");
     protected static final Location INTERNAL_LOCATION = new Location("<Base>", 0, 0);
+    protected static final Namespace INTERNAL_NAMESPACE = new Namespace("<Base>");
 
-    public static final ELClass OBJECT_CLASS = new ELClass("Object", null, INTERNAL_UNIT) {
+    public static final ELClass OBJECT_CLASS = new ELClass("Object", INTERNAL_NAMESPACE, INTERNAL_UNIT) {
         
         public boolean canStaticCast(ELType target) {
             return true;
@@ -26,7 +28,7 @@ public class ELPrimitives {
     public static final ELType OBJECT = new ELType("Object", OBJECT_CLASS, INTERNAL_LOCATION);
 
     // bool
-    public static final ELClass BOOL_CLASS = new ELClass("bool", OBJECT_CLASS, INTERNAL_UNIT);
+    public static final ELClass BOOL_CLASS = new ELClass("bool", INTERNAL_NAMESPACE, INTERNAL_UNIT).withParent(OBJECT_CLASS, OBJECT);
     public static final ELType BOOL = new ELType("bool", BOOL_CLASS, INTERNAL_LOCATION);
     // uint8
     public static final ELClass UINT8_CLASS = new ELClass("uint8", OBJECT_CLASS, INTERNAL_UNIT) {
@@ -42,7 +44,7 @@ public class ELPrimitives {
     };
     public static final ELType UINT8 = new ELType("uint8", UINT8_CLASS, INTERNAL_LOCATION);
     // char
-    public static final ELClass CHAR_CLASS = new ELClass("char", OBJECT_CLASS, INTERNAL_UNIT) {
+    public static final ELClass CHAR_CLASS = new ELClass("char", INTERNAL_NAMESPACE, INTERNAL_UNIT) {
         @Override
         public boolean canStaticCast(ELType target) {
             return target.equals(UINT8) || target.equals(UINT16) || target.equals(UINT32);
@@ -52,10 +54,10 @@ public class ELPrimitives {
         public int getSize() {
             return 4;
         };
-    };
+    }.withParent(OBJECT_CLASS, OBJECT);
     public static final ELType CHAR = new ELType("char", CHAR_CLASS, INTERNAL_LOCATION);
     // uint16
-    public static final ELClass UINT16_CLASS = new ELClass("uint16", OBJECT_CLASS, INTERNAL_UNIT) {
+    public static final ELClass UINT16_CLASS = new ELClass("uint16", INTERNAL_NAMESPACE, INTERNAL_UNIT) {
         @Override
         public boolean canStaticCast(ELType target) {
             return target.equals(UINT32);
@@ -64,10 +66,10 @@ public class ELPrimitives {
         public int getSize() {
             return 4;
         };
-    };
+    }.withParent(OBJECT_CLASS, OBJECT);
     public static final ELType UINT16 = new ELType("uint16", UINT16_CLASS, INTERNAL_LOCATION);
     // uint32
-    public static final ELClass UINT32_CLASS = new ELClass("uint32", OBJECT_CLASS, INTERNAL_UNIT) {
+    public static final ELClass UINT32_CLASS = new ELClass("uint32", INTERNAL_NAMESPACE, INTERNAL_UNIT) {
         @Override
         public boolean canStaticCast(ELType target) {
             return target.equals(VOID_PTR);
@@ -77,7 +79,7 @@ public class ELPrimitives {
         public int getSize() {
             return 4;
         };
-    };
+    }.withParent(OBJECT_CLASS, OBJECT);
     public static final ELType UINT32 = new ELType("uint32", UINT32_CLASS, INTERNAL_LOCATION);
     // void*
     public static final ELType VOID_PTR = new ELType.Builder("void").pointer().location(INTERNAL_LOCATION).build();
@@ -85,7 +87,7 @@ public class ELPrimitives {
     // method
     // public static final ELType VOID_METHOD = new ELType("method", METHOD_CLASS, INTERNAL_LOCATION);
     // method<A>
-    public static final ELClass METHOD_CLASS = new Method("method", OBJECT_CLASS, INTERNAL_UNIT, "A");
+    public static final ELClass METHOD_CLASS = new Method("method", INTERNAL_NAMESPACE, INTERNAL_UNIT, "A");
     public static final ELType METHOD = new ELType("method", METHOD_CLASS, INTERNAL_LOCATION);
     // provider<R(,A,B,C...)>
     // public static final ELType PROVIDER = new ELType("provider");

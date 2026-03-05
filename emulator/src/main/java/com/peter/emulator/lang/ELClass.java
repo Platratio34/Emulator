@@ -40,6 +40,21 @@ public class ELClass extends Namespace {
         unit.classes.add(this);
     }
 
+    public ELClass withParent(ELClass parent) {
+        this.parent = parent;
+        parentType = parent.getType();
+        return this;
+    }
+    public ELClass withParent(ELClass parent, ELType parentTYpe) {
+        this.parent = parent;
+        this.parentType = parentTYpe;
+        return this;
+    }
+    public ELClass withParent(ELType parent) {
+        parentType = parent;
+        return this;
+    }
+
     public void addMember(ELVariable var) {
         if (memberVariables.containsKey(var.name) || staticVariables.containsKey(var.name) || staticFunctions.containsKey(var.name) || memberFunctions.containsKey(var.name))
             throw new ELCompileException("Duplicate member name: `"+var.name+"` in class "+cName);
@@ -309,13 +324,13 @@ public class ELClass extends Namespace {
     public void analyze(ErrorSet errors) {
         for (ELFunction func : memberFunctions.values()) {
             func.analyze(errors);
-            if(func.abstractFunction && !abstractClass)
+            if (func.abstractFunction && !abstractClass)
                 errors.error("Abstract functions must exist within an abstract class",
                         func.startLocation.span());
             ELOverrideAnnotation oa = func.getAnnotation(ELOverrideAnnotation.class);
             if (oa != null) {
                 ArrayList<ELType> p = new ArrayList<>();
-                for(String s : func.paramOrder)
+                for (String s : func.paramOrder)
                     p.add(func.params.get(s));
                 boolean found = false;
                 if (parent != null) {
@@ -333,9 +348,16 @@ public class ELClass extends Namespace {
                         c = c.parent;
                     }
                 }
-                if(!found)
-                    errors.error("Function was marked override, but no matching parent function could be found", oa.span());
+                if (!found)
+                    errors.error("Function was marked override, but no matching parent function could be found",
+                            oa.span());
             }
+        }
+        if (constructor != null) {
+            constructor.analyze(errors);
+        }
+        if (destructor != null) {
+            destructor.analyze(errors);
         }
         for (ELVariable var : memberVariables.values()) {
             var.analyze(errors, this);
@@ -411,5 +433,29 @@ public class ELClass extends Namespace {
     @Override
     protected ELVariable getVariable(String name) {
         return memberVariables.getOrDefault(name, staticVariables.get(name));
+    }
+    
+    @Override
+    public String toString() {
+        String out = String.format("ELCLass{cName=\"%s\"", cName);
+        if (namespace != null) {
+            out += ", namespace=" + namespace.toString();
+        }
+        if (parentType != null) {
+            out += ", parentType=" + parentType.toString();
+        }
+        if (parent != null) {
+            out += ", parent=" + parent.toString();
+        }
+        if (!genericsOrder.isEmpty()) {
+            out += ", generics=[";
+            for (String t : genericsOrder) {
+                out += String.format("%s:%s", t, generics.get(t).toString());
+            }
+        }
+        if (abstractClass) {
+            out += ", abstractClass";
+        }
+        return out + "}";
     }
 }

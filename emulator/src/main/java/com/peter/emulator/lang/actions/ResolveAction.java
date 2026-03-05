@@ -24,7 +24,10 @@ public class ResolveAction extends ComplexAction {
             while (it != null) {
                 if (it.value.equals(var.name))
                     break;
-                scope.addSymbol(new ELSymbol(ELSymbol.Type.NAMESPACE_NAME, it.spanFirst(), "### `%s`", it.value));
+                if (it.value.equals("this"))
+                    scope.addSymbol(new ELSymbol(ELSymbol.Type.VARIABLE_FINAL, it.spanFirst(), "### `%s* this`", var.namespace.getQualifiedName()));
+                else
+                    scope.addSymbol(new ELSymbol(ELSymbol.Type.NAMESPACE_NAME, it.spanFirst(), "### `%s`", it.value));
                 if (it.hasSub())
                     it = it.sub(0);
                 else
@@ -65,7 +68,11 @@ public class ResolveAction extends ComplexAction {
                 }
             }
             case STATIC -> actions.add(new DirectAction("LOAD %s &%s", reg, var.getQualifiedName()));
-            case MEMBER -> actions.add(new DirectAction("COPY r0 %s\nINC %s %d", reg, reg, var.offset));
+            case MEMBER -> {
+                actions.add(new DirectAction("COPY r0 %s", reg));
+                if (var.offset != 0)
+                    actions.add(new DirectAction("INC %s %d", reg, var.offset));
+            }
             case SCOPE -> {
                 actions.add(new DirectAction("COPY r15 %s", reg));
                 if (var.offset != 0)

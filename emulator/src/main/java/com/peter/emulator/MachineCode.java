@@ -325,21 +325,21 @@ public class MachineCode {
     public static String regDesc(String vN) {
         return switch (vN) {
             case "r0" -> "User register 0";
-            case "r1" -> "User register 0";
-            case "r2" -> "User register 0";
-            case "r3" -> "User register 0";
-            case "r4" -> "User register 0";
-            case "r5" -> "User register 0";
-            case "r6" -> "User register 0";
-            case "r7" -> "User register 0";
-            case "r8" -> "User register 0";
-            case "r9" -> "User register 0";
-            case "r10" -> "User register 0";
-            case "r11" -> "User register 0";
-            case "r12" -> "User register 0";
-            case "r13" -> "User register 0";
-            case "r14" -> "User register 0";
-            case "r15" -> "User register 0";
+            case "r1" -> "User register 1";
+            case "r2" -> "User register 2";
+            case "r3" -> "User register 3";
+            case "r4" -> "User register 4";
+            case "r5" -> "User register 5";
+            case "r6" -> "User register 6";
+            case "r7" -> "User register 7";
+            case "r8" -> "User register 8";
+            case "r9" -> "User register 9";
+            case "r10" -> "User register 10";
+            case "r11" -> "User register 11";
+            case "r12" -> "User register 12";
+            case "r13" -> "User register 13";
+            case "r14" -> "User register 14";
+            case "r15" -> "User register 15";
             
             case "rPgm" -> "Program pointer (next address)";
             case "rStack" -> "Stack pointer";
@@ -352,6 +352,31 @@ public class MachineCode {
             case "rIH" -> "Interrupt handler pointer (PM required)";
 
             case "rPM" -> "Privileged Mode (PM required)";
+            
+            case "r0I" -> "Interrupt stored User register 0";
+            case "r1I" -> "Interrupt stored User register 1";
+            case "r2I" -> "Interrupt stored User register 2";
+            case "r3I" -> "Interrupt stored User register 3";
+            case "r4I" -> "Interrupt stored User register 4";
+            case "r5I" -> "Interrupt stored User register 5";
+            case "r6I" -> "Interrupt stored User register 6";
+            case "r7I" -> "Interrupt stored User register 7";
+            case "r8I" -> "Interrupt stored User register 8";
+            case "r9I" -> "Interrupt stored User register 9";
+            case "r10I" -> "Interrupt stored User register 10";
+            case "r11I" -> "Interrupt stored User register 11";
+            case "r12I" -> "Interrupt stored User register 12";
+            case "r13I" -> "Interrupt stored User register 13";
+            case "r14I" -> "Interrupt stored User register 14";
+            case "r15I" -> "Interrupt stored User register 15";
+            
+            case "rPgmI" -> "Interrupt stored Program pointer (next address)";
+            case "rStackI" -> "Interrupt stored Stack pointer";
+
+            case "rPIDI" -> "Interrupt stored Process ID (Kernal set) (PM required)";
+            case "rMemTblI" -> "Interrupt stored Memory Map Table pointer  (PM required)";
+
+            case "rPMI" -> "Interrupt stored Privileged Mode (PM required)";
         
             default -> "Unknown register";
         };

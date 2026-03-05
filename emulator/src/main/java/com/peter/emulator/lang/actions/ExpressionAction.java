@@ -200,11 +200,11 @@ public class ExpressionAction extends ComplexAction {
                                 throw ELAnalysisError.error("Unable to resolve variable `"+it.debugString()+"`", it);
                             String vN = it.sub(0).value;
                             switch(vN) {
-                                case "rPM" -> {
+                                case "rPM", "rPMI" -> {
                                     actions.add(new DirectAction("COPY rPM %s", tR));
                                     t = ELPrimitives.BOOL;
                                 }
-                                case "rStack", "rMemTbl" -> {
+                                case "rStack", "rMemTbl", "rStackI", "rMemTblI" -> {
                                     actions.add(new DirectAction("COPY %s %s", vN, tR));
                                     t = ELPrimitives.VOID_PTR;
                                 }

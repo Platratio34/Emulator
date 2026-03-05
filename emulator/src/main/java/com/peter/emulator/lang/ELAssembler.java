@@ -14,7 +14,7 @@ public class ELAssembler {
     private String assembleFunction(ELFunction f) {
         String out = "";
         out += "\n";
-        if(module.entrypoint == f)
+        if (module.entrypoint == f)
             out += "\n:__start";
         out += "\n#function " + f.getQualifiedName(true);
         boolean first = true;
@@ -24,11 +24,11 @@ public class ELAssembler {
             first = false;
             out += String.format(" %s %s", p, f.params.get(p).typeString());
         }
-        for(Action action : f.actions) {
-            out += "\n"+action.toAssembly();
+        for (Action action : f.actions) {
+            out += "\n" + action.toAssembly();
         }
-        if(module.entrypoint == f)
-            out +="\nHALT";
+        if (module.entrypoint == f)
+            out += "\nHALT";
         else if (f.hasAnnotation(ELInterruptHandlerAnnotation.class))
             out += "\nINTERRUPT RET";
         else
@@ -40,13 +40,52 @@ public class ELAssembler {
         return out;
     }
 
+    private String assembleStatics(Namespace ns) {
+        String out = "// " + ns.getQualifiedName() + "\n";
+        for (ELVariable v : ns.staticVariables.values()) {
+            if (v.type.isArray()) {
+                // if(v.startingValue == null)
+                out += String.format("#var %s %s // %s\n", v.getQualifiedName(), String.format("(%d)", v.sizeofWords()),
+                        v.typeString());
+            } else if (v.sizeofWords() > 1) {
+                out += String.format("#var %s %s // %s\n", v.getQualifiedName(), String.format("(%d)", v.sizeofWords()),
+                        v.typeString());
+            } else {
+                out += String.format("#var %s %s // %s\n", v.getQualifiedName(),
+                        (v.startingValue == null) ? "0x00" : v.startingValue.valueString(), v.typeString());
+            }
+        }
+        for (Namespace n : ns.namespaces.values()) {
+            out += assembleStatics(n);
+        }
+        return out;
+    }
+    
+    private String assembleFunctions(Namespace ns) {
+        String out = "\n\n// " + ns.getQualifiedName();
+        for (ELFunction f : ns.staticFunctions.values()) {
+            out += assembleFunction(f);
+        }
+        if (ns instanceof ELClass c) {
+            if (c.constructor != null)
+                out += assembleFunction(c.constructor);
+            if (c.destructor != null)
+                out += assembleFunction(c.destructor);
+            for (ELFunction f : c.memberFunctions.values()) {
+                out += assembleFunction(f);
+            }
+        }
+        for (Namespace n : ns.namespaces.values()) {
+            out += assembleFunctions(n);
+        }
+        return out;
+    }
+    
     public String assemble() {
         String out = "";
         out += "// static data\n";
         for(Namespace ns : module.namespaces.values()) {
-            for(ELVariable v : ns.staticVariables.values()) {
-                out += String.format("#var %s %s // %s\n", v.getQualifiedName(), (v.startingValue == null)? "0x00" : v.startingValue.valueString(), v.typeString());
-            }
+            out += assembleStatics(ns);
         }
         ELFunction ent = module.entrypoint;
         if(ent == null)
@@ -56,9 +95,7 @@ public class ELAssembler {
         // out += "\nGOTO :" + ent.getQualifiedName(true);
         // out += "\n#endfunction void";
         for(Namespace ns : module.namespaces.values()) {
-            for (ELFunction f : ns.staticFunctions.values()) {
-                out += assembleFunction(f);
-            }
+            out += assembleFunctions(ns);
         }
         out += "\n\nHALT";
         return out;

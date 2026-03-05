@@ -102,7 +102,8 @@ public class ELSymbol {
             if ((var.finalVal || var.varType == ELVariable.Type.CONST) && var.hasValue())
                 out += "\n\nValue: `" + var.getValueDebug() + "`";
             if (var.type.getELClass() != null) {
-                out += "\n\nBase Class: `"+var.type.getELClass().getQualifiedName()+"`";
+                out += "\n\nBase Class: `" + var.type.getELClass().getQualifiedName() + "`";
+                out += "\n(`" + var.type.toString() + "`)";
             }
             return out/* + "\n\n\n\n"+span.debugString()*/;
         }

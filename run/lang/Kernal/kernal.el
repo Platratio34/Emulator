@@ -25,12 +25,10 @@ namespace Kernal {
     // #syscall 0x0003 malloc
     // #syscall 0x0fff exit
 
-    static const void* HEAP_START = (void*) 0x9001;
-    static void* heepPtr = (void*) HEAP_START;
-
     @Entrypoint(raw)
     internal static void _main() {
         // SysD.rIH = &Kernal::_interrupt;
+        asm("LOAD rIH &:Kernal._interrupt");
         peripheralCmd(0x0001, 3, &CONSOLE_SETUP_CMD);
         SysD.memSet(CONSOLE_START, CONSOLE_PNTR);
         // Memory._setup();
@@ -45,6 +43,7 @@ namespace Kernal {
         void* stack = SysD.rStack; // stack: [...pgmPtr,rPM,r0...r15,var(stack) [HEAD], [stack*]]
         stack -= 2; // now points to r15; stack: [...pgmPtr,rPM,r0...r15 [stack*],var(stack,+17) [HEAD]]
         ProcessState* oldState = &processStates[SysD.rPID];
+        oldState.pid = 0;
         oldState.updateInterrupt();
 
         uint32 code = SysD.rIC;
@@ -114,12 +113,16 @@ namespace Kernal {
         if(nextPID == 1024) {
             nextPID = 1;
             while(processStates[nextPID].status != 0) {
-                nextPID ++;
+                nextPID++;
                 if(nextPID == 1024) {
+                    nextPID = 1;
+                }
+                if(nextPID == lastPID) {
                     return nullptr;
                 }
             }
         }
+        lastPID = nextPID;
         return &processStates[nextPID];
     }
 

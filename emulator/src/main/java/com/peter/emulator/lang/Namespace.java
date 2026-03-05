@@ -384,7 +384,17 @@ public class Namespace {
     protected boolean hasVariable(String name) {
         return staticVariables.containsKey(name);
     }
+
     protected ELVariable getVariable(String name) {
         return staticVariables.get(name);
+    }
+    
+    @Override
+    public String toString() {
+        String out = String.format("Namespace{cName=\"%s\"", cName);
+        if (namespace != null) {
+            out += ", namespace=" + namespace.toString();
+        }
+        return out + "}";
     }
 }

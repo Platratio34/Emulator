@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -334,6 +335,25 @@ public class ProgramModule {
 
     public String assemble() {
         return new ELAssembler(this).assemble();
+    }
+
+    public boolean assembleToOut() {
+        ELAssembler assembler = new ELAssembler(this);
+        String asm = assembler.assemble();
+        Path pK = root.toPath().resolve(String.format("out/%s.asm", name));
+        try {
+            File f = new File(pK.toUri());
+            if (f.exists()) {
+                f.delete();
+            } else {
+                f.getParentFile().mkdirs();
+            }
+            Files.writeString(pK, asm, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
     }
 
     public void onRecompile() {

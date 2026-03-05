@@ -1,0 +1,61 @@
+{
+    "variables": {
+        "TestD.v": {
+            "address": 145,
+            "start": 145,
+            "end": 145,
+            "type": "uint32"
+        },
+        "TestD.str": {
+            "address": 138,
+            "start": 138,
+            "end": 144,
+            "type": "char*"
+        }
+    },
+    "functions": {
+        "TestD.onInterrupt": {
+            "args": [],
+            "rt": "void",
+            "start": 1,
+            "end": 16
+        },
+        "TestD.testA_StructA&": {
+            "args": ["str StructA&"],
+            "rt": "StructA*",
+            "start": 114,
+            "end": 137
+        },
+        "TestD.main": {
+            "args": [],
+            "rt": "void",
+            "start": 31,
+            "end": 90
+        },
+        "TestD.funcb_uint32": {
+            "args": ["a uint32"],
+            "rt": "void",
+            "start": 90,
+            "end": 102
+        },
+        "TestD.wait_uint32": {
+            "args": ["time uint32"],
+            "rt": "void",
+            "start": 16,
+            "end": 31
+        },
+        "TestD.funcb_uint32_uint32*": {
+            "args": [
+                "a uint32",
+                "b uint32*"
+            ],
+            "rt": "void",
+            "start": 102,
+            "end": 114
+        }
+    },
+    "version": 1,
+    "definitions": {},
+    "syscalls": {}
+}
+}

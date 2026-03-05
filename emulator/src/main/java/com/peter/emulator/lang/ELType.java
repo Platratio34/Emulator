@@ -74,6 +74,11 @@ public class ELType {
         String out = "ELType{";
         if (subType == null) {
             out += "baseClass=\"" + baseClass + "\"";
+            if (clazz != null) {
+                out += ", clazz=" + clazz.toString();
+            } else {
+                out += ", clazz=null";
+            }
         } else {
             out += "subType=" + subType.toString();
         }
@@ -88,10 +93,13 @@ public class ELType {
             }
             out += "}";
         }
+        if (constant)
+            out += ", const";
         if (pointer)
             out += ", pointer";
-        if (array)
-            out += ", array";
+        if (array) {
+            out += ", array["+arraySize+"]";
+        }
         if (address)
             out += ", address";
         return out + "}";
@@ -431,25 +439,28 @@ public class ELType {
     }
     
     public ELType nonConst() {
-        if(!constant)
+        if (!constant)
             return this;
         ELType t = new ELType();
         t.baseClass = baseClass;
-        t.subType = subType;
         t.genericTypes = genericTypes;
-        t.pointer = pointer;
         t.array = array;
+        t.arraySize = arraySize;
+        t.pointer = pointer;
         t.address = address;
+        t.subType = subType;
         t.location = location;
-        t.endLocation = location;
         t.genericLocation = location;
+        t.endLocation = location;
+        t.clazz = clazz;
         return t;
     }
 
+    private ELType baseRef() {
+        return (subType != null) ? subType.baseRef() : this;
+    }
     public ELType base() {
-        if (subType != null)
-            return subType.base();
-        return this.nonConst();
+        return (subType != null) ? subType.base() : this.nonConst();
     }
 
     public void analyze(ErrorSet errors, Namespace namespace, ProgramUnit unit) {
@@ -457,7 +468,7 @@ public class ELType {
             return;
         for(ELType type : genericTypes)
             type.analyze(errors, namespace, unit);
-        ELType base = base();
+        ELType base = baseRef();
         if (ELPrimitives.PRIMITIVE_TYPES.containsKey(base)) {
             base.clazz = ELPrimitives.PRIMITIVE_TYPES.get(base);
             return;

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import com.peter.emulator.lang.*;
+import com.peter.emulator.lang.ELFunction.FunctionType;
 import com.peter.emulator.lang.tokens.IdentifierToken;
 
 public class ActionScope {
@@ -94,11 +95,18 @@ public class ActionScope {
     public int getStackOffDif() {
         return stackOff - stackOffStart;
     }
+
     public DirectAction getStackResetAction() {
         return new DirectAction("STACK DEC %d", stackOff - stackOffStart);
     }
     
+    public Namespace getNamespace() {
+        return (parent != null) ? parent.getNamespace() : namespace;
+    }
+    
     public boolean hasVariable(Identifier id) {
+        if (id.first().equals("this"))
+            return true;
         if(stackVars.containsKey(id.first()))
             return true;
         if(parent != null)
@@ -139,6 +147,20 @@ public class ActionScope {
      * @return the resolve action
      */
     public ResolveAction loadVar(IdentifierToken id, Register reg, boolean byValue) {
+        if (id.value.equals("this")) {
+            Namespace ns = getNamespace();
+            ELFunction func = getFunction();
+            if (ns != null && func != null) {
+                if (ns instanceof ELClass c && func.type != FunctionType.STATIC) {
+                    ELVariable v = c.memberVariables.get(id.sub(0).value);
+                    if(v == null)
+                        return null;
+                    return new ResolveAction(this, reg, v, id, byValue);
+                } else {
+                    throw ELAnalysisError.error("Can not use this outside of class instance function", id);
+                }
+            }
+        }
         if(stackVars.containsKey(id.value)) {
             ELVariable v = stackVars.get(id.value);
             return new ResolveAction(this, reg, v, id, byValue);

@@ -24,10 +24,12 @@ public class Register {
         regStr = MachineCode.translateReg(reg);
     }
 
-    public void fistFree() {
+    public boolean fistFree() {
         if(reg != -1)
-            return;
+            return true;
         reg = scope.firstFreeR();
+        regStr = MachineCode.translateReg(reg);
+        return reg >= 0;
     }
 
     public void reserve() {

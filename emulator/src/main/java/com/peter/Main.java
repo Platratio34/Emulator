@@ -116,10 +116,12 @@ public class Main {
                 continue;
             System.out.println("- "+err);
         }
-        if(ls.clearError())
-            return;
+        // if(ls.clearError())
+        //     return;
 
         System.out.println("\n");
+        testD.assembleToOut();
+
         String asm = testD.assemble();
         // System.out.println(asm);
         Path p = ROOT_PATH.resolve("testd.asm");
@@ -134,17 +136,18 @@ public class Main {
 
         System.out.println("\n");
         if (kernal != null) {
-            String asmK = kernal.assemble();
-            // System.out.println(asm);
-            Path pK = ROOT_PATH.resolve("lang/Kernal/out/kernal.asm");
-            try {
-                new File(pK.toUri()).delete();
-                Files.writeString(pK, asmK, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-                return;
-            }
+            kernal.assembleToOut();
+            // String asmK = kernal.assemble();
+            // // System.out.println(asm);
+            // Path pK = ROOT_PATH.resolve("lang/Kernal/out/kernal.asm");
+            // try {
+            //     new File(pK.toUri()).delete();
+            //     Files.writeString(pK, asmK, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+            // } catch (IOException e) {
+            //     // TODO Auto-generated catch block
+            //     e.printStackTrace();
+            //     return;
+            // }
         }
 
 
@@ -219,7 +222,7 @@ public class Main {
             return;
         }
         try {
-            Files.writeString(ROOT_PATH.resolve("obj/testd.obj"), assembler.symbols.toFile(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+            Files.writeString(ROOT_PATH.resolve("lang/TestD/out/obj/testd.obj"), assembler.symbols.toFile(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

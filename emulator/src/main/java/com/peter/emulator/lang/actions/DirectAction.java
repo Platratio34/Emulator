@@ -15,7 +15,6 @@ public class DirectAction extends Action {
         super(null);
         this.asm = asm;
         this.args = args;
-        this.asm = String.format(asm, args);
     }
 
     @Override

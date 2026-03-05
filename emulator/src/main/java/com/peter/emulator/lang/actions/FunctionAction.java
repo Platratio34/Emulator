@@ -95,11 +95,11 @@ public class FunctionAction extends ComplexAction {
             ExpressionAction expA = new ExpressionAction(scope, exp, r);
             tempActions.add(expA);
             types.add(expA.outType == null ? ELPrimitives.OBJECT : expA.outType);
-            if (onStack)
+            if (onStack) {
                 tempActions.add(new DirectAction("STACK PUSH %s", r));
-            else {
+                r.release();
+            }  else {
                 tempActions.add(new DirectAction("COPY %s %s", r, r));
-                r = r.next();
             }
         }
 
@@ -215,16 +215,15 @@ public class FunctionAction extends ComplexAction {
                 actions.add(new DirectAction("COPY r1 %s", MachineCode.translateReg(targetReg)));
             }
         }
-        if (onStack) {
-            for (int i = r.reg-1; i > 0; i--) {
+        if (!onStack) {
+            for (int i = r.reg; i > 0; i--) {
                 if(reserved[i])
                     actions.add(new DirectAction("STACK POP %s", MachineCode.translateReg(i)));
                 else
                     scope.release(i);
             }
-        } else {
-            r.release();
         }
+        r.release();
     }
 
 }

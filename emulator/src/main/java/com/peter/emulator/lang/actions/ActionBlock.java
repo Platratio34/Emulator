@@ -55,10 +55,12 @@ public class ActionBlock extends ComplexAction {
                                 wI += 1;
                                 // set is the condition
                                 // also block
-                                ActionBlock innerBlock = new ActionBlock(scope.createChild());
-                                if (!(tokens.get(wI) instanceof BlockToken))
-                                        throw ELAnalysisError.error("Expected block after if", tokens.get(wI).span());
-                                innerBlock.parse(tokens.get(wI).subTokens, errors);
+                                BlockToken iBT;
+                                if (tokens.get(wI) instanceof BlockToken bT) {
+                                    iBT = bT;
+                                } else {
+                                    throw ELAnalysisError.error("Expected block after if", tokens.get(wI).span());
+                                }
                                 wI++;
                                 int index = subIndex++;
                                 boolean elsePresent = wI < tokens.size() && tokens.get(wI) instanceof IdentifierToken it3
@@ -77,6 +79,8 @@ public class ActionBlock extends ComplexAction {
                                     actions.add(new DirectAction("GOTO EQ %s :if_end_%d", r, index));
                                 r.release();
                                 // actions.add(new DirectAction(":if_true_%d", index));
+                                ActionBlock innerBlock = new ActionBlock(scope.createChild());
+                                innerBlock.parse(iBT.subTokens, errors);
                                 actions.add(innerBlock);
                                 if (elsePresent) {
                                     actions.add(new DirectAction("GOTO :if_end_%d", index));
@@ -106,8 +110,6 @@ public class ActionBlock extends ComplexAction {
                                 wI += 1;
                                 //set is condition
                                 // also block
-                                ActionBlock innerBlock = new ActionBlock(scope.createChild());
-                                innerBlock.parse(tokens.get(wI).subTokens, errors);
                                 int index = subIndex++;
 
                                 // :while_condition_%d
@@ -122,8 +124,10 @@ public class ActionBlock extends ComplexAction {
                                 actions.add(new ExpressionAction(scope, it.params.subTokens, r));
                                 // actions.add(new ConditionalAction(scope, ":while_body_"+index, ":while_end_"+index, it.params.subTokens));
                                 // actions.add(new DirectAction(":while_body_%d",index));
-                                r.release();
                                 actions.add(new DirectAction("GOTO EQ %s :while_end_%d", r, index));
+                                r.release();
+                                ActionBlock innerBlock = new ActionBlock(scope.createChild());
+                                innerBlock.parse(tokens.get(wI).subTokens, errors);
                                 actions.add(innerBlock);
                                 actions.add(new DirectAction("GOTO :while_condition_%d",index));
                                 actions.add(new DirectAction(":while_end_%d",index));
@@ -189,8 +193,12 @@ public class ActionBlock extends ComplexAction {
                                     throw ELAnalysisError.error("Expected semicolon",
                                             tokens.get(wI - 1).endLocation.span());
                                 exp.add(tkn);
-                                tkn = tokens.get(wI++);
+                                wI++;
+                                if (wI == tokens.size())
+                                    throw ELAnalysisError.error("Unexpected end of block in expression", tkn);
+                                tkn = tokens.get(wI);
                             }
+                            wI++;
                             ELFunction func = scope.getFunction();
                             ELType funcRet = func.ret;
                             if (funcRet == null) {
@@ -272,8 +280,11 @@ public class ActionBlock extends ComplexAction {
                                                 if (expTkns.isEmpty())
                                                     throw ELAnalysisError.error("Empty expression", t);
                                                 Register r = scope.firstFree();
+                                                if (r == null)
+                                                    throw ELAnalysisError.error("No free register", tkn);
                                                 actions.add(new ExpressionAction(scope, expTkns, r));
                                                 actions.add(new DirectAction("STACK PUSH %s", r));
+                                                r.release();
                                                 expTkns = new ArrayList<>();
                                                 n++;
                                             } else {
@@ -283,6 +294,8 @@ public class ActionBlock extends ComplexAction {
                                         if(expTkns.isEmpty())
                                             throw ELAnalysisError.error("Empty expression", bt);
                                         Register r = scope.firstFree();
+                                        if (r == null)
+                                            throw ELAnalysisError.error("No free register", tkn);
                                         actions.add(new ExpressionAction(scope, expTkns, r));
                                         actions.add(new DirectAction("STACK PUSH %s", r));
                                         r.release();
@@ -296,13 +309,15 @@ public class ActionBlock extends ComplexAction {
                                                 && ot2.type == OperatorToken.Type.SEMICOLON)) {
                                             exp.add(tkn);
                                             if (wI == tokens.size())
-                                                throw ELAnalysisError.error("Unexpected end of block. Expected `;`",
+                                                throw ELAnalysisError.error("Unexpected end of block in expression. Expected `;`",
                                                         tkn);
                                             tkn = tokens.get(wI++);
                                         }
                                         if (exp.isEmpty())
                                             throw ELAnalysisError.error("Empty expression", tkn);
                                         Register r = scope.firstFree();
+                                        if (r == null)
+                                            throw ELAnalysisError.error("No free register", tkn);
                                         actions.add(new ExpressionAction(scope, exp, r));
                                         actions.add(new StackAllocAction(scope, var, r));
                                         r.release();
@@ -327,7 +342,7 @@ public class ActionBlock extends ComplexAction {
                             || ot.type == OperatorToken.Type.INC || ot.type == OperatorToken.Type.DEC)) {
                         Span actionSpan = tkn.span();
                         Register rT = null;
-                        Register r = new Register(scope);
+                        final Register r = new Register(scope);
                         boolean regTarget = false;
                         ELType t;
                         Action assignAction = null;
@@ -338,9 +353,10 @@ public class ActionBlock extends ComplexAction {
                             String vN = targetVal.sub(0).value;
                             if (vN.startsWith("r")) {
                                 regTarget = true;
+                                r.fistFree();
                                 switch (vN) {
                                     case "rPM" -> {
-                                        assignAction = new DirectAction("COPY rPM %s", r);
+                                        assignAction = new DirectAction("COPY %s %s", vN, r);
                                         t = ELPrimitives.BOOL;
                                     }
                                     case "rStack", "rMemTbl" -> {
@@ -348,9 +364,7 @@ public class ActionBlock extends ComplexAction {
                                         t = ELPrimitives.VOID_PTR;
                                     }
                                     case "rID" -> {
-                                        assignAction = new DirectAction("COPY %s %s", vN, r);
-                                        t = ELPrimitives.VOID_PTR;
-                                        throw ELAnalysisError.error("`rID` is read-only", targetVal.span());
+                                        throw ELAnalysisError.error("Register `rID` is read-only", targetVal.span());
                                     }
                                     default -> {
                                         assignAction = new DirectAction("COPY %s %s", vN, r);
@@ -372,7 +386,9 @@ public class ActionBlock extends ComplexAction {
                             if(rA.returnVar != null && (rA.returnVar.finalVal || t.isConstant()))
                                 throw ELAnalysisError.error("Cannot assign to "+(rA.returnVar.finalVal ? "final variable" : "constant"), it.startLocation.span(actionSpan.end()));
                             actions.add(rA);
-                            assignAction = new DirectAction("STORE %s %s");
+                            if (!r.fistFree())
+                                throw ELAnalysisError.error("No free register", targetVal);
+                            assignAction = new DirectAction("STORE %s %s", r, rT);
                         }
 
                         if (ot.type == OperatorToken.Type.INC) {
@@ -382,16 +398,14 @@ public class ActionBlock extends ComplexAction {
                                 if(rT.reg < 0x10) {
                                     actions.add(new DirectAction("INC %s 1", rT));
                                 } else {
-                                    Register r2 = scope.firstFree();
-                                    actions.add(new DirectAction("COPY %s %s", rT, r2));
-                                    actions.add(new DirectAction("INC %s 1", r2));
-                                    actions.add(new DirectAction("COPY %s %s", r2, rT));
+                                    actions.add(new DirectAction("COPY %s %s", rT, r));
+                                    actions.add(new DirectAction("INC %s 1", r));
+                                    actions.add(new DirectAction("COPY %s %s", r, rT));
                                 }
                             } else {
-                                Register r2 = scope.firstFree();
-                                actions.add(new DirectAction("LOAD MEM %s %s", r2, rT));
-                                actions.add(new DirectAction("INC %s 1", r2));
-                                actions.add(new DirectAction("STORE %s %s", r2, rT));
+                                actions.add(new DirectAction("LOAD MEM %s %s", r, rT));
+                                actions.add(new DirectAction("INC %s 1", r));
+                                actions.add(new DirectAction("STORE %s %s", r, rT));
                             }
                             rT.release();
                             wI += 2;
@@ -437,13 +451,12 @@ public class ActionBlock extends ComplexAction {
                         if(exp.isEmpty())
                             throw ELAnalysisError.error("Empty expression", tkn);
                         
-                        rT.reserve();
-                        r.fistFree();
                         ExpressionAction expA = new ExpressionAction(scope, exp, r);
                         actions.add(expA);
 
                         if(expA.outType != null && !expA.outType.canCastTo(t)) {
                             r.release();
+                            rT.release();
                             throw ELAnalysisError.error("Invalid assign, can not cast " + expA.outType.typeString()
                                     + " to " + t.typeString(), it.startLocation.span(actionSpan.end()));
                         }
@@ -451,11 +464,11 @@ public class ActionBlock extends ComplexAction {
                         if (ot.type == OperatorToken.Type.ADD_ASSIGN) {
                             Register r2 = scope.firstFree();
                             actions.add(new DirectAction("LOAD MEM %s %s", r2, rT));
-                            actions.add(new DirectAction("ADD %s %s %s", r2, r2, rT));
+                            actions.add(new DirectAction("ADD %s %s %s", r, r2, r));
                         } else if (ot.type == OperatorToken.Type.SUB_ASSIGN) {
                             Register r2 = scope.firstFree();
                             actions.add(new DirectAction("LOAD MEM %s %s", r2, rT));
-                            actions.add(new DirectAction("SUB %s %s %s", r2, r2, rT));
+                            actions.add(new DirectAction("SUB %s %s %s", r, r2, r));
                         }
                         actions.add(assignAction);
                         // actions.add(new DirectAction("STORE %s %s", r, rT));
@@ -479,6 +492,7 @@ public class ActionBlock extends ComplexAction {
                     wI++;
                     tkn = tokens.get(wI);
                 }
+                scope.freeScopeHandles(errors, tkn.endLocation.span());
             }
             wI++;
         }
