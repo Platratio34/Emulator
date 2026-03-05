@@ -91,7 +91,7 @@ public class CPUPanel extends JPanel {
 
         intpCdeLbl = (JLabel)regPanel.add(new JLabel(EmulatorGui.toHex(cpu.interruptCode)));
         intpCdeLbl.setFont(EmulatorGui.monFont);
-        inptRspLbl = (JLabel)regPanel.add(new JLabel(EmulatorGui.toHex(cpu.interruptRsp)));
+        inptRspLbl = (JLabel)regPanel.add(new JLabel(EmulatorGui.toHex(cpu.interruptHandler)));
         inptRspLbl.setFont(EmulatorGui.monFont);
 
         pmLbl = (JLabel)regPanel.add(new JLabel(EmulatorGui.toHex(cpu.privilegeMode ? 1 : 0)));
@@ -117,7 +117,7 @@ public class CPUPanel extends JPanel {
         memTblLbl.setText(EmulatorGui.toHex(cpu.memTablePtr));
 
         intpCdeLbl.setText(EmulatorGui.toHex(cpu.interruptCode));
-        inptRspLbl.setText(EmulatorGui.toHex(cpu.interruptRsp));
+        inptRspLbl.setText(EmulatorGui.toHex(cpu.interruptHandler));
 
         pmLbl.setText(EmulatorGui.toHex(cpu.privilegeMode ? 1 : 0));
 

@@ -8,22 +8,42 @@ import com.peter.emulator.debug.Debugger;
 public class CPU {
 
     public final int cpuId;
-    public final int[] registers = new int[0x20];
 
     public final RAM ram;
     public final MMU mmu;
-
-    public int pgmPtr = 0;
-    public int stackPtr = 0x1000;
-    public int pid = 0;
-    public int memTablePtr = 0;
     
     public boolean running = false;
 
-    public boolean privilegeMode = true;
+    // r0-r15
+    public final int[] registers = new int[0x10];
+    // r0i-r15i
+    public final int[] registersI = new int[0x10];
+    // rPgm
+    public int pgmPtr = 0;
+    // rPgmI
+    public int pgmPtrI = 0;
+    // rStack
+    public int stackPtr = 0x1000;
+    // rStackI
+    public int stackPtrI = 0x1000;
+    // rPID
+    public int pid = 0;
+    // rPIDI
+    public int pidI = 0;
+    // rMemTbl
+    public int memTablePtr = 0;
+    // rMemTblI
+    public int memTablePtrI = 0;
 
+    // rPM
+    public boolean privilegeMode = true;
+    // rPMI
+    public boolean privilegeModeI = true;
+
+    // rIC
     public int interruptCode = 0;
-    public int interruptRsp = 0;
+    // rIH
+    public int interruptHandler = 0;
 
     public Debugger debugger = null;
 
@@ -38,8 +58,10 @@ public class CPU {
     }
 
     public int getReg(int reg) {
-        if (reg < 0xf0) {
+        if (reg < 0x10) {
             return registers[reg];
+        } else if (reg < 0x20) {
+            return registersI[reg];
         }
         return switch (reg) {
             case REG_PGM_PNTR -> pgmPtr;
@@ -49,10 +71,18 @@ public class CPU {
             case REG_MEM_TABLE -> memTablePtr;
 
             case REG_INTERRUPT -> interruptCode;
-            case REG_INTR_HANDLER -> interruptRsp;
+            case REG_INTR_HANDLER -> interruptHandler;
             
             case REG_CPU_ID -> cpuId;
             case REG_PRIVILEGED_MODE -> privilegeMode ? 1 : 0;
+            
+            case REG_PGM_PNTR_I -> pgmPtrI;
+            case REG_STACK_PNTR_I -> stackPtrI;
+
+            case REG_PID_I -> pidI;
+            case REG_MEM_TABLE_I -> memTablePtrI;
+
+            case REG_PRIVILEGED_MODE_I -> privilegeModeI ? 1 : 0;
         
             default -> {
                 throw new RuntimeException("Invalid special register");
@@ -64,6 +94,14 @@ public class CPU {
         // System.out.println(String.format("Setting register %x to %x", reg, val));
         if (reg < 0x10) {
             registers[reg] = val;
+            return;
+        }
+        if (reg < 0x20) {
+            if (!privilegeMode) {
+                interrupt(0x8000_0001);
+                return;
+            }
+            registersI[reg] = val;
             return;
         }
         switch (reg) {
@@ -106,11 +144,47 @@ public class CPU {
                     interrupt(0x8000_0001);
                     return;
                 }
-                interruptRsp = val;
+                interruptHandler = val;
             }
 
             case REG_CPU_ID -> {
                 interrupt(0x8000_0001);
+            }
+            
+            case REG_PGM_PNTR_I -> {
+                if (!privilegeMode) {
+                    interrupt(0x8000_0001);
+                    return;
+                }
+                pgmPtrI = val;
+            }
+            case REG_STACK_PNTR_I -> {
+                if (!privilegeMode) {
+                    interrupt(0x8000_0001);
+                    return;
+                }
+                stackPtrI = val;
+            }
+            case REG_PID_I -> {
+                if (!privilegeMode) {
+                    interrupt(0x8000_0001);
+                    return;
+                }
+                pidI = val;
+            }
+            case REG_MEM_TABLE_I -> {
+                if (!privilegeMode) {
+                    interrupt(0x8000_0001);
+                    return;
+                }
+                memTablePtrI = val;
+            }
+            case REG_PRIVILEGED_MODE_I -> {
+                if (!privilegeMode) {
+                    interrupt(0x8000_0001);
+                    return;
+                }
+                privilegeModeI = val != 0;
             }
 
             default -> {
@@ -153,12 +227,18 @@ public class CPU {
         if (interruptCode != 0 && !inInterrupt) {
             inInterrupt = true;
             System.err.println("Interrupt: "+interruptCode);
-            stackPush(pgmPtr);
-            stackPush(getReg(REG_PRIVILEGED_MODE));
-            for (int i = 0; i <= 0xf; i++)
-                stackPush(registers[i]);
+            for (int i = 0; i <= 0xf; i++) {
+                registersI[i] = registers[i];
+                registers[i] = 0;
+            }
+            stackPtrI = stackPtr;
+            memTablePtrI = memTablePtr;
+            pidI = pid;
+            privilegeModeI = privilegeMode;
+            pgmPtrI = pgmPtr;
+
             privilegeMode = true;
-            pgmPtr = interruptRsp;
+            pgmPtr = interruptHandler;
             return;
         }
 
@@ -475,10 +555,15 @@ public class CPU {
                         if (iOp == SYSCALL_INTERRUPT_RET) {
                             if (!privilegeMode)
                                 return;
-                            for (int i = 0xf; i >= 0x00; i--)
-                                registers[i] = stackPop();
-                            setReg(REG_PRIVILEGED_MODE, stackPop());
-                            pgmPtr = stackPop();
+                            for (int i = 0; i <= 0xf; i++) {
+                                registers[i] = registersI[i];
+                            }
+                            stackPtr = stackPtrI;
+                            memTablePtr = memTablePtrI;
+                            pid = pidI;
+                            privilegeMode = privilegeModeI;
+                            pgmPtr = pgmPtrI;
+                            
                             inInterrupt = false;
                             System.out.println("Interrupt ret to "+pgmPtr);
                             return;

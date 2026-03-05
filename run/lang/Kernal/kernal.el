@@ -45,16 +45,8 @@ namespace Kernal {
         void* stack = SysD.rStack; // stack: [...pgmPtr,rPM,r0...r15,var(stack) [HEAD], [stack*]]
         stack -= 2; // now points to r15; stack: [...pgmPtr,rPM,r0...r15 [stack*],var(stack,+17) [HEAD]]
         ProcessState* oldState = &processStates[SysD.rPID];
-        oldState.stackPtr = stack;
-        stack -= 16;
-        SysD.memCopy((void*)(oldState.registers), 0, 15, stack, 0);
-        for(uint32 i = 15; i >= 0; i--) {
-            oldState.registers[i] = *stack; stack--;
-        }
-        oldState.update();
-        oldState.privileged = *stack; stack--;
-        oldState.pgmPtr = *stack; stack--;
-        oldState.memTablePtr = SysD.rMemTbl;
+        oldState.updateInterrupt();
+
         uint32 code = SysD.rIC;
         if((code & 0x8000_0000) == 0) { // system interrupt in the active process
             SysD.rPM = false;
@@ -71,9 +63,9 @@ namespace Kernal {
 
             }
         }
-        SysD.rMemTbl = oldState.memTablePtr;
+        // SysD.rMemTblI = oldState.memTablePtr;
         // stack: [...pgmPtr,rPM,r0...r15 [oldState.stackPtr*],var(stack,+1)...]
-        SysD.rStack = oldState.stackPtr;
+        // SysD.rStackI = oldState.stackPtr;
         // stack: [...pgmPtr [stack*],rPM,r0...r15 [HEAD,oldState.stackPtr*] ,var(stack,+0)...]
         SysD.interruptReturn();
     }
@@ -128,7 +120,7 @@ namespace Kernal {
                 }
             }
         }
-        return &(processStates[nextPID]);
+        return &processStates[nextPID];
     }
 
     class Method<P1> {
@@ -151,6 +143,51 @@ namespace Kernal {
             stackPtr = SysD.rStack;
             memTablePtr = SysD.rMemTbl;
             privileged = SysD.rPM;
+        }
+
+        public void updateInterrupt() {
+            stackPtr = SysD.rStackI;
+            privileged = SysD.rPMI;
+            pgmPtr = SysD.rPgmI;
+            memTablePtr = SysD.rMemTblI;
+            registers[0] = SysD.r0I;
+            registers[1] = SysD.r1I;
+            registers[2] = SysD.r2I;
+            registers[3] = SysD.r3I;
+            registers[4] = SysD.r4I;
+            registers[5] = SysD.r5I;
+            registers[6] = SysD.r6I;
+            registers[7] = SysD.r7I;
+            registers[8] = SysD.r8I;
+            registers[9] = SysD.r9I;
+            registers[10] = SysD.r10I;
+            registers[11] = SysD.r11I;
+            registers[12] = SysD.r12I;
+            registers[13] = SysD.r13I;
+            registers[14] = SysD.r14I;
+            registers[15] = SysD.r15I;
+        }
+        public void setInterrupt() {
+            SysD.rStackI = stackPtr;
+            SysD.rPMI = privileged;
+            SysD.rPgmI = pgmPtr;
+            SysD.rMemTblI = memTablePtr;
+            SysD.r0I = registers[0];
+            SysD.r1I = registers[1];
+            SysD.r2I = registers[2];
+            SysD.r3I = registers[3];
+            SysD.r4I = registers[4];
+            SysD.r5I = registers[5];
+            SysD.r6I = registers[6];
+            SysD.r7I = registers[7];
+            SysD.r8I = registers[8];
+            SysD.r9I = registers[9];
+            SysD.r10I = registers[10];
+            SysD.r11I = registers[11];
+            SysD.r12I = registers[12];
+            SysD.r13I = registers[13];
+            SysD.r14I = registers[14];
+            SysD.r15I = registers[15];
         }
 
         public void apply() {

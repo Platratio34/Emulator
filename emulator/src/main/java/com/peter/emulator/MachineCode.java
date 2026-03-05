@@ -110,6 +110,14 @@ public class MachineCode {
     
     public static final int REG_CPU_ID = 0xfe;
     public static final int REG_PRIVILEGED_MODE = 0xff;
+    
+    public static final int REG_PGM_PNTR_I = 0xe0;
+    public static final int REG_STACK_PNTR_I = 0xe1;
+    
+    public static final int REG_PID_I = 0xe8;
+    public static final int REG_MEM_TABLE_I = 0xe9;
+
+    public static final int REG_PRIVILEGED_MODE_I = 0xef;
 
     public static String translateReg(int reg) {
         return switch (reg) {
@@ -125,8 +133,16 @@ public class MachineCode {
             case REG_INTR_HANDLER -> "rIH";
 
             case REG_CPU_ID -> "rID";
+            
+            case REG_PGM_PNTR_I -> "rPgmI";
+            case REG_STACK_PNTR_I -> "rStackI";
+            
+            case REG_PID_I -> "rPIDI";
+            case REG_MEM_TABLE_I -> "rMTblI";
+            
+            case REG_PRIVILEGED_MODE_I -> "rPMI";
         
-            default -> String.format("r%d", reg);
+            default -> reg < 0x10 ? String.format("r%d", reg) : String.format("r%dI", reg-0x10);
         };
     }
 

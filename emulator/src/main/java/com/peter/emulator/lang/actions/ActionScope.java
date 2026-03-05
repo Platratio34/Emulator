@@ -18,6 +18,7 @@ public class ActionScope {
     public final ActionScope parent;
     public final ELFunction function;
     public final boolean[] reservedRegisters = new boolean[16];
+    private final ArrayList<Register> registerHandles = new ArrayList<>();
 
     public ActionScope(Namespace namespace, ProgramUnit unit, ELFunction function) {
         this.parent = null;
@@ -137,7 +138,7 @@ public class ActionScope {
     /**
      * @return the resolve action
      */
-    public ResolveAction loadVar(IdentifierToken id, int reg, boolean byValue) {
+    public ResolveAction loadVar(IdentifierToken id, Register reg, boolean byValue) {
         if(stackVars.containsKey(id.value)) {
             ELVariable v = stackVars.get(id.value);
             return new ResolveAction(this, reg, v, id, byValue);
@@ -150,16 +151,42 @@ public class ActionScope {
         return new ResolveAction(this, reg, v, id, byValue);
     }
 
+    // public void reserve(Register reg) {
+    //     reservedRegisters[reg.reg] = true;
+    // }
+    // public void release(Register reg) {
+    //     reservedRegisters[reg.reg] = false;
+    // }
+
+    // public boolean isReserved(Register reg) {
+    //     return reservedRegisters[reg.reg];
+    // }
+    
     public void reserve(int reg) {
         reservedRegisters[reg] = true;
     }
     public void release(int reg) {
         reservedRegisters[reg] = false;
     }
+
     public boolean isReserved(int reg) {
         return reservedRegisters[reg];
     }
-    public int firstFree() {
+    
+    public Register makeHandle(int reg) {
+        Register r = new Register(this, reg);
+        registerHandles.add(r);
+        return r;
+    }
+
+    public Register firstFree() {
+        for (int i = 1; i < 15; i++)
+            if (!reservedRegisters[i])
+                return makeHandle(i);
+        throw ELAnalysisError.error("No free registers");
+        // return null;
+    }
+    public int firstFreeR() {
         for(int i = 1; i < 15; i++)
             if(!reservedRegisters[i])
                 return i;
@@ -179,5 +206,13 @@ public class ActionScope {
 
     public ELFunction getFunction() {
         return (parent != null) ? parent.getFunction() : function;
+    }
+    public void freeScopeHandles(ErrorSet errors, Span span) {
+        for (Register r : registerHandles) {
+            if (r.reserved) {
+                errors.warning("Register " + r + " was not freed before the end of the scope", span);
+                r.release();
+            }
+        }
     }
 }

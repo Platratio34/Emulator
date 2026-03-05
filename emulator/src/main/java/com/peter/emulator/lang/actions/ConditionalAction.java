@@ -20,7 +20,7 @@ public class ConditionalAction extends ComplexAction {
         Token t1 = condition.get(0);
         Token t2 = condition.get(2);
         if(t1 instanceof IdentifierToken it1) {
-            ResolveAction r = scope.loadVar(it1, 1, true);
+            ResolveAction r = scope.loadVar(it1, scope.makeHandle(1), true);
             if (r == null)
                 throw ELAnalysisError.error("Unable to resolve variable `"+it1.debugString()+"`", it1);
             actions.add(r);
@@ -28,7 +28,7 @@ public class ConditionalAction extends ComplexAction {
             actions.add(new DirectAction("LOAD r1 %d", nt1.numValue));
         }
         if(t2 instanceof IdentifierToken it2) {
-            ResolveAction r = scope.loadVar(it2, 2, true);
+            ResolveAction r = scope.loadVar(it2, scope.makeHandle(2), true);
             if (r == null)
                 throw ELAnalysisError.error("Unable to resolve variable `"+it2.debugString()+"`", it2);
             actions.add(r);

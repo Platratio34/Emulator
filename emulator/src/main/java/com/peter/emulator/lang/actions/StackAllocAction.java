@@ -1,15 +1,14 @@
 package com.peter.emulator.lang.actions;
 
-import com.peter.emulator.MachineCode;
 import com.peter.emulator.lang.ELType;
 import com.peter.emulator.lang.ELVariable;
 
 public class StackAllocAction extends Action {
 
-    public int reg = 1;
-    public ELType type = null;
+    public final Register reg;
+    public final ELType type;
 
-    public StackAllocAction(ActionScope scope, ELVariable var, int reg) {
+    public StackAllocAction(ActionScope scope, ELVariable var, Register reg) {
         super(scope);
         this.reg = reg;
         this.type = var.type;
@@ -19,9 +18,9 @@ public class StackAllocAction extends Action {
     public String toAssembly() {
         if (type.sizeofWords() > 1)
             return "STACK INC " + type.sizeofWords();
-        if(reg < 0)
+        if(reg != null)
             return "STACK INC";
-        return String.format("STACK PUSH %s", MachineCode.translateReg(reg));
+        return String.format("STACK PUSH %s", reg);
     }
 
 

@@ -42,17 +42,17 @@ public class Main {
 
         LanguageServer ls = new LanguageServer();
 
-        // ProgramModule kernal;
-        // try {
-        //     kernal = ls.addModule(ROOT_PATH.resolve("lang/Kernal").toFile());
-        //     kernal.addRefModule("SysD");
-        // } catch (JSONException e) {
-        //     // TODO Auto-generated catch block
-        //     e.printStackTrace();
-        // } catch (IOException e) {
-        //     // TODO Auto-generated catch block
-        //     e.printStackTrace();
-        // }
+        ProgramModule kernal = null;
+        try {
+            kernal = ls.addModule(ROOT_PATH.resolve("lang/Kernal").toFile());
+            kernal.addRefModule("SysD");
+        } catch (JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
 
         // ProgramModule system;
         // try {
@@ -130,6 +130,21 @@ public class Main {
             // TODO Auto-generated catch block
             e.printStackTrace();
             return;
+        }
+
+        System.out.println("\n");
+        if (kernal != null) {
+            String asmK = kernal.assemble();
+            // System.out.println(asm);
+            Path pK = ROOT_PATH.resolve("lang/Kernal/out/kernal.asm");
+            try {
+                new File(pK.toUri()).delete();
+                Files.writeString(pK, asmK, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+                return;
+            }
         }
 
 

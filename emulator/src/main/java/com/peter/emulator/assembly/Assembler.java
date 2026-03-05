@@ -825,7 +825,10 @@ public class Assembler {
         
             default -> {
                 if (reg.charAt(0) == 'r') {
-                    r = Integer.parseInt(reg.substring(1));
+                    if(reg.endsWith("I"))
+                        r = Integer.parseInt(reg.substring(1,reg.length()-2)) + 0x10;
+                    else
+                        r = Integer.parseInt(reg.substring(1));
                 } else {
                     r = Integer.parseInt(reg);
                 }

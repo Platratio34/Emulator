@@ -1,11 +1,10 @@
 package com.peter.emulator.lang.actions;
 
-import com.peter.emulator.MachineCode;
-
 public class DirectAction extends Action {
 
     public int reg;
     public String asm;
+    public Object[] args = null;
 
     public DirectAction(String asm) {
         super(null);
@@ -14,12 +13,14 @@ public class DirectAction extends Action {
 
     public DirectAction(String asm, Object... args) {
         super(null);
+        this.asm = asm;
+        this.args = args;
         this.asm = String.format(asm, args);
     }
 
     @Override
     public String toAssembly() {
-        return String.format(asm, MachineCode.translateReg(reg));
+        return args != null ? String.format(asm, args) : asm;
     }
 
 }
