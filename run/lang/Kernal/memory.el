@@ -3,7 +3,7 @@ import SysD;
 namespace Kernal.Memory {
 
     protected static const uint32 MMU_DEVICE_TYPE = 0x0100_0002;
-    protected static const uint32 MMU_START = MEMORY_DEVICE_START;
+    protected static const uint32 MMU_START = 0x1_0000;
     protected static const uint32 MMU_MAX_BLOCKS = 0x0800;
     protected static uint32 mmuId;
 

@@ -1,30 +1,26 @@
 // static data
 // Kernal
 #var Kernal.lastPID 0x0000 // uint32
-#var Kernal.CONSOLE_END 0x0840 // uint32
-#var Kernal.CONSOLE_SETUP_CMD (3) // uint32[3]
-#var Kernal.CONSOLE_START 0x0800 // uint32
-#var Kernal.CMD_DEVICE 0x8002 // uint32
+#define Kernal.CONSOLE_END 0x0840 // uint32
+#var Kernal.CONSOLE_SETUP_CMD [0x0001,Kernal.CONSOLE_START,0x0020] // uint32[3]
+#define Kernal.CONSOLE_START 0x0800 // uint32
+#define Kernal.CMD_DEVICE 0x8002 // uint32
 #var Kernal.SYS_NAME "EmulatorOS" // char*
-#var Kernal.CONSOLE_PNTR 0x0841 // uint32
-#var Kernal.CMD_WRITTEN 0x0001 // uint32
+#define Kernal.CONSOLE_PNTR 0x0841 // uint32
+#define Kernal.CMD_WRITTEN 0x0001 // uint32
 #var Kernal.processStates (22528) // ProcessState[1024]
-#var Kernal.CMD_1 0x8005 // uint32
-#var Kernal.CMD_STATUS 0x8001 // uint32
-#var Kernal.CMD_2 0x8006 // uint32
-#var Kernal.CMD_3 0x8007 // uint32
-#var Kernal.CMD_4 0x8008 // uint32
-#var Kernal.CMD_SIZE 0x8003 // uint32
-#var Kernal.CMD_0 0x8004 // uint32
-// Kernal.ProcessState
+#define Kernal.CMD_1 0x8005 // uint32
+#define Kernal.CMD_STATUS 0x8001 // uint32
+#define Kernal.CMD_2 0x8006 // uint32
+#define Kernal.CMD_3 0x8007 // uint32
+#define Kernal.CMD_4 0x8008 // uint32
+#define Kernal.CMD_SIZE 0x8003 // uint32
+#define Kernal.CMD_0 0x8004 // uint32
 // Kernal.Memory
-#var Kernal.Memory.MMU_MAX_BLOCKS 0x0800 // uint32
+#define Kernal.Memory.MMU_MAX_BLOCKS 0x0800 // uint32
 #var Kernal.Memory.mmuId 0x00 // uint32
-#var Kernal.Memory.MMU_DEVICE_TYPE 0x0100_0002 // uint32
-#var Kernal.Memory.MMU_START 0x00 // uint32
-// Kernal.Memory.PageMapTable
-// Kernal.Console
-// Kernal.Method
+#define Kernal.Memory.MMU_DEVICE_TYPE 0x0100_0002 // uint32
+#define Kernal.Memory.MMU_START 0x0001_0000 // uint32
 
 //--------
 // text
@@ -71,7 +67,8 @@ STACK DEC 3
 //  SysD.memSet(CONSOLE_START, CONSOLE_PNTR);
 
 // 5 37:10
-LOAD r1 2113
+LOAD r1 Kernal.CONSOLE_PNTR
+LOAD MEM r1 r1
 STACK PUSH r1
 //  uint32 a = Kernal.CONSOLE_PNTR;
 
@@ -245,7 +242,8 @@ GOTO POP
 STACK PUSH r15
 COPY rStack r15
 // 0 83:10
-LOAD r1 32770
+LOAD r1 Kernal.CMD_DEVICE
+LOAD MEM r1 r1
 STACK PUSH r1
 //  uint32 addr = CMD_DEVICE;
 

@@ -41,31 +41,32 @@ public class ResolveAction extends ComplexAction {
 
         switch (var.varType) {
             case CONST -> {
-                switch (var.startingValue) {
-                    case ELNumberValue nv -> {
-                        actions.add(new DirectAction("LOAD %s %d", reg, nv.value));
-                        returnType = var.type;
-                        returnVar = var;
-                        // scope.addSymbol(new ELSymbol(ELSymbol.Type.VARIABLE_CONSTANT, it.spanFirst(),
-                        //         "### `const %s %s = %d`", var.type.typeString(), it.value, nv.value));
-                        scope.addSymbol(new ELVarSymbol(var, it.spanFirst()));
-                        return;
-                    }
-                    case ELStringValue sv -> {
-                        if (sv.type.equals(ELPrimitives.CHAR)) {
-                            actions.add(new DirectAction("LOAD %s '%s'", reg, sv.value));
-                            returnType = var.type;
-                            returnVar = var;
-                            // scope.addSymbol(new ELSymbol(ELSymbol.Type.VARIABLE_CONSTANT, it.spanFirst(),
-                            //         "### `const %s %s = '%s'`", var.type.typeString(), it.value, sv.value));
-                            scope.addSymbol(new ELVarSymbol(var, it.spanFirst()));
-                            return;
-                        } else {
-                            throw ELAnalysisError.error("Can not reference constant char* right now");
-                        }
-                    }
-                    default -> throw ELAnalysisError.error("Unknown constant type");
-                }
+                actions.add(new DirectAction("LOAD %s %s", reg, var.getQualifiedName()));
+                // switch (var.startingValue) {
+                //     case ELNumberValue nv -> {
+                //         actions.add(new DirectAction("LOAD %s %d", reg, nv.value));
+                //         returnType = var.type;
+                //         returnVar = var;
+                //         // scope.addSymbol(new ELSymbol(ELSymbol.Type.VARIABLE_CONSTANT, it.spanFirst(),
+                //         //         "### `const %s %s = %d`", var.type.typeString(), it.value, nv.value));
+                //         scope.addSymbol(new ELVarSymbol(var, it.spanFirst()));
+                //         return;
+                //     }
+                //     case ELStringValue sv -> {
+                //         if (sv.type.equals(ELPrimitives.CHAR)) {
+                //             actions.add(new DirectAction("LOAD %s '%s'", reg, sv.value));
+                //             returnType = var.type;
+                //             returnVar = var;
+                //             // scope.addSymbol(new ELSymbol(ELSymbol.Type.VARIABLE_CONSTANT, it.spanFirst(),
+                //             //         "### `const %s %s = '%s'`", var.type.typeString(), it.value, sv.value));
+                //             scope.addSymbol(new ELVarSymbol(var, it.spanFirst()));
+                //             return;
+                //         } else {
+                //             throw ELAnalysisError.error("Can not reference constant char* right now");
+                //         }
+                //     }
+                //     default -> throw ELAnalysisError.error("Unknown constant type");
+                // }
             }
             case STATIC -> actions.add(new DirectAction("LOAD %s &%s", reg, var.getQualifiedName()));
             case MEMBER -> {

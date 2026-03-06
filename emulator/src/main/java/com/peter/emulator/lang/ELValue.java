@@ -2,8 +2,12 @@ package com.peter.emulator.lang;
 
 import java.util.ArrayList;
 
+import com.peter.emulator.lang.tokens.BlockToken;
+import com.peter.emulator.lang.tokens.IdentifierToken;
 import com.peter.emulator.lang.tokens.NumberToken;
+import com.peter.emulator.lang.tokens.OperatorToken;
 import com.peter.emulator.lang.tokens.StringToken;
+import com.peter.emulator.lang.tokens.Token;
 import com.peter.emulator.lang.base.ELPrimitives;
 
 public abstract class ELValue {
@@ -14,6 +18,18 @@ public abstract class ELValue {
     }
 
     public abstract String valueString();
+
+    public void resolve(ErrorSet errors) {}
+
+    public static ELValue value(ELType type, Token tkn, Namespace ns, ProgramUnit unit) {
+        return switch (tkn) {
+            case NumberToken nt -> number(type, nt);
+            case StringToken st -> string(type, st);
+            case BlockToken bt -> array(type, bt, ns, unit);
+            case IdentifierToken it -> ref(type, it, ns, unit);
+            default -> null;
+        };
+    }
 
     public static class ELNumberValue extends ELValue {
         public final int size;
@@ -113,15 +129,72 @@ public abstract class ELValue {
         }
 
         @Override
-        public String valueString() {
-            String out = "{";
-            for (int i = 0; i < values.size(); i++) {
-                if(i > 0)
-                    out += ",";
-                out += values.get(0).valueString();
-            }
-            return out + "}";
+        public void resolve(ErrorSet errors) {
+            for(ELValue v : values)
+                v.resolve(errors);
         }
 
+        @Override
+        public String valueString() {
+            String out = "[";
+            for (int i = 0; i < values.size(); i++) {
+                if (i > 0)
+                    out += ",";
+                out += values.get(i).valueString();
+            }
+            return out + "]";
+        }
+    }
+    
+    public static ELArrayValue<ELValue> array(ELType type, BlockToken bt, Namespace ns, ProgramUnit unit) {
+        ELArrayValue<ELValue> av = new ELArrayValue<>(type);
+        ELType subType = type.resolve();
+        for (Token tkn : bt.subTokens) {
+            if (tkn instanceof OperatorToken) {
+                continue;
+            }
+            ELValue v = value(subType, tkn, ns, unit);
+            if (v == null)
+                throw ELAnalysisError.error("Unable to parse value " + tkn.debugString(), tkn);
+            av.values.add(v);
+        }
+        return av;
+    }
+
+    public static class ELRefValue extends ELValue {
+
+        private final IdentifierToken it;
+        private final Namespace ns;
+        private final ProgramUnit unit;
+
+        private String value = "";
+
+        protected ELRefValue(ELType type, IdentifierToken it, Namespace ns, ProgramUnit unit) {
+            super(type);
+            this.it = it;
+            this.ns = ns;
+            this.unit = unit;
+        }
+
+        @Override
+        public void resolve(ErrorSet errors) {
+            ELVariable v = ns.getFirstVar(it, unit);
+            if (v == null) {
+                errors.error("Unable to resolve variable `" + it.debugString() + '`', it);
+                value = it.debugString();
+            } else {
+                value = v.getQualifiedName();
+            }
+        }
+
+        @Override
+        public String valueString() {
+            return value;
+        }
+
+    }
+
+    public static ELRefValue ref(ELType type, IdentifierToken it, Namespace ns, ProgramUnit unit) {
+        return new ELRefValue(type, it, ns, unit);
     }
 }

@@ -49,7 +49,7 @@ public class ActionBlock extends ComplexAction {
                                 "// " + (l++) + " " + tkn.startLocation.line() + ":" + tkn.startLocation.col()));
                 if (tkn instanceof IdentifierToken it) {
                     Identifier id = it.asId();
-                    if (it.hasParams()) {
+                    if (it.hasParamsSub()) {
                         switch (it.value) {
                             case "if" -> {
                                 wI += 1;
@@ -234,7 +234,7 @@ public class ActionBlock extends ComplexAction {
                         }
                     }
 
-                    if (!scope.hasVariable(id) && !id.first().equals("SysD")) {
+                    if (/*!scope.hasVariable(id) && !id.first().equals("SysD")*/ scope.hasType(it)) {
                         ELType.Builder b = new ELType.Builder();
                         tkn = tokens.get(wI++);
                         while (b.ingest(tkn)) {

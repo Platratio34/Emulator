@@ -45,10 +45,10 @@ public class Identifier {
     public Identifier(String[] pArr) {
         String n = pArr[0];
         parts = new String[pArr.length];
-        for(int i = 0; i < pArr.length; i++) {
+        for(int i = 1; i < pArr.length; i++) {
             String s = pArr[i];
             n += "." + s;
-            parts[i+1] = s;
+            parts[i] = s;
         }
         fullName = n;
     }

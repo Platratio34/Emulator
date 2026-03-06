@@ -5,6 +5,7 @@ import java.util.HashMap;
 
 import com.peter.emulator.lang.*;
 import com.peter.emulator.lang.ELFunction.FunctionType;
+import com.peter.emulator.lang.base.ELPrimitives;
 import com.peter.emulator.lang.tokens.IdentifierToken;
 
 public class ActionScope {
@@ -107,11 +108,21 @@ public class ActionScope {
     public boolean hasVariable(Identifier id) {
         if (id.first().equals("this"))
             return true;
-        if(stackVars.containsKey(id.first()))
+        if (stackVars.containsKey(id.first()))
             return true;
-        if(parent != null)
+        if (parent != null)
             return parent.hasVariable(id);
         return !namespace.getVarStack(id, new ArrayList<>()).isEmpty();
+    }
+    public boolean hasType(IdentifierToken it) {
+        if(parent != null)
+            return parent.hasType(it);
+        if(it.value.equals("void"))
+            return true;
+        ELType baseType = new ELType(it.debugString());
+        if (ELPrimitives.PRIMITIVE_TYPES.containsKey(baseType))
+            return true;
+        return namespace.hasType(baseType);
     }
 
     public ActionScope createChild() {

@@ -1,18 +1,10 @@
 {
-    "variables": {
-        "TestD.v": {
-            "address": 145,
-            "start": 145,
-            "end": 145,
-            "type": "uint32"
-        },
-        "TestD.str": {
-            "address": 138,
-            "start": 138,
-            "end": 144,
-            "type": "char*"
-        }
-    },
+    "variables": {"TestD.v": {
+        "address": 145,
+        "start": 145,
+        "end": 145,
+        "type": "uint32"
+    }},
     "functions": {
         "TestD.onInterrupt": {
             "args": [],
@@ -55,6 +47,14 @@
         }
     },
     "version": 1,
+    "definitions": {"TestD.str": {
+        "start": 138,
+        "end": 144,
+        "type": "char*",
+        "value": "// Test"
+    }},
+    "syscalls": {}
+}   "version": 1,
     "definitions": {},
     "syscalls": {}
 }

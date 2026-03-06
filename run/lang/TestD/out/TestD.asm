@@ -1,8 +1,7 @@
 // static data
 // TestD
-#var TestD.str "// Test" // char*
+#define TestD.str "// Test" // char*
 #var TestD.v 0x0000 // uint32
-// TestD.StructA
 
 //--------
 // text

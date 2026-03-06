@@ -468,6 +468,8 @@ public class Parser {
             //     last += tokens.get(i);
             // }
             errors.error(e.getMessage(), tokens.get(workingI));
+        } catch (ELAnalysisError e) {
+            errors.add(e);
         }
     }
     

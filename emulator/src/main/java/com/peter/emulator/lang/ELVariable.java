@@ -3,9 +3,7 @@ package com.peter.emulator.lang;
 import java.util.ArrayList;
 
 import com.peter.emulator.lang.annotations.ELAnnotation;
-import com.peter.emulator.lang.tokens.NumberToken;
 import com.peter.emulator.lang.tokens.OperatorToken;
-import com.peter.emulator.lang.tokens.StringToken;
 import com.peter.emulator.lang.tokens.Token;
 
 public class ELVariable {
@@ -95,10 +93,7 @@ public class ELVariable {
     public boolean ingestValue(Token token) {
         if (token instanceof OperatorToken ot && ot.type == OperatorToken.Type.SEMICOLON) {
             if (valueTokens.size() == 1) {
-                if (valueTokens.get(0) instanceof NumberToken nt)
-                    startingValue = ELValue.number(type, nt);
-                else if (valueTokens.get(0) instanceof StringToken st)
-                    startingValue = ELValue.string(type, st);
+                startingValue = ELValue.value(type, valueTokens.getFirst(), namespace, unit);
             }
             return false;
         }
@@ -111,6 +106,8 @@ public class ELVariable {
 
     public void analyze(ErrorSet errors, Namespace namespace) {
         type.analyze(errors, namespace, unit);
+        if(startingValue != null)
+            startingValue.resolve(errors);
     }
 
     public int getAddress() {

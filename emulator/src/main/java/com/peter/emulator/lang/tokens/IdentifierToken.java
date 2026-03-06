@@ -145,5 +145,13 @@ public class IdentifierToken extends Token {
     public boolean hasParams() {
         return params != null;
     }
+
+    public boolean hasParamsSub() {
+        if (params != null)
+            return true;
+        if (subTokens == null || subTokens.isEmpty())
+            return false;
+        return ((IdentifierToken)subTokens.getFirst()).hasParamsSub();
+    }
     
 }

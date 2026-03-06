@@ -1,5 +1,6 @@
 package com.peter.emulator.lang;
 
+import com.peter.emulator.lang.ELVariable.Type;
 import com.peter.emulator.lang.actions.Action;
 import com.peter.emulator.lang.annotations.ELInterruptHandlerAnnotation;
 
@@ -41,17 +42,19 @@ public class ELAssembler {
     }
 
     private String assembleStatics(Namespace ns) {
+        if(ns.staticVariables.isEmpty() && ns.namespaces.isEmpty())
+            return "";
         String out = "// " + ns.getQualifiedName() + "\n";
         for (ELVariable v : ns.staticVariables.values()) {
+            out += (v.varType == Type.CONST) ? "#define" : "#var";
             if (v.type.isArray()) {
-                // if(v.startingValue == null)
-                out += String.format("#var %s %s // %s\n", v.getQualifiedName(), String.format("(%d)", v.sizeofWords()),
+                out += String.format(" %s %s // %s\n", v.getQualifiedName(), (v.startingValue == null) ? String.format("(%d)", v.sizeofWords()) : v.startingValue.valueString(),
                         v.typeString());
             } else if (v.sizeofWords() > 1) {
-                out += String.format("#var %s %s // %s\n", v.getQualifiedName(), String.format("(%d)", v.sizeofWords()),
+                out += String.format(" %s %s // %s\n", v.getQualifiedName(), String.format("(%d)", v.sizeofWords()),
                         v.typeString());
             } else {
-                out += String.format("#var %s %s // %s\n", v.getQualifiedName(),
+                out += String.format(" %s %s // %s\n", v.getQualifiedName(),
                         (v.startingValue == null) ? "0x00" : v.startingValue.valueString(), v.typeString());
             }
         }
