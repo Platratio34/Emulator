@@ -598,21 +598,17 @@ public class ELType {
         if(pointer || address)
             return 4;
         if (array) {
-            return arraySize * subType.sizeofWords() * 4;
+            return arraySize * subType.sizeof();
         }
         if(clazz == null)
             return 4;
         return clazz.getSize();
     }
 
-    public int sizeofWords() {
-        return Math.ceilDiv(sizeof(), 4);
-    }
-
     public int stepSize() {
         if(!(array || pointer))
             throw new ELCompileException("Can not get step size of non array or pointer");
-        return subType.sizeofWords();
+        return subType.sizeof();
     }
 
     public int arraySize() {

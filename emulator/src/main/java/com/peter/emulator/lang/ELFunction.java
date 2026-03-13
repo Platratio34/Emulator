@@ -266,7 +266,7 @@ public class ELFunction {
         }
         if (ret != null) {
             ret.analyze(errors, namespace, unit);
-            if (ret.sizeofWords() > 1)
+            if (ret.sizeof() > 4)
                 errors.error("Function returns must be 1 word", ret.span());
         }
         if (body == null && !(extern || abstractFunction)) {

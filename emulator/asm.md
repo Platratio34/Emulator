@@ -10,7 +10,7 @@
 | `02_rs_03_rd`    | `COPY MEM`    | Store a value from `mem[r[rs]]` to `mem[r[rd]]`                                                 |
 | `04_op/rd_ra_rb` | MATH/LOGIC    | Perform a math/logic operation on `r[ra]` and `r[rb]` storing the result into `r[rd]`, see spec |
 | `05_op_ra_rg`    | `GOTO`        | Goto command, see [spec](#GOTOOperations)                                                       |
-| `06_fc/op_rg_ro` | `GOTO`        | Conditional set, see [spec](#GOTOOperations) (`0x01`-`0x04` only)                               |
+| `06_fc/op_rg_ro` | `SET`         | Conditional set, see [spec](#GOTOOperations) (`0x01`-`0x04` only)                               |
 | `10_rg_00_00`    | `STACK PUSH`  | Push `r[rg]` to the stack                                                                       |
 | `10_rg_01_00`    | `STACK POP`   | Pop the top of the stack to `r[rg]`                                                             |
 | `10_rg_02_xx`    | `STACK INC`   | Increment the stac pointer by `xx` + 1                                                          |

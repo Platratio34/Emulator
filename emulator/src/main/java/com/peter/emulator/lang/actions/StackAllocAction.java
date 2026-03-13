@@ -16,10 +16,8 @@ public class StackAllocAction extends Action {
 
     @Override
     public String toAssembly() {
-        if (type.sizeofWords() > 1)
-            return "STACK INC " + type.sizeofWords();
-        if(reg == null)
-            return "STACK INC";
+        if (type.sizeof() != 4 || reg == null)
+            return "STACK INC " + type.sizeof();
         return String.format("STACK PUSH %s", reg);
     }
 

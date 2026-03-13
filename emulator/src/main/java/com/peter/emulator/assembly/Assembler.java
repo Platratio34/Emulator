@@ -60,7 +60,7 @@ public class Assembler {
     public boolean assemble() {
         errors.clear();
         // mapping
-        int addr = 1;
+        int addr = 2;
         int valAdd = 0;
         FunctionSymbol cFunction = null;
         for (int lineN = 0; lineN < lines.length; lineN++) {
@@ -70,7 +70,7 @@ public class Assembler {
             String[] parts = line.split("\s+");
             if (line.charAt(0) == ':') {
                 String name = parts[0].substring(1);
-                labels.put(name, addr);
+                labels.put(name, addr*4);
                 continue;
             }
             if (line.startsWith("#")) {
@@ -112,12 +112,8 @@ public class Assembler {
                                 }
                             }
                             str = str2;
-                            int[] val = new int[str.length()];
-                            for (int j = 0; j < val.length; j++) {
-                                val[j] = (int) str.charAt(j);
-                            }
-                            memSet.add(new MemSet(name, val));
-                            valAdd += val.length;
+                            memSet.add(new MemSet(name, str));
+                            valAdd += Math.ceilDiv(str.length(), 4);
                             symbols.addDefinition(new ValueSymbol(name, -1, -1, "char*", str), lineN + 1);
                         } else if (parts[2].startsWith("[")) {
                             Matcher m = DEFINE_ARRAY_PATTERN.matcher(line);
@@ -141,7 +137,7 @@ public class Assembler {
                         } else if (parts[2].startsWith("(")) {
                             Matcher m = ALLOC_PATTERN.matcher(parts[2]);
                             m.find();
-                            int size = getVal(m.group(1));
+                            int size = Math.ceilDiv(getVal(m.group(1)), 4);
                             memSet.add(new MemSet(name, new int[size]));
                             valAdd += size;
                             symbols.addDefinition(new ValueSymbol(name, -1, -1, "uint32[" + size + "]*", ""),
@@ -187,12 +183,8 @@ public class Assembler {
                                 }
                             }
                             str = str2;
-                            int[] val = new int[str.length()];
-                            for (int j = 0; j < val.length; j++) {
-                                val[j] = (int) str.charAt(j);
-                            }
-                            memSet.add(new MemSet(name, val));
-                            valAdd += val.length;
+                            memSet.add(new MemSet(name, str));
+                            valAdd += Math.ceilDiv(str.length(), 4);
                             symbols.addVariable(new VariableSymbol(name, -1, -1, "char*", str), lineN + 1);
                         } else if (parts[2].startsWith("[")) {
                             Matcher m = DEFINE_ARRAY_PATTERN.matcher(line);
@@ -216,7 +208,7 @@ public class Assembler {
                         } else if (parts[2].startsWith("(")) {
                             Matcher m = ALLOC_PATTERN.matcher(parts[2]);
                             m.find();
-                            int size = getVal(m.group(1));
+                            int size = Math.ceilDiv(getVal(m.group(1)), 4);
                             memSet.add(new MemSet(name, new int[size]));
                             valAdd += size;
                             symbols.addVariable(new VariableSymbol(name, -1, -1, "uint32[" + size + "]*", ""),
@@ -246,8 +238,8 @@ public class Assembler {
                             inSyscall = true;
                             // System.out.println("Test?: " + functionName);
                         }
-                        labels.put(functionName, addr);
-                        functions.put(functionName, addr);
+                        labels.put(functionName, addr*4);
+                        functions.put(functionName, addr*4);
                         ArrayList<String> args = new ArrayList<>();
                         int j = 2;
                         String arg = "";
@@ -267,7 +259,7 @@ public class Assembler {
                             args.add(arg);
                         }
                         cFunction = symbols.addFunction(
-                                new FunctionSymbol(functionName, addr, -1, args.toArray(String[]::new), "void",
+                                new FunctionSymbol(functionName, addr*4, -1, args.toArray(String[]::new), "void",
                                         isSyscall, false),
                                 lineN + 1);
                     }
@@ -277,7 +269,7 @@ public class Assembler {
                                     line, source));
                             continue;
                         }
-                        cFunction.end = addr;
+                        cFunction.end = addr*4;
                         cFunction.endLine = lineN;
                         if (parts.length >= 2 && !parts[1].startsWith("//"))
                             cFunction.rt = parts[1];
@@ -299,6 +291,44 @@ public class Assembler {
                 if (!parts[1].startsWith("r")) {
                     addr++;
                 }
+            } else if (line.startsWith("GOTO")) {
+                if (parts.length < 2) {
+                    System.err.println("invalid goto");
+                    errors.add(new AssemblerError("Invalid goto instruction", lineN,
+                            line.length(), line, source));
+                    continue;
+                }
+                boolean push = parts[1].equals("PUSH");
+                boolean pop = parts[1].equals("POP");
+                int nI = 1;
+                if (push || pop) {
+                    nI++;
+                }
+                if(pop)
+                    continue;
+                if (parts.length < nI) {
+                    System.err.println("invalid goto");
+                    errors.add(new AssemblerError("Invalid goto instruction", lineN,
+                            line.length(), line, source));
+                    continue;
+                }
+                if (parts.length > nI) {
+                    boolean cond = parts[nI].equals("EQ");
+                    cond |= parts[nI].equals("LEQ");
+                    cond |= parts[nI].equals("GT");
+                    cond |= parts[nI].equals("NEQ");
+                    if (cond)
+                        nI += 2;
+                }
+                if (parts.length < nI) {
+                    System.err.println("invalid goto");
+                    errors.add(new AssemblerError("Invalid goto instruction", lineN,
+                            line.length(), line, source));
+                    continue;
+                }
+                if (!parts[nI].startsWith("r")) {
+                    addr++;
+                }
             }
         }
         if (cFunction != null) {
@@ -314,19 +344,22 @@ public class Assembler {
         }
         data = new Entry[addr + valAdd];
         for (MemSet set : memSet) {
-            defines.put(set.name, addr);
-            symbols.updateDefinition(set.name, addr, addr + set.value.length - 1);
-            for (int i = 0; i < set.value.length; i++) {
-                data[addr++] = Entry.Literal(set.value[i]);
+            defines.put(set.name, addr*4);
+            symbols.updateDefinition(set.name, addr*4, (addr + set.values.length) * 4 - 1);
+            for (int i = 0; i < set.values.length; i++) {
+                data[addr++] = Entry.Literal(set.values[i]);
             }
         }
         // converting
         addr = 0;
-        if(labels.containsKey("__start")) {
-            GotoEntry entry = GotoEntry.Unconditional(true, 0, "__start");
+        if (labels.containsKey("__start")) {
+            Entry next = new Entry(0);
+            GotoEntry entry = GotoEntry.Unconditional(true, 0, "__start", next);
             data[addr++] = entry;
+            data[addr++] = next;
         } else {
             System.out.println("File did not have __start");
+            data[addr++] = Entry.Direct(NO_OP);
             data[addr++] = Entry.Direct(NO_OP);
         }
         for (int lineN = 0; lineN < lines.length; lineN++) {
@@ -572,7 +605,7 @@ public class Assembler {
                         }
                         String target = "";
                         int ra = 0;
-                        boolean relative = true;
+                        boolean relative = (!pop);
                         if (!pop) {
                             if (parts.length < nI) {
                                 errors.add(new AssemblerError("Invalid goto instruction", lineN,
@@ -587,48 +620,51 @@ public class Assembler {
                             }
                         }
                         GotoEntry entry;
+                        Entry next = relative ? new Entry(0) : null;
                         if (eq) {
                             if (push) {
-                                entry = GotoEntry.ZeroPush(relative, ra, ro, target);
+                                entry = GotoEntry.ZeroPush(relative, ra, ro, target, next);
                             } else if (pop) {
                                 entry = GotoEntry.ZeroPop(ro);
                             } else {
-                                entry = GotoEntry.Zero(relative, ra, ro, target);
+                                entry = GotoEntry.Zero(relative, ra, ro, target, next);
                             }
                         } else if (leq) {
                             if (push) {
-                                entry = GotoEntry.LessEqualPush(relative, ra, ro, target);
+                                entry = GotoEntry.LessEqualPush(relative, ra, ro, target, next);
                             } else if (pop) {
                                 entry = GotoEntry.LessEqualPop(ro);
                             } else {
-                                entry = GotoEntry.LessEqual(relative, ra, ro, target);
+                                entry = GotoEntry.LessEqual(relative, ra, ro, target, next);
                             }
                         } else if (gt) {
                             if (push) {
-                                entry = GotoEntry.GreaterPush(relative, ra, ro, target);
+                                entry = GotoEntry.GreaterPush(relative, ra, ro, target, next);
                             } else if (pop) {
                                 entry = GotoEntry.GreaterPop(ro);
                             } else {
-                                entry = GotoEntry.Greater(relative, ra, ro, target);
+                                entry = GotoEntry.Greater(relative, ra, ro, target, next);
                             }
                         } else if (neq) {
                             if (push) {
-                                entry = GotoEntry.NotZeroPush(relative, ra, ro, target);
+                                entry = GotoEntry.NotZeroPush(relative, ra, ro, target, next);
                             } else if (pop) {
                                 entry = GotoEntry.NotZeroPop(ro);
                             } else {
-                                entry = GotoEntry.NotZero(relative, ra, ro, target);
+                                entry = GotoEntry.NotZero(relative, ra, ro, target, next);
                             }
                         } else {
                             if (push) {
-                                entry = GotoEntry.UnconditionalPush(relative, ra, target);
+                                entry = GotoEntry.UnconditionalPush(relative, ra, target, next);
                             } else if (pop) {
                                 entry = GotoEntry.UnconditionalPop();
                             } else {
-                                entry = GotoEntry.Unconditional(relative, ra, target);
+                                entry = GotoEntry.Unconditional(relative, ra, target, next);
                             }
                         }
                         data[addr++] = (entry);
+                        if(relative)
+                            data[addr++] = next;
                     }
                     case "SET" -> {
                         boolean forced = false;
@@ -737,6 +773,8 @@ public class Assembler {
                     }
                 }
             } catch (Exception e) {
+                System.err.println(e);
+                e.printStackTrace();
                 System.err.println("Error parsing assembly at line " + (lineN + 1) + " in file " + source);
                 throw e;
             }
@@ -769,7 +807,7 @@ public class Assembler {
                     if(!labels.containsKey(ge.target))
                         throw new RuntimeException("Invalid label "+ge.target);
                     int tW = labels.get(ge.target);
-                    int off = tW - i - 1;
+                    int off = tW - (i*4) - 8;
                     ge.setOffset(off);
                 }
             }
@@ -986,84 +1024,126 @@ public class Assembler {
     private static class GotoEntry extends Entry {
 
         public String target;
+        public Entry next;
 
-        private GotoEntry(int instruction, String target) {
+        private GotoEntry(int instruction, String target, Entry next) {
             super(instruction);
             this.target = target;
+            this.next = next;
         }
 
-        public static GotoEntry Unconditional(boolean relative, int ra, String target) {
-            return new GotoEntry(GOTO | (relative ? GOTO_REL_UNCD : GOTO_UNCD) | (ra << 8), target);
+        public static GotoEntry Unconditional(boolean relative, int ra, String target, Entry next) {
+            return new GotoEntry(GOTO | (relative ? GOTO_REL_UNCD : GOTO_UNCD) | (ra << 8), target, next);
         }
 
-        public static GotoEntry UnconditionalPush(boolean relative, int ra, String target) {
-            return new GotoEntry(GOTO | (relative ? GOTO_PUSH_REL_UNCD : GOTO_PUSH_UNCD) | (ra << 8), target);
+        public static GotoEntry UnconditionalPush(boolean relative, int ra, String target, Entry next) {
+            return new GotoEntry(GOTO | (relative ? GOTO_PUSH_REL_UNCD : GOTO_PUSH_UNCD) | (ra << 8), target, next);
         }
 
         public static GotoEntry UnconditionalPop() {
-            return new GotoEntry(GOTO | GOTO_POP_UNCD, "");
+            return new GotoEntry(GOTO | GOTO_POP_UNCD, "", null);
         }
 
-        public static GotoEntry Zero(boolean relative, int ra, int ro, String target) {
-            return new GotoEntry(GOTO | (relative ? GOTO_REL_EQ_ZERO : GOTO_EQ_ZERO) | (ra << 8) | ro, target);
+        public static GotoEntry Zero(boolean relative, int ra, int ro, String target, Entry next) {
+            return new GotoEntry(GOTO | (relative ? GOTO_REL_EQ_ZERO : GOTO_EQ_ZERO) | (ra << 8) | ro, target, next);
         }
 
-        public static GotoEntry ZeroPush(boolean relative, int ra, int ro, String target) {
+        public static GotoEntry ZeroPush(boolean relative, int ra, int ro, String target, Entry next) {
             return new GotoEntry(GOTO | (relative ? GOTO_PUSH_REL_EQ_ZERO : GOTO_PUSH_EQ_ZERO) | (ra << 8) | ro,
-                    target);
+                    target, next);
         }
 
         public static GotoEntry ZeroPop(int ro) {
-            return new GotoEntry(GOTO | GOTO_POP_EQ_ZERO | ro, "");
+            return new GotoEntry(GOTO | GOTO_POP_EQ_ZERO | ro, "", null);
         }
 
-        public static GotoEntry LessEqual(boolean relative, int ra, int ro, String target) {
-            return new GotoEntry(GOTO | (relative ? GOTO_REL_LEQ_ZERO : GOTO_LEQ_ZERO) | (ra << 8) | ro, target);
+        public static GotoEntry LessEqual(boolean relative, int ra, int ro, String target, Entry next) {
+            return new GotoEntry(GOTO | (relative ? GOTO_REL_LEQ_ZERO : GOTO_LEQ_ZERO) | (ra << 8) | ro, target, next);
         }
 
-        public static GotoEntry LessEqualPush(boolean relative, int ra, int ro, String target) {
+        public static GotoEntry LessEqualPush(boolean relative, int ra, int ro, String target, Entry next) {
             return new GotoEntry(GOTO | (relative ? GOTO_PUSH_REL_LEQ_ZERO : GOTO_PUSH_LEQ_ZERO) | (ra << 8) | ro,
-                    target);
+                    target, next);
         }
 
         public static GotoEntry LessEqualPop(int ro) {
-            return new GotoEntry(GOTO | GOTO_POP_LEQ_ZERO | ro, "");
+            return new GotoEntry(GOTO | GOTO_POP_LEQ_ZERO | ro, "", null);
         }
 
-        public static GotoEntry Greater(boolean relative, int ra, int ro, String target) {
-            return new GotoEntry(GOTO | (relative ? GOTO_REL_GT_ZERO : GOTO_GT_ZERO) | (ra << 8) | ro, target);
+        public static GotoEntry Greater(boolean relative, int ra, int ro, String target, Entry next) {
+            return new GotoEntry(GOTO | (relative ? GOTO_REL_GT_ZERO : GOTO_GT_ZERO) | (ra << 8) | ro, target, next);
         }
 
-        public static GotoEntry GreaterPush(boolean relative, int ra, int ro, String target) {
+        public static GotoEntry GreaterPush(boolean relative, int ra, int ro, String target, Entry next) {
             return new GotoEntry(GOTO | (relative ? GOTO_PUSH_REL_GT_ZERO : GOTO_PUSH_GT_ZERO) | (ra << 8) | ro,
-                    target);
+                    target, next);
         }
 
         public static GotoEntry GreaterPop(int ro) {
-            return new GotoEntry(GOTO | GOTO_POP_GT_ZERO | ro, "");
+            return new GotoEntry(GOTO | GOTO_POP_GT_ZERO | ro, "", null);
         }
 
-        public static GotoEntry NotZero(boolean relative, int ra, int ro, String target) {
-            return new GotoEntry(GOTO | (relative ? GOTO_REL_NOT_ZERO : GOTO_NOT_ZERO) | (ra << 8) | ro, target);
+        public static GotoEntry NotZero(boolean relative, int ra, int ro, String target, Entry next) {
+            return new GotoEntry(GOTO | (relative ? GOTO_REL_NOT_ZERO : GOTO_NOT_ZERO) | (ra << 8) | ro, target, next);
         }
 
-        public static GotoEntry NotZeroPush(boolean relative, int ra, int ro, String target) {
+        public static GotoEntry NotZeroPush(boolean relative, int ra, int ro, String target, Entry next) {
             return new GotoEntry(GOTO | (relative ? GOTO_PUSH_REL_NOT_ZERO : GOTO_PUSH_NOT_ZERO) | (ra << 8) | ro,
-                    target);
+                    target, next);
         }
 
         public static GotoEntry NotZeroPop(int ro) {
-            return new GotoEntry(GOTO | GOTO_POP_NOT_ZERO | ro, "");
+            return new GotoEntry(GOTO | GOTO_POP_NOT_ZERO | ro, "", null);
         }
 
         public void setOffset(int offset) {
-            instruction |= uint32ToInt8(offset) << 8;
+            next.instruction = offset;
+            // instruction |= uint32ToInt8(offset) << 8;
         }
 
     }
-    
-    private static record MemSet(String name, int[] value) {
 
+    private static class MemSet {
+        public final String name;
+        public final int[] values;
+
+        public MemSet(String name, int[] values) {
+            this.name = name;
+            this.values = values;
+        }
+
+        public MemSet(String name, byte[] bytes) {
+            this.name = name;
+            // bytes = values;
+            values = new int[Math.ceilDiv(bytes.length, 4)];
+            for (int i = 0; i < bytes.length; i += 4) {
+                int v = ((int) bytes[i]) << 24;
+                if(i+1 < bytes.length)
+                    v |= ((int) bytes[i+1]) << 16;
+                if(i+2 < bytes.length)
+                    v |= ((int) bytes[i+2]) << 8;
+                if(i+3 < bytes.length)
+                    v |= (int) bytes[i + 3];
+                values[i / 4] = v;
+            }
+        }
+
+        public MemSet(String name, String str) {
+            this.name = name;
+            // bytes = values;
+            int len = str.length();
+            values = new int[Math.ceilDiv(len, 4)];
+            for (int i = 0; i < str.length(); i += 4) {
+                int v = ((int) str.charAt(i)) << 24;
+                if(i+1 < len)
+                    v |= ((int) str.charAt(i+1)) << 16;
+                if(i+2 < len)
+                    v |= ((int) str.charAt(i+2)) << 8;
+                if(i+3 < len)
+                    v |= (int) str.charAt(i + 3);
+                values[i / 4] = v;
+            }
+        }
     }
 
     public Set<java.util.Map.Entry<String, Integer>> getSyscallMapping() {

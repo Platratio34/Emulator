@@ -8,7 +8,7 @@ public interface MemoryMappedPeripheral extends Peripheral {
 
     public void message(int[] msg);
 
-    public void link(RAM ram, int deviceID);
+    public void link(RAM ram, byte deviceID);
 
     public int[] getDescriptor();
 

@@ -195,19 +195,20 @@ public class CPU {
     }
 
     public void writeMem(int addr, int val) {
-        ram.write(mmu.translate(this, addr), val);
+        ram.writeWord(mmu.translate(this, addr), val);
     }
     public int readMem(int addr) {
-        return ram.read(mmu.translate(this, addr));
+        return ram.readWord(mmu.translate(this, addr));
     }
     
     public void stackPush(int val) {
         // System.out.println(String.format("\t Stack push: [%x] %x", stackPtr, val));
-        writeMem(stackPtr++, val);
+        writeMem(stackPtr, val);
+        stackPtr += 4;
     }
 
     public int stackPop() {
-        stackPtr--;
+        stackPtr -= 4;
         int val = readMem(stackPtr);
         // System.out.println(String.format("\t Stack pop: [%x] %x", stackPtr, val));
         return val;
@@ -247,13 +248,14 @@ public class CPU {
             debugger.update(this);
             dbg = debugger.getSymbol(this);
         }
-        int op = readMem(pgmPtr++);
+        int op = readMem(pgmPtr);
+        pgmPtr += 4;
         instr = op;
         int next = readMem(pgmPtr);
         instrb = next;
         int instruction = op & MASK_INSTRUCTION;
         String instrStr = translate(op, next);
-        System.out.println(String.format("CPU Tick: [%x] %s", mmu.translate(this, pgmPtr - 1), instrStr));
+        System.out.println(String.format("CPU Tick: [%x] %s", mmu.translate(this, pgmPtr - 4), instrStr));
         switch (instruction) {
             case HALT -> {
                 if (!privilegeMode)
@@ -269,7 +271,7 @@ public class CPU {
                     val = readMem(getReg(ra));
                 } else {
                     val = next;
-                    pgmPtr++;
+                    pgmPtr += 4;
                 }
                 setReg(rg, val);
             }
@@ -283,9 +285,8 @@ public class CPU {
                 if (mem) {
                     writeMem(getReg(ra), getReg(rg));
                 } else if (val) {
-                    int v = next;
-                    pgmPtr++;
-                    writeMem(getReg(ra), v);
+                    pgmPtr += 4;
+                    writeMem(getReg(ra), next);
                 } else if (memCopy) {
                     writeMem(getReg(ra), readMem(getReg(rg)));
                 } else {
@@ -371,26 +372,31 @@ public class CPU {
                     }
 
                     case GOTO_REL_UNCD -> {
-                        pgmPtr += int8(ra);
+                        pgmPtr += 4;
+                        pgmPtr += next;
                     }
                     case GOTO_REL_EQ_ZERO -> {
+                        pgmPtr += 4;
                         if (getReg(rg) == 0) {
-                            pgmPtr += int8(ra);
+                            pgmPtr += next;
                         }
                     }
                     case GOTO_REL_LEQ_ZERO -> {
+                        pgmPtr += 4;
                         if (getReg(rg) <= 0) {
-                            pgmPtr += int8(ra);
+                            pgmPtr += next;
                         }
                     }
                     case GOTO_REL_GT_ZERO -> {
+                        pgmPtr += 4;
                         if (getReg(rg) > 0) {
-                            pgmPtr += int8(ra);
+                            pgmPtr += next;
                         }
                     }
                     case GOTO_REL_NOT_ZERO -> {
+                        pgmPtr += 4;
                         if (registers[rg] != 0) {
-                            pgmPtr += int8(ra);
+                            pgmPtr += next;
                         }
                     }
 
@@ -424,31 +430,36 @@ public class CPU {
                     }
 
                     case GOTO_PUSH_REL_UNCD -> {
+                        pgmPtr += 4;
                         stackPush(pgmPtr);
-                        pgmPtr += int8(ra);
+                            pgmPtr += next;
                     }
                     case GOTO_PUSH_REL_EQ_ZERO -> {
+                        pgmPtr += 4;
                         if (getReg(rg) == 0) {
                             stackPush(pgmPtr);
-                            pgmPtr += int8(ra);
+                            pgmPtr += next;
                         }
                     }
                     case GOTO_PUSH_REL_LEQ_ZERO -> {
+                        pgmPtr += 4;
                         if (getReg(rg) <= 0) {
                             stackPush(pgmPtr);
-                            pgmPtr += int8(ra);
+                            pgmPtr += next;
                         }
                     }
                     case GOTO_PUSH_REL_GT_ZERO -> {
+                        pgmPtr += 4;
                         if (getReg(rg) > 0) {
                             stackPush(pgmPtr);
-                            pgmPtr += int8(ra);
+                            pgmPtr += next;
                         }
                     }
                     case GOTO_PUSH_REL_NOT_ZERO -> {
+                        pgmPtr += 4;
                         if (registers[rg] != 0) {
                             stackPush(pgmPtr);
-                            pgmPtr += int8(ra);
+                            pgmPtr += next;
                         }
                     }
 
@@ -573,7 +584,7 @@ public class CPU {
                     default -> {
                         privilegeMode = true;
                         int function = op & MASK_SYSCALL_FUNCTION;
-                        int ptr = readMem(function + 0x1_0000);
+                        int ptr = readMem((function<<2) + 0x1_0000);
                         if (ptr == 0xffff_ffff) {
                             running = false;
                             // TODO: interrupt?
@@ -598,11 +609,34 @@ public class CPU {
     public String dump() {
         String out = "r0";
         String vl = "";
-        for(int i = 0; i <= 0xf; i++) {
+        for (int i = 0; i <= 0xf; i++) {
             out += MachineCode.translateReg(i) + "         ";
             vl += toHex(registers[i]) + "  ";
         }
         out += "\n" + vl;
         return out;
+    }
+    
+    public void reset() {
+        pgmPtr = 0;
+        pgmPtrI = 0;
+        inInterrupt = false;
+        interruptCode = 0;
+        interruptHandler = 0;
+        privilegeMode = true;
+        privilegeModeI = false;
+        memTablePtr = 0;
+        memTablePtrI = 1;
+        stackPtr = 0x1000;
+        stackPtrI = 0x1000;
+        pid = 0;
+        pidI = 0;
+        instr = 0;
+        instrb = 0;
+        for (int i = 0; i < registers.length; i++) {
+            registers[i] = 0;
+            registersI[i] = 0;
+        }
+        running = true;
     }
 }

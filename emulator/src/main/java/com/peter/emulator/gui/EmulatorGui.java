@@ -19,6 +19,7 @@ public class EmulatorGui {
     protected JButton pauseBtn;
     protected JButton resumeBtn;
     protected JButton tickBtn;
+    protected JButton resetBtn;
 
     protected JButton interruptButton;
     protected JTextArea interruptCode;
@@ -57,8 +58,14 @@ public class EmulatorGui {
                 emulator.stopWaiting();
             });
             buttonGrid.add(tickBtn);
+            
+            resetBtn = new JButton("Reset");
+            resetBtn.addActionListener((event) -> {
+                emulator.reset();
+            });
+            buttonGrid.add(resetBtn);
 
-            buttonGrid.add(new JLabel());
+            // buttonGrid.add(new JLabel());
             interruptButton = new JButton("Interrupt");
             interruptButton.addActionListener((event) -> {
                 int c;
@@ -86,7 +93,7 @@ public class EmulatorGui {
             stackPanel.stack = true;
             p.add(stackPanel);
 
-            kernalPanel = new MemoryPanel(emulator.cores[0], 0, 10);
+            kernalPanel = new MemoryPanel(emulator.cores[0], 0, 32);
             p.add(kernalPanel);
 
             frame.setSize(1500, 500);

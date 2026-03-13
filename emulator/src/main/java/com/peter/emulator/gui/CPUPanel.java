@@ -104,6 +104,8 @@ public class CPUPanel extends JPanel {
 
         debuggerPanel = new DebuggerPanel(cpu);
         add(debuggerPanel);
+
+        update();
     }
 
     public void update() {

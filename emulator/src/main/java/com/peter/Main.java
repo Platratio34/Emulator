@@ -227,7 +227,7 @@ public class Main {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        emulator.ram.copy(assembler.build());
+        emulator.ram.copyWords(assembler.build());
         emulator.cores[0].debugger = new Debugger(assembler.symbols, assembler.symbols);
         
         // Assembler assembler = new Assembler();
@@ -247,7 +247,7 @@ public class Main {
         // emulator.setProgram(pgm);
         emulator.run();
         
-        while (emulator.isRunning() && emulator.cores[0].running) {
+        while (emulator.isRunning()/* && emulator.cores[0].running */) {
             try {
                 Thread.sleep(10);
             } catch (InterruptedException e) {

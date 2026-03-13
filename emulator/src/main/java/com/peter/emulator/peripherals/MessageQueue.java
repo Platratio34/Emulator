@@ -14,12 +14,12 @@ public class MessageQueue {
     public boolean hasMsg() {
         if (start == -1 || ram == null)
             return false;
-        return ram.read(pointer + 1) == 0x1;
+        return ram.readWord(pointer + 1) == 0x1;
     }
 
     public int read() {
-        int v = ram.read(pointer);
-        ram.write(pointer + 1, 0x2);
+        int v = ram.readWord(pointer);
+        ram.writeWord(pointer + 1, 0x2);
         pointer += 2;
         if (pointer >= end) {
             pointer = start;

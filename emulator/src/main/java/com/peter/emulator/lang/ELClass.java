@@ -102,10 +102,6 @@ public class ELClass extends Namespace {
         return size;
     }
 
-    public int getSizeWords() {
-        return Math.ceilDiv(getSize(), 4);
-    }
-
     public int getOffset(String member) {
         if (!memberVariables.containsKey(member)) {
             throw new NoSuchElementException("Struct " + cName + " does not contain member variable " + member);

@@ -99,7 +99,7 @@ public class Emulator {
     }
 
     public void setProgram(int[] data, int position) {
-        ram.copy(data, position);
+        ram.copyWords(data, position);
         cores[0].setPtr(position);
         cores[0].running = true;
     }
@@ -121,6 +121,12 @@ public class Emulator {
         if(!wait) {
             waiting = false;
             thread.interrupt();
+        }
+    }
+
+    public void reset() {
+        for (CPU core : cores) {
+            core.reset();
         }
     }
 }

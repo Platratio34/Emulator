@@ -1,5 +1,7 @@
 package com.peter.emulator;
 
+import com.peter.emulator.assembly.AssemblerError;
+
 public class MachineCode {
 
     public static final int MASK_INSTRUCTION = 0xff00_0000;
@@ -220,33 +222,33 @@ public class MachineCode {
                 String rg = translateReg(instruction & MASK_GOTO_RG);
                 return switch (op) {
                     case GOTO_UNCD -> String.format("GOTO %s", ra);
-                    case GOTO_REL_UNCD -> String.format("GOTO pPtr + %d", int8(raV));
+                    case GOTO_REL_UNCD -> String.format("GOTO pPtr + %s", next);
                     case GOTO_PUSH_UNCD -> String.format("GOTO PUSH %s", ra);
-                    case GOTO_PUSH_REL_UNCD -> String.format("GOTO PUSH pPtr + %d", int8(raV));
+                    case GOTO_PUSH_REL_UNCD -> String.format("GOTO PUSH pPtr + %s", next);
                     case GOTO_POP_UNCD -> String.format("GOTO POP");
 
                     case GOTO_EQ_ZERO -> String.format("GOTO %s ? %s == 0", ra, rg);
-                    case GOTO_REL_EQ_ZERO -> String.format("GOTO pPtr + %d ? %s == 0", int8(raV), rg);
+                    case GOTO_REL_EQ_ZERO -> String.format("GOTO pPtr + %s ? %s == 0", next, rg);
                     case GOTO_PUSH_EQ_ZERO -> String.format("GOTO PUSH %s ? %s == 0", ra, rg);
-                    case GOTO_PUSH_REL_EQ_ZERO -> String.format("GOTO PUSH pPtr + %d ? %s == 0", int8(raV), rg);
+                    case GOTO_PUSH_REL_EQ_ZERO -> String.format("GOTO PUSH pPtr + %s ? %s == 0", next, rg);
                     case GOTO_POP_EQ_ZERO -> String.format("GOTO POP ? %s == 0", rg);
 
                     case GOTO_LEQ_ZERO -> String.format("GOTO %s ? %s <= 0", ra, rg);
-                    case GOTO_REL_LEQ_ZERO -> String.format("GOTO pPtr + %d ? %s <= 0", int8(raV), rg);
+                    case GOTO_REL_LEQ_ZERO -> String.format("GOTO pPtr + %s ? %s <= 0", next, rg);
                     case GOTO_PUSH_LEQ_ZERO -> String.format("GOTO PUSH %s ? %s <= 0", ra, rg);
-                    case GOTO_PUSH_REL_LEQ_ZERO -> String.format("GOTO PUSH pPtr + %d ? %s <= 0", int8(raV), rg);
+                    case GOTO_PUSH_REL_LEQ_ZERO -> String.format("GOTO PUSH pPtr + %s ? %s <= 0", next, rg);
                     case GOTO_POP_LEQ_ZERO -> String.format("GOTO POP ? %s <= 0", rg);
 
                     case GOTO_GT_ZERO -> String.format("GOTO %s ? %s > 0", ra, rg);
-                    case GOTO_REL_GT_ZERO -> String.format("GOTO pPtr + %d ? %s > 0", int8(raV), rg);
+                    case GOTO_REL_GT_ZERO -> String.format("GOTO pPtr + %s ? %s > 0", next, rg);
                     case GOTO_PUSH_GT_ZERO -> String.format("GOTO PUSH %s ? %s > 0", ra, rg);
-                    case GOTO_PUSH_REL_GT_ZERO -> String.format("GOTO PUSH pPtr + %d ? %s > 0", int8(raV), rg);
+                    case GOTO_PUSH_REL_GT_ZERO -> String.format("GOTO PUSH pPtr + %s ? %s > 0", next, rg);
                     case GOTO_POP_GT_ZERO -> String.format("GOTO POP ? %s > 0", rg);
 
                     case GOTO_NOT_ZERO -> String.format("GOTO %s ? %s != 0", ra, rg);
-                    case GOTO_REL_NOT_ZERO -> String.format("GOTO pPtr + %d ? %s != 0", int8(raV), rg);
+                    case GOTO_REL_NOT_ZERO -> String.format("GOTO pPtr + %s ? %s != 0", next, rg);
                     case GOTO_PUSH_NOT_ZERO -> String.format("GOTO PUSH %s ? %s != 0", ra, rg);
-                    case GOTO_PUSH_REL_NOT_ZERO -> String.format("GOTO PUSH pPtr + %d ? %s != 0", int8(raV), rg);
+                    case GOTO_PUSH_REL_NOT_ZERO -> String.format("GOTO PUSH pPtr + %s ? %s != 0", next, rg);
                     case GOTO_POP_NOT_ZERO -> String.format("GOTO POP ? %s != 0", rg);
 
                     default -> String.format("GOTO (%x)", instruction);
@@ -314,6 +316,8 @@ public class MachineCode {
     }
 
     public static int uint32ToInt8(int val) {
+        if (val < -128 || val > 127)
+            throw new RuntimeException("Invalid uint32 to int8 conversion");
         if (val < 0) {
             byte v = (byte) val;
             return ((int) v) & 0xff;

@@ -30,7 +30,7 @@ public class ActionScope {
         stackOff = 0;
         this.function = function;
         if (function != null) {
-            int o = - 2;
+            int o = -8; // accounting for ret address and last stack ref pointer
             for (int i = function.paramOrder.size() - 1; i >= 0; i--) {
                 String name = function.paramOrder.get(i);
                 ELType type = function.params.get(name);
@@ -40,12 +40,12 @@ public class ActionScope {
                     unit.errors.warning("Duplicate variable name `" + name + "`");
                     continue;
                 }
-                o -= type.sizeofWords();
+                o -= type.sizeof();
                 var.offset = o;
                 stackVars.put(name, var);
             }
             if (function.ret != null) {
-                returnOffset = o - function.ret.sizeofWords();
+                returnOffset = o - function.ret.sizeof();
             }
         }
     }
@@ -67,7 +67,7 @@ public class ActionScope {
             return var;
         }
         var.offset = stackOff;
-        stackOff += type.sizeofWords();
+        stackOff += type.sizeof();
         stackVars.put(name, var);
         return var;
     }
@@ -83,7 +83,7 @@ public class ActionScope {
     //             errors.warning("Duplicate variable name `" + name + "`");
     //             continue;
     //         }
-    //         o -= type.sizeofWords();
+    //         o -= type.sizeof();
     //         var.offset = o;
     //         returnOffset = o;
     //         stackVars.put(name, var);

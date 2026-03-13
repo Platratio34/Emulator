@@ -8,7 +8,7 @@
 #var Kernal.SYS_NAME "EmulatorOS" // char*
 #define Kernal.CONSOLE_PNTR 0x0841 // uint32
 #define Kernal.CMD_WRITTEN 0x0001 // uint32
-#var Kernal.processStates (22528) // ProcessState[1024]
+#var Kernal.processStates (90112) // ProcessState[1024]
 #define Kernal.CMD_1 0x8005 // uint32
 #define Kernal.CMD_STATUS 0x8001 // uint32
 #define Kernal.CMD_2 0x8006 // uint32
@@ -57,7 +57,7 @@ STACK PUSH r1
 LOAD r1 &Kernal.CONSOLE_SETUP_CMD
 STACK PUSH r1
 GOTO PUSH :Kernal.peripheralCmd_uint32_uint32_uint32*
-STACK DEC 3
+STACK DEC 12
 //  peripheralCmd(0x0001, 3, & CONSOLE_SETUP_CMD)
 
 // 3 32:54
@@ -73,7 +73,7 @@ STACK PUSH r1
 //  uint32 a = Kernal.CONSOLE_PNTR;
 
 :func_exit_Kernal._main
-STACK DEC 1
+STACK DEC 4
 STACK POP r15
 HALT
 #endfunction void
@@ -117,13 +117,13 @@ STORE r2 r1
 // 3 126:10
 LOAD r1 &Kernal.processStates
 COPY r15 r2
-INC r2 -3
+INC r2 -12
 STORE r1 r2
 GOTO :func_exit_Kernal.createProcess
 //  return & processStates[nextPID];
 
 :func_exit_Kernal.createProcess
-STACK DEC 1
+STACK DEC 4
 STACK POP r15
 GOTO POP
 #endfunction ProcessState*
@@ -151,7 +151,7 @@ STACK PUSH r1
 
 // 3 46:10
 COPY r15 r1
-INC r1 1
+INC r1 4
 LOAD MEM r1 r1
 LOAD r2 0
 STORE r2 r1
@@ -167,7 +167,7 @@ STACK PUSH r1
 
 // 6 50:10
 COPY r15 r1
-INC r1 2
+INC r1 8
 LOAD MEM r1 r1
 LOAD r2 -2147483648
 AND r1 r1 r2
@@ -192,7 +192,7 @@ GOTO :if_end_2
 :if_else_2
 // 0 58:14
 COPY r15 r1
-INC r1 2
+INC r1 8
 LOAD MEM r1 r1
 INC r1 2147483647
 SET FORCE EQ r1 r1
@@ -205,7 +205,7 @@ GOTO EQ r1 :if_end_3
 
 // 1 61:14
 COPY r15 r1
-INC r1 2
+INC r1 8
 LOAD MEM r1 r1
 LOAD r2 65536
 AND r1 r1 r2
@@ -223,7 +223,7 @@ GOTO EQ r1 :if_end_4
 //  SysD.interruptReturn();
 
 :func_exit_Kernal._interrupt
-STACK DEC 3
+STACK DEC 12
 STACK POP r15
 INTERRUPT RET
 #endfunction void
@@ -274,7 +274,7 @@ STORE r2 r1
 //  SysD.memSet(CMD_STATUS, CMD_WRITTEN);
 
 :func_exit_Kernal.peripheralCmd_uint32_uint32_uint32*
-STACK DEC 1
+STACK DEC 4
 STACK POP r15
 GOTO POP
 #endfunction void
@@ -286,7 +286,7 @@ STACK PUSH r15
 COPY rStack r15
 // 0 210:14
 COPY r15 r1
-INC r1 -3
+INC r1 -12
 LOAD MEM r1 r1
 COPY rPID r2
 STORE r2 r1
@@ -304,10 +304,10 @@ STORE r2 r1
 
 // 3 213:14
 COPY r15 r1
-INC r1 -3
+INC r1 -12
 LOAD MEM r1 r1
 COPY r15 r2
-INC r2 -4
+INC r2 -16
 STORE r1 r2
 GOTO :func_exit_Kernal.ProcessState.create_ProcessState&
 //  return state;
@@ -694,7 +694,7 @@ COPY rStack r15
 // 0 14:10
 COPY r0 r1
 COPY r15 r2
-INC r2 -5
+INC r2 -20
 LOAD MEM r2 r2
 STORE r2 r1
 //  this.address = address;
@@ -703,7 +703,7 @@ STORE r2 r1
 COPY r0 r1
 INC r1 4
 COPY r15 r2
-INC r2 -4
+INC r2 -16
 LOAD MEM r2 r2
 STORE r2 r1
 //  this.deviceId = deviceId;
@@ -712,7 +712,7 @@ STORE r2 r1
 COPY r0 r1
 INC r1 12
 COPY r15 r2
-INC r2 -3
+INC r2 -12
 LOAD MEM r2 r2
 STORE r2 r1
 //  this.consoleSize = consoleSize;
@@ -721,10 +721,10 @@ STORE r2 r1
 COPY r0 r1
 INC r1 8
 COPY r15 r2
-INC r2 -5
+INC r2 -20
 LOAD MEM r2 r2
 COPY r15 r3
-INC r3 -3
+INC r3 -12
 LOAD MEM r3 r3
 LOAD r4 2
 MUL r3 r3 r4
@@ -746,7 +746,7 @@ STACK PUSH r15
 COPY rStack r15
 // 0 32:10
 COPY r15 r1
-INC r1 -3
+INC r1 -12
 LOAD MEM r1 r1
 SET FORCE EQ r1 r1
 GOTO EQ r1 :if_else_5
@@ -759,7 +759,7 @@ STACK PUSH r1
 :while_condition_6
 //  while(str[i] != 0) {printChar(str[i]); i++;}
 
-STACK DEC 1
+STACK DEC 4
 GOTO :if_end_5
 :if_else_5
 // 0 39:14
@@ -779,7 +779,7 @@ COPY rStack r15
 // 0 22:10
 COPY r0 r1
 COPY r15 r2
-INC r2 -3
+INC r2 -12
 LOAD MEM r2 r2
 //  address[index] = c;
 

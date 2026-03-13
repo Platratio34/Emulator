@@ -65,6 +65,7 @@ public class FunctionAction extends ComplexAction {
             r.reserve();
         boolean[] reserved = new boolean[16];
         ArrayList<Action> tempActions = new ArrayList<>();
+        int stackSize = 0;
         for (int i = 0; i < it.params.subTokens.size(); i++) {
             Token t2 = it.params.subTokens.get(i);
             endOfParams = t2.endLocation;
@@ -78,9 +79,10 @@ public class FunctionAction extends ComplexAction {
                 ExpressionAction expA = new ExpressionAction(scope, exp, r);
                 tempActions.add(expA);
                 types.add(expA.outType == null ? ELPrimitives.OBJECT : expA.outType);
-                if(onStack)
+                if (onStack) {
                     tempActions.add(new DirectAction("STACK PUSH %s", r));
-                else {
+                    stackSize += 4;
+                } else {
                     // actions.add(new DirectAction("COPY %s %s", MachineCode.translateReg(r),
                     //         MachineCode.translateReg(r++)));
                     r.reserve();
@@ -98,6 +100,7 @@ public class FunctionAction extends ComplexAction {
             if (onStack) {
                 tempActions.add(new DirectAction("STACK PUSH %s", r));
                 r.release();
+                stackSize += 4;
             }  else {
                 tempActions.add(new DirectAction("COPY %s %s", r, r));
             }
@@ -200,16 +203,16 @@ public class FunctionAction extends ComplexAction {
             }
         }
         if (f.ret != null)
-            actions.add(new DirectAction("STACK INC %d", f.ret.sizeofWords()));
+            actions.add(new DirectAction("STACK INC %d", f.ret.sizeof()));
         actions.addAll(tempActions);
         actions.add(new DirectAction("GOTO PUSH :%s", f.getQualifiedName(true)));
         if (f.ret == null) {
             if (onStack)
-                actions.add(new DirectAction("STACK DEC %d", types.size()));
+                actions.add(new DirectAction("STACK DEC %d", stackSize));
         } else if(targetReg >= 0) {
             retType = f.ret;
             if (onStack) {
-                actions.add(new DirectAction("STACK DEC %d", types.size()-1));
+                actions.add(new DirectAction("STACK DEC %d", stackSize-4));
                 actions.add(new DirectAction("STACK POP %s", MachineCode.translateReg(targetReg)));
             } else {
                 actions.add(new DirectAction("COPY r1 %s", MachineCode.translateReg(targetReg)));

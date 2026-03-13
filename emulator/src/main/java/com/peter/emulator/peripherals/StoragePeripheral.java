@@ -26,7 +26,7 @@ public class StoragePeripheral implements MemoryMappedPeripheral {
     }
 
     @Override
-    public void link(RAM ram, int deviceID) {
+    public void link(RAM ram, byte deviceID) {
         
     }
 

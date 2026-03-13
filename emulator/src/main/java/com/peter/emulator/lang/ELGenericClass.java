@@ -51,11 +51,6 @@ public class ELGenericClass extends ELClass {
     }
 
     @Override
-    public int getSizeWords() {
-        return baseClass.getSizeWords();
-    }
-
-    @Override
     public ELType getType() {
         ELType ot = baseClass.getType();
         for (int i = 0; i < types.length; i++) {

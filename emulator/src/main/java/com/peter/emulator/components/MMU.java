@@ -21,12 +21,12 @@ public class MMU {
                 throw new MemoryException(addr);
         } else { // process ram
             int localAddr = addr - 0x2_0000;
-            int numPages = cpu.ram.read(cpu.memTablePtr);
-            int pageIndex = (localAddr & 0xffff_f000) >> 12;
+            int numPages = cpu.ram.readWord(cpu.memTablePtr);
+            int pageIndex = (localAddr & 0xffff_f000) >> 10;
             int addrOffset = localAddr & 0xfff;
             if (pageIndex > numPages)
                 throw new MemoryException(addr);
-            int pageAddr = cpu.ram.read(cpu.memTablePtr + pageIndex + 1);
+            int pageAddr = cpu.ram.readWord(cpu.memTablePtr + pageIndex + 4);
             return pageAddr | addrOffset;
             // for (int i = 0; i < maxNumBlocks; i++) {
             //     if (cpu.pid != ram.read(blockAddr + 2))

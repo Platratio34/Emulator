@@ -40,7 +40,7 @@ HALT
 //  if(code == 0xff) {asm("HALT");}
 
 :func_exit_TestD.onInterrupt
-STACK DEC 1
+STACK DEC 4
 STACK POP r15
 INTERRUPT RET
 #endfunction void
@@ -51,13 +51,13 @@ COPY rStack r15
 // 0 48:10
 :while_condition_9
 COPY r15 r1
-INC r1 -3
+INC r1 -12
 LOAD MEM r1 r1
 SET FORCE GT r1 r1
 GOTO EQ r1 :while_end_9
 // 0 49:14
 COPY r15 r1
-INC r1 -3
+INC r1 -12
 LOAD MEM r2 r1
 INC r2 -1
 STORE r2 r1
@@ -84,7 +84,7 @@ LOAD rIH &:TestD.onInterrupt
 // ;
 
 // 2 11:10
-STACK INC
+STACK INC 4
 //  uint32 b;
 
 // 3 12:10
@@ -95,18 +95,18 @@ STACK PUSH r1
 // 4 13:10
 LOAD r1 &TestD.v
 COPY r15 r2
-INC r2 1
+INC r2 4
 LOAD MEM r2 r2
 STORE r2 r1
 //  v = a;
 
 // 5 14:10
-STACK INC
+STACK INC 4
 //  char c;
 
 // 6 15:10
 COPY r15 r1
-INC r1 2
+INC r1 8
 COPY r15 r2
 LOAD MEM r2 r2
 STORE r2 r1
@@ -115,11 +115,11 @@ STORE r2 r1
 // 7 17:10
 COPY r15 r1
 COPY r15 r2
-INC r2 1
+INC r2 4
 LOAD MEM r2 r2
 INC r2 1
 COPY r15 r3
-INC r3 2
+INC r3 8
 LOAD MEM r3 r3
 ADD r2 r2 r3
 STORE r2 r1
@@ -127,18 +127,18 @@ STORE r2 r1
 
 // 8 18:10
 COPY r15 r1
-INC r1 2
+INC r1 8
 LOAD r2 32
 STORE r2 r1
 //  c = 32;
 
 // 9 19:10
 COPY r15 r1
-INC r1 2
+INC r1 8
 LOAD MEM r1 r1
 STACK PUSH r1
 GOTO PUSH :TestD.funcb_uint32
-STACK DEC 1
+STACK DEC 4
 //  funcb(c)
 
 // 10 19:18
@@ -161,13 +161,13 @@ STORE r1 r2
 // ;
 
 // 15 23:10
-STACK INC 2
+STACK INC 8
 //  StructA sA;
 
 // 16 24:10
-STACK INC 1
+STACK INC 4
 COPY r15 r1
-INC r1 3
+INC r1 12
 STACK PUSH r1
 GOTO PUSH :TestD.testA_StructA&
 //  testA(& sA)
@@ -179,14 +179,14 @@ GOTO PUSH :TestD.testA_StructA&
 LOAD r1 1000
 STACK PUSH r1
 GOTO PUSH :TestD.wait_uint32
-STACK DEC 1
+STACK DEC 4
 //  wait(1000)
 
 // 19 26:20
 // ;
 
 :func_exit_TestD.main
-STACK DEC 4
+STACK DEC 16
 STACK POP r15
 HALT
 #endfunction void
@@ -197,7 +197,7 @@ COPY rStack r15
 // 0 31:10
 LOAD r1 &TestD.v
 COPY r15 r2
-INC r2 -3
+INC r2 -12
 LOAD MEM r2 r2
 LOAD MEM r3 r1
 ADD r2 r3 r2
@@ -215,7 +215,7 @@ COPY rStack r15
 // 0 35:10
 LOAD r1 &TestD.v
 COPY r15 r2
-INC r2 -4
+INC r2 -16
 LOAD MEM r2 r2
 LOAD MEM r3 r1
 ADD r2 r3 r2
@@ -232,7 +232,7 @@ STACK PUSH r15
 COPY rStack r15
 // 0 54:10
 COPY r15 r1
-INC r1 -3
+INC r1 -12
 LOAD MEM r1 r1
 LOAD r2 32
 STORE r2 r1
@@ -240,7 +240,7 @@ STORE r2 r1
 
 // 1 55:10
 COPY r15 r1
-INC r1 -3
+INC r1 -12
 LOAD MEM r1 r1
 LOAD r2 -1
 STORE r2 r1
@@ -248,10 +248,10 @@ STORE r2 r1
 
 // 2 56:10
 COPY r15 r1
-INC r1 -3
+INC r1 -12
 LOAD MEM r1 r1
 COPY r15 r2
-INC r2 -4
+INC r2 -16
 STORE r1 r2
 GOTO :func_exit_TestD.testA_StructA&
 //  return str;

@@ -96,10 +96,10 @@ public class ResolveAction extends ComplexAction {
                     if (indexExp.outType != null && !indexExp.outType.equals(ELPrimitives.UINT32))
                         throw ELAnalysisError.error("Index must resolve to a uint32",
                                 id.index.subFirst().startLocation.span(id.index.subLast().endLocation));
-                    int wds = v.sizeofWords();
+                    int wds = v.sizeof();
                     if (wds > 1) {
                         Register r3 = scope.firstFree();
-                        actions.add(new DirectAction("LOAD %s %d\nMUL %s %s %s", r3, v.sizeofWords(), r2, r2, r3));
+                        actions.add(new DirectAction("LOAD %s %d\nMUL %s %s %s", r3, v.sizeof(), r2, r2, r3));
                     }
                     actions.add(new DirectAction("ADD %s %s %s", reg, reg, r2));
                     actions.add(new DirectAction("LOAD MEM %s %s", reg, reg));
