@@ -12,8 +12,6 @@
 STACK PUSH r15
 COPY rStack r15
 // 0 40:10
-COPY rIC r1
-STACK PUSH r1
 //  uint32 code = SysD.rIC;
 
 // 1 41:10
@@ -28,7 +26,7 @@ COPY r15 r1
 LOAD MEM r1 r1
 INC r1 -255
 SET FORCE EQ r1 r1
-GOTO EQ r1 :if_end_8
+GOTO EQ r1 :if_end_9
 // 0 43:14
 HALT
 //  asm("HALT")
@@ -36,7 +34,7 @@ HALT
 // 1 43:25
 // ;
 
-:if_end_8
+:if_end_9
 //  if(code == 0xff) {asm("HALT");}
 
 :func_exit_TestD.onInterrupt
@@ -49,12 +47,12 @@ INTERRUPT RET
 STACK PUSH r15
 COPY rStack r15
 // 0 48:10
-:while_condition_9
+:while_condition_10
 COPY r15 r1
 INC r1 -12
 LOAD MEM r1 r1
 SET FORCE GT r1 r1
-GOTO EQ r1 :while_end_9
+GOTO EQ r1 :while_end_10
 // 0 49:14
 COPY r15 r1
 INC r1 -12
@@ -63,8 +61,8 @@ INC r2 -1
 STORE r2 r1
 //  time--;
 
-GOTO :while_condition_9
-:while_end_9
+GOTO :while_condition_10
+:while_end_10
 //  while(time > 0) {time--;}
 
 :func_exit_TestD.wait_uint32
@@ -84,12 +82,9 @@ LOAD rIH &:TestD.onInterrupt
 // ;
 
 // 2 11:10
-STACK INC 4
 //  uint32 b;
 
 // 3 12:10
-COPY rPgm r1
-STACK PUSH r1
 //  uint32 a = SysD.rPgm;
 
 // 4 13:10
@@ -101,7 +96,6 @@ STORE r2 r1
 //  v = a;
 
 // 5 14:10
-STACK INC 4
 //  char c;
 
 // 6 15:10
@@ -161,7 +155,6 @@ STORE r1 r2
 // ;
 
 // 15 23:10
-STACK INC 8
 //  StructA sA;
 
 // 16 24:10

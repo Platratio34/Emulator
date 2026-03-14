@@ -8,7 +8,7 @@
 #var Kernal.SYS_NAME "EmulatorOS" // char*
 #define Kernal.CONSOLE_PNTR 0x0841 // uint32
 #define Kernal.CMD_WRITTEN 0x0001 // uint32
-#var Kernal.processStates (90112) // ProcessState[1024]
+#var Kernal.processStates (98304) // ProcessState[1024]
 #define Kernal.CMD_1 0x8005 // uint32
 #define Kernal.CMD_STATUS 0x8001 // uint32
 #define Kernal.CMD_2 0x8006 // uint32
@@ -31,7 +31,11 @@
 STACK PUSH r15
 COPY rStack r15
 // 0 79:10
-//  SysD.halt();
+HALT
+//  SysD.halt()
+
+// 1 79:21
+// ;
 
 :func_exit_Kernal.exit
 STACK POP r15
@@ -64,12 +68,20 @@ STACK DEC 12
 // ;
 
 // 4 33:10
-//  SysD.memSet(CONSOLE_START, CONSOLE_PNTR);
-
-// 5 37:10
-LOAD r1 Kernal.CONSOLE_PNTR
-LOAD MEM r1 r1
 STACK PUSH r1
+LOAD r1 Kernal.CONSOLE_START
+LOAD MEM r1 r1
+LOAD r2 Kernal.CONSOLE_PNTR
+LOAD MEM r2 r2
+COPY r2 r2
+STORE MEM r1 r2
+STACK POP r1
+//  SysD.memSet(CONSOLE_START, CONSOLE_PNTR)
+
+// 5 33:50
+// ;
+
+// 6 37:10
 //  uint32 a = Kernal.CONSOLE_PNTR;
 
 :func_exit_Kernal._main
@@ -82,10 +94,6 @@ HALT
 STACK PUSH r15
 COPY rStack r15
 // 0 112:10
-LOAD r1 &Kernal.lastPID
-LOAD MEM r1 r1
-INC r1 1
-STACK PUSH r1
 //  uint32 nextPID = lastPID + 1;
 
 // 1 113:10
@@ -131,43 +139,27 @@ GOTO POP
 #function Kernal._interrupt
 STACK PUSH r15
 COPY rStack r15
-// 0 43:10
-COPY rStack r1
-STACK PUSH r1
-//  void* stack = SysD.rStack;
-
-// 1 44:10
-COPY r15 r1
-LOAD r2 2
-LOAD MEM r3 r1
-SUB r2 r3 r2
-STORE r2 r1
-//  stack -= 2;
-
-// 2 45:10
+// 0 45:10
 LOAD r1 &Kernal.processStates
 STACK PUSH r1
 //  ProcessState* oldState = & processStates[SysD.rPID];
 
-// 3 46:10
+// 1 46:10
 COPY r15 r1
-INC r1 4
 LOAD MEM r1 r1
 LOAD r2 0
 STORE r2 r1
 //  oldState.pid = 0;
 
-// 4 47:10
+// 2 47:10
 //  oldState.updateInterrupt();
 
-// 5 49:10
-COPY rIC r1
-STACK PUSH r1
+// 3 49:10
 //  uint32 code = SysD.rIC;
 
-// 6 50:10
+// 4 50:10
 COPY r15 r1
-INC r1 8
+INC r1 4
 LOAD MEM r1 r1
 LOAD r2 -2147483648
 AND r1 r1 r2
@@ -182,9 +174,13 @@ COPY rPM r1
 //  oldState.interruptHandler.call(code);
 
 // 2 55:14
-//  SysD.interruptReturn();
+INTERRUPT RET
+//  SysD.interruptReturn()
 
-// 3 56:14
+// 3 55:36
+// ;
+
+// 4 56:14
 GOTO :func_exit_Kernal._interrupt
 //  return;
 
@@ -192,20 +188,24 @@ GOTO :if_end_2
 :if_else_2
 // 0 58:14
 COPY r15 r1
-INC r1 8
+INC r1 4
 LOAD MEM r1 r1
 INC r1 2147483647
 SET FORCE EQ r1 r1
 GOTO EQ r1 :if_end_3
 // 0 59:18
-//  SysD.halt();
+HALT
+//  SysD.halt()
+
+// 1 59:29
+// ;
 
 :if_end_3
 //  if(code == 0x8000_0001) {SysD.halt();}
 
 // 1 61:14
 COPY r15 r1
-INC r1 8
+INC r1 4
 LOAD MEM r1 r1
 LOAD r2 65536
 AND r1 r1 r2
@@ -219,11 +219,15 @@ GOTO EQ r1 :if_end_4
 :if_end_2
 //  if((code & 0x8000_0000) == 0) {SysD.rPM = false; oldState.interruptHandler.call(code); SysD.interruptReturn(); return;} else {if(code == 0x8000_0001) {SysD.halt();} if((code & 0x0001_0000) != 0) {}}
 
-// 7 69:10
-//  SysD.interruptReturn();
+// 5 69:10
+INTERRUPT RET
+//  SysD.interruptReturn()
+
+// 6 69:32
+// ;
 
 :func_exit_Kernal._interrupt
-STACK DEC 12
+STACK DEC 8
 STACK POP r15
 INTERRUPT RET
 #endfunction void
@@ -242,36 +246,93 @@ GOTO POP
 STACK PUSH r15
 COPY rStack r15
 // 0 83:10
-LOAD r1 Kernal.CMD_DEVICE
-LOAD MEM r1 r1
-STACK PUSH r1
 //  uint32 addr = CMD_DEVICE;
 
 // 1 84:10
-//  SysD.memSet(addr, deviceId);
-
-// 2 85:10
+STACK PUSH r1
 COPY r15 r1
-LOAD MEM r2 r1
-INC r2 1
-STORE r2 r1
+LOAD MEM r1 r1
+COPY r15 r2
+INC r2 -20
+LOAD MEM r2 r2
+COPY r2 r2
+STORE MEM r1 r2
+STACK POP r1
+//  SysD.memSet(addr, deviceId)
+
+// 2 84:37
+// ;
+
+// 3 85:10
+COPY r15 r3
+LOAD MEM r4 r3
+INC r4 1
+STORE r4 r3
 //  addr++;
 
-// 3 86:10
-//  SysD.memSet(addr, cmdSize);
-
-// 4 87:10
+// 4 86:10
+STACK PUSH r1
 COPY r15 r1
-LOAD MEM r2 r1
-INC r2 1
-STORE r2 r1
+LOAD MEM r1 r1
+COPY r15 r2
+INC r2 -16
+LOAD MEM r2 r2
+COPY r2 r2
+STORE MEM r1 r2
+STACK POP r1
+//  SysD.memSet(addr, cmdSize)
+
+// 5 86:36
+// ;
+
+// 6 87:10
+COPY r15 r3
+LOAD MEM r4 r3
+INC r4 1
+STORE r4 r3
 //  addr++;
 
-// 5 88:10
-//  SysD.memCopy(cmd, 0, cmdSize, (uint32*) addr, 0);
+// 7 88:10
+STACK PUSH r1
+COPY r15 r1
+INC r1 -12
+LOAD MEM r1 r1
+STACK PUSH r2
+LOAD r2 0
+COPY r15 r3
+INC r3 -16
+LOAD MEM r3 r3
+COPY r15 r4
+LOAD MEM r4 r4
+LOAD r5 0
+COPY r5 r5
+ADD r1 r1 r2
+ADD r4 r4 r5
+SUB r3 r3 r2
+:loop_5
+COPY MEM r1 r4
+INC r3 -1
+GOTO GT r3 :loop_5
+STACK POP r2
+STACK POP r1
+//  SysD.memCopy(cmd, 0, cmdSize, addr, 0)
 
-// 6 89:10
-//  SysD.memSet(CMD_STATUS, CMD_WRITTEN);
+// 8 88:61
+// ;
+
+// 9 89:10
+STACK PUSH r1
+LOAD r1 Kernal.CMD_STATUS
+LOAD MEM r1 r1
+LOAD r2 Kernal.CMD_WRITTEN
+LOAD MEM r2 r2
+COPY r2 r2
+STORE MEM r1 r2
+STACK POP r1
+//  SysD.memSet(CMD_STATUS, CMD_WRITTEN)
+
+// 10 89:46
+// ;
 
 :func_exit_Kernal.peripheralCmd_uint32_uint32_uint32*
 STACK DEC 4
@@ -297,7 +358,7 @@ STORE r2 r1
 
 // 2 212:14
 COPY r0 r1
-INC r1 84
+INC r1 88
 LOAD r2 1
 STORE r2 r1
 //  status = 1;
@@ -322,28 +383,28 @@ STACK PUSH r15
 COPY rStack r15
 // 0 197:14
 COPY r0 r1
-INC r1 12
+INC r1 16
 LOAD MEM r1 r1
 COPY rMemTbl r1
 //  SysD.rMemTbl = memTablePtr;
 
 // 1 198:14
 COPY r0 r1
-INC r1 8
+INC r1 12
 LOAD MEM r1 r1
 COPY rStack r1
 //  SysD.rStack = stackPtr;
 
 // 2 199:14
 COPY r0 r1
-INC r1 16
+INC r1 20
 LOAD MEM r1 r1
 COPY rPM r1
 //  SysD.rPM = privileged;
 
 // 3 200:14
 COPY r0 r1
-INC r1 4
+INC r1 8
 LOAD MEM r1 r1
 COPY rPgm r1
 //  SysD.rPgm = pgmPtr;
@@ -358,21 +419,21 @@ STACK PUSH r15
 COPY rStack r15
 // 0 204:14
 COPY r0 r1
-INC r1 12
+INC r1 16
 LOAD MEM r1 r1
 COPY rMemTbl r1
 //  SysD.rMemTbl = memTablePtr;
 
 // 1 205:14
 COPY r0 r1
-INC r1 8
+INC r1 12
 LOAD MEM r1 r1
 COPY rStack r1
 //  SysD.rStack = stackPtr;
 
 // 2 206:14
 COPY r0 r1
-INC r1 16
+INC r1 20
 LOAD MEM r1 r1
 COPY rPM r1
 //  SysD.rPM = privileged;
@@ -387,28 +448,28 @@ STACK PUSH r15
 COPY rStack r15
 // 0 145:14
 COPY r0 r1
-INC r1 4
+INC r1 8
 COPY rPgm r2
 STORE r2 r1
 //  pgmPtr = SysD.rPgm;
 
 // 1 146:14
 COPY r0 r1
-INC r1 8
+INC r1 12
 COPY rStack r2
 STORE r2 r1
 //  stackPtr = SysD.rStack;
 
 // 2 147:14
 COPY r0 r1
-INC r1 12
+INC r1 16
 COPY rMemTbl r2
 STORE r2 r1
 //  memTablePtr = SysD.rMemTbl;
 
 // 3 148:14
 COPY r0 r1
-INC r1 16
+INC r1 20
 COPY rPM r2
 STORE r2 r1
 //  privileged = SysD.rPM;
@@ -423,125 +484,125 @@ STACK PUSH r15
 COPY rStack r15
 // 0 174:14
 COPY r0 r1
-INC r1 8
+INC r1 12
 LOAD MEM r1 r1
 COPY rStackI r1
 //  SysD.rStackI = stackPtr;
 
 // 1 175:14
 COPY r0 r1
-INC r1 16
+INC r1 20
 LOAD MEM r1 r1
 COPY rPMI r1
 //  SysD.rPMI = privileged;
 
 // 2 176:14
 COPY r0 r1
-INC r1 4
+INC r1 8
 LOAD MEM r1 r1
 COPY rPgmI r1
 //  SysD.rPgmI = pgmPtr;
 
 // 3 177:14
 COPY r0 r1
-INC r1 12
+INC r1 16
 LOAD MEM r1 r1
 COPY rMemTblI r1
 //  SysD.rMemTblI = memTablePtr;
 
 // 4 178:14
 COPY r0 r1
-INC r1 20
+INC r1 24
 LOAD MEM r1 r1
 //  SysD.r0I = registers[0];
 
 // 5 179:14
 COPY r0 r1
-INC r1 20
+INC r1 24
 LOAD MEM r1 r1
 //  SysD.r1I = registers[1];
 
 // 6 180:14
 COPY r0 r1
-INC r1 20
+INC r1 24
 LOAD MEM r1 r1
 //  SysD.r2I = registers[2];
 
 // 7 181:14
 COPY r0 r1
-INC r1 20
+INC r1 24
 LOAD MEM r1 r1
 //  SysD.r3I = registers[3];
 
 // 8 182:14
 COPY r0 r1
-INC r1 20
+INC r1 24
 LOAD MEM r1 r1
 //  SysD.r4I = registers[4];
 
 // 9 183:14
 COPY r0 r1
-INC r1 20
+INC r1 24
 LOAD MEM r1 r1
 //  SysD.r5I = registers[5];
 
 // 10 184:14
 COPY r0 r1
-INC r1 20
+INC r1 24
 LOAD MEM r1 r1
 //  SysD.r6I = registers[6];
 
 // 11 185:14
 COPY r0 r1
-INC r1 20
+INC r1 24
 LOAD MEM r1 r1
 //  SysD.r7I = registers[7];
 
 // 12 186:14
 COPY r0 r1
-INC r1 20
+INC r1 24
 LOAD MEM r1 r1
 //  SysD.r8I = registers[8];
 
 // 13 187:14
 COPY r0 r1
-INC r1 20
+INC r1 24
 LOAD MEM r1 r1
 //  SysD.r9I = registers[9];
 
 // 14 188:14
 COPY r0 r1
-INC r1 20
+INC r1 24
 LOAD MEM r1 r1
 //  SysD.r10I = registers[10];
 
 // 15 189:14
 COPY r0 r1
-INC r1 20
+INC r1 24
 LOAD MEM r1 r1
 //  SysD.r11I = registers[11];
 
 // 16 190:14
 COPY r0 r1
-INC r1 20
+INC r1 24
 LOAD MEM r1 r1
 //  SysD.r12I = registers[12];
 
 // 17 191:14
 COPY r0 r1
-INC r1 20
+INC r1 24
 LOAD MEM r1 r1
 //  SysD.r13I = registers[13];
 
 // 18 192:14
 COPY r0 r1
-INC r1 20
+INC r1 24
 LOAD MEM r1 r1
 //  SysD.r14I = registers[14];
 
 // 19 193:14
 COPY r0 r1
-INC r1 20
+INC r1 24
 LOAD MEM r1 r1
 //  SysD.r15I = registers[15];
 
@@ -555,125 +616,125 @@ STACK PUSH r15
 COPY rStack r15
 // 0 152:14
 COPY r0 r1
-INC r1 8
+INC r1 12
 COPY rStackI r2
 STORE r2 r1
 //  stackPtr = SysD.rStackI;
 
 // 1 153:14
 COPY r0 r1
-INC r1 16
+INC r1 20
 COPY rPM r2
 STORE r2 r1
 //  privileged = SysD.rPMI;
 
 // 2 154:14
 COPY r0 r1
-INC r1 4
+INC r1 8
 COPY rPgmI r2
 STORE r2 r1
 //  pgmPtr = SysD.rPgmI;
 
 // 3 155:14
 COPY r0 r1
-INC r1 12
+INC r1 16
 COPY rMemTblI r2
 STORE r2 r1
 //  memTablePtr = SysD.rMemTblI;
 
 // 4 156:14
 COPY r0 r1
-INC r1 20
+INC r1 24
 COPY r0I r2
 //  registers[0] = SysD.r0I;
 
 // 5 157:14
 COPY r0 r1
-INC r1 20
+INC r1 24
 COPY r1I r2
 //  registers[1] = SysD.r1I;
 
 // 6 158:14
 COPY r0 r1
-INC r1 20
+INC r1 24
 COPY r2I r2
 //  registers[2] = SysD.r2I;
 
 // 7 159:14
 COPY r0 r1
-INC r1 20
+INC r1 24
 COPY r3I r2
 //  registers[3] = SysD.r3I;
 
 // 8 160:14
 COPY r0 r1
-INC r1 20
+INC r1 24
 COPY r4I r2
 //  registers[4] = SysD.r4I;
 
 // 9 161:14
 COPY r0 r1
-INC r1 20
+INC r1 24
 COPY r5I r2
 //  registers[5] = SysD.r5I;
 
 // 10 162:14
 COPY r0 r1
-INC r1 20
+INC r1 24
 COPY r6I r2
 //  registers[6] = SysD.r6I;
 
 // 11 163:14
 COPY r0 r1
-INC r1 20
+INC r1 24
 COPY r7I r2
 //  registers[7] = SysD.r7I;
 
 // 12 164:14
 COPY r0 r1
-INC r1 20
+INC r1 24
 COPY r8I r2
 //  registers[8] = SysD.r8I;
 
 // 13 165:14
 COPY r0 r1
-INC r1 20
+INC r1 24
 COPY r9I r2
 //  registers[9] = SysD.r9I;
 
 // 14 166:14
 COPY r0 r1
-INC r1 20
+INC r1 24
 COPY r10I r2
 //  registers[10] = SysD.r10I;
 
 // 15 167:14
 COPY r0 r1
-INC r1 20
+INC r1 24
 COPY r11I r2
 //  registers[11] = SysD.r11I;
 
 // 16 168:14
 COPY r0 r1
-INC r1 20
+INC r1 24
 COPY r12I r2
 //  registers[12] = SysD.r12I;
 
 // 17 169:14
 COPY r0 r1
-INC r1 20
+INC r1 24
 COPY r13I r2
 //  registers[13] = SysD.r13I;
 
 // 18 170:14
 COPY r0 r1
-INC r1 20
+INC r1 24
 COPY r14I r2
 //  registers[14] = SysD.r14I;
 
 // 19 171:14
 COPY r0 r1
-INC r1 20
+INC r1 24
 COPY r15I r2
 //  registers[15] = SysD.r15I;
 
@@ -693,6 +754,7 @@ STACK PUSH r15
 COPY rStack r15
 // 0 14:10
 COPY r0 r1
+INC r1 4
 COPY r15 r2
 INC r2 -20
 LOAD MEM r2 r2
@@ -701,7 +763,7 @@ STORE r2 r1
 
 // 1 15:10
 COPY r0 r1
-INC r1 4
+INC r1 8
 COPY r15 r2
 INC r2 -16
 LOAD MEM r2 r2
@@ -710,7 +772,7 @@ STORE r2 r1
 
 // 2 16:10
 COPY r0 r1
-INC r1 12
+INC r1 16
 COPY r15 r2
 INC r2 -12
 LOAD MEM r2 r2
@@ -719,7 +781,7 @@ STORE r2 r1
 
 // 3 17:10
 COPY r0 r1
-INC r1 8
+INC r1 12
 COPY r15 r2
 INC r2 -20
 LOAD MEM r2 r2
@@ -734,9 +796,26 @@ STORE r2 r1
 //  end = address + (consoleSize* 2) + 1;
 
 // 4 18:10
-//  Kernal.peripheralCmd(deviceId, 3, new uint32[] {0x0001, address, consoleSize});
+//  uint32 cmd = {0x0001, address, consoleSize};
+
+// 5 19:10
+COPY r15 r1
+INC r1 -16
+LOAD MEM r1 r1
+STACK PUSH r1
+LOAD r1 3
+STACK PUSH r1
+COPY r15 r1
+STACK PUSH r1
+GOTO PUSH :Kernal.peripheralCmd_uint32_uint32_uint32*
+STACK DEC 12
+//  Kernal.peripheralCmd(deviceId, 3, & cmd)
+
+// 6 19:49
+// ;
 
 :func_exit_Kernal.Console.Console_void*_uint32_uint32
+STACK DEC 4
 STACK POP r15
 GOTO POP
 #endfunction Console
@@ -744,28 +823,26 @@ GOTO POP
 #function Kernal.Console.print_char*_uint32 str char*, len uint32
 STACK PUSH r15
 COPY rStack r15
-// 0 32:10
+// 0 33:10
 COPY r15 r1
 INC r1 -12
 LOAD MEM r1 r1
 SET FORCE EQ r1 r1
-GOTO EQ r1 :if_else_5
-// 0 33:14
-LOAD r1 0
-STACK PUSH r1
+GOTO EQ r1 :if_else_6
+// 0 34:14
 //  uint32 i = 0;
 
-// 1 34:14
-:while_condition_6
+// 1 35:14
+:while_condition_7
 //  while(str[i] != 0) {printChar(str[i]); i++;}
 
 STACK DEC 4
-GOTO :if_end_5
-:if_else_5
-// 0 39:14
+GOTO :if_end_6
+:if_else_6
+// 0 40:14
 //  for(uint32 i = 0; i < len; i++) {printChar(str[i]);}
 
-:if_end_5
+:if_end_6
 //  if(len == 0) {uint32 i = 0; while(str[i] != 0) {printChar(str[i]); i++;}} else {for(uint32 i = 0; i < len; i++) {printChar(str[i]);}}
 
 :func_exit_Kernal.Console.print_char*_uint32
@@ -776,53 +853,55 @@ GOTO POP
 #function Kernal.Console.printChar_char c char
 STACK PUSH r15
 COPY rStack r15
-// 0 22:10
+// 0 23:10
 COPY r0 r1
+INC r1 4
 COPY r15 r2
 INC r2 -12
 LOAD MEM r2 r2
 //  address[index] = c;
 
-// 1 23:10
+// 1 24:10
 COPY r0 r1
-INC r1 16
+INC r1 20
 LOAD MEM r2 r1
 INC r2 1
 STORE r2 r1
 //  index++;
 
-// 2 24:10
+// 2 25:10
 COPY r0 r1
+INC r1 4
 LOAD r2 1
 STORE r2 r1
 //  address[index] = 0x1;
 
-// 3 25:10
+// 3 26:10
 COPY r0 r1
-INC r1 16
+INC r1 20
 LOAD MEM r2 r1
 INC r2 1
 STORE r2 r1
 //  index++;
 
-// 4 26:10
+// 4 27:10
 COPY r0 r1
-INC r1 16
+INC r1 20
 LOAD MEM r1 r1
 COPY r0 r2
-INC r2 12
+INC r2 16
 LOAD MEM r2 r2
 SUB r1 r1 r2
 SET FORCE GT r1 r1
-GOTO EQ r1 :if_end_7
-// 0 27:14
+GOTO EQ r1 :if_end_8
+// 0 28:14
 COPY r0 r1
-INC r1 16
+INC r1 20
 LOAD r2 0
 STORE r2 r1
 //  index = 0;
 
-:if_end_7
+:if_end_8
 //  if(index > consoleSize) {index = 0;}
 
 :func_exit_Kernal.Console.printChar_char

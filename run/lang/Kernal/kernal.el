@@ -40,8 +40,8 @@ namespace Kernal {
     @InterruptHandler(raw)
     internal static void _interrupt() {
         // stack: [...pgmPtr,rPM,r0...r15 [HEAD]]
-        void* stack = SysD.rStack; // stack: [...pgmPtr,rPM,r0...r15,var(stack) [HEAD], [stack*]]
-        stack -= 2; // now points to r15; stack: [...pgmPtr,rPM,r0...r15 [stack*],var(stack,+17) [HEAD]]
+        // void* stack = SysD.rStack; // stack: [...pgmPtr,rPM,r0...r15,var(stack) [HEAD], [stack*]]
+        // stack -= 2; // now points to r15; stack: [...pgmPtr,rPM,r0...r15 [stack*],var(stack,+17) [HEAD]]
         ProcessState* oldState = &processStates[SysD.rPID];
         oldState.pid = 0;
         oldState.updateInterrupt();
@@ -85,7 +85,7 @@ namespace Kernal {
         addr++;
         SysD.memSet(addr, cmdSize);
         addr++;
-        SysD.memCopy(cmd, 0, cmdSize, (uint32*)addr, 0);
+        SysD.memCopy(cmd, 0, cmdSize, /*(uint32*)*/addr, 0);
         SysD.memSet(CMD_STATUS, CMD_WRITTEN);
     }
 

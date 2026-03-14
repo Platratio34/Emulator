@@ -588,9 +588,9 @@ public class ELType {
         return pointer || array;
 	}
 
-    public ELType resolve() {
+    public ELType resolve(Span span) {
         if (!isResolvable())
-            throw new ELCompileException("Can not resolve a void*, non-pointer, address, or array");
+            throw ELAnalysisError.error("Can not resolve a non-pointer, address, or array (tried to resolve `"+typeString()+"`)", span);
         return subType;
     }
     

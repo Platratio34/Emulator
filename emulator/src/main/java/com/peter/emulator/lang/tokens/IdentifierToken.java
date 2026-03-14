@@ -127,7 +127,13 @@ public class IdentifierToken extends Token {
     }
 
     public IdentifierToken sub(int i) {
-        return (IdentifierToken)subTokens.get(i);
+        return (IdentifierToken) subTokens.get(i);
+    }
+    
+    public IdentifierToken next() {
+        if (subTokens == null || subTokens.isEmpty())
+            return null;
+        return (IdentifierToken) subTokens.getFirst();
     }
 
     public Span spanFirst() {
@@ -152,6 +158,14 @@ public class IdentifierToken extends Token {
         if (subTokens == null || subTokens.isEmpty())
             return false;
         return ((IdentifierToken)subTokens.getFirst()).hasParamsSub();
+    }
+
+    public SetToken getParamsSub() {
+        if (params != null)
+            return params;
+        if (subTokens == null || subTokens.isEmpty())
+            return null;
+        return ((IdentifierToken)subTokens.getFirst()).getParamsSub();
     }
     
 }

@@ -15,7 +15,8 @@ class Console {
         this.deviceId = deviceId;
         this.consoleSize = consoleSize;
         end = address + (consoleSize * 2) + 1;
-        Kernal.peripheralCmd(deviceId, 3, new uint32[] {0x0001,address,consoleSize});
+        uint32[3] cmd = {0x0001,address,consoleSize};
+        Kernal.peripheralCmd(deviceId, 3, &cmd);
     }
 
     public void printChar(char c) {

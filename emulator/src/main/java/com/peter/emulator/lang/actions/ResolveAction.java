@@ -1,8 +1,6 @@
 package com.peter.emulator.lang.actions;
 
 import com.peter.emulator.lang.ELSymbol.ELVarSymbol;
-import com.peter.emulator.lang.ELValue.ELNumberValue;
-import com.peter.emulator.lang.ELValue.ELStringValue;
 import com.peter.emulator.lang.*;
 import com.peter.emulator.lang.base.ELPrimitives;
 import com.peter.emulator.lang.tokens.IdentifierToken;
@@ -85,7 +83,7 @@ public class ResolveAction extends ComplexAction {
 
         ELVariable v = var;
         ELType t = v.type;
-        if(id.hasSub()) {
+        // if(id.hasSub()) {
             while (it != null) {
                 if (it.indexed()) {
                     if (!v.type.isIndexable())
@@ -104,7 +102,7 @@ public class ResolveAction extends ComplexAction {
                     actions.add(new DirectAction("ADD %s %s %s", reg, reg, r2));
                     actions.add(new DirectAction("LOAD MEM %s %s", reg, reg));
                     r2.release();
-                    t = t.resolve();
+                    t = t.resolve(it.span());
                 }
                 
                 scope.addSymbol(new ELVarSymbol(v, it.spanFirst()));
@@ -117,7 +115,7 @@ public class ResolveAction extends ComplexAction {
 
                 if (t.isPointer() || t.isAddress()) {
                     actions.add(new DirectAction("LOAD MEM %s %s", reg, reg));
-                    t = t.resolve();
+                    t = t.resolve(it.span());
                 }
 
                 ELClass clazz = t.getELClass();
@@ -128,7 +126,7 @@ public class ResolveAction extends ComplexAction {
                 v = clazz.memberVariables.get(it.value);
                 t = v.type;
             }
-        }
+        // }
         if (byValue)
             actions.add(new DirectAction("LOAD MEM %s %s", reg, reg));
         returnType = t;

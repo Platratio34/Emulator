@@ -238,7 +238,7 @@ public class ExpressionAction extends ComplexAction {
                         actions.add(new DirectAction("LOAD MEM %s %s", tR, tR));
                         resolvePointer--;
                         if(!t.isVoidPtr())
-                            t = t.resolve();
+                            t = t.resolve(it.span());
                         else
                             t = null;
                     }
@@ -336,7 +336,7 @@ public class ExpressionAction extends ComplexAction {
                         actions.add(new DirectAction("LOAD MEM %s %s", tR, tR));
                         resolvePointer--;
                         if(t != null && !t.isVoidPtr())
-                            t = t.resolve();
+                            t = t.resolve(st.span());
                         else
                             t = null;
                     }

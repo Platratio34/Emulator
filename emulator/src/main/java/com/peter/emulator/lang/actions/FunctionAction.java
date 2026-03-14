@@ -14,6 +14,7 @@ import com.peter.emulator.lang.Span;
 import com.peter.emulator.lang.base.ELPrimitives;
 import com.peter.emulator.lang.tokens.IdentifierToken;
 import com.peter.emulator.lang.tokens.OperatorToken;
+import com.peter.emulator.lang.tokens.SetToken;
 import com.peter.emulator.lang.tokens.Token;
 
 public class FunctionAction extends ComplexAction {
@@ -24,20 +25,18 @@ public class FunctionAction extends ComplexAction {
     public FunctionAction(ActionScope scope, int targetReg, IdentifierToken it, ErrorSet errors) {
         super(scope);
         this.targetReg = targetReg;
-        if(!it.hasParams())
+        if (!it.hasParamsSub()) {
             throw ELAnalysisError.error("Function did not have params", it);
+        }
+            
 
         boolean onStack = true;
         Identifier id = it.asId();
         if (id.starts("SysD")) {
             switch (id.parts[1]) {
-                case "memSet" -> {
+                case "memSet", "memGet", "memCopy" -> {
                     // SysD.memSet(uint32 addr, uint32 value);
-                    errors.warning("SysD.memSet is not currently implemented", it);
-                    onStack = false;
-                }
-                case "memCopy" -> {
-                    errors.warning("SysD.copy is not currently implemented", it);
+                    // errors.warning("SysD.memSet is not currently implemented", it);
                     onStack = false;
                 }
                 case "interruptReturn" -> {
@@ -55,7 +54,8 @@ public class FunctionAction extends ComplexAction {
         // function call; set is parameters
         ArrayList<ELType> types = new ArrayList<>();
         Location endOfParams = null;
-        Location startOfParams = it.params.get(0).startLocation;
+        SetToken params = it.getParamsSub();
+        Location startOfParams = params.startLocation;
         Span nameSpan = it.span();
         // boolean vNext = true;
         // boolean addr = false;
@@ -66,43 +66,45 @@ public class FunctionAction extends ComplexAction {
         boolean[] reserved = new boolean[16];
         ArrayList<Action> tempActions = new ArrayList<>();
         int stackSize = 0;
-        for (int i = 0; i < it.params.subTokens.size(); i++) {
-            Token t2 = it.params.subTokens.get(i);
-            endOfParams = t2.endLocation;
-            if (t2 instanceof OperatorToken ot && ot.type == OperatorToken.Type.COMMA) {
-                if(exp.isEmpty())
-                    throw ELAnalysisError.error("Empty expression", t2);
-                if (!onStack && r.isReserved()) {
-                    tempActions.add(new DirectAction("STACK PUSH %s", r));
-                    reserved[r.reg] = true;
+        if (params.hasSub()) {
+            for (int i = 0; i < params.subTokens.size(); i++) {
+                Token t2 = params.subTokens.get(i);
+                endOfParams = t2.endLocation;
+                if (t2 instanceof OperatorToken ot && ot.type == OperatorToken.Type.COMMA) {
+                    if (exp.isEmpty())
+                        throw ELAnalysisError.error("Empty expression", t2);
+                    if (!onStack && r.isReserved()) {
+                        tempActions.add(new DirectAction("STACK PUSH %s", r));
+                        reserved[r.reg] = true;
+                    }
+                    ExpressionAction expA = new ExpressionAction(scope, exp, r);
+                    tempActions.add(expA);
+                    types.add(expA.outType == null ? ELPrimitives.OBJECT : expA.outType);
+                    if (onStack) {
+                        tempActions.add(new DirectAction("STACK PUSH %s", r));
+                        stackSize += 4;
+                    } else {
+                        // actions.add(new DirectAction("COPY %s %s", MachineCode.translateReg(r),
+                        //         MachineCode.translateReg(r++)));
+                        r.reserve();
+                        r = r.next();
+                    }
+                    exp = new ArrayList<>();
+                } else {
+                    exp.add(t2);
                 }
+            }
+            if (!exp.isEmpty()) {
                 ExpressionAction expA = new ExpressionAction(scope, exp, r);
                 tempActions.add(expA);
                 types.add(expA.outType == null ? ELPrimitives.OBJECT : expA.outType);
                 if (onStack) {
                     tempActions.add(new DirectAction("STACK PUSH %s", r));
+                    r.release();
                     stackSize += 4;
                 } else {
-                    // actions.add(new DirectAction("COPY %s %s", MachineCode.translateReg(r),
-                    //         MachineCode.translateReg(r++)));
-                    r.reserve();
-                    r = r.next();
+                    tempActions.add(new DirectAction("COPY %s %s", r, r));
                 }
-                exp = new ArrayList<>();
-            } else {
-                exp.add(t2);
-            }
-        }
-        if (!exp.isEmpty()) {
-            ExpressionAction expA = new ExpressionAction(scope, exp, r);
-            tempActions.add(expA);
-            types.add(expA.outType == null ? ELPrimitives.OBJECT : expA.outType);
-            if (onStack) {
-                tempActions.add(new DirectAction("STACK PUSH %s", r));
-                r.release();
-                stackSize += 4;
-            }  else {
-                tempActions.add(new DirectAction("COPY %s %s", r, r));
             }
         }
 

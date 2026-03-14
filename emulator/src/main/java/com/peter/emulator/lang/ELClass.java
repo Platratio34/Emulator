@@ -59,6 +59,8 @@ public class ELClass extends Namespace {
         if (memberVariables.containsKey(var.name) || staticVariables.containsKey(var.name) || staticFunctions.containsKey(var.name) || memberFunctions.containsKey(var.name))
             throw new ELCompileException("Duplicate member name: `"+var.name+"` in class "+cName);
         int size = 0;
+        if (parent != null)
+            size = parent.getSize();
         memberVariables.put(var.name, var);
         for (int i = 0; i < order.size(); i++) {
             int vSize = memberVariables.get(order.get(i)).sizeof();
@@ -86,6 +88,8 @@ public class ELClass extends Namespace {
 
     public int getSize() {
         int size = 0;
+        if (parent != null)
+            size = parent.getSize();
         for (int i = 0; i < order.size(); i++) {
             int vSize = memberVariables.get(order.get(i)).sizeof();
             if (vSize == 1) {

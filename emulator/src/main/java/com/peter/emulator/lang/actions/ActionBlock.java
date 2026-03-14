@@ -435,7 +435,7 @@ public class ActionBlock extends ComplexAction {
 
                         if(t.isAddress()) {
                             actions.add(new DirectAction("LOAD MEM %s %s", rT, rT)); // resolve the address
-                            t = t.resolve();
+                            t = t.resolve(targetVal.span());
                         }
                         
                         ArrayList<Token> exp = new ArrayList<>();
@@ -481,7 +481,7 @@ public class ActionBlock extends ComplexAction {
                         wI++;
                         continue;
                     }
-                    throw ELAnalysisError.error("Unexpected token "+tkn.debugString(), tkn);
+                    throw ELAnalysisError.error("Unexpected token found at start of expression ("+tkn.debugString()+")", tkn);
                 }
             } catch (ELAnalysisError e) {
                 Token tkn = (wI >= tokens.size()) ? tokens.getLast() : tokens.get(wI);

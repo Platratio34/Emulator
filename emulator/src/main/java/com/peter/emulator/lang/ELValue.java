@@ -148,7 +148,7 @@ public abstract class ELValue {
     
     public static ELArrayValue<ELValue> array(ELType type, BlockToken bt, Namespace ns, ProgramUnit unit) {
         ELArrayValue<ELValue> av = new ELArrayValue<>(type);
-        ELType subType = type.resolve();
+        ELType subType = type.resolve(type.span());
         for (Token tkn : bt.subTokens) {
             if (tkn instanceof OperatorToken) {
                 continue;

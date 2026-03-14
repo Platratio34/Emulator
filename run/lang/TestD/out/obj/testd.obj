@@ -1,8 +1,8 @@
 {
     "variables": {"TestD.v": {
-        "address": 592,
-        "start": 592,
-        "end": 595,
+        "address": 564,
+        "start": 564,
+        "end": 567,
         "type": "uint32"
     }},
     "functions": {
@@ -10,31 +10,31 @@
             "args": [],
             "rt": "void",
             "start": 8,
-            "end": 72
+            "end": 64
         },
         "TestD.testA_StructA&": {
             "args": ["str StructA&"],
             "rt": "StructA*",
-            "start": 484,
-            "end": 580
+            "start": 456,
+            "end": 552
         },
         "TestD.main": {
             "args": [],
             "rt": "void",
-            "start": 140,
-            "end": 388
+            "start": 132,
+            "end": 360
         },
         "TestD.funcb_uint32": {
             "args": ["a uint32"],
             "rt": "void",
-            "start": 388,
-            "end": 436
+            "start": 360,
+            "end": 408
         },
         "TestD.wait_uint32": {
             "args": ["time uint32"],
             "rt": "void",
-            "start": 72,
-            "end": 140
+            "start": 64,
+            "end": 132
         },
         "TestD.funcb_uint32_uint32*": {
             "args": [
@@ -42,14 +42,14 @@
                 "b uint32*"
             ],
             "rt": "void",
-            "start": 436,
-            "end": 484
+            "start": 408,
+            "end": 456
         }
     },
     "version": 1,
     "definitions": {"TestD.str": {
-        "start": 584,
-        "end": 591,
+        "start": 556,
+        "end": 563,
         "type": "char*",
         "value": "// Test"
     }},

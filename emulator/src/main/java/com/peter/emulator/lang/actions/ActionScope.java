@@ -69,6 +69,7 @@ public class ActionScope {
         var.offset = stackOff;
         stackOff += type.sizeof();
         stackVars.put(name, var);
+        type.analyze(unit.errors, namespace, unit);
         return var;
     }
     
