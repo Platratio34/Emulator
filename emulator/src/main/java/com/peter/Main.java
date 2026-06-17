@@ -122,18 +122,6 @@ public class Main {
         System.out.println("\n");
         testD.assembleToOut();
 
-        String asm = testD.assemble();
-        // System.out.println(asm);
-        Path p = ROOT_PATH.resolve("testd.asm");
-        try {
-            new File(p.toUri()).delete();
-            Files.writeString(p, asm, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            return;
-        }
-
         System.out.println("\n");
         if (kernal != null) {
             kernal.assembleToOut();
@@ -209,6 +197,9 @@ public class Main {
             return;
         }
         */
+
+        Path p = ROOT_PATH.resolve("lang/TestD/out/TestD.asm");
+
         Assembler assembler = new Assembler();
         try {
             assembler.setSource(p);
@@ -256,24 +247,24 @@ public class Main {
             }
         }
 
-        System.err.println("\n");
+        System.out.println("\n\n+----------+\n| CPU DUMP |\n+----------+");
         System.out.println(emulator.cores[0].dump());
         
         System.out.println("\n\n+----------+\n| MEM DUMP |\n+----------+");
-        System.out.println("Kernal");
-        System.out.println(emulator.ram.debugPrint(0x0000, 8));
+        // System.out.println("Kernal");
+        // System.out.println(emulator.ram.debugPrint(0x0000, 8));
         System.out.println(String.format("Stack (Pointer: 0x%x)", emulator.cores[0].stackPtr));
-        System.out.println(emulator.ram.debugPrint(0x1000, 2));
+        System.out.println(emulator.ram.debugPrint(0x1000, 8));
         System.out.println("Syscall table");
-        System.out.println(emulator.ram.debugPrint(0x1_0000, 8));
+        System.out.println(emulator.ram.debugPrint(0x1_0000, 4));
         System.out.println();
         
-        System.out.println("Console");
-        System.out.println(emulator.ram.debugPrint(0x2_0100, 3));
+        // System.out.println("Console");
+        // System.out.println(emulator.ram.debugPrint(0x2_0100, 3));
         System.out.println("Peripheral Manager");
-        System.out.println(emulator.ram.debugPrint(0x2_0000, 2));
+        System.out.println(emulator.ram.debugPrint(0x2_0000, 4));
         System.out.println("Heap");
-        System.out.println(emulator.ram.debugPrint(0x9000, 4));
+        System.out.println(emulator.ram.debugPrint(0x9000, 8));
         
         emulator.stop();
         

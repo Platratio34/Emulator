@@ -11,13 +11,10 @@ public class PeripheralManager {
     private int nextId = 1;
 
     public static final int PERIPHERAL_START = 0x2_0000;
-    public static final int PERIPHERAL_CMD_STATUS = 0x2_0001;
-    public static final int PERIPHERAL_CMD_DEVICE_ID = 0x2_0002;
     public static final int PERIPHERAL_CMD_SIZE = 0x2_0004;
     public static final int PERIPHERAL_CMD_MSG = 0x2_0008;
     
     public static final int PERIPHERAL_RSP_STATUS = 0x2_0080;
-    public static final int PERIPHERAL_RSP_DEVICE_ID = 0x2_0081;
     public static final int PERIPHERAL_RSP_DATA = 0x2_0084;
 
     public PeripheralManager(RAM ram) {
@@ -38,9 +35,8 @@ public class PeripheralManager {
                     if (peripherals.containsKey(d) && peripherals.get(d) instanceof MemoryMappedPeripheral mmp) {
                         mmp.message(msg);
                     } else {
-                        ram.writeWord(PERIPHERAL_RSP_DEVICE_ID, d);
-                        ram.writeByte(PERIPHERAL_RSP_DATA, (byte)0x1);
-                        ram.writeByte(PERIPHERAL_RSP_STATUS, (byte)0x0f);
+                        ram.writeWord(PERIPHERAL_RSP_DATA, 0xff);
+                        ram.writeWord(PERIPHERAL_RSP_STATUS, 0x0f00_0000 | d);
                     }
                 }
             } catch (Exception e) {
@@ -48,7 +44,7 @@ public class PeripheralManager {
                 System.err.println(ram.debugPrint(0x2_0000, 16));
                 throw e;
             }
-            ram.writeByte(PERIPHERAL_CMD_STATUS, (byte)0x2);
+            ram.writeByte(PERIPHERAL_START + 1, (byte)0x2);
         }
         for (Peripheral peripheral : peripherals.values()) {
             peripheral.tick();
@@ -87,9 +83,8 @@ public class PeripheralManager {
                     }
                 }
                 out[0] = numDevices;
-                ram.writeByte(PERIPHERAL_RSP_DEVICE_ID, (byte)0x00);
                 ram.copyWords(out, PERIPHERAL_RSP_DATA, arrI);
-                ram.writeByte(PERIPHERAL_RSP_STATUS, (byte)0x1);
+                ram.writeWord(PERIPHERAL_RSP_STATUS, 0x0100_0000);
             }
         }
     }

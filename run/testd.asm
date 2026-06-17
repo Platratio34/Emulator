@@ -2,7 +2,7 @@
 // TestD
 #define TestD.CONSOLE_END 0x0002_0200 // uint32
 #define TestD.CMD_ADDR 0x0002_0000 // uint32*
-#var TestD.CONSOLE_SETUP_CMD [0x0001,0x0002_0100,0x0020] // uint32[3]
+#var TestD.CONSOLE_SETUP_CMD [0x0001,0x0002_0100,0x0002_0200] // uint32[3]
 #var TestD.testStr "Test\n" // char[5]
 #define TestD.CONSOLE_START 0x0002_0100 // uint32
 #define TestD.CMD_DEVICE 0x0002_0002 // uint32*
@@ -57,7 +57,7 @@ INTERRUPT RET
 #function TestD.setupConsole
 STACK PUSH r15
 COPY rStack r15
-// 0 40:10
+// 0 36:10
 LOAD r1 1
 STACK PUSH r1
 LOAD r1 3
@@ -68,7 +68,7 @@ GOTO PUSH :TestD.peripheralCommand_uint32_uint32_uint32*
 STACK DEC 12
 //  peripheralCommand(0x001, 0x003, & CONSOLE_SETUP_CMD)
 
-// 1 40:61
+// 1 36:61
 // ;
 
 :func_exit_TestD.setupConsole
@@ -275,7 +275,7 @@ GOTO POP
 #function TestD.peripheralCommand_uint32_uint32_uint32* deviceId uint32, cmdSize uint32, cmd uint32*
 STACK PUSH r15
 COPY rStack r15
-// 0 23:10
+// 0 19:10
 LOAD r1 TestD.CMD_SIZE
 COPY r15 r2
 INC r2 -16
@@ -283,35 +283,35 @@ LOAD MEM r2 r2
 STORE r2 r1
 // * CMD_SIZE = cmdSize;
 
-// 1 25:10
+// 1 21:10
 LOAD r1 TestD.CMD_START
 //  asm("LOAD r1 TestD.CMD_START");
 
-// 2 27:10
+// 2 23:10
 COPY r15 r3
 INC r3 -12
 LOAD MEM r3 r3
 //  asm("COPY r15 r3\nINC r3 -12\nLOAD MEM r3 r3");
 
-// 3 29:10
+// 3 25:10
 :peripheralCommand_l0
 //  asm(":peripheralCommand_l0");
 
-// 4 31:10
+// 4 27:10
 COPY MEM r3 r1
 //  asm("COPY MEM r3 r1");
 
-// 5 32:10
+// 5 28:10
 INC r1 4
 INC r3 4
 INC r2 -1
 //  asm("INC r1 4\nINC r3 4\nINC r2 -1");
 
-// 6 34:10
+// 6 30:10
 GOTO GT r2 :peripheralCommand_l0
 //  asm("GOTO GT r2 :peripheralCommand_l0");
 
-// 7 36:10
+// 7 32:10
 LOAD r1 TestD.CMD_ADDR
 LOAD r2 16842752
 COPY r15 r3
@@ -363,112 +363,102 @@ GOTO POP
 #function TestD.printStr_char*_uint32 str char*, len uint32
 STACK PUSH r15
 COPY rStack r15
-// 0 61:10
+// 0 50:10
 COPY r15 r14
 INC r14 -12
 LOAD MEM r14 r14
 //  asm("COPY r15 r14\nINC r14 -12\nLOAD MEM r14 r14");
 
-// 1 62:10
+// 1 51:10
 LOAD r1 &TestD.consolePntr
 LOAD MEM r1 r1
 //  asm("LOAD r1 &TestD.consolePntr\nLOAD MEM r1 r1");
 
-// 2 63:10
+// 2 52:10
 COPY r15 r2
 INC r2 -16
 LOAD MEM r2 r2
 //  asm("COPY r15 r2\nINC r2 -16\nLOAD MEM r2 r2");
 
-// 3 64:10
+// 3 53:10
 LOAD r3 0x1
 LOAD r4 TestD.CONSOLE_END
 LOAD r5 TestD.CONSOLE_START
 //  asm("LOAD r3 0x1\nLOAD r4 TestD.CONSOLE_END\nLOAD r5 TestD.CONSOLE_START");
 
-// 4 65:10
+// 4 54:10
 GOTO GT r14 :printStr_len
 //  asm("GOTO GT r14 :printStr_len");
 
-// 5 66:14
+// 5 55:14
 :printStr_l1
 //  asm(":printStr_l1");
 
-// 6 67:18
+// 6 56:18
 LOAD MEM r6 r2
 GOTO EQ r6 :printStr_l1_exit
 //  asm("LOAD MEM r6 r2\nGOTO EQ r6 :printStr_l1_exit");
 
-// 7 68:18
+// 7 57:18
 STORE r6 r1
 INC r1 4
 INC r2 4
 //  asm("STORE r6 r1\nINC r1 4\nINC r2 4");
 
-// 8 69:18
-STORE r3 r1
-INC r1 4
-//  asm("STORE r3 r1\nINC r1 4");
-
-// 9 70:18
+// 8 59:18
 SUB r6 r4 r1
 GOTO GT r6 :printStr_l1
 COPY r5 r1
 GOTO :printStr_l1
 //  asm("SUB r6 r4 r1\nGOTO GT r6 :printStr_l1\nCOPY r5 r1\nGOTO :printStr_l1");
 
-// 10 71:14
+// 9 60:14
 :printStr_l1_exit
 //  asm(":printStr_l1_exit");
 
-// 11 72:14
+// 10 61:14
 GOTO :printStr_exit
 //  asm("GOTO :printStr_exit");
 
-// 12 73:10
+// 11 62:10
 :printStr_len
 //  asm(":printStr_len");
 
-// 13 74:14
+// 12 63:14
 :printStr_l2
 //  asm(":printStr_l2");
 
-// 14 75:18
+// 13 64:18
 COPY MEM r2 r1
 INC r1 4
 INC r2 4
 //  asm("COPY MEM r2 r1\nINC r1 4\nINC r2 4");
 
-// 15 76:18
-STORE r3 r1
-INC r1 4
-//  asm("STORE r3 r1\nINC r1 4");
-
-// 16 77:18
+// 14 66:18
 SUB r6 r4 r1
 GOTO GT r6 :printStr_l2_end
 COPY r5 r1
 //  asm("SUB r6 r4 r1\nGOTO GT r6 :printStr_l2_end\nCOPY r5 r1");
 
-// 17 78:18
+// 15 67:18
 :printStr_l2_end
 //  asm(":printStr_l2_end");
 
-// 18 79:18
+// 16 68:18
 INC r14 -1
 GOTO GT r14 :printStr_l2
 //  asm("INC r14 -1\nGOTO GT r14 :printStr_l2");
 
-// 19 80:10
+// 17 69:10
 :printStr_exit
 //  asm(":printStr_exit");
 
-// 20 81:10
+// 18 70:10
 LOAD r3 &TestD.consolePntr
 STORE r1 r3
 //  asm("LOAD r3 &TestD.consolePntr\nSTORE r1 r3")
 
-// 21 81:56
+// 19 70:56
 // ;
 
 :func_exit_TestD.printStr_char*_uint32
@@ -479,45 +469,40 @@ GOTO POP
 #function TestD.printChar_char c char
 STACK PUSH r15
 COPY rStack r15
-// 0 44:10
+// 0 40:10
 LOAD r1 &TestD.consolePntr
 LOAD MEM r1 r1
 //  asm("LOAD r1 &TestD.consolePntr\nLOAD MEM r1 r1");
 
-// 1 45:10
+// 1 41:10
 COPY r15 r2
 INC r2 -12
 LOAD MEM r2 r2
 //  asm("COPY r15 r2\nINC r2 -12\nLOAD MEM r2 r2");
 
-// 2 46:10
+// 2 42:10
 LOAD r3 0x1
 LOAD r4 TestD.CONSOLE_END
 LOAD r5 TestD.CONSOLE_START
 //  asm("LOAD r3 0x1\nLOAD r4 TestD.CONSOLE_END\nLOAD r5 TestD.CONSOLE_START");
 
-// 3 47:10
+// 3 43:10
 STORE r2 r1
 INC r1 4
 INC r2 4
 //  asm("STORE r2 r1\nINC r1 4\nINC r2 4");
 
-// 4 48:10
-STORE r3 r1
-INC r1 4
-//  asm("STORE r3 r1\nINC r1 4");
-
-// 5 49:10
+// 4 45:10
 SUB r6 r4 r1
 GOTO GT r6 :printChar_exit
 COPY r5 r1
 //  asm("SUB r6 r4 r1\nGOTO GT r6 :printChar_exit\nCOPY r5 r1");
 
-// 6 50:10
+// 5 46:10
 :printChar_exit
 //  asm(":printChar_exit")
 
-// 7 50:32
+// 6 46:32
 // ;
 
 :func_exit_TestD.printChar_char

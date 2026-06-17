@@ -1,33 +1,33 @@
 {
     "variables": {
         "TestD.CONSOLE_SETUP_CMD": {
-            "address": 1180,
-            "start": 1180,
-            "end": 1191,
+            "address": 1140,
+            "start": 1140,
+            "end": 1151,
             "type": "uint32*"
         },
         "TestD.testStr": {
-            "address": 1192,
-            "start": 1192,
-            "end": 1211,
+            "address": 1152,
+            "start": 1152,
+            "end": 1171,
             "type": "char*"
         },
         "TestD.v": {
-            "address": 1240,
-            "start": 1240,
-            "end": 1243,
+            "address": 1200,
+            "start": 1200,
+            "end": 1203,
             "type": "uint32"
         },
         "TestD.testStr2": {
-            "address": 1244,
-            "start": 1244,
-            "end": 1271,
+            "address": 1204,
+            "start": 1204,
+            "end": 1231,
             "type": "char*"
         },
         "TestD.consolePntr": {
-            "address": 1272,
-            "start": 1272,
-            "end": 1275,
+            "address": 1232,
+            "start": 1232,
+            "end": 1235,
             "type": "uint32"
         }
     },
@@ -67,7 +67,7 @@
             ],
             "rt": "void",
             "start": 868,
-            "end": 1076
+            "end": 1052
         },
         "TestD.funcb_uint32": {
             "args": ["a uint32"],
@@ -90,8 +90,8 @@
         "TestD.printChar_char": {
             "args": ["c char"],
             "rt": "void",
-            "start": 1076,
-            "end": 1176
+            "start": 1052,
+            "end": 1136
         },
         "TestD.funcb_uint32_uint32*": {
             "args": [
@@ -131,8 +131,8 @@
             "value": "131328"
         },
         "TestD.str": {
-            "start": 1212,
-            "end": 1239,
+            "start": 1172,
+            "end": 1199,
             "type": "char*",
             "value": "// Test"
         },

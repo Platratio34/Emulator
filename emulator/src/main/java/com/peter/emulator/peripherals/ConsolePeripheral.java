@@ -12,6 +12,9 @@ public class ConsolePeripheral implements MemoryMappedPeripheral {
 
     private RAM ram;
     private int deviceId = -1;
+    private int start;
+    private int end;
+    private int pntr;
 
     private final MessageQueue inputQueue = new MessageQueue();
 
@@ -23,19 +26,26 @@ public class ConsolePeripheral implements MemoryMappedPeripheral {
     @Override
     public void message(int[] msg) {
         if (msg[0] == 0x0000_0001) {
-            inputQueue.setup(msg[1], msg[2]);
-            // ram.writeByte(PeripheralManager.PERIPHERAL_RSP_DEVICE_ID, deviceId);
-            // ram.writeWord(PeripheralManager.PERIPHERAL_RSP_DATA, 0x1);
-            // ram.writeByte(PeripheralManager.PERIPHERAL_RSP_STATUS, (byte)0x1);
+            start = msg[1];
+            end = msg[2];
+            pntr = start;
+            
+            ram.writeWord(PeripheralManager.PERIPHERAL_RSP_DATA, 0x1);
+            ram.writeWord(PeripheralManager.PERIPHERAL_RSP_STATUS, 0x0100_0000 | deviceId);
         }
     }
     
     @Override
     public void tick() {
-        if (!inputQueue.hasMsg())
-            return;
-        int i2 = inputQueue.read();
-        System.out.print((char) i2);
+        int w = ram.readWord(pntr);
+        if (w != 0) {
+            System.out.print((char) w);
+            ram.writeWord(pntr, 0);
+            pntr += 4;
+            if (pntr >= end) {
+                pntr = start;
+            }
+        }
     }
 
     @Override

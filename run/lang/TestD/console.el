@@ -13,7 +13,7 @@ namespace TestD {
     public static const uint32 CONSOLE_END = 0x2_0200;
     public static void* consolePntr = CONSOLE_START;
 
-    static final uint32[3] CONSOLE_SETUP_CMD = {0x0001,0x2_0100,0x0020};
+    static final uint32[3] CONSOLE_SETUP_CMD = {0x0001,0x2_0100,0x2_0200};
 
     protected static void peripheralCommand(uint32 deviceId, uint32 cmdSize, uint32* cmd) {
         *CMD_SIZE = cmdSize;
@@ -39,10 +39,9 @@ namespace TestD {
     public static void printChar(char c) {
         asm("LOAD r1 &TestD.consolePntr\nLOAD MEM r1 r1"); // consolePntr
         asm("COPY r15 r2\nINC r2 -12\nLOAD MEM r2 r2"); // c
-        asm("LOAD r3 0x1\nLOAD r4 TestD.CONSOLE_END\nLOAD r5 TestD.CONSOLE_START");
+        asm("LOAD r4 TestD.CONSOLE_END\nLOAD r5 TestD.CONSOLE_START");
         asm("STORE r2 r1\nINC r1 4\nINC r2 4");
-        asm("STORE r3 r1\nINC r1 4");
-        asm("SUB r6 r4 r1\nGOTO GT r6 :printChar_exit\nCOPY r5 r1");
+        asm("SUB r3 r4 r1\nGOTO GT r3 :printChar_exit\nCOPY r5 r1");
         asm(":printChar_exit");
     }
 
@@ -50,20 +49,18 @@ namespace TestD {
         asm("COPY r15 r14\nINC r14 -12\nLOAD MEM r14 r14"); // len
         asm("LOAD r1 &TestD.consolePntr\nLOAD MEM r1 r1"); // consolePntr
         asm("COPY r15 r2\nINC r2 -16\nLOAD MEM r2 r2"); // str
-        asm("LOAD r3 0x1\nLOAD r4 TestD.CONSOLE_END\nLOAD r5 TestD.CONSOLE_START");
+        asm("LOAD r4 TestD.CONSOLE_END\nLOAD r5 TestD.CONSOLE_START");
         asm("GOTO GT r14 :printStr_len");
             asm(":printStr_l1");
-                asm("LOAD MEM r6 r2\nGOTO EQ r6 :printStr_l1_exit");
-                asm("STORE r6 r1\nINC r1 4\nINC r2 4");
-                asm("STORE r3 r1\nINC r1 4");
-                asm("SUB r6 r4 r1\nGOTO GT r6 :printStr_l1\nCOPY r5 r1\nGOTO :printStr_l1");
+                asm("LOAD MEM r3 r2\nGOTO EQ r3 :printStr_l1_exit");
+                asm("STORE r3 r1\nINC r1 4\nINC r2 4");
+                asm("SUB r3 r4 r1\nGOTO GT r3 :printStr_l1\nCOPY r5 r1\nGOTO :printStr_l1");
             asm(":printStr_l1_exit");
             asm("GOTO :printStr_exit");
         asm(":printStr_len");
             asm(":printStr_l2");
                 asm("COPY MEM r2 r1\nINC r1 4\nINC r2 4");
-                asm("STORE r3 r1\nINC r1 4");
-                asm("SUB r6 r4 r1\nGOTO GT r6 :printStr_l2_end\nCOPY r5 r1");
+                asm("SUB r3 r4 r1\nGOTO GT r3 :printStr_l2_end\nCOPY r5 r1");
                 asm(":printStr_l2_end");
                 asm("INC r14 -1\nGOTO GT r14 :printStr_l2");
         asm(":printStr_exit");

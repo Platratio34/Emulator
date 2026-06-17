@@ -58,11 +58,37 @@ public class CPU {
         pgmPtr = ptr;
     }
 
+    private boolean isValidReg(int reg) {
+        return switch(reg) {
+            case REG_PGM_PNTR -> true;
+            case REG_STACK_PNTR -> true;
+
+            case REG_PID -> true;
+            case REG_MEM_TABLE -> true;
+
+            case REG_INTERRUPT -> true;
+            case REG_INTR_HANDLER -> true;
+            
+            case REG_CPU_ID -> true;
+            case REG_PRIVILEGED_MODE -> true;
+            
+            case REG_PGM_PNTR_I -> true;
+            case REG_STACK_PNTR_I -> true;
+
+            case REG_PID_I -> true;
+            case REG_MEM_TABLE_I -> true;
+
+            case REG_PRIVILEGED_MODE_I -> true;
+
+            default -> reg >= 0 && reg < 0x30;
+        };
+    }
+
     public int getReg(int reg) {
         if (reg < 0x10) {
             return registers[reg];
         } else if (reg < 0x20) {
-            return registersI[reg];
+            return registersI[reg & 0xf];
         }
         return switch (reg) {
             case REG_PGM_PNTR -> pgmPtr;
@@ -610,11 +636,45 @@ public class CPU {
     }
 
     public String dump() {
-        String out = "r0";
+        String out = "";
         String vl = "";
         for (int i = 0; i <= 0xf; i++) {
-            out += MachineCode.translateReg(i) + "         ";
-            vl += toHex(registers[i]) + "  ";
+            out += String.format("%-11s", MachineCode.translateReg(i));
+            vl += toHex(getReg(i)) + "  ";
+        }
+        out += "\n" + vl;
+        
+        out += "\n";
+        vl = "";
+        for (int i = 0xf0; i <= 0xff; i++) {
+            if (!isValidReg(i)) {
+                out += "           ";
+                vl += "           ";
+                continue;
+            }
+            out += String.format("%-11s", MachineCode.translateReg(i));
+            vl += toHex(getReg(i)) + "  ";
+        }
+        out += "\n" + vl;
+        
+        out += "\n";
+        vl = "";
+        for (int i = 0x10; i <= 0x1f; i++) {
+            out += String.format("%-11s", MachineCode.translateReg(i));
+            vl += toHex(getReg(i)) + "  ";
+        }
+        out += "\n" + vl;
+        
+        out += "\n";
+        vl = "";
+        for (int i = 0xe0; i <= 0xef; i++) {
+            if (!isValidReg(i)) {
+                out += "           ";
+                vl += "           ";
+                continue;
+            }
+            out += String.format("%-11s", MachineCode.translateReg(i));
+            vl += toHex(getReg(i)) + "  ";
         }
         out += "\n" + vl;
         return out;

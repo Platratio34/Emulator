@@ -25,7 +25,7 @@ public class DebuggerPanel extends JPanel {
         this.funcLbl = new JLabel();
         add(funcLbl);
 
-        varPanel = new JPanel(new GridLayout());
+        varPanel = new JPanel(new GridLayout(0, 3));
         add(varPanel);
     }
 
