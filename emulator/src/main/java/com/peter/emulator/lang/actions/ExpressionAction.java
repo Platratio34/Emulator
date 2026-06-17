@@ -11,6 +11,7 @@ import com.peter.emulator.lang.tokens.IdentifierToken;
 import com.peter.emulator.lang.tokens.NumberToken;
 import com.peter.emulator.lang.tokens.OperatorToken;
 import com.peter.emulator.lang.tokens.SetToken;
+import com.peter.emulator.lang.tokens.StringToken;
 import com.peter.emulator.lang.tokens.Token;
 
 public class ExpressionAction extends ComplexAction {
@@ -323,7 +324,7 @@ public class ExpressionAction extends ComplexAction {
                         throw ELAnalysisError.error("Can not get address of an expression", tkn);
                     // but what if this is casting?
                     Register tR = (lastType == null) ? targetReg : scope.firstFree();
-                    if(st.subTokens.isEmpty())
+                    if (st.subTokens.isEmpty())
                         throw ELAnalysisError.error("Empty expression", st);
                     ExpressionAction expA = new ExpressionAction(scope, st.subTokens, tR);
                     actions.add(expA);
@@ -335,7 +336,7 @@ public class ExpressionAction extends ComplexAction {
                                     st);
                         actions.add(new DirectAction("LOAD MEM %s %s", tR, tR));
                         resolvePointer--;
-                        if(t != null && !t.isVoidPtr())
+                        if (t != null && !t.isVoidPtr())
                             t = t.resolve(st.span());
                         else
                             t = null;
@@ -388,7 +389,7 @@ public class ExpressionAction extends ComplexAction {
                                 actions.add(new DirectAction("SUB %s %s %s", targetReg, targetReg, tR));
                                 actions.add(new DirectAction("SET FORCE GT %s %s", targetReg, targetReg));
                             }
-                            
+
                             case GEQ -> {
                                 actions.add(new DirectAction("SUB %s %s %s", targetReg, tR, targetReg));
                                 actions.add(new DirectAction("SET FORCE LEQ %s %s", targetReg, targetReg));
@@ -409,6 +410,16 @@ public class ExpressionAction extends ComplexAction {
                     }
                     not = false;
                     lastOp = null;
+                }
+                case StringToken st -> {
+                    if (addressOf)
+                        throw ELAnalysisError.error("Can not get address of a string literal", tkn);
+                    if(wI > 0 || tokens.size() > 1)
+                        throw ELAnalysisError.error("String literal must be only element of expression", tkn);
+                    if(!st.ch)
+                        throw ELAnalysisError.error("Only character allowed in expression", tkn);
+                    addDirect("LOAD %s '%s'", targetReg, st.value);
+                    // Register tR = (lastType == null) ? targetReg : scope.firstFree();
                 }
                 default -> {
                     throw ELAnalysisError.error("Unexpected token found in expression: " + tkn, tkn);

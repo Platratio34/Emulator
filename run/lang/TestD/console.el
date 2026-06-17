@@ -10,16 +10,12 @@ namespace TestD {
     public static const uint32 CMD_WRITTEN = 0x0001;
     
     public static const uint32 CONSOLE_START = 0x2_0100;
-    public static const uint32 CONSOLE_END = 0x2_0140;
+    public static const uint32 CONSOLE_END = 0x2_0200;
     public static void* consolePntr = CONSOLE_START;
 
     static final uint32[3] CONSOLE_SETUP_CMD = {0x0001,0x2_0100,0x0020};
 
     protected static void peripheralCommand(uint32 deviceId, uint32 cmdSize, uint32* cmd) {
-        // asm("LOAD r1 TestD.CMD_DEVICE");
-        // asm("COPY r15 r2\nINC r2 -20\nLOAD MEM r2 r2");
-        // asm("STORE r1 r2");
-
         *CMD_SIZE = cmdSize;
         
         asm("LOAD r1 TestD.CMD_START");
@@ -41,39 +37,36 @@ namespace TestD {
     }
 
     public static void printChar(char c) {
-        *consolePntr = c;
-        consolePntr += 4;
-        *consolePntr = 0x1;
-        consolePntr += 4;
-        if(consolePntr > CONSOLE_END) {
-            consolePntr = CONSOLE_START;
-        }
+        asm("LOAD r1 &TestD.consolePntr\nLOAD MEM r1 r1"); // consolePntr
+        asm("COPY r15 r2\nINC r2 -12\nLOAD MEM r2 r2"); // c
+        asm("LOAD r3 0x1\nLOAD r4 TestD.CONSOLE_END\nLOAD r5 TestD.CONSOLE_START");
+        asm("STORE r2 r1\nINC r1 4\nINC r2 4");
+        asm("STORE r3 r1\nINC r1 4");
+        asm("SUB r6 r4 r1\nGOTO GT r6 :printChar_exit\nCOPY r5 r1");
+        asm(":printChar_exit");
     }
 
     public static void printStr(char* str, uint32 len) {
-        uint32 i = 0;
-        if(len == 0) {
-            while(str[i] != 0) {
-                *consolePntr = str[i];
-                consolePntr += 4;
-                *consolePntr = 0x1;
-                consolePntr += 4;
-                if(consolePntr > CONSOLE_END) {
-                    consolePntr = CONSOLE_START;
-                }
-                i++;
-            }
-        } else {
-            while(i < len) {
-                *consolePntr = str[i];
-                consolePntr += 4;
-                *consolePntr = 0x1;
-                consolePntr += 4;
-                if(consolePntr > CONSOLE_END) {
-                    consolePntr = CONSOLE_START;
-                }
-                i++;
-            }
-        }
+        asm("COPY r15 r14\nINC r14 -12\nLOAD MEM r14 r14"); // len
+        asm("LOAD r1 &TestD.consolePntr\nLOAD MEM r1 r1"); // consolePntr
+        asm("COPY r15 r2\nINC r2 -16\nLOAD MEM r2 r2"); // str
+        asm("LOAD r3 0x1\nLOAD r4 TestD.CONSOLE_END\nLOAD r5 TestD.CONSOLE_START");
+        asm("GOTO GT r14 :printStr_len");
+            asm(":printStr_l1");
+                asm("LOAD MEM r6 r2\nGOTO EQ r6 :printStr_l1_exit");
+                asm("STORE r6 r1\nINC r1 4\nINC r2 4");
+                asm("STORE r3 r1\nINC r1 4");
+                asm("SUB r6 r4 r1\nGOTO GT r6 :printStr_l1\nCOPY r5 r1\nGOTO :printStr_l1");
+            asm(":printStr_l1_exit");
+            asm("GOTO :printStr_exit");
+        asm(":printStr_len");
+            asm(":printStr_l2");
+                asm("COPY MEM r2 r1\nINC r1 4\nINC r2 4");
+                asm("STORE r3 r1\nINC r1 4");
+                asm("SUB r6 r4 r1\nGOTO GT r6 :printStr_l2_end\nCOPY r5 r1");
+                asm(":printStr_l2_end");
+                asm("INC r14 -1\nGOTO GT r14 :printStr_l2");
+        asm(":printStr_exit");
+        asm("LOAD r3 &TestD.consolePntr\nSTORE r1 r3");
     }
 }

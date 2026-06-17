@@ -112,7 +112,8 @@ public abstract class ELValue {
 
         @Override
         public String valueString() {
-            return String.format(ch ? "\'%s\'" : "\"%s\"", value);
+            String outVal = value.replace("\\","\\\\").replace("\n","\\n").replace("\0","\\0");
+            return String.format(ch ? "\'%s\'" : "\"%s\"", outVal);
         }
     }
 

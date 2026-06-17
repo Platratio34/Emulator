@@ -170,7 +170,7 @@ public class ActionBlock extends ComplexAction {
                                     }
                                     default -> throw ELAnalysisError.error("asm function may only take string literal or const", t);
                                 }
-                                if (!(tokens.get(wI) instanceof OperatorToken ot
+                                if (wI >= tokens.size() || !(tokens.get(wI) instanceof OperatorToken ot
                                         && ot.type == OperatorToken.Type.SEMICOLON))
                                     throw ELAnalysisError.error("Missing semicolon",
                                             tokens.get(wI - 1).endLocation.span());

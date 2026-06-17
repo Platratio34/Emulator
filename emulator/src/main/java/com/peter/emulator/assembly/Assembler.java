@@ -90,8 +90,9 @@ public class Assembler {
                             for (int j = 0; j < str.length(); j++) {
                                 char c = str.charAt(j);
                                 if (c == '\\') {
-                                    if (j > 0 && (str.charAt(j - 1) != '\\')) {
+                                    if (j+1 < str.length()) {
                                         char n = str.charAt(j + 1);
+                                        System.out.println("Escape "+n);
                                         switch (n) {
                                             case 'n' -> {
                                                 str2 += "\n";
@@ -103,6 +104,10 @@ public class Assembler {
                                             }
                                             case '\\' -> {
                                                 str2 += "\\";
+                                                j++;
+                                            }
+                                            case '0' -> {
+                                                str2 += "\0";
                                                 j++;
                                             }
                                         }
@@ -162,7 +167,7 @@ public class Assembler {
                             for (int j = 0; j < str.length(); j++) {
                                 char c = str.charAt(j);
                                 if (c == '\\') {
-                                    if (j > 0 && (str.charAt(j - 1) != '\\')) {
+                                    if (j+1 < str.length()) {
                                         char n = str.charAt(j + 1);
                                         switch (n) {
                                             case 'n' -> {
@@ -175,6 +180,10 @@ public class Assembler {
                                             }
                                             case '\\' -> {
                                                 str2 += "\\";
+                                                j++;
+                                            }
+                                            case '0' -> {
+                                                str2 += "\0";
                                                 j++;
                                             }
                                         }

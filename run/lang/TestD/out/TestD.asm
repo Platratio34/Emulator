@@ -1,14 +1,15 @@
 // static data
 // TestD
-#define TestD.CONSOLE_END 0x0002_0140 // uint32
+#define TestD.CONSOLE_END 0x0002_0200 // uint32
 #define TestD.CMD_ADDR 0x0002_0000 // uint32*
 #var TestD.CONSOLE_SETUP_CMD [0x0001,0x0002_0100,0x0020] // uint32[3]
-#var TestD.testStr "Test" // char[4]
+#var TestD.testStr "Test\n" // char[5]
 #define TestD.CONSOLE_START 0x0002_0100 // uint32
 #define TestD.CMD_DEVICE 0x0002_0002 // uint32*
 #define TestD.str "// Test" // char*
 #define TestD.CMD_WRITTEN 0x0001 // uint32
 #var TestD.v 0x0000 // uint32
+#var TestD.testStr2 "Test2\n\0" // char[7]
 #define TestD.CMD_STATUS 0x0002_0001 // uint32*
 #define TestD.CMD_START 0x0002_0008 // uint32*
 #define TestD.CMD_SIZE 0x0002_0004 // uint32*
@@ -22,26 +23,26 @@
 #function TestD.onInterrupt
 STACK PUSH r15
 COPY rStack r15
-// 0 45:10
+// 0 48:10
 COPY rIC r1
 STACK PUSH r1
 //  uint32 code = SysD.rIC;
 
-// 1 46:10
+// 1 49:10
 LOAD rIC 0
 //  asm("LOAD rIC 0");
 
-// 2 47:10
+// 2 50:10
 COPY r15 r1
 LOAD MEM r1 r1
 INC r1 -255
 SET FORCE EQ r1 r1
 GOTO EQ r1 :if_end_0
-// 0 48:14
+// 0 51:14
 HALT
 //  asm("HALT")
 
-// 1 48:25
+// 1 51:25
 // ;
 
 :if_end_0
@@ -78,14 +79,14 @@ GOTO POP
 #function TestD.wait_uint32 time uint32
 STACK PUSH r15
 COPY rStack r15
-// 0 53:10
+// 0 56:10
 :while_condition_1
 COPY r15 r1
 INC r1 -12
 LOAD MEM r1 r1
 SET FORCE GT r1 r1
 GOTO EQ r1 :while_end_1
-// 0 54:14
+// 0 57:14
 COPY r15 r1
 INC r1 -12
 LOAD MEM r2 r1
@@ -106,20 +107,20 @@ GOTO POP
 #function TestD.main
 STACK PUSH r15
 COPY rStack r15
-// 0 11:10
+// 0 12:10
 LOAD rIH &:TestD.onInterrupt
 //  asm("LOAD rIH &:TestD.onInterrupt");
 
-// 1 12:10
+// 1 13:10
 STACK INC 4
 //  uint32 b;
 
-// 2 13:10
+// 2 14:10
 COPY rPgm r1
 STACK PUSH r1
 //  uint32 a = SysD.rPgm;
 
-// 3 14:10
+// 3 15:10
 LOAD r1 &TestD.v
 COPY r15 r2
 INC r2 4
@@ -127,11 +128,11 @@ LOAD MEM r2 r2
 STORE r2 r1
 //  v = a;
 
-// 4 15:10
+// 4 16:10
 STACK INC 4
 //  char c;
 
-// 5 16:10
+// 5 17:10
 COPY r15 r1
 INC r1 8
 COPY r15 r2
@@ -139,7 +140,7 @@ LOAD MEM r2 r2
 STORE r2 r1
 //  c = b;
 
-// 6 18:10
+// 6 19:10
 COPY r15 r1
 COPY r15 r2
 INC r2 4
@@ -152,14 +153,14 @@ ADD r2 r2 r3
 STORE r2 r1
 //  b = a + 1 + c;
 
-// 7 19:10
+// 7 20:10
 COPY r15 r1
 INC r1 8
 LOAD r2 32
 STORE r2 r1
 //  c = 32;
 
-// 8 20:10
+// 8 21:10
 COPY r15 r1
 INC r1 8
 LOAD MEM r1 r1
@@ -168,21 +169,21 @@ GOTO PUSH :TestD.funcb_uint32
 STACK DEC 4
 //  funcb(c);
 
-// 9 21:10
+// 9 22:10
 LOAD r1 64
 LOAD r2 &TestD.v
 STORE r1 r2
 //  asm("LOAD r1 64\nLOAD r2 &TestD.v\nSTORE r1 r2");
 
-// 10 22:10
+// 10 23:10
 // Test
 //  asm(str);
 
-// 11 24:10
+// 11 25:10
 STACK INC 12
 //  StructA sA;
 
-// 12 25:10
+// 12 26:10
 STACK INC 4
 COPY r15 r1
 INC r1 12
@@ -190,27 +191,43 @@ STACK PUSH r1
 GOTO PUSH :TestD.testA_StructA&
 //  testA(& sA);
 
-// 13 27:10
+// 13 28:10
 GOTO PUSH :TestD.setupConsole
 //  setupConsole();
 
-// 14 29:10
+// 14 30:10
 LOAD r1 &TestD.testStr
 STACK PUSH r1
-LOAD r1 4
+LOAD r1 5
 STACK PUSH r1
 GOTO PUSH :TestD.printStr_char*_uint32
 STACK DEC 8
-//  printStr(& testStr, 4);
+//  printStr(& testStr, 5);
 
 // 15 31:10
+LOAD r1 &TestD.testStr2
+STACK PUSH r1
+LOAD r1 0
+STACK PUSH r1
+GOTO PUSH :TestD.printStr_char*_uint32
+STACK DEC 8
+//  printStr(& testStr2, 0);
+
+// 16 32:10
+LOAD r1 'a'
+STACK PUSH r1
+GOTO PUSH :TestD.printChar_char
+STACK DEC 4
+//  printChar('a');
+
+// 17 34:10
 LOAD r1 1000
 STACK PUSH r1
 GOTO PUSH :TestD.wait_uint32
 STACK DEC 4
 //  wait(1000)
 
-// 16 31:20
+// 18 34:20
 // ;
 
 :func_exit_TestD.main
@@ -222,7 +239,7 @@ HALT
 #function TestD.funcb_uint32 a uint32
 STACK PUSH r15
 COPY rStack r15
-// 0 36:10
+// 0 39:10
 LOAD r1 &TestD.v
 COPY r15 r2
 INC r2 -12
@@ -240,7 +257,7 @@ GOTO POP
 #function TestD.funcb_uint32_uint32* a uint32, b uint32*
 STACK PUSH r15
 COPY rStack r15
-// 0 40:10
+// 0 43:10
 LOAD r1 &TestD.v
 COPY r15 r2
 INC r2 -16
@@ -312,7 +329,7 @@ GOTO POP
 #function TestD.testA_StructA& str StructA&
 STACK PUSH r15
 COPY rStack r15
-// 0 59:10
+// 0 62:10
 COPY r15 r1
 INC r1 -12
 LOAD MEM r1 r1
@@ -320,7 +337,7 @@ LOAD r2 32
 STORE r2 r1
 //  str.a = 32;
 
-// 1 60:10
+// 1 63:10
 COPY r15 r1
 INC r1 -12
 LOAD MEM r1 r1
@@ -328,7 +345,7 @@ LOAD r2 -1
 STORE r2 r1
 //  str.b = 0xffffffff;
 
-// 2 61:10
+// 2 64:10
 COPY r15 r1
 INC r1 -12
 LOAD MEM r1 r1
@@ -346,177 +363,115 @@ GOTO POP
 #function TestD.printStr_char*_uint32 str char*, len uint32
 STACK PUSH r15
 COPY rStack r15
-// 0 54:10
-LOAD r1 0
-STACK PUSH r1
-//  uint32 i = 0;
+// 0 61:10
+COPY r15 r14
+INC r14 -12
+LOAD MEM r14 r14
+//  asm("COPY r15 r14\nINC r14 -12\nLOAD MEM r14 r14");
 
-// 1 55:10
-COPY r15 r1
-INC r1 -12
-LOAD MEM r1 r1
-SET FORCE EQ r1 r1
-GOTO EQ r1 :if_else_2
-// 0 56:14
-:while_condition_3
-COPY r15 r1
-INC r1 -16
-COPY r15 r2
-LOAD MEM r2 r2
-LOAD r3 4
-MUL r2 r2 r3
-LOAD MEM r1 r1
-ADD r1 r1 r2
-LOAD MEM r1 r1
-SET FORCE NEQ r1 r1
-GOTO EQ r1 :while_end_3
-// 0 57:18
+// 1 62:10
 LOAD r1 &TestD.consolePntr
 LOAD MEM r1 r1
+//  asm("LOAD r1 &TestD.consolePntr\nLOAD MEM r1 r1");
+
+// 2 63:10
 COPY r15 r2
 INC r2 -16
-COPY r15 r3
-LOAD MEM r3 r3
-LOAD r4 4
-MUL r3 r3 r4
 LOAD MEM r2 r2
-ADD r2 r2 r3
-LOAD MEM r2 r2
-STORE r2 r1
-// * consolePntr = str[i];
+//  asm("COPY r15 r2\nINC r2 -16\nLOAD MEM r2 r2");
 
-// 1 58:18
-LOAD r1 &TestD.consolePntr
-LOAD r2 4
-LOAD MEM r3 r1
-ADD r2 r3 r2
-STORE r2 r1
-//  consolePntr += 4;
+// 3 64:10
+LOAD r3 0x1
+LOAD r4 TestD.CONSOLE_END
+LOAD r5 TestD.CONSOLE_START
+//  asm("LOAD r3 0x1\nLOAD r4 TestD.CONSOLE_END\nLOAD r5 TestD.CONSOLE_START");
 
-// 2 59:18
-LOAD r1 &TestD.consolePntr
-LOAD MEM r1 r1
-LOAD r2 1
-STORE r2 r1
-// * consolePntr = 0x1;
+// 4 65:10
+GOTO GT r14 :printStr_len
+//  asm("GOTO GT r14 :printStr_len");
 
-// 3 60:18
-LOAD r1 &TestD.consolePntr
-LOAD r2 4
-LOAD MEM r3 r1
-ADD r2 r3 r2
-STORE r2 r1
-//  consolePntr += 4;
+// 5 66:14
+:printStr_l1
+//  asm(":printStr_l1");
 
-// 4 61:18
-LOAD r1 &TestD.consolePntr
-LOAD MEM r1 r1
-LOAD r2 TestD.CONSOLE_END
-SUB r1 r1 r2
-SET FORCE GT r1 r1
-GOTO EQ r1 :if_end_4
-// 0 62:22
-LOAD r1 &TestD.consolePntr
-LOAD r2 TestD.CONSOLE_START
-STORE r2 r1
-//  consolePntr = CONSOLE_START;
+// 6 67:18
+LOAD MEM r6 r2
+GOTO EQ r6 :printStr_l1_exit
+//  asm("LOAD MEM r6 r2\nGOTO EQ r6 :printStr_l1_exit");
 
-:if_end_4
-//  if(consolePntr > CONSOLE_END) {consolePntr = CONSOLE_START;}
+// 7 68:18
+STORE r6 r1
+INC r1 4
+INC r2 4
+//  asm("STORE r6 r1\nINC r1 4\nINC r2 4");
 
-// 5 64:18
-COPY r15 r1
-LOAD MEM r2 r1
-INC r2 1
-STORE r2 r1
-//  i++;
+// 8 69:18
+STORE r3 r1
+INC r1 4
+//  asm("STORE r3 r1\nINC r1 4");
 
-GOTO :while_condition_3
-:while_end_3
-//  while(str[i] != 0) {* consolePntr = str[i]; consolePntr += 4;* consolePntr = 0x1; consolePntr += 4; if(consolePntr > CONSOLE_END) {consolePntr = CONSOLE_START;} i++;}
+// 9 70:18
+SUB r6 r4 r1
+GOTO GT r6 :printStr_l1
+COPY r5 r1
+GOTO :printStr_l1
+//  asm("SUB r6 r4 r1\nGOTO GT r6 :printStr_l1\nCOPY r5 r1\nGOTO :printStr_l1");
 
-GOTO :if_end_2
-:if_else_2
-// 0 67:14
-:while_condition_5
-COPY r15 r1
-LOAD MEM r1 r1
-COPY r15 r2
-INC r2 -12
-LOAD MEM r2 r2
-SUB r1 r2 r1
-SET FORCE GT r1 r1
-GOTO EQ r1 :while_end_5
-// 0 68:18
-LOAD r1 &TestD.consolePntr
-LOAD MEM r1 r1
-COPY r15 r2
-INC r2 -16
-COPY r15 r3
-LOAD MEM r3 r3
-LOAD r4 4
-MUL r3 r3 r4
-LOAD MEM r2 r2
-ADD r2 r2 r3
-LOAD MEM r2 r2
-STORE r2 r1
-// * consolePntr = str[i];
+// 10 71:14
+:printStr_l1_exit
+//  asm(":printStr_l1_exit");
 
-// 1 69:18
-LOAD r1 &TestD.consolePntr
-LOAD r2 4
-LOAD MEM r3 r1
-ADD r2 r3 r2
-STORE r2 r1
-//  consolePntr += 4;
+// 11 72:14
+GOTO :printStr_exit
+//  asm("GOTO :printStr_exit");
 
-// 2 70:18
-LOAD r1 &TestD.consolePntr
-LOAD MEM r1 r1
-LOAD r2 1
-STORE r2 r1
-// * consolePntr = 0x1;
+// 12 73:10
+:printStr_len
+//  asm(":printStr_len");
 
-// 3 71:18
-LOAD r1 &TestD.consolePntr
-LOAD r2 4
-LOAD MEM r3 r1
-ADD r2 r3 r2
-STORE r2 r1
-//  consolePntr += 4;
+// 13 74:14
+:printStr_l2
+//  asm(":printStr_l2");
 
-// 4 72:18
-LOAD r1 &TestD.consolePntr
-LOAD MEM r1 r1
-LOAD r2 TestD.CONSOLE_END
-SUB r1 r1 r2
-SET FORCE GT r1 r1
-GOTO EQ r1 :if_end_6
-// 0 73:22
-LOAD r1 &TestD.consolePntr
-LOAD r2 TestD.CONSOLE_START
-STORE r2 r1
-//  consolePntr = CONSOLE_START;
+// 14 75:18
+COPY MEM r2 r1
+INC r1 4
+INC r2 4
+//  asm("COPY MEM r2 r1\nINC r1 4\nINC r2 4");
 
-:if_end_6
-//  if(consolePntr > CONSOLE_END) {consolePntr = CONSOLE_START;}
+// 15 76:18
+STORE r3 r1
+INC r1 4
+//  asm("STORE r3 r1\nINC r1 4");
 
-// 5 75:18
-COPY r15 r1
-LOAD MEM r2 r1
-INC r2 1
-STORE r2 r1
-//  i++;
+// 16 77:18
+SUB r6 r4 r1
+GOTO GT r6 :printStr_l2_end
+COPY r5 r1
+//  asm("SUB r6 r4 r1\nGOTO GT r6 :printStr_l2_end\nCOPY r5 r1");
 
-GOTO :while_condition_5
-:while_end_5
-//  while(i < len) {* consolePntr = str[i]; consolePntr += 4;* consolePntr = 0x1; consolePntr += 4; if(consolePntr > CONSOLE_END) {consolePntr = CONSOLE_START;} i++;}
+// 17 78:18
+:printStr_l2_end
+//  asm(":printStr_l2_end");
 
-:if_end_2
-//  if(len == 0) {while(str[i] != 0) {* consolePntr = str[i]; consolePntr += 4;* consolePntr = 0x1; consolePntr += 4; if(consolePntr > CONSOLE_END) {consolePntr = CONSOLE_START;} i++;}} else {while(i < len) {* consolePntr = str[i]; consolePntr += 4;* consolePntr = 0x1; consolePntr += 4; if(consolePntr > CONSOLE_END) {consolePntr = CONSOLE_START;} i++;}}
+// 18 79:18
+INC r14 -1
+GOTO GT r14 :printStr_l2
+//  asm("INC r14 -1\nGOTO GT r14 :printStr_l2");
+
+// 19 80:10
+:printStr_exit
+//  asm(":printStr_exit");
+
+// 20 81:10
+LOAD r3 &TestD.consolePntr
+STORE r1 r3
+//  asm("LOAD r3 &TestD.consolePntr\nSTORE r1 r3")
+
+// 21 81:56
+// ;
 
 :func_exit_TestD.printStr_char*_uint32
-STACK DEC 4
 STACK POP r15
 GOTO POP
 #endfunction void
@@ -527,50 +482,43 @@ COPY rStack r15
 // 0 44:10
 LOAD r1 &TestD.consolePntr
 LOAD MEM r1 r1
+//  asm("LOAD r1 &TestD.consolePntr\nLOAD MEM r1 r1");
+
+// 1 45:10
 COPY r15 r2
 INC r2 -12
 LOAD MEM r2 r2
-STORE r2 r1
-// * consolePntr = c;
-
-// 1 45:10
-LOAD r1 &TestD.consolePntr
-LOAD r2 4
-LOAD MEM r3 r1
-ADD r2 r3 r2
-STORE r2 r1
-//  consolePntr += 4;
+//  asm("COPY r15 r2\nINC r2 -12\nLOAD MEM r2 r2");
 
 // 2 46:10
-LOAD r1 &TestD.consolePntr
-LOAD MEM r1 r1
-LOAD r2 1
-STORE r2 r1
-// * consolePntr = 0x1;
+LOAD r3 0x1
+LOAD r4 TestD.CONSOLE_END
+LOAD r5 TestD.CONSOLE_START
+//  asm("LOAD r3 0x1\nLOAD r4 TestD.CONSOLE_END\nLOAD r5 TestD.CONSOLE_START");
 
 // 3 47:10
-LOAD r1 &TestD.consolePntr
-LOAD r2 4
-LOAD MEM r3 r1
-ADD r2 r3 r2
 STORE r2 r1
-//  consolePntr += 4;
+INC r1 4
+INC r2 4
+//  asm("STORE r2 r1\nINC r1 4\nINC r2 4");
 
 // 4 48:10
-LOAD r1 &TestD.consolePntr
-LOAD MEM r1 r1
-LOAD r2 TestD.CONSOLE_END
-SUB r1 r1 r2
-SET FORCE GT r1 r1
-GOTO EQ r1 :if_end_7
-// 0 49:14
-LOAD r1 &TestD.consolePntr
-LOAD r2 TestD.CONSOLE_START
-STORE r2 r1
-//  consolePntr = CONSOLE_START;
+STORE r3 r1
+INC r1 4
+//  asm("STORE r3 r1\nINC r1 4");
 
-:if_end_7
-//  if(consolePntr > CONSOLE_END) {consolePntr = CONSOLE_START;}
+// 5 49:10
+SUB r6 r4 r1
+GOTO GT r6 :printChar_exit
+COPY r5 r1
+//  asm("SUB r6 r4 r1\nGOTO GT r6 :printChar_exit\nCOPY r5 r1");
+
+// 6 50:10
+:printChar_exit
+//  asm(":printChar_exit")
+
+// 7 50:32
+// ;
 
 :func_exit_TestD.printChar_char
 STACK POP r15

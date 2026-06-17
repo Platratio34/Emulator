@@ -4,7 +4,8 @@ namespace TestD {
 
     public static uint32 v = 0;
     public static const char* str = "// Test";
-    public static char[4] testStr = "Test";
+    public static char[5] testStr = "Test\n";
+    public static char[7] testStr2 = "Test2\n\0";
 
     @Entrypoint(raw)
     public static void main() {
@@ -26,7 +27,9 @@ namespace TestD {
 
         setupConsole();
 
-        printStr(&testStr, 4);
+        printStr(&testStr, 5);
+        printStr(&testStr2, 0);
+        printChar('a');
 
         wait(1000);
         // funcC();

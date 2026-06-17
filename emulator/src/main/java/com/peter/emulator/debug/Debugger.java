@@ -94,7 +94,14 @@ public class Debugger {
             if (vs.type.equals("char*")) {
                 String out = "\"";
                 for (int i = vs.start; i <= vs.end; i += 4) {
-                    out += (char) cpu.readMem(i);
+                    char c = (char) cpu.readMem(i);
+                    switch(c) {
+                        case '\n' -> out += "\\n";
+                        case '\t' -> out += "\\t";
+                        case '\0' -> out += "\\0";
+                        case '\\' -> out += "\\\\";
+                        default -> out += c;
+                    }
                 }
                 return out + "\"";
             }
@@ -107,7 +114,14 @@ public class Debugger {
             if (vs.type.equals("char*")) {
                 String out = "\"";
                 for (int i = vs.start; i <= vs.end; i++) {
-                    out += (char) cpu.readMem(i);
+                    char c = (char) cpu.readMem(i);
+                    switch(c) {
+                        case '\n' -> out += "\\n";
+                        case '\t' -> out += "\\t";
+                        case '\0' -> out += "\\0";
+                        case '\\' -> out += "\\\\";
+                        default -> out += c;
+                    }
                 }
                 return out + "\"";
             }
