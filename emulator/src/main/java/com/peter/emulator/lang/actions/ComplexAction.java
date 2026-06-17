@@ -21,4 +21,11 @@ public class ComplexAction extends Action {
         return out;
     }
 
+    public void addDirect(String asm, Object... args) {
+        actions.add(new DirectAction(asm, args));
+    }
+    public void addDirect(String asm) {
+        actions.add(new DirectAction(asm));
+    }
+
 }

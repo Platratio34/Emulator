@@ -509,7 +509,7 @@ public class ELType {
 
     public boolean canCastTo(ELType target) {
         // check modifiers
-        if ((isVoidPtr() && target.equals(ELPrimitives.UINT32)) || (target.isVoidPtr() && equals(ELPrimitives.UINT32)))
+        if (((isVoidPtr()) && target.equals(ELPrimitives.UINT32)) || (target.isVoidPtr() && equals(ELPrimitives.UINT32)))
             return true;
         if (subType == null && target.subType == null) {
             

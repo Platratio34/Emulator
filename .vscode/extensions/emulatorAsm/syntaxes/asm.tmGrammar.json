@@ -189,7 +189,7 @@
             }
         },
         {
-            "match": "^(ADD|SUB)(?:\\s+(\\S+)(?:\\s+(\\S+)(?:\\s+(\\S+))?)?)?",
+            "match": "^(ADD|SUB|MUL|LSH|RSH|OR|AND)(?:\\s+(\\S+)(?:\\s+(\\S+)(?:\\s+(\\S+))?)?)?",
             "captures": {
                 "1": {
                     "name": "keyword.control.instruction"
@@ -199,7 +199,7 @@
                         { "include": "#register" }
                     ]
                 },
-                "3": {
+                "3": {  
                     "patterns": [
                         { "include": "#register" }
                     ]
@@ -232,7 +232,7 @@
             }
         },
         {
-            "match": "^(SET(?:\\s+(?:EQ|LEQ|GT|NEQ))?)(?:\\s+(r\\S+)(?:\\s+(\\S+))?)?",
+            "match": "^(SET(?:\\s+FORCE)(?:\\s+(?:EQ|LEQ|GT|NEQ))?)(?:\\s+(r\\S+)(?:\\s+(\\S+))?)?",
             "captures": {
                 "1": {
                     "name": "keyword.control.instruction"
@@ -328,6 +328,14 @@
             }
         },
         {
+            "match": "^(#breakpoint)",
+            "captures": {
+                "1": {
+                    "name": "keyword.other.compiler"
+                }
+            }
+        },
+        {
             "name": "entity.name.namespace",
             "match": "^(\\:\\S+)\\b"
         }
@@ -401,7 +409,7 @@
             "patterns": [
                 {
                     "name": "constant.numeric",
-                    "match": "(0x[0-9a-f]+|[\\-\\+]?\\d+)"
+                    "match": "(0x[0-9a-f_]+|[\\-\\+]?\\d+)"
                 },
                 {
                     "name": "entity.name.variable",

@@ -6,7 +6,7 @@ public class RAM {
     private final byte[] mem;
 
     public RAM() {
-        this(0x8_0000);
+        this(0x80_0000);
     }
 
     public RAM(int size) {
@@ -107,7 +107,8 @@ public class RAM {
     public String debugPrint(int start, int rows) {
         String str = "           ";
         for (int i = 0; i < 16; i++) {
-            str += "     0x" + Integer.toHexString(i) + "   ";
+            str += String.format("     0x%02x  ", i * 4);
+            // str += "     0x" + Integer.toHexString(i*4) + "   ";
         }
         str += "\n";
         str += "          +";
@@ -116,10 +117,11 @@ public class RAM {
         }
         str += "\n";
         for (int r = 0; r < rows; r++) {
-            int rs = start + (r*16);
+            int rs = start + (r*16*4);
+            int[] words = readWords(rs, 16);
             str += toHex(rs)+" |";
             for (int c = 0; c < 16; c++) {
-                str += "  " + toHex(mem[rs + c]);
+                str += "  " + toHex(words[c]);
             }
             str += "\n";
         }

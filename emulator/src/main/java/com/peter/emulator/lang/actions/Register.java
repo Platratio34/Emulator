@@ -32,11 +32,12 @@ public class Register {
         return reg >= 0;
     }
 
-    public void reserve() {
+    public boolean reserve() {
         if (reg == -1 || reg >= 0x10)
-            return;
+            return false;
         scope.reserve(reg);
         reserved = true;
+        return true;
     }
 
     public void release() {

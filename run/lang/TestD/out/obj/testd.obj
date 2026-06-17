@@ -1,40 +1,91 @@
 {
-    "variables": {"TestD.v": {
-        "address": 564,
-        "start": 564,
-        "end": 567,
-        "type": "uint32"
-    }},
+    "variables": {
+        "TestD.CONSOLE_SETUP_CMD": {
+            "address": 1576,
+            "start": 1576,
+            "end": 1587,
+            "type": "uint32*"
+        },
+        "TestD.testStr": {
+            "address": 1588,
+            "start": 1588,
+            "end": 1603,
+            "type": "char*"
+        },
+        "TestD.v": {
+            "address": 1632,
+            "start": 1632,
+            "end": 1635,
+            "type": "uint32"
+        },
+        "TestD.consolePntr": {
+            "address": 1636,
+            "start": 1636,
+            "end": 1639,
+            "type": "uint32"
+        }
+    },
     "functions": {
         "TestD.onInterrupt": {
             "args": [],
             "rt": "void",
             "start": 8,
-            "end": 64
+            "end": 72
         },
         "TestD.testA_StructA&": {
             "args": ["str StructA&"],
             "rt": "StructA*",
-            "start": 456,
-            "end": 552
+            "start": 712,
+            "end": 808
         },
         "TestD.main": {
             "args": [],
             "rt": "void",
-            "start": 132,
-            "end": 360
+            "start": 204,
+            "end": 496
+        },
+        "TestD.peripheralCommand_uint32_uint32_uint32*": {
+            "args": [
+                "deviceId uint32",
+                "cmdSize uint32",
+                "cmd uint32*"
+            ],
+            "rt": "void",
+            "start": 592,
+            "end": 712
+        },
+        "TestD.printStr_char*_uint32": {
+            "args": [
+                "str char*",
+                "len uint32"
+            ],
+            "rt": "void",
+            "start": 808,
+            "end": 1392
         },
         "TestD.funcb_uint32": {
             "args": ["a uint32"],
             "rt": "void",
-            "start": 360,
-            "end": 408
+            "start": 496,
+            "end": 544
+        },
+        "TestD.setupConsole": {
+            "args": [],
+            "rt": "void",
+            "start": 72,
+            "end": 136
         },
         "TestD.wait_uint32": {
             "args": ["time uint32"],
             "rt": "void",
-            "start": 64,
-            "end": 132
+            "start": 136,
+            "end": 204
+        },
+        "TestD.printChar_char": {
+            "args": ["c char"],
+            "rt": "void",
+            "start": 1392,
+            "end": 1572
         },
         "TestD.funcb_uint32_uint32*": {
             "args": [
@@ -42,20 +93,67 @@
                 "b uint32*"
             ],
             "rt": "void",
-            "start": 408,
-            "end": 456
+            "start": 544,
+            "end": 592
         }
     },
+    "breakpoints": {},
     "version": 1,
-    "definitions": {"TestD.str": {
-        "start": 556,
-        "end": 563,
-        "type": "char*",
-        "value": "// Test"
-    }},
+    "definitions": {
+        "TestD.CMD_DEVICE": {
+            "start": -1,
+            "end": -1,
+            "type": "const uint32",
+            "value": "131074"
+        },
+        "TestD.CMD_ADDR": {
+            "start": -1,
+            "end": -1,
+            "type": "const uint32",
+            "value": "131072"
+        },
+        "TestD.CMD_STATUS": {
+            "start": -1,
+            "end": -1,
+            "type": "const uint32",
+            "value": "131073"
+        },
+        "TestD.CONSOLE_START": {
+            "start": -1,
+            "end": -1,
+            "type": "const uint32",
+            "value": "131328"
+        },
+        "TestD.str": {
+            "start": 1604,
+            "end": 1631,
+            "type": "char*",
+            "value": "// Test"
+        },
+        "TestD.CMD_START": {
+            "start": -1,
+            "end": -1,
+            "type": "const uint32",
+            "value": "131080"
+        },
+        "TestD.CONSOLE_END": {
+            "start": -1,
+            "end": -1,
+            "type": "const uint32",
+            "value": "131392"
+        },
+        "TestD.CMD_WRITTEN": {
+            "start": -1,
+            "end": -1,
+            "type": "const uint32",
+            "value": "1"
+        },
+        "TestD.CMD_SIZE": {
+            "start": -1,
+            "end": -1,
+            "type": "const uint32",
+            "value": "131076"
+        }
+    },
     "syscalls": {}
-}version": 1,
-    "definitions": {},
-    "syscalls": {}
-}
 }

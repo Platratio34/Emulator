@@ -43,16 +43,16 @@ public class Main {
         LanguageServer ls = new LanguageServer();
 
         ProgramModule kernal = null;
-        try {
-            kernal = ls.addModule(ROOT_PATH.resolve("lang/Kernal").toFile());
-            kernal.addRefModule("SysD");
-        } catch (JSONException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        // try {
+        //     kernal = ls.addModule(ROOT_PATH.resolve("lang/Kernal").toFile());
+        //     kernal.addRefModule("SysD");
+        // } catch (JSONException e) {
+        //     // TODO Auto-generated catch block
+        //     e.printStackTrace();
+        // } catch (IOException e) {
+        //     // TODO Auto-generated catch block
+        //     e.printStackTrace();
+        // }
 
         // ProgramModule system;
         // try {
@@ -228,7 +228,7 @@ public class Main {
             e.printStackTrace();
         }
         emulator.ram.copyWords(assembler.build());
-        emulator.cores[0].debugger = new Debugger(assembler.symbols, assembler.symbols);
+        emulator.cores[0].debugger = new Debugger(assembler.symbols, assembler.symbols, emulator);
         
         // Assembler assembler = new Assembler();
         // try {
@@ -269,9 +269,9 @@ public class Main {
         System.out.println();
         
         System.out.println("Console");
-        System.out.println(emulator.ram.debugPrint(0x0800, 3));
+        System.out.println(emulator.ram.debugPrint(0x2_0100, 3));
         System.out.println("Peripheral Manager");
-        System.out.println(emulator.ram.debugPrint(0x8000, 2));
+        System.out.println(emulator.ram.debugPrint(0x2_0000, 2));
         System.out.println("Heap");
         System.out.println(emulator.ram.debugPrint(0x9000, 4));
         

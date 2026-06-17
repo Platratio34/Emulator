@@ -41,7 +41,8 @@ public class DebuggerPanel extends JPanel {
                 varDisplays.put(v, vd);
             }
         }
-        funcLbl.setText(debugger.getSymbol(cpu));
+        // String str = debugger.printStack()
+        funcLbl.setText("<html>"+debugger.printStack().replace("\n","<br>")+"</html>");
         for (VarDisplay vd : varDisplays.values()) {
             vd.update();
         }

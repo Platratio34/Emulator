@@ -14,13 +14,13 @@ public class MessageQueue {
     public boolean hasMsg() {
         if (start == -1 || ram == null)
             return false;
-        return ram.readWord(pointer + 1) == 0x1;
+        return ram.readWord(pointer + 4) == 0x1;
     }
 
     public int read() {
         int v = ram.readWord(pointer);
-        ram.writeWord(pointer + 1, 0x2);
-        pointer += 2;
+        ram.writeWord(pointer + 4, 0x2);
+        pointer += 8;
         if (pointer >= end) {
             pointer = start;
         }
@@ -32,14 +32,14 @@ public class MessageQueue {
         this.start = start;
         this.size = size;
         this.pointer = start;
-        this.end = start + (size * 2);
+        this.end = start + (size * 8);
     }
 
     public void setup(int start, int size) {
         this.start = start;
         this.size = size;
         this.pointer = start;
-        this.end = start + (size * 2);
+        this.end = start + (size * 8);
     }
 
     public void setup(RAM ram) {

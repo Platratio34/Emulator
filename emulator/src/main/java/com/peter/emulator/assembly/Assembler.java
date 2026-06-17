@@ -29,8 +29,8 @@ public class Assembler {
 
     public SymbolFile symbols = new SymbolFile();
 
-    private static final Pattern DEFINE_ARRAY_PATTERN = Pattern.compile("#define\\s+\\w+\\s+\\[([^\\]]+)\\]");
-    private static final Pattern DEFINE_ARRAY_VALUE_PATTERN = Pattern.compile("(0x[0-9a-f]+|\\d+|\\w+)(?:,\\s*)?");
+    private static final Pattern DEFINE_ARRAY_PATTERN = Pattern.compile("#(?:define|var)\\s+[\\w\\.]+\\s+\\[([^\\]]+)\\]");
+    private static final Pattern DEFINE_ARRAY_VALUE_PATTERN = Pattern.compile("(0x[0-9a-f_]+|\\d+|\\w+)(?:,\\s*)?");
     private static final Pattern STRING_PATTERN = Pattern.compile("\"(.*)\"");
     private static final Pattern ALLOC_PATTERN = Pattern.compile("\\(([^\\)]+)\\)");
 
@@ -113,7 +113,8 @@ public class Assembler {
                             }
                             str = str2;
                             memSet.add(new MemSet(name, str));
-                            valAdd += Math.ceilDiv(str.length(), 4);
+                            // valAdd += Math.ceilDiv(str.length(), 4);
+                            valAdd += str.length();
                             symbols.addDefinition(new ValueSymbol(name, -1, -1, "char*", str), lineN + 1);
                         } else if (parts[2].startsWith("[")) {
                             Matcher m = DEFINE_ARRAY_PATTERN.matcher(line);
@@ -184,7 +185,8 @@ public class Assembler {
                             }
                             str = str2;
                             memSet.add(new MemSet(name, str));
-                            valAdd += Math.ceilDiv(str.length(), 4);
+                            // valAdd += Math.ceilDiv(str.length(), 4);
+                            valAdd += str.length();
                             symbols.addVariable(new VariableSymbol(name, -1, -1, "char*", str), lineN + 1);
                         } else if (parts[2].startsWith("[")) {
                             Matcher m = DEFINE_ARRAY_PATTERN.matcher(line);
@@ -281,6 +283,9 @@ public class Assembler {
                         symbols.mapSyscall(parts[2], index);
                         // System.out.println(String.format("Added syscall 0x%x %s", index, parts[2]));
                     }
+                    case "breakpoint" -> {
+
+                    }
                 }
                 continue;
             }
@@ -368,6 +373,9 @@ public class Assembler {
                 if (line.isBlank() || line.startsWith("//"))
                     continue;
                 if (line.startsWith("#") || line.startsWith(":")) { // compiler instruction
+                    if (line.startsWith("#breakpoint")) {
+                        symbols.addBreakpoint(addr * 4 - 4);
+                    }
                     continue;
                 }
                 String[] parts = line.split("\s+");
@@ -757,7 +765,7 @@ public class Assembler {
                             continue;
                         }
                         if (parts[1].equals("RET")) {
-                            System.out.println("ir");
+                            // System.out.println("ir");
                             data[addr++] = Entry.Interrupt(SYSCALL_INTERRUPT_RET, 0);
                         } else if (parts[1].startsWith("r")) {
                             data[addr++] = Entry.Interrupt(SYSCALL_INTERRUPT_RG, getReg(parts[1]));
@@ -896,9 +904,9 @@ public class Assembler {
         } else if (linker != null && linker.hasDefinition(val)) {
             v = linker.getDefinition(val);
         } else if (val.startsWith("0x")) {
-            v = Integer.parseInt(val.substring(2), 16);
+            v = Integer.parseInt(val.substring(2).replace("_",""), 16);
         } else if (val.startsWith("0b")) {
-            v = Integer.parseInt(val.substring(2), 2);
+            v = Integer.parseInt(val.substring(2).replace("_",""), 2);
         } else if (val.startsWith("'")) {
             if (val.startsWith("'\\")) {
                 switch (val) {
@@ -916,7 +924,7 @@ public class Assembler {
                 v = (int) val.charAt(1);
             }
         } else {
-            v = Integer.parseInt(val);
+            v = Integer.parseInt(val.replace("_",""));
         }
         return v;
     }
@@ -1132,6 +1140,11 @@ public class Assembler {
             this.name = name;
             // bytes = values;
             int len = str.length();
+            values = new int[len];
+            for (int i = 0; i < len; i++) {
+                values[i] = str.charAt(i);
+            }
+            /*
             values = new int[Math.ceilDiv(len, 4)];
             for (int i = 0; i < str.length(); i += 4) {
                 int v = ((int) str.charAt(i)) << 24;
@@ -1142,7 +1155,7 @@ public class Assembler {
                 if(i+3 < len)
                     v |= (int) str.charAt(i + 3);
                 values[i / 4] = v;
-            }
+            }*/
         }
     }
 

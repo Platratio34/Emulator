@@ -35,7 +35,7 @@ public class MemoryPanel extends JPanel {
         for (int i = 0; i < 8 * rows; i++) {
             if (i % 8 == 0) {
                 int rI = i / 8;
-                rowLabels[rI] = new JLabel(EmulatorGui.toHex((i * 4)));
+                rowLabels[rI] = new JLabel(EmulatorGui.toHex((i * 4) + start));
                 rowLabels[rI].setFont(EmulatorGui.monFont);
                 panel.add(rowLabels[rI]);
                 rowLabels[rI].setForeground(Color.BLUE);

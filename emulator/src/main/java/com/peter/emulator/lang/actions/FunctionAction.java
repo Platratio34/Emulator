@@ -63,6 +63,7 @@ public class FunctionAction extends ComplexAction {
         Register r = onStack ? scope.firstFree() : scope.makeHandle(1);
         if (!onStack)
             r.reserve();
+        boolean[] pushed = new boolean[16];
         boolean[] reserved = new boolean[16];
         ArrayList<Action> tempActions = new ArrayList<>();
         int stackSize = 0;
@@ -75,18 +76,21 @@ public class FunctionAction extends ComplexAction {
                         throw ELAnalysisError.error("Empty expression", t2);
                     if (!onStack && r.isReserved()) {
                         tempActions.add(new DirectAction("STACK PUSH %s", r));
-                        reserved[r.reg] = true;
+                        pushed[r.reg] = true;
                     }
                     ExpressionAction expA = new ExpressionAction(scope, exp, r);
                     tempActions.add(expA);
                     types.add(expA.outType == null ? ELPrimitives.OBJECT : expA.outType);
                     if (onStack) {
                         tempActions.add(new DirectAction("STACK PUSH %s", r));
+                        r.release();
                         stackSize += 4;
                     } else {
                         // actions.add(new DirectAction("COPY %s %s", MachineCode.translateReg(r),
                         //         MachineCode.translateReg(r++)));
                         r.reserve();
+                        // tempActions.add(new DirectAction("// reserving %s", r));
+                        reserved[r.reg] = true;
                         r = r.next();
                     }
                     exp = new ArrayList<>();
@@ -95,6 +99,10 @@ public class FunctionAction extends ComplexAction {
                 }
             }
             if (!exp.isEmpty()) {
+                if (!onStack && r.isReserved()) {
+                    tempActions.add(new DirectAction("STACK PUSH %s", r));
+                    pushed[r.reg] = true;
+                }
                 ExpressionAction expA = new ExpressionAction(scope, exp, r);
                 tempActions.add(expA);
                 types.add(expA.outType == null ? ELPrimitives.OBJECT : expA.outType);
@@ -103,7 +111,10 @@ public class FunctionAction extends ComplexAction {
                     r.release();
                     stackSize += 4;
                 } else {
-                    tempActions.add(new DirectAction("COPY %s %s", r, r));
+                    // tempActions.add(new DirectAction("COPY %s %s", r, r));
+                    r.reserve();
+                    // tempActions.add(new DirectAction("// reserving %s", r));
+                    reserved[r.reg] = true;
                 }
             }
         }
@@ -121,18 +132,19 @@ public class FunctionAction extends ComplexAction {
             switch (id.parts[1]) {
                 case "memSet" -> {
                     // void SysD.memSet(uint32 addr, uint32 value);
-                    if (types.size() != 2 || !(types.get(0).canCastTo(ELPrimitives.UINT32)
+                    if (types.size() != 2 || !((types.get(0).canCastTo(ELPrimitives.UINT32) || types.get(0).canCastTo(ELPrimitives.VOID_PTR))
                             && types.get(1).canCastTo(ELPrimitives.UINT32))) {
 
                         throw ELAnalysisError.error(String.format(
                                 "Found no overload of SysD.memSet matching %s; Found SysD.memSet(uint32 addr, uint32 value)",
                                 tStr), startOfParams.span(endOfParams));
                     }
-                    actions.add(new DirectAction("STORE MEM r1 r2"));
-                    for (int i = r.reg-1; i > 0; i--) {
-                        if(reserved[i])
+                    actions.add(new DirectAction("STORE r1 r2"));
+                    
+                    for (int i = r.reg; i > 0; i--) {
+                        if(pushed[i])
                             actions.add(new DirectAction("STACK POP %s", MachineCode.translateReg(i)));
-                        else
+                        else if (reserved[i])
                             scope.release(i);
                     }
                     return;
@@ -146,16 +158,17 @@ public class FunctionAction extends ComplexAction {
                                 tStr), startOfParams.span(endOfParams));
                     }
                     actions.add(new DirectAction("LOAD r1 %s", MachineCode.translateReg(targetReg)));
-                    for (int i = r.reg-1; i > 0; i--) {
-                        if(reserved[i])
+                    
+                    for (int i = r.reg; i > 0; i--) {
+                        if(pushed[i])
                             actions.add(new DirectAction("STACK POP %s", MachineCode.translateReg(i)));
-                        else
+                        else if (reserved[i])
                             scope.release(i);
                     }
                     return;
                 }
                 case "memCopy" -> {
-                    errors.warning("SysD.copy is not currently implemented", it);
+                    // errors.warning("SysD.copy is not currently implemented", it);
 
                     /*
                     [r1 = void* src, r2 = uint32 start, r3 = uint32 end, r4 = void* dest, r5 = uint32 destStart]
@@ -175,10 +188,11 @@ public class FunctionAction extends ComplexAction {
 
                     actions.add(new DirectAction("ADD r1 r1 r2\nADD r4 r4 r5\nSUB r3 r3 r2\n:%s\nCOPY MEM r1 r4\nINC r3 -1\nGOTO GT r3 :%s", loopLabel, loopLabel));
                     
-                    for (int i = r.reg-1; i > 0; i--) {
-                        if(reserved[i])
+                    
+                    for (int i = r.reg; i > 0; i--) {
+                        if(pushed[i])
                             actions.add(new DirectAction("STACK POP %s", MachineCode.translateReg(i)));
-                        else
+                        else if (reserved[i])
                             scope.release(i);
                     }
                     return;
@@ -209,12 +223,13 @@ public class FunctionAction extends ComplexAction {
         actions.addAll(tempActions);
         actions.add(new DirectAction("GOTO PUSH :%s", f.getQualifiedName(true)));
         if (f.ret == null) {
-            if (onStack)
+            if (onStack && stackSize > 0)
                 actions.add(new DirectAction("STACK DEC %d", stackSize));
         } else if(targetReg >= 0) {
             retType = f.ret;
             if (onStack) {
-                actions.add(new DirectAction("STACK DEC %d", stackSize-4));
+                if(stackSize-4 > 0)
+                    actions.add(new DirectAction("STACK DEC %d", stackSize-4));
                 actions.add(new DirectAction("STACK POP %s", MachineCode.translateReg(targetReg)));
             } else {
                 actions.add(new DirectAction("COPY r1 %s", MachineCode.translateReg(targetReg)));
@@ -222,13 +237,14 @@ public class FunctionAction extends ComplexAction {
         }
         if (!onStack) {
             for (int i = r.reg; i > 0; i--) {
-                if(reserved[i])
+                if(pushed[i])
                     actions.add(new DirectAction("STACK POP %s", MachineCode.translateReg(i)));
-                else
+                else if (reserved[i])
                     scope.release(i);
             }
+        } else {
+            r.release();
         }
-        r.release();
     }
 
 }

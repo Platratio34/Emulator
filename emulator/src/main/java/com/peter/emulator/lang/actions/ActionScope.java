@@ -197,23 +197,33 @@ public class ActionScope {
     // }
     
     public void reserve(int reg) {
+        if (parent != null)
+            parent.reserve(reg);
         reservedRegisters[reg] = true;
     }
     public void release(int reg) {
+        if (parent != null)
+            parent.release(reg);
         reservedRegisters[reg] = false;
     }
 
     public boolean isReserved(int reg) {
+        if (parent != null)
+            return parent.isReserved(reg);
         return reservedRegisters[reg];
     }
     
     public Register makeHandle(int reg) {
+        if (parent != null)
+            return parent.makeHandle(reg);
         Register r = new Register(this, reg);
         registerHandles.add(r);
         return r;
     }
 
     public Register firstFree() {
+        if (parent != null)
+            return parent.firstFree();
         for (int i = 1; i < 15; i++)
             if (!reservedRegisters[i])
                 return makeHandle(i);
@@ -221,6 +231,8 @@ public class ActionScope {
         // return null;
     }
     public int firstFreeR() {
+        if (parent != null)
+            return parent.firstFreeR();
         for(int i = 1; i < 15; i++)
             if(!reservedRegisters[i])
                 return i;

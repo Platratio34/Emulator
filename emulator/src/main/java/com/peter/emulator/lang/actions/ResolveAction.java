@@ -39,10 +39,10 @@ public class ResolveAction extends ComplexAction {
 
         switch (var.varType) {
             case CONST -> {
-                actions.add(new DirectAction("LOAD %s %s", reg, var.getQualifiedName()));
+                addDirect("LOAD %s %s", reg, var.getQualifiedName());
                 // switch (var.startingValue) {
                 //     case ELNumberValue nv -> {
-                //         actions.add(new DirectAction("LOAD %s %d", reg, nv.value));
+                //         addDirect("LOAD %s %d", reg, nv.value));
                 //         returnType = var.type;
                 //         returnVar = var;
                 //         // scope.addSymbol(new ELSymbol(ELSymbol.Type.VARIABLE_CONSTANT, it.spanFirst(),
@@ -52,7 +52,7 @@ public class ResolveAction extends ComplexAction {
                 //     }
                 //     case ELStringValue sv -> {
                 //         if (sv.type.equals(ELPrimitives.CHAR)) {
-                //             actions.add(new DirectAction("LOAD %s '%s'", reg, sv.value));
+                //             addDirect("LOAD %s '%s'", reg, sv.value));
                 //             returnType = var.type;
                 //             returnVar = var;
                 //             // scope.addSymbol(new ELSymbol(ELSymbol.Type.VARIABLE_CONSTANT, it.spanFirst(),
@@ -66,21 +66,21 @@ public class ResolveAction extends ComplexAction {
                 //     default -> throw ELAnalysisError.error("Unknown constant type");
                 // }
             }
-            case STATIC -> actions.add(new DirectAction("LOAD %s &%s", reg, var.getQualifiedName()));
+            case STATIC -> addDirect("LOAD %s &%s", reg, var.getQualifiedName());
             case MEMBER -> {
-                actions.add(new DirectAction("COPY r0 %s", reg));
+                addDirect("COPY r0 %s", reg);
                 if (var.offset != 0)
-                    actions.add(new DirectAction("INC %s %d", reg, var.offset));
+                    addDirect("INC %s %d", reg, var.offset);
             }
             case SCOPE -> {
-                actions.add(new DirectAction("COPY r15 %s", reg));
+                addDirect("COPY r15 %s", reg);
                 if (var.offset != 0)
-                    actions.add(new DirectAction("INC %s %d", reg, var.offset));
+                    addDirect("INC %s %d", reg, var.offset);
             }
         }
         scope.addSymbol(new ELVarSymbol(var, it.spanFirst()));
         // scope.addSymbol(new ELSymbol(var.finalVal ? ELSymbol.Type.VARIABLE_FINAL : ELSymbol.Type.VARIABLE_NAME, it.spanFirst(), "### `%s %s`", var.typeString(), it.value));
-
+        reg.reserve();
         ELVariable v = var;
         ELType t = v.type;
         // if(id.hasSub()) {
@@ -89,19 +89,25 @@ public class ResolveAction extends ComplexAction {
                     if (!v.type.isIndexable())
                         throw ELAnalysisError.error(v.type.typeString() + " is not indexable",
                                 it.index.subFirst().startLocation.span(it.index.subLast().endLocation));
-                    Register r2 = scope.firstFree();
-                    ExpressionAction indexExp = new ExpressionAction(scope, id.index.subTokens, r2);
+                    
+                    Register rIndex = scope.firstFree();
+                    // addDirect("// index; %s", rIndex);
+                    ExpressionAction indexExp = new ExpressionAction(scope, id.index.subTokens, rIndex);
                     if (indexExp.outType != null && !indexExp.outType.equals(ELPrimitives.UINT32))
                         throw ELAnalysisError.error("Index must resolve to a uint32",
                                 id.index.subFirst().startLocation.span(id.index.subLast().endLocation));
+                    actions.add(indexExp);
+                    if (!rIndex.reserve())
+                        System.err.println("??");
                     int wds = v.sizeof();
                     if (wds > 1) {
-                        Register r3 = scope.firstFree();
-                        actions.add(new DirectAction("LOAD %s %d\nMUL %s %s %s", r3, v.sizeof(), r2, r2, r3));
+                        Register rSize = scope.firstFree();
+                        addDirect("LOAD %s %d\nMUL %s %s %s", rSize, wds, rIndex, rIndex, rSize);
+                        rSize.release();
                     }
-                    actions.add(new DirectAction("ADD %s %s %s", reg, reg, r2));
-                    actions.add(new DirectAction("LOAD MEM %s %s", reg, reg));
-                    r2.release();
+                    addDirect("LOAD MEM %s %s", reg, reg);
+                    addDirect("ADD %s %s %s", reg, reg, rIndex);
+                    rIndex.release();
                     t = t.resolve(it.span());
                 }
                 
@@ -113,8 +119,8 @@ public class ResolveAction extends ComplexAction {
                 else
                     break;
 
-                if (t.isPointer() || t.isAddress()) {
-                    actions.add(new DirectAction("LOAD MEM %s %s", reg, reg));
+                if (t.isPointer() || t.isAddress() || t.isArray()) {
+                    addDirect("LOAD MEM %s %s", reg, reg);
                     t = t.resolve(it.span());
                 }
 
@@ -127,8 +133,8 @@ public class ResolveAction extends ComplexAction {
                 t = v.type;
             }
         // }
-        if (byValue)
-            actions.add(new DirectAction("LOAD MEM %s %s", reg, reg));
+        if (byValue && v.varType != ELVariable.Type.CONST)
+            addDirect("LOAD MEM %s %s", reg, reg);
         returnType = t;
         returnVar = v;
     }

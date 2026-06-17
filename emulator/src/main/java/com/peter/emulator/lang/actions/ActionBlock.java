@@ -32,6 +32,13 @@ public class ActionBlock extends ComplexAction {
         while (wI < tokens.size()) {
             try {
                 Token tkn = tokens.get(wI);
+
+                while ((wI + 1) < tokens.size()
+                        && (tkn instanceof OperatorToken ot && ot.type == OperatorToken.Type.SEMICOLON)) {
+                    wI++;
+                    tkn = tokens.get(wI);
+                }
+                
                 // System.out.println(tkn);
                 if (last > -1) {
                     String line = "";
@@ -47,6 +54,15 @@ public class ActionBlock extends ComplexAction {
                 actions.add(
                         new DirectAction(
                                 "// " + (l++) + " " + tkn.startLocation.line() + ":" + tkn.startLocation.col()));
+                boolean dma = false;
+                if (tkn instanceof OperatorToken ot && ot.type == OperatorToken.Type.POINTER) {
+                    dma = true;
+                    wI++;
+                    if (wI >= tokens.size()) {
+                        throw ELAnalysisError.error("Unexpected '*'", tkn);
+                    }
+                    tkn = tokens.get(wI);
+                }
                 if (tkn instanceof IdentifierToken it) {
                     Identifier id = it.asId();
                     if (it.hasParamsSub()) {
@@ -347,6 +363,8 @@ public class ActionBlock extends ComplexAction {
                         ELType t;
                         Action assignAction = null;
                         if (targetVal.value.equals("SysD")) { // if lh is SysD
+                            if (dma)
+                                throw ELAnalysisError.error("DMA is not allowed with SysD pseudo-variables", tkn);
                             scope.addSymbol(new ELSymbol(ELSymbol.Type.NAMESPACE_NAME, it.spanFirst(), "### `SysD`\nSystem Direct Low-level module"));
                             if(!targetVal.hasSub() || targetVal.subTokens.size() != 1)
                                 throw ELAnalysisError.error("Unable to resolve variable `"+it.debugString()+"`", it);
@@ -379,11 +397,16 @@ public class ActionBlock extends ComplexAction {
                         } else {
                             rT = scope.firstFree();
                             rT.reserve();
-                            ResolveAction rA = scope.loadVar(targetVal, rT, false);
+                            ResolveAction rA = scope.loadVar(targetVal, rT, dma);
                             if (rA == null) // block stack var
                                 throw ELAnalysisError.error("Unable to resolve variable `"+targetVal.debugString()+"`", it.span());
                             t = rA.returnType;
-                            if(rA.returnVar != null && (rA.returnVar.finalVal || t.isConstant()))
+                            if (dma) {
+                                if(!(t.isPointer() || t.isAddress()))
+                                    throw ELAnalysisError.error("DMA only allowed with pointers");
+                                t = t.resolve(it.span());
+                            }
+                            if(rA.returnVar != null && (!dma && (rA.returnVar.finalVal || t.isConstant())))
                                 throw ELAnalysisError.error("Cannot assign to "+(rA.returnVar.finalVal ? "final variable" : "constant"), it.startLocation.span(actionSpan.end()));
                             actions.add(rA);
                             if (!r.fistFree())

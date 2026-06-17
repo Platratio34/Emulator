@@ -46,6 +46,7 @@ public class CPU {
     public int interruptHandler = 0;
 
     public Debugger debugger = null;
+    public boolean printInstr = false;
 
     public CPU(int cpuId, RAM ram, MMU mmu) {
         this.cpuId = cpuId;
@@ -254,8 +255,10 @@ public class CPU {
         int next = readMem(pgmPtr);
         instrb = next;
         int instruction = op & MASK_INSTRUCTION;
-        String instrStr = translate(op, next);
-        System.out.println(String.format("CPU Tick: [%x] %s", mmu.translate(this, pgmPtr - 4), instrStr));
+        if (printInstr) {
+            String instrStr = translate(op, next);
+            System.out.println(String.format("CPU Tick: [%x] %s", mmu.translate(this, pgmPtr - 4), instrStr));
+        }
         switch (instruction) {
             case HALT -> {
                 if (!privilegeMode)
@@ -335,10 +338,10 @@ public class CPU {
                         setReg(rd, getReg(ra) ^ getReg(rb));
                     }
                     case MATH_LSHIFT -> {
-                        setReg(rd, getReg(ra) << getReg(rb));
+                        setReg(rd, getReg(ra) << rb);
                     }
                     case MATH_RSHIFT -> {
-                        setReg(rd, getReg(ra) >> getReg(rb));
+                        setReg(rd, getReg(ra) >> rb);
                     }
                 }
             }

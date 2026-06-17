@@ -1,6 +1,7 @@
 package com.peter.emulator.assembly;
 
 import java.util.HashMap;
+import java.util.HashSet;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -13,6 +14,7 @@ public class SymbolFile {
     public final HashMap<String, ValueSymbol> definitions = new HashMap<>();
     public final HashMap<String, VariableSymbol> variables = new HashMap<>();
     public final HashMap<String, Integer> syscalls = new HashMap<>();
+    public final HashSet<Integer> breakpoints = new HashSet<>();
 
     public SymbolFile() {
     }
@@ -69,6 +71,10 @@ public class SymbolFile {
         def.start = start;
     }
 
+    public void addBreakpoint(int address) {
+        breakpoints.add(address);
+    }
+
     public void mapSyscall(String name, int index) {
         syscalls.put(name, index);
     }
@@ -105,6 +111,9 @@ public class SymbolFile {
         for (String name : other.syscalls.keySet()) {
             mapSyscall(name, other.syscalls.get(name));
         }
+        for (Integer addr : other.breakpoints) {
+            addBreakpoint(addr + otherOffset);
+        }
         return this;
     }
     
@@ -131,6 +140,11 @@ public class SymbolFile {
         for (String name : syscalls.keySet()) {
             jsonSyscalls.put(name, syscalls.get(name));
         }
+        JSONArray jsonBreakpoints = new JSONArray();
+        json.put("breakpoints", jsonSyscalls);
+        for (Integer addr : breakpoints) {
+            jsonBreakpoints.put(addr);
+        }
         return json.toString(4);
     }
     public String toFileKernal() {
@@ -154,6 +168,11 @@ public class SymbolFile {
         json.put("syscalls", jsonSyscalls);
         for (String name : syscalls.keySet()) {
             jsonSyscalls.put(name, syscalls.get(name));
+        }
+        JSONArray jsonBreakpoints = new JSONArray();
+        json.put("breakpoints", jsonSyscalls);
+        for (Integer addr : breakpoints) {
+            jsonBreakpoints.put(addr);
         }
         return json.toString(4);
     }
@@ -180,6 +199,12 @@ public class SymbolFile {
                 JSONObject jsonSyscalls = json.getJSONObject("syscalls");
                 for (String key : jsonSyscalls.keySet()) {
                     symbols.syscalls.put(key, jsonSyscalls.getInt(key));
+                }
+                if(json.has("breakpoints")) {
+                    JSONArray jsonBreakpoints = json.getJSONArray("breakpoints");
+                    for (int i = 0; i < jsonBreakpoints.length(); i++) {
+                        symbols.addBreakpoint(jsonBreakpoints.getInt(i));
+                    }
                 }
             }
             default -> {

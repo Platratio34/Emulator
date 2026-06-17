@@ -125,10 +125,10 @@ public class ExpressionAction extends ComplexAction {
                             }
 
                             case LEFT_SHIFT -> {
-                                actions.add(new DirectAction("LSH %s %d", targetReg, nt.numValue));
+                                actions.add(new DirectAction("LSH %s %s %d", targetReg, targetReg, nt.numValue));
                             }
                             case RIGHT_SHIFT -> {
-                                actions.add(new DirectAction("RSH %s %d", targetReg, nt.numValue));
+                                actions.add(new DirectAction("RSH %s %s %d", targetReg, targetReg, nt.numValue));
                             }
 
                             case EQ2 -> {

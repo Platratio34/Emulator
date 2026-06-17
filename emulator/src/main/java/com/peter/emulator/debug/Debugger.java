@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Set;
 
 import com.peter.emulator.CPU;
+import com.peter.emulator.Emulator;
 import com.peter.emulator.assembly.SymbolFile;
 import com.peter.emulator.assembly.SymbolFile.FunctionSymbol;
 import com.peter.emulator.assembly.SymbolFile.VariableSymbol;
@@ -12,12 +13,14 @@ public class Debugger {
 
     private final SymbolFile kernalSymbols;
     private final SymbolFile symbols;
+    private final Emulator emulator;
 
     private final ArrayList<FunctionSymbol> stack = new ArrayList<>();
 
-    public Debugger(SymbolFile kernalSymbols, SymbolFile symbols) {
+    public Debugger(SymbolFile kernalSymbols, SymbolFile symbols, Emulator emulator) {
         this.kernalSymbols = kernalSymbols;
         this.symbols = symbols;
+        this.emulator = emulator;
     }
 
     public String getSymbol(CPU cpu) {
@@ -46,10 +49,13 @@ public class Debugger {
                     // System.out.println("Entering " + symbol);
                     stack.add(symbol);
                 }
-                if (symbol.end == addr + 1) {
+                if (symbol.end == addr + 4) {
                     // System.out.println("Exiting " + symbol);
-                    stack.remove(stack.size()-1);
+                    stack.remove(stack.size() - 1);
                 }
+            }
+            if (kernalSymbols.breakpoints.contains(cpu.pgmPtr)) {
+                emulator.setWait(true);
             }
         } else {
             for (FunctionSymbol symbol : symbols.functions.values()) {
@@ -58,11 +64,14 @@ public class Debugger {
                         // System.out.println("Entering "+ symbol);
                         stack.add(symbol);
                     }
-                    if (symbol.end == addr) {
+                    if (symbol.end == addr + 4) {
                         // System.out.println("Exiting "+ symbol);
                         stack.remove(stack.size()-1);
                     }
                 }
+            }
+            if (symbols.breakpoints.contains(cpu.pgmPtr)) {
+                emulator.setWait(true);
             }
         }
     }
@@ -84,7 +93,7 @@ public class Debugger {
             VariableSymbol vs = kernalSymbols.variables.get(name);
             if (vs.type.equals("char*")) {
                 String out = "\"";
-                for (int i = vs.start; i <= vs.end; i++) {
+                for (int i = vs.start; i <= vs.end; i += 4) {
                     out += (char) cpu.readMem(i);
                 }
                 return out + "\"";
