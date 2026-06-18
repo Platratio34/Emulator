@@ -84,6 +84,7 @@ public class Namespace {
             }
             ns = ns.namespace;
         }
+
         return null;
     }
 

@@ -1,5 +1,6 @@
 package com.peter.emulator;
 
+import com.peter.Main;
 import com.peter.emulator.components.MMU;
 import com.peter.emulator.components.RAM;
 import com.peter.emulator.gui.EmulatorGui;
@@ -21,7 +22,7 @@ public class Emulator {
 
     public Emulator() {
         peripheralManager.addPeripheral(new ConsolePeripheral());
-        peripheralManager.addPeripheral(new StoragePeripheral());
+        peripheralManager.addPeripheral(new StoragePeripheral(Main.ROOT_PATH.resolve("devices/vd0")));
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             stop();
         }));

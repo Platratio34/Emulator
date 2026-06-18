@@ -1,97 +1,85 @@
 {
     "variables": {
-        "TestD.CONSOLE_SETUP_CMD": {
+        "TestD.testStr": {
+            "address": 1216,
+            "start": 1216,
+            "end": 1235,
+            "type": "char*"
+        },
+        "TestD.v": {
+            "address": 1184,
+            "start": 1184,
+            "end": 1187,
+            "type": "uint32"
+        },
+        "Console.consolePntr": {
+            "address": 1152,
+            "start": 1152,
+            "end": 1155,
+            "type": "uint32"
+        },
+        "TestD.testStr2": {
+            "address": 1188,
+            "start": 1188,
+            "end": 1215,
+            "type": "char*"
+        },
+        "Console.CONSOLE_SETUP_CMD": {
             "address": 1140,
             "start": 1140,
             "end": 1151,
             "type": "uint32*"
-        },
-        "TestD.testStr": {
-            "address": 1152,
-            "start": 1152,
-            "end": 1171,
-            "type": "char*"
-        },
-        "TestD.v": {
-            "address": 1200,
-            "start": 1200,
-            "end": 1203,
-            "type": "uint32"
-        },
-        "TestD.testStr2": {
-            "address": 1204,
-            "start": 1204,
-            "end": 1231,
-            "type": "char*"
-        },
-        "TestD.consolePntr": {
-            "address": 1232,
-            "start": 1232,
-            "end": 1235,
-            "type": "uint32"
         }
     },
     "functions": {
         "TestD.onInterrupt": {
             "args": [],
             "rt": "void",
-            "start": 8,
-            "end": 72
+            "start": 460,
+            "end": 524
         },
         "TestD.testA_StructA&": {
             "args": ["str StructA&"],
             "rt": "StructA*",
-            "start": 772,
-            "end": 868
+            "start": 1040,
+            "end": 1136
         },
         "TestD.main": {
             "args": [],
             "rt": "void",
-            "start": 204,
-            "end": 556
+            "start": 592,
+            "end": 944
         },
-        "TestD.peripheralCommand_uint32_uint32_uint32*": {
+        "TestD.funcb_uint32": {
+            "args": ["a uint32"],
+            "rt": "void",
+            "start": 944,
+            "end": 992
+        },
+        "TestD.wait_uint32": {
+            "args": ["time uint32"],
+            "rt": "void",
+            "start": 524,
+            "end": 592
+        },
+        "Console.peripheralCommand_uint32_uint32_uint32*": {
             "args": [
                 "deviceId uint32",
                 "cmdSize uint32",
                 "cmd uint32*"
             ],
             "rt": "void",
-            "start": 652,
-            "end": 772
+            "start": 72,
+            "end": 192
         },
-        "TestD.printStr_char*_uint32": {
+        "Console.printStr_char*_uint32": {
             "args": [
                 "str char*",
                 "len uint32"
             ],
             "rt": "void",
-            "start": 868,
-            "end": 1052
-        },
-        "TestD.funcb_uint32": {
-            "args": ["a uint32"],
-            "rt": "void",
-            "start": 556,
-            "end": 604
-        },
-        "TestD.setupConsole": {
-            "args": [],
-            "rt": "void",
-            "start": 72,
-            "end": 136
-        },
-        "TestD.wait_uint32": {
-            "args": ["time uint32"],
-            "rt": "void",
-            "start": 136,
-            "end": 204
-        },
-        "TestD.printChar_char": {
-            "args": ["c char"],
-            "rt": "void",
-            "start": 1052,
-            "end": 1136
+            "start": 192,
+            "end": 376
         },
         "TestD.funcb_uint32_uint32*": {
             "args": [
@@ -99,68 +87,79 @@
                 "b uint32*"
             ],
             "rt": "void",
-            "start": 604,
-            "end": 652
+            "start": 992,
+            "end": 1040
+        },
+        "Console.setupConsole": {
+            "args": [],
+            "rt": "void",
+            "start": 8,
+            "end": 72
+        },
+        "Console.printChar_char": {
+            "args": ["c char"],
+            "rt": "void",
+            "start": 376,
+            "end": 460
         }
     },
     "breakpoints": {},
     "version": 1,
     "definitions": {
-        "TestD.CMD_DEVICE": {
+        "Console.CMD_SIZE": {
             "start": -1,
             "end": -1,
             "type": "const uint32",
-            "value": "131074"
+            "value": "131076"
         },
-        "TestD.CMD_ADDR": {
-            "start": -1,
-            "end": -1,
-            "type": "const uint32",
-            "value": "131072"
-        },
-        "TestD.CMD_STATUS": {
-            "start": -1,
-            "end": -1,
-            "type": "const uint32",
-            "value": "131073"
-        },
-        "TestD.CONSOLE_START": {
+        "Console.CONSOLE_START": {
             "start": -1,
             "end": -1,
             "type": "const uint32",
             "value": "131328"
         },
-        "TestD.str": {
-            "start": 1172,
-            "end": 1199,
-            "type": "char*",
-            "value": "// Test"
-        },
-        "TestD.CMD_START": {
+        "Console.CMD_START": {
             "start": -1,
             "end": -1,
             "type": "const uint32",
             "value": "131080"
         },
-        "TestD.CONSOLE_END": {
+        "TestD.str": {
+            "start": 1156,
+            "end": 1183,
+            "type": "char*",
+            "value": "// Test"
+        },
+        "Console.CMD_ADDR": {
             "start": -1,
             "end": -1,
             "type": "const uint32",
-            "value": "131584"
+            "value": "131072"
         },
-        "TestD.CMD_WRITTEN": {
+        "Console.CMD_DEVICE": {
+            "start": -1,
+            "end": -1,
+            "type": "const uint32",
+            "value": "131074"
+        },
+        "Console.CMD_WRITTEN": {
             "start": -1,
             "end": -1,
             "type": "const uint32",
             "value": "1"
         },
-        "TestD.CMD_SIZE": {
+        "Console.CONSOLE_END": {
             "start": -1,
             "end": -1,
             "type": "const uint32",
-            "value": "131076"
+            "value": "131584"
+        },
+        "Console.CMD_STATUS": {
+            "start": -1,
+            "end": -1,
+            "type": "const uint32",
+            "value": "131073"
         }
     },
     "syscalls": {}
-}{}
 }

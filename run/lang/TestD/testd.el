@@ -1,4 +1,5 @@
 import SysD;
+import Console;
 
 namespace TestD {
 
@@ -25,11 +26,11 @@ namespace TestD {
         StructA sA;
         testA(&sA);
 
-        setupConsole();
+        Console.setupConsole();
 
-        printStr(&testStr, 5);
-        printStr(&testStr2, 0);
-        printChar('a');
+        Console.printStr(&testStr, 5);
+        Console.printStr(&testStr2, 0);
+        Console.printChar('a');
 
         wait(1000);
         // funcC();

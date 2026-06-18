@@ -68,4 +68,22 @@ public class ProgramUnit {
     public Namespace getNamespaceIncluded(String include) {
         return module.getNamespaceIncluded(include);
     }
+
+    public final ELFunction findFunction(Identifier id, ArrayList<ELType> params) {
+        if (id.parts.length == 1)
+            return null;
+        if(imports.containsKey(id.parts[0])) {
+            return getNamespaceIncluded(id.parts[0]).findFunction(id, params, 1);
+        }
+        return null;
+    }
+
+    public final ELFunction getFunction(Identifier id) {
+        if (id.parts.length == 1)
+            return null;
+        if(imports.containsKey(id.parts[0])) {
+            return getNamespaceIncluded(id.parts[0]).getFunction(id, 1);
+        }
+        return null;
+    }
 }

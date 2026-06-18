@@ -52,13 +52,40 @@ public class RAM {
     }
     
     public int[] readWords(int address, int size) {
-        if (address < 0 || address+size > this.size)
+        if (address < 0 || address + size > this.size)
             throw new ArrayIndexOutOfBoundsException(address);
         int[] out = new int[size];
         for (int i = 0; i < size; i++) {
-            out[i] = readWord(address + (i*4));
+            out[i] = readWord(address + (i * 4));
         }
         return out;
+    }
+    
+    public String readString(int startAddress, int length) {
+        String str = "";
+        for (int i = 0; i < length; i++) {
+            str += (char) readWord(startAddress);
+            startAddress += 4;
+        }
+        return str;
+    }
+
+    public String readStringNT(int startAddress) {
+        char c = (char) readWord(startAddress);
+        String str = "";
+        while (c != 0x0) {
+            str += c;
+            startAddress += 4;
+            c = (char) readWord(startAddress);
+        }
+        return str;
+    }
+    
+    public void writeString(int startAddress, String str) {
+        for (int i = 0; i < str.length(); i++) {
+            writeWord(startAddress, str.charAt(i));
+            startAddress += 4;
+        }
     }
 
     public void copy(byte[] data) {

@@ -207,9 +207,11 @@ public class FunctionAction extends ComplexAction {
             }
         }
         ELFunction f = scope.namespace.findFunction(id, types);
+        boolean includedFunction = f == null;
+        if (includedFunction)
+            f = scope.unit.findFunction(id, types);
         if (f == null) {
-
-            f = scope.namespace.getFunction(id);
+            f = includedFunction ? scope.unit.getFunction(id) : scope.namespace.getFunction(id);
             if (f != null) {
                 throw ELAnalysisError.error(String.format(
                         "Found no overload of %s matching %s; Found %s", id.fullName, tStr, f.debugString("")),
