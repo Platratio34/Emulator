@@ -3,7 +3,6 @@ package com.peter.emulator.gui;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 
-import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
@@ -186,7 +185,7 @@ public class CPUPanel extends JPanel {
 
         pmLbl_I.setText(EmulatorGui.toHex(cpu.privilegeModeI ? 1 : 0));
 
-        instrLbl.setText(MachineCode.translate(cpu.instr, cpu.instrb) + "(" + EmulatorGui.toHex(cpu.instr) + " "
+        instrLbl.setText(MachineCode.translate(cpu.instr, cpu.instrb) + "  (" + EmulatorGui.toHex(cpu.instr) + " "
                 + EmulatorGui.toHex(cpu.instrb) + ")");
         
         debuggerPanel.update();

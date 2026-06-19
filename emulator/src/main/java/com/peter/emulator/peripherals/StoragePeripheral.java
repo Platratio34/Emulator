@@ -6,7 +6,7 @@ import java.nio.file.Path;
 import com.peter.emulator.Packer;
 import com.peter.emulator.components.RAM;
 
-public class StoragePeripheral implements MemoryMappedPeripheral {
+public class StoragePeripheral implements DMAPeripheral {
 
     public static final int DEVICE_TYPE = 0x0100_0001;
     public static final int[] MANUFACTURE = Packer.packChar("Virtual", 16);

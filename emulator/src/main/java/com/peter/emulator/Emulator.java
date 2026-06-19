@@ -19,9 +19,10 @@ public class Emulator {
     };
     public PeripheralManager peripheralManager = new PeripheralManager(ram);
     public final EmulatorGui gui;
+    public final ConsolePeripheral console = new ConsolePeripheral(0x0002_0100);
 
     public Emulator() {
-        peripheralManager.addPeripheral(new ConsolePeripheral());
+        peripheralManager.addPeripheral(console);
         peripheralManager.addPeripheral(new StoragePeripheral(Main.ROOT_PATH.resolve("devices/vd0")));
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             stop();
@@ -71,6 +72,7 @@ public class Emulator {
                 } catch (Exception e) {
                     System.err.println("\n");
                     System.err.println("Exception in execution");
+                    System.err.println(MachineCode.translate(cores[0].instr, cores[0].instrb));
                     if (cores[0].debugger != null) {
                         System.err.println(cores[0].debugger.printStack());
                     }

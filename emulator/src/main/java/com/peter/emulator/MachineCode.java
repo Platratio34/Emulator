@@ -1,7 +1,5 @@
 package com.peter.emulator;
 
-import com.peter.emulator.assembly.AssemblerError;
-
 public class MachineCode {
 
     public static final int MASK_INSTRUCTION = 0xff00_0000;
@@ -12,16 +10,28 @@ public class MachineCode {
 
     public static final int LOAD = 0x01 << 24;
     public static final int MASK_LOAD_RG = 0x00ff_0000;
-    public static final int MASK_LOAD_MEM = 0x0000_0100;
     public static final int MASK_LOAD_RA = 0x0000_00ff;
+    public static final int MASK_LOAD_MODE = 0x0000_ff00;
+    public static final int LOAD_LITERAL = 0x0000_0000;
+    public static final int LOAD_MEM = 0x0000_0100;
+    public static final int LOAD_MEM_SHORT = 0x0000_0200;
+    public static final int LOAD_MEM_BYTE = 0x0000_0300;
 
     public static final int STORE = 0x02 << 24;
     public static final int MASK_STORE_RG = 0x00ff_0000;
-    public static final int MASK_STORE_OP = 0x0000_ff00;
+    public static final int MASK_STORE_SIZE = 0b0000_0011 << 8;
+    public static final int MASK_STORE_SOURCE = 0b0000_1100 << 8;
+    public static final int MASK_STORE_FLAG_INC_RG = 0b1000_0000 << 8;
+    public static final int MASK_STORE_FLAG_INC_RA = 0b0100_0000 << 8;
     public static final int MASK_STORE_RA = 0x0000_00ff;
     public static final int STORE_MEM = 0x0000_0100;
-    public static final int STORE_VAL = 0x0000_0200;
-    public static final int STORE_MEM_COPY = 0x0000_0300;
+    public static final int STORE_SIZE_WORD = 0b0000_0000 << 8;
+    public static final int STORE_SIZE_SHORT = 0b0000_0001 << 8;
+    public static final int STORE_SIZE_BYTE = 0b0000_0010 << 8;
+    public static final int STORE_SOURCE_REG = 0b0000_0000 << 8;
+    public static final int STORE_SOURCE_VAL = 0b0000_0100 << 8;
+    public static final int STORE_SOURCE_MEM = 0b0000_1000 << 8;
+    public static final int STORE_SOURCE_REG_REG = 0b0000_1100 << 8;
     
     public static final int MATH = 0x04 << 24;
     public static final int MASK_MATH_OP = 0x00f0_0000;
@@ -144,7 +154,7 @@ public class MachineCode {
             
             case REG_PRIVILEGED_MODE_I -> "rPMI";
         
-            default -> reg < 0x10 ? String.format("r%d", reg) : String.format("r%dI", reg-0x10);
+            default -> reg < 0x10 ? String.format("r%d", reg) : String.format("r%dI", reg&0xf);
         };
     }
 
@@ -166,24 +176,58 @@ public class MachineCode {
                 return "NO OP";
             }
             case LOAD -> {
-                if ((instruction & MASK_LOAD_MEM) != 0) {
-                    return String.format("LOAD mem[%s] -> %s", translateReg(instruction & MASK_LOAD_RA),
-                            translateReg((instruction & MASK_LOAD_RG) >> 16));
-                } else {
-                    return String.format("LOAD (%s) -> %s", next, translateReg((instruction & MASK_LOAD_RG) >> 16));
-                }
+                int ra = instruction & MASK_LOAD_RA;
+                int rg = (instruction & MASK_LOAD_RG) >> 16;
+                int mode = instruction & MASK_LOAD_MODE;
+                return switch(mode) {
+                    case LOAD_LITERAL -> String.format("LOAD(0x%02x) %s -> %s", mode, next, translateReg(rg));
+                    case LOAD_MEM -> String.format("LOAD mem[%s] -> %s", translateReg(ra), translateReg(rg));
+                    case LOAD_MEM_SHORT -> String.format("LOAD SHORT mem[%s] -> %s", translateReg(ra), translateReg(rg));
+                    case LOAD_MEM_BYTE -> String.format("LOAD BYTE mem[%s] -> %s", translateReg(ra), translateReg(rg));
+                    default -> String.format("LOAD(0x%02x) 0x%02x, 0x%02x", mode >> 8, rg, ra);
+                };
             }
             case STORE -> {
-                int op = instruction & MASK_STORE_OP;
-                return switch (op) {
-                    case STORE_MEM -> String.format("STORE %s -> mem[%s]", translateReg((instruction & MASK_STORE_RG) >> 16),
-                            translateReg(instruction & MASK_STORE_RA));
-                    case STORE_VAL -> String.format("STORE (%s) -> mem[%s]", next, translateReg(instruction & MASK_STORE_RA));
-                    case STORE_MEM_COPY -> String.format("COPY mem[%s] -> mem[%s]", translateReg((instruction & MASK_STORE_RG) >> 16),
-                            translateReg(instruction & MASK_STORE_RA));
-                    default -> String.format("COPY %s -> %s", translateReg((instruction & MASK_STORE_RG) >> 16),
-                            translateReg(instruction & MASK_STORE_RA));
+                int rg = (instruction & MASK_STORE_RG) >> 16;
+                int size = instruction & MASK_STORE_SIZE;
+                int source = instruction & MASK_STORE_SOURCE;
+                boolean incRG = (instruction & MASK_STORE_FLAG_INC_RG) != 0;
+                boolean incRA = (instruction & MASK_STORE_FLAG_INC_RA) != 0;
+                int ra = instruction & MASK_STORE_RA;
+                String out = switch(source) {
+                    case STORE_SOURCE_REG, STORE_SOURCE_VAL -> "STORE";
+                    case STORE_SOURCE_MEM, STORE_SOURCE_REG_REG -> "COPY";
+                    default -> String.format("STORE(%02x)", size >> 8);
                 };
+                switch(size) {
+                    case STORE_SIZE_SHORT -> out += " SHORT";
+                    case STORE_SIZE_BYTE -> out += " BYTE";
+                }
+                switch(source) {
+                    case STORE_SOURCE_REG -> out += String.format(" %s -> mem[%s]", translateReg(rg), translateReg(ra));
+                    case STORE_SOURCE_MEM -> out += String.format(" mem[%s] -> mem[%s]", translateReg(rg), translateReg(ra));
+                    case STORE_SOURCE_VAL -> out += String.format(" %s -> mem[%s]", toHex(rg), translateReg(ra));
+                    case STORE_SOURCE_REG_REG -> out += String.format(" %s -> %s", translateReg(rg), translateReg(ra));
+                    default -> out += String.format(" SOURCE(%02x)", source >> 10);
+                }
+                if(incRG)
+                    out += " INC_RG";
+                if(incRA)
+                    out += " INC_RA";
+                return out;
+                // return switch (op) {
+                //     case STORE_MEM -> String.format("STORE %s -> mem[%s]", translateReg((instruction & MASK_STORE_RG) >> 16),
+                //             translateReg(instruction & MASK_STORE_RA));
+                //     case STORE_MEM_SHORT -> String.format("STORE SHORT %s -> mem[%s]", translateReg((instruction & MASK_STORE_RG) >> 16),
+                //             translateReg(instruction & MASK_STORE_RA));
+                //     case STORE_MEM_BYTE -> String.format("STORE BYTE %s -> mem[%s]", translateReg((instruction & MASK_STORE_RG) >> 16),
+                //             translateReg(instruction & MASK_STORE_RA));
+                //     case STORE_VAL -> String.format("STORE (%s) -> mem[%s]", next, translateReg(instruction & MASK_STORE_RA));
+                //     case STORE_MEM_COPY -> String.format("COPY mem[%s] -> mem[%s]", translateReg((instruction & MASK_STORE_RG) >> 16),
+                //             translateReg(instruction & MASK_STORE_RA));
+                //     default -> String.format("COPY %s -> %s", translateReg((instruction & MASK_STORE_RG) >> 16),
+                //             translateReg(instruction & MASK_STORE_RA));
+                // };
             }
             case MATH -> {
                 int op = instruction & MASK_MATH_OP;
@@ -384,5 +428,10 @@ public class MachineCode {
         
             default -> "Unknown register";
         };
+    }
+
+    public static String toHex(int num) {
+        String str = String.format("%08x", num);
+        return str.substring(0,4)+"_"+str.substring(4);
     }
 }

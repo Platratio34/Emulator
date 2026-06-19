@@ -37,31 +37,26 @@ namespace Console {
     }
 
     public static void printChar(char c) {
-        asm("LOAD r1 &Console.consolePntr\nLOAD MEM r1 r1"); // consolePntr
+        asm("LOAD r1 Console.CONSOLE_START");
         asm("COPY r15 r2\nINC r2 -12\nLOAD MEM r2 r2"); // c
-        asm("LOAD r4 Console.CONSOLE_END\nLOAD r5 Console.CONSOLE_START");
-        asm("STORE r2 r1\nINC r1 4\nINC r2 4");
-        asm("SUB r3 r4 r1\nGOTO GT r3 :printChar_exit\nCOPY r5 r1");
-        asm(":printChar_exit");
+        asm("STORE BYTE r2 r1");
     }
 
     public static void printStr(char* str, uint32 len) {
         asm("COPY r15 r14\nINC r14 -12\nLOAD MEM r14 r14"); // len
-        asm("LOAD r1 &Console.consolePntr\nLOAD MEM r1 r1"); // consolePntr
+        asm("LOAD r1 Console.CONSOLE_START"); // consolePntr
         asm("COPY r15 r2\nINC r2 -16\nLOAD MEM r2 r2"); // str
         asm("LOAD r4 Console.CONSOLE_END\nLOAD r5 Console.CONSOLE_START");
         asm("GOTO GT r14 :printStr_len");
             asm(":printStr_l1");
                 asm("LOAD MEM r3 r2\nGOTO EQ r3 :printStr_l1_exit");
-                asm("STORE r3 r1\nINC r1 4\nINC r2 4");
-                asm("SUB r3 r4 r1\nGOTO GT r3 :printStr_l1\nCOPY r5 r1\nGOTO :printStr_l1");
+                asm("STORE BYTE r3 r1\nINC r2 4\nGOTO :printStr_l1");
             asm(":printStr_l1_exit");
             asm("GOTO :printStr_exit");
         asm(":printStr_len");
+            asm("INC r1 -3");
             asm(":printStr_l2");
-                asm("COPY MEM r2 r1\nINC r1 4\nINC r2 4");
-                asm("SUB r3 r4 r1\nGOTO GT r3 :printStr_l2_end\nCOPY r5 r1");
-                asm(":printStr_l2_end");
+                asm("COPY MEM r2 r1 INC_RG");
                 asm("INC r14 -1\nGOTO GT r14 :printStr_l2");
         asm(":printStr_exit");
         asm("LOAD r3 &Console.consolePntr\nSTORE r1 r3");

@@ -7,12 +7,7 @@ import com.peter.emulator.lang.ELAnalysisError;
 import com.peter.emulator.lang.ELSymbol;
 import com.peter.emulator.lang.ELType;
 import com.peter.emulator.lang.base.ELPrimitives;
-import com.peter.emulator.lang.tokens.IdentifierToken;
-import com.peter.emulator.lang.tokens.NumberToken;
-import com.peter.emulator.lang.tokens.OperatorToken;
-import com.peter.emulator.lang.tokens.SetToken;
-import com.peter.emulator.lang.tokens.StringToken;
-import com.peter.emulator.lang.tokens.Token;
+import com.peter.emulator.lang.tokens.*;
 
 public class ExpressionAction extends ComplexAction {
 
@@ -418,7 +413,7 @@ public class ExpressionAction extends ComplexAction {
                         throw ELAnalysisError.error("String literal must be only element of expression", tkn);
                     if(!st.ch)
                         throw ELAnalysisError.error("Only character allowed in expression", tkn);
-                    addDirect("LOAD %s '%s'", targetReg, st.value);
+                    addDirect("LOAD %s '%s'", targetReg, st.value.replace("\n","\\n").replace("\0","\\0"));
                     // Register tR = (lastType == null) ? targetReg : scope.firstFree();
                 }
                 default -> {

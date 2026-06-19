@@ -1,33 +1,39 @@
 {
     "variables": {
         "TestD.testStr": {
-            "address": 1216,
-            "start": 1216,
-            "end": 1235,
+            "address": 1144,
+            "start": 1144,
+            "end": 1163,
             "type": "char*"
         },
         "TestD.v": {
-            "address": 1184,
-            "start": 1184,
-            "end": 1187,
+            "address": 1112,
+            "start": 1112,
+            "end": 1115,
             "type": "uint32"
         },
         "Console.consolePntr": {
-            "address": 1152,
-            "start": 1152,
-            "end": 1155,
+            "address": 1080,
+            "start": 1080,
+            "end": 1083,
             "type": "uint32"
         },
         "TestD.testStr2": {
-            "address": 1188,
-            "start": 1188,
-            "end": 1215,
+            "address": 1116,
+            "start": 1116,
+            "end": 1143,
             "type": "char*"
         },
+        "TestD.tc": {
+            "address": 1164,
+            "start": 1164,
+            "end": 1167,
+            "type": "uint32"
+        },
         "Console.CONSOLE_SETUP_CMD": {
-            "address": 1140,
-            "start": 1140,
-            "end": 1151,
+            "address": 1068,
+            "start": 1068,
+            "end": 1079,
             "type": "uint32*"
         }
     },
@@ -35,32 +41,32 @@
         "TestD.onInterrupt": {
             "args": [],
             "rt": "void",
-            "start": 460,
-            "end": 524
+            "start": 372,
+            "end": 436
         },
         "TestD.testA_StructA&": {
             "args": ["str StructA&"],
             "rt": "StructA*",
-            "start": 1040,
-            "end": 1136
+            "start": 968,
+            "end": 1064
         },
         "TestD.main": {
             "args": [],
             "rt": "void",
-            "start": 592,
-            "end": 944
+            "start": 504,
+            "end": 872
         },
         "TestD.funcb_uint32": {
             "args": ["a uint32"],
             "rt": "void",
-            "start": 944,
-            "end": 992
+            "start": 872,
+            "end": 920
         },
         "TestD.wait_uint32": {
             "args": ["time uint32"],
             "rt": "void",
-            "start": 524,
-            "end": 592
+            "start": 436,
+            "end": 504
         },
         "Console.peripheralCommand_uint32_uint32_uint32*": {
             "args": [
@@ -79,7 +85,7 @@
             ],
             "rt": "void",
             "start": 192,
-            "end": 376
+            "end": 332
         },
         "TestD.funcb_uint32_uint32*": {
             "args": [
@@ -87,8 +93,8 @@
                 "b uint32*"
             ],
             "rt": "void",
-            "start": 992,
-            "end": 1040
+            "start": 920,
+            "end": 968
         },
         "Console.setupConsole": {
             "args": [],
@@ -99,8 +105,8 @@
         "Console.printChar_char": {
             "args": ["c char"],
             "rt": "void",
-            "start": 376,
-            "end": 460
+            "start": 332,
+            "end": 372
         }
     },
     "breakpoints": {},
@@ -125,8 +131,8 @@
             "value": "131080"
         },
         "TestD.str": {
-            "start": 1156,
-            "end": 1183,
+            "start": 1084,
+            "end": 1111,
             "type": "char*",
             "value": "// Test"
         },
@@ -162,4 +168,7 @@
         }
     },
     "syscalls": {}
+}
+}
+}
 }

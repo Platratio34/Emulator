@@ -32,7 +32,7 @@ public class PeripheralManager {
                 } else {
                     int size = ram.readWord(PERIPHERAL_CMD_SIZE);
                     int[] msg = ram.readWords(PERIPHERAL_CMD_MSG, size);
-                    if (peripherals.containsKey(d) && peripherals.get(d) instanceof MemoryMappedPeripheral mmp) {
+                    if (peripherals.containsKey(d) && peripherals.get(d) instanceof DMAPeripheral mmp) {
                         mmp.message(msg);
                     } else {
                         ram.writeWord(PERIPHERAL_RSP_DATA, 0xff);
@@ -54,8 +54,10 @@ public class PeripheralManager {
     public int addPeripheral(Peripheral peripheral) {
         int deviceId = nextId++;
         peripherals.put(deviceId, peripheral);
-        if (peripheral instanceof MemoryMappedPeripheral mmp) {
-            mmp.link(ram, deviceId);
+        switch (peripheral) {
+            case DMAPeripheral dmap -> dmap.link(ram, deviceId);
+            case MemoryMappedPeripheral mmp -> ram.addMMP(mmp);
+            default -> {}
         }
         return deviceId;
     }
@@ -72,7 +74,7 @@ public class PeripheralManager {
                 int[] out = new int[126];
                 int numDevices = 0;
                 for (byte i = start; i < nextId; i++) {
-                    if (peripherals.containsKey(i) && peripherals.get(i) instanceof MemoryMappedPeripheral mmp) {
+                    if (peripherals.containsKey(i) && peripherals.get(i) instanceof DMAPeripheral mmp) {
                         out[arrI++] = i;
                         out[arrI++] = mmp.getType();
                         numDevices++;

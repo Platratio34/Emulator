@@ -126,10 +126,7 @@ public class EmulatorGui {
     }
 
     public static String toHex(int num) {
-        String str = String.format("%x", num);
-        while (str.length() < 8) {
-            str = "0" + str;
-        }
+        String str = String.format("%08x", num);
         return str.substring(0,4)+"_"+str.substring(4);
     }
 }

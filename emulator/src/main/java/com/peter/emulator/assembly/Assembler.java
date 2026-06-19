@@ -302,7 +302,11 @@ public class Assembler {
             if (line.startsWith("LOAD") && !line.startsWith("LOAD MEM")) {
                 addr++;
             } else if (line.startsWith("STORE")) {
-                if (!parts[1].startsWith("r")) {
+                int next = 1;
+                switch(parts[next]) {
+                    case "SHORT", "BYTE" -> next++;
+                }
+                if (!parts[next].startsWith("r")) {
                     addr++;
                 }
             } else if (line.startsWith("GOTO")) {
@@ -400,13 +404,27 @@ public class Assembler {
                         }
                         if (parts[1].equals("MEM")) {
                             if (parts.length < 4) {
-                                errors.add(new AssemblerError("Invalid load instruction: LOAD MEM [rg] [ra]", lineN,
+                                errors.add(new AssemblerError("Invalid load instruction: LOAD MEM <SHORT|BYTE> [rg] [ra]", lineN,
                                         line.length(), line, source));
                                 continue;
                             }
-                            int rg = getReg(parts[2]);
-                            int ra = getReg(parts[3]);
-                            data[addr++] = (Entry.LoadMem(rg, ra));
+                            switch (parts[2]) {
+                                case "SHORT" -> {
+                                    int rg = getReg(parts[3]);
+                                    int ra = getReg(parts[4]);
+                                    data[addr++] = (Entry.LoadMemShort(rg, ra));
+                                }
+                                case "BYTE" -> {
+                                    int rg = getReg(parts[3]);
+                                    int ra = getReg(parts[4]);
+                                    data[addr++] = (Entry.LoadMemByte(rg, ra));
+                                }
+                                default -> {
+                                    int rg = getReg(parts[2]);
+                                    int ra = getReg(parts[3]);
+                                    data[addr++] = (Entry.LoadMem(rg, ra));
+                                }
+                            }
                         } else {
                             if (parts.length < 3) {
                                 errors.add(new AssemblerError("Invalid load instruction: LOAD [rg] [val]", lineN,
@@ -420,66 +438,110 @@ public class Assembler {
                         }
                     }
                     case "COPY" -> {
-                        if (parts.length < 2) {
-                            errors.add(new AssemblerError("Invalid copy instruction: COPY <MEM> [rs] [rd]", lineN,
+                        if (parts.length < 3) {
+                            errors.add(new AssemblerError("Invalid copy instruction: COPY <SHORT|BYTE> <MEM> [rs] [rd] <INC_RA>", lineN,
                                     line.length(), line, source));
                             continue;
                         }
-                        if (parts[1].equals("MEM")) {
-                            if (parts.length < 4) {
-                                errors.add(new AssemblerError("Invalid copy instruction: COPY MEM [rs] [rd]", lineN,
+                        int size = STORE_SIZE_WORD;
+                        int next = 1;
+                        switch(parts[next]) {
+                            case "SHORT" -> {size = STORE_SIZE_SHORT;next++;}
+                            case "BYTE" -> {size = STORE_SIZE_BYTE;next++;}
+                        }
+                        StoreEntry entry;
+                        if (parts[next].equals("MEM")) {
+                            next++;
+                            if (parts.length < next+2) {
+                                errors.add(new AssemblerError("Invalid copy instruction: COPY <SHORT|BYTE> MEM [rs] [rd] <INC_RG> <INC_RA>", lineN,
                                         line.length(), line, source));
                                 continue;
                             }
-                            int rs = getReg(parts[2]);
-                            int rd = getReg(parts[3]);
-                            data[addr++] = (Entry.CopyMem(rs, rd));
+                            int rs = getReg(parts[next++]);
+                            int rd = getReg(parts[next++]);
+                            entry = new StoreEntry(rs, size, STORE_SOURCE_MEM, rd);
                         } else {
-                            if (parts.length < 3) {
-                                errors.add(new AssemblerError("Invalid copy instruction: COPY [rs] [rd]", lineN,
+                            if (parts.length < next+2) {
+                                errors.add(new AssemblerError("Invalid copy instruction: COPY <SHORT|BYTE> [rs] [rd] <INC_RG> <INC_RA>", lineN,
                                         line.length(), line, source));
                                 continue;
                             }
-                            int rs = getReg(parts[1]);
-                            int rd = getReg(parts[2]);
-                            data[addr++] = (Entry.Copy(rs, rd));
+                            int rs = getReg(parts[next++]);
+                            int rd = getReg(parts[next++]);
+                            entry = new StoreEntry(rs, size, STORE_SOURCE_REG_REG, rd);
+                        }
+                        data[addr++] = entry;
+                        if(parts.length > next) {
+                            switch(parts[next++]) {
+                                case "INC_RG" -> entry.incRG();
+                                case "INC_RA" -> entry.incRA();
+                            }
+                        }
+                        if(parts.length > next) {
+                            switch(parts[next++]) {
+                                case "INC_RG" -> entry.incRG();
+                                case "INC_RA" -> entry.incRA();
+                            }
                         }
                     }
                     case "STORE" -> {
                         if (parts.length < 2) {
-                            errors.add(new AssemblerError("Invalid copy instruction: COPY VAL [ra] [val] or COPY [val|rg] [ra]", lineN,
+                            errors.add(new AssemblerError("Invalid copy instruction: STORE <SHORT|BYTE> VAL [ra] [val] <INC_RA> or STORE <SHORT|BYTE> [val|rg] [ra] <INC_RA>", lineN,
                                     line.length(), line, source));
                             continue;
                         }
-                        if (parts[1].equals("VAL")) {
-                            if (parts.length < 4) {
-                                errors.add(new AssemblerError("Invalid copy instruction: COPY VAL [ra] [val]", lineN,
+                        int size = STORE_SIZE_WORD;
+                        int next = 1;
+                        switch(parts[next]) {
+                            case "SHORT" -> {size = STORE_SIZE_SHORT;next++;}
+                            case "BYTE" -> {size = STORE_SIZE_BYTE;next++;}
+                        }
+                        StoreEntry entry;
+                        if (parts[next].equals("VAL")) {
+                            if (parts.length < next+3) {
+                                errors.add(new AssemblerError("Invalid copy instruction: STORE <SHORT|BYTE> VAL [ra] [val] <INC_RA>", lineN,
                                         line.length(), line, source));
                                 continue;
                             }
-                            int ra = getReg(parts[2]);
-                            int val = getVal(parts[3]);
-                            data[addr++] = (Entry.StoreVal(ra));
+                            next++;
+                            int ra = getReg(parts[next++]);
+                            int val = getVal(parts[next++]);
+                            entry = new StoreEntry(0, size, STORE_SOURCE_VAL, ra);
+                            data[addr++] = entry;
                             data[addr++] = (Entry.Literal(val));
-                        } else if (!parts[1].startsWith("r")) {
-                            if (parts.length < 3) {
-                                errors.add(new AssemblerError("Invalid copy instruction: COPY [rg|val] [ra]", lineN,
+                        } else if (!parts[next].startsWith("r")) {
+                            if (parts.length < next+2) {
+                                errors.add(new AssemblerError("Invalid copy instruction: STORE <SHORT|BYTE> [rg|val] [ra] <INC_RA>", lineN,
                                         line.length(), line, source));
                                 continue;
                             }
-                            int ra = getReg(parts[2]);
-                            int val = getVal(parts[1]);
-                            data[addr++] = (Entry.StoreVal(ra));
+                            int ra = getReg(parts[next++]);
+                            int val = getVal(parts[next++]);
+                            entry = new StoreEntry(0, size, STORE_SOURCE_VAL, ra);
+                            data[addr++] = entry;
                             data[addr++] = (Entry.Literal(val));
                         } else {
-                            if (parts.length < 3) {
-                                errors.add(new AssemblerError("Invalid copy instruction: COPY [rg|val] [ra]", lineN,
+                            if (parts.length < next+2) {
+                                errors.add(new AssemblerError("Invalid copy instruction: STORE <SHORT|BYTE> [rg|val] [ra] <INC_RA>", lineN,
                                         line.length(), line, source));
                                 continue;
                             }
-                            int rg = getReg(parts[1]);
-                            int ra = getReg(parts[2]);
-                            data[addr++] = (Entry.Store(rg, ra));
+                            int rg = getReg(parts[next++]);
+                            int ra = getReg(parts[next++]);
+                            entry = new StoreEntry(rg, size, STORE_SOURCE_REG, ra);
+                            data[addr++] = entry;
+                        }
+                        if(parts.length > next) {
+                            switch(parts[next++]) {
+                                case "INC_RG" -> entry.incRG();
+                                case "INC_RA" -> entry.incRA();
+                            }
+                        }
+                        if(parts.length > next) {
+                            switch(parts[next++]) {
+                                case "INC_RG" -> entry.incRG();
+                                case "INC_RA" -> entry.incRA();
+                            }
                         }
                     }
                     case "ADD" -> {
@@ -970,24 +1032,55 @@ public class Assembler {
         }
 
         public static Entry LoadMem(int rg, int ra) {
-            return new Entry(LOAD | (rg << 16) | MASK_LOAD_MEM | ra);
+            return new Entry(LOAD | (rg << 16) | LOAD_MEM | ra);
+        }
+        public static Entry LoadMemShort(int rg, int ra) {
+            return new Entry(LOAD | (rg << 16) | LOAD_MEM_SHORT | ra);
+        }
+        public static Entry LoadMemByte(int rg, int ra) {
+            return new Entry(LOAD | (rg << 16) | LOAD_MEM_BYTE | ra);
         }
 
-        public static Entry Copy(int rs, int rd) {
-            return new Entry(STORE | (rs << 16) | rd);
-        }
+        // // store a word from reg[ra] into mem[reg[rg]]
+        // public static Entry Store(int rg, int ra) {
+        //     return new Entry(STORE | (rg << 16) | STORE_SIZE_WORD | STORE_SOURCE_REG | ra);
+        // }
+        // public static Entry StoreShort(int rg, int ra) {
+        //     return new Entry(STORE | (rg << 16) | STORE_SIZE_SHORT | STORE_SOURCE_REG | ra);
+        // }
+        // public static Entry StoreByte(int rg, int ra) {
+        //     return new Entry(STORE | (rg << 16) | STORE_SIZE_BYTE | STORE_SOURCE_REG | ra);
+        // }
 
-        public static Entry Store(int rg, int ra) {
-            return new Entry(STORE | (rg << 16) | STORE_MEM | ra);
-        }
+        // public static Entry StoreVal(int ra) {
+        //     return new Entry(STORE | STORE_SIZE_WORD | STORE_SOURCE_VAL | ra);
+        // }
+        // public static Entry StoreValShort(int ra) {
+        //     return new Entry(STORE | STORE_SIZE_SHORT | STORE_SOURCE_VAL | ra);
+        // }
+        // public static Entry StoreValByte(int ra) {
+        //     return new Entry(STORE | STORE_SIZE_BYTE | STORE_SOURCE_VAL | ra);
+        // }
 
-        public static Entry StoreVal(int ra) {
-            return new Entry(STORE | STORE_VAL | ra);
-        }
+        // public static Entry CopyMem(int rs, int rd) {
+        //     return new Entry(STORE | (rs << 16) | STORE_SIZE_WORD | STORE_SOURCE_MEM | rd);
+        // }
+        // public static Entry CopyMemShort(int rs, int rd) {
+        //     return new Entry(STORE | (rs << 16) | STORE_SIZE_SHORT | STORE_SOURCE_MEM | rd);
+        // }
+        // public static Entry CopyMemByte(int rs, int rd) {
+        //     return new Entry(STORE | (rs << 16) | STORE_SIZE_BYTE | STORE_SOURCE_MEM | rd);
+        // }
 
-        public static Entry CopyMem(int rs, int rd) {
-            return new Entry(STORE | (rs << 16) | STORE_MEM_COPY | rd);
-        }
+        // public static Entry CopyReg(int rs, int rd) {
+        //     return new Entry(STORE | (rs << 16) | STORE_SIZE_WORD | STORE_SOURCE_REG_REG | rd);
+        // }
+        // public static Entry CopyRegShort(int rs, int rd) {
+        //     return new Entry(STORE | (rs << 16) | STORE_SIZE_SHORT | STORE_SOURCE_REG_REG | rd);
+        // }
+        // public static Entry CopyRegByte(int rs, int rd) {
+        //     return new Entry(STORE | (rs << 16) | STORE_SIZE_BYTE | STORE_SOURCE_REG_REG | rd);
+        // }
 
         public static Entry Math(int op, int rd, int ra, int rb) {
             return new Entry(MATH | op | ((rd & 0xf) << 16) | (ra << 8) | rb);
@@ -1035,6 +1128,22 @@ public class Assembler {
 
         public static Entry Set(boolean forced, int op, int rg, int rd) {
             return new Entry(SET | (forced ? SET_FORCED : 0x00) | op | (rg << 8) | rd);
+        }
+    }
+
+    private static class StoreEntry extends Entry {
+
+        public StoreEntry(int rg, int size, int source, int ra) {
+            super(STORE | (rg << 16) | size | source | ra);
+        }
+
+        public StoreEntry incRG() {
+            instruction |= MASK_STORE_FLAG_INC_RG;
+            return this;
+        }
+        public StoreEntry incRA() {
+            instruction |= MASK_STORE_FLAG_INC_RA;
+            return this;
         }
     }
 

@@ -224,8 +224,21 @@ public class CPU {
     public void writeMem(int addr, int val) {
         ram.writeWord(mmu.translate(this, addr), val);
     }
+    public void writeMemShort(int addr, int val) {
+        ram.writeShort(mmu.translate(this, addr), val);
+    }
+    public void writeMemByte(int addr, byte val) {
+        ram.writeByte(mmu.translate(this, addr), val);
+    }
+
     public int readMem(int addr) {
         return ram.readWord(mmu.translate(this, addr));
+    }
+    public int readMemShort(int addr) {
+        return ram.readShort(mmu.translate(this, addr));
+    }
+    public byte readMemByte(int addr) {
+        return ram.readByte(mmu.translate(this, addr));
     }
     
     public void stackPush(int val) {
@@ -293,11 +306,18 @@ public class CPU {
             }
             case LOAD -> {
                 int rg = (op & MASK_LOAD_RG) >> 16;
-                boolean mem = (op & MASK_LOAD_MEM) != 0;
+                int mode = op & MASK_LOAD_MODE;
                 int ra = (op & MASK_LOAD_RA);
                 int val;
-                if (mem) {
-                    val = readMem(getReg(ra));
+                if (mode != 0) {
+                    switch(mode) {
+                        case LOAD_MEM -> {val = readMem(getReg(ra));}
+                        case LOAD_MEM_SHORT -> {val = readMemShort(getReg(ra));}
+                        case LOAD_MEM_BYTE -> {val = readMemByte(getReg(ra));}
+                        default -> {
+                            throw new RuntimeException(String.format("Unknown load mode: %20x", mode >> 8));
+                        }
+                    }
                 } else {
                     val = next;
                     pgmPtr += 4;
@@ -306,21 +326,58 @@ public class CPU {
             }
             case STORE -> {
                 int rg = (op & MASK_STORE_RG) >> 16;
-                int sOp = op & MASK_STORE_OP;
-                boolean mem = sOp == STORE_MEM;
-                boolean val = sOp == STORE_VAL;
-                boolean memCopy = sOp == STORE_MEM_COPY;
-                int ra = (op & MASK_STORE_RA);
-                if (mem) {
-                    writeMem(getReg(ra), getReg(rg));
-                } else if (val) {
+                int size = op & MASK_STORE_SIZE;
+                int source = op & MASK_STORE_SOURCE;
+                boolean incRG = (op & MASK_STORE_FLAG_INC_RG) != 0;
+                boolean incRA = (op & MASK_STORE_FLAG_INC_RA) != 0;
+                int ra = op & MASK_STORE_RA;
+
+                int val = switch(source) {
+                    case STORE_SOURCE_REG, STORE_SOURCE_REG_REG -> getReg(rg);
+                    case STORE_SOURCE_MEM -> switch(size) {
+                        case STORE_SIZE_WORD -> readMem(getReg(rg));
+                        case STORE_SIZE_SHORT -> readMemShort(getReg(rg));
+                        case STORE_SIZE_BYTE -> readMemByte(getReg(rg));
+                        default -> 0;
+                    };
+                    case STORE_SOURCE_VAL -> next;
+                    default -> 0;
+                };
+                if(source == STORE_SOURCE_VAL)
                     pgmPtr += 4;
-                    writeMem(getReg(ra), next);
-                } else if (memCopy) {
-                    writeMem(getReg(ra), readMem(getReg(rg)));
+                if(source == STORE_SOURCE_REG_REG) {
+                    setReg(ra, val);
                 } else {
-                    setReg(ra, getReg(rg));
+                    switch(size) {
+                        case STORE_SIZE_WORD -> writeMem(getReg(ra), val);
+                        case STORE_SIZE_SHORT -> writeMemShort(getReg(ra), val);
+                        case STORE_SIZE_BYTE -> writeMemByte(getReg(ra), (byte) val);
+                    }
                 }
+                int incSize = switch(size) {
+                    case STORE_SIZE_WORD -> 4;
+                    case STORE_SIZE_SHORT -> 2;
+                    default -> 1;
+                };
+                if(incRG)
+                    setReg(rg, getReg(rg) + incSize);
+                if(incRA)
+                    setReg(ra, getReg(ra) + incSize);
+
+                // int rg = (op & MASK_STORE_RG) >> 16;
+                // int sOp = op & MASK_STORE_OP;
+                // int ra = (op & MASK_STORE_RA);
+                // switch (sOp) {
+                //     case STORE_MEM -> writeMem(getReg(ra), getReg(rg));
+                //     case STORE_MEM_SHORT -> writeMemShort(getReg(ra), getReg(rg) & 0xffff);
+                //     case STORE_MEM_BYTE -> writeMemByte(getReg(ra), (byte)(getReg(rg) & 0xff));
+                //     case STORE_MEM_COPY -> writeMem(getReg(ra), readMem(getReg(rg)));
+                //     case STORE_VAL-> {
+                //         pgmPtr += 4;
+                //         writeMem(getReg(ra), next);
+                //     }
+                //     default -> setReg(ra, getReg(rg));
+                // }
             }
             case MATH -> {
                 int mOp = op & MASK_MATH_OP;
@@ -627,11 +684,8 @@ public class CPU {
         }
     }
 
-    private String toHex(int num) {
-        String str = String.format("%x", num);
-        while (str.length() < 8) {
-            str = "0" + str;
-        }
+    public static String toHex(int num) {
+        String str = String.format("%08x", num);
         return str.substring(0,4)+"_"+str.substring(4);
     }
 

@@ -7,6 +7,7 @@ namespace TestD {
     public static const char* str = "// Test";
     public static char[5] testStr = "Test\n";
     public static char[7] testStr2 = "Test2\n\0";
+    public static char tc;
 
     @Entrypoint(raw)
     public static void main() {
@@ -26,11 +27,12 @@ namespace TestD {
         StructA sA;
         testA(&sA);
 
-        Console.setupConsole();
+        // Console.setupConsole();
 
         Console.printStr(&testStr, 5);
         Console.printStr(&testStr2, 0);
         Console.printChar('a');
+        Console.printChar('\n');
 
         wait(1000);
         // funcC();

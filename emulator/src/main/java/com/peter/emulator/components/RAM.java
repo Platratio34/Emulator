@@ -1,9 +1,14 @@
 package com.peter.emulator.components;
 
+import java.util.HashMap;
+
+import com.peter.emulator.peripherals.MemoryMappedPeripheral;
+
 public class RAM {
 
     public final int size;
     private final byte[] mem;
+    private final HashMap<Integer,MemoryMappedPeripheral> peripherals = new HashMap<>();
 
     public RAM() {
         this(0x80_0000);
@@ -17,43 +22,52 @@ public class RAM {
     public void writeWord(int address, int value) {
         if (address < 0 || address >= size)
             throw new ArrayIndexOutOfBoundsException(address);
-        mem[address] = (byte) (value >> 24);
-        mem[address + 1] = (byte) ((value >> 16) & 0xff);
-        mem[address + 2] = (byte) ((value >> 8) & 0xff);
-        mem[address + 3] = (byte) (value & 0xff);
+        writeByte(address, (byte) (value >> 24));
+        writeByte(address + 1, (byte) ((value >> 16) & 0xff));
+        writeByte(address + 2, (byte) ((value >> 8) & 0xff));
+        writeByte(address + 3, (byte) (value & 0xff));
+    }
+    
+    public void writeShort(int address, int value) {
+        writeByte(address, (byte)(value >> 8));
+        writeByte(address+1, (byte)(value & 0xff));
     }
     
     public void writeByte(int address, byte value) {
+        if(peripherals.containsKey(address)) {
+            peripherals.get(address).onUpdate(address, value);
+            return;
+        }
         if (address < 0 || address >= size)
             throw new ArrayIndexOutOfBoundsException(address);
         mem[address] = value;
     }
     
     public int readWord(int address) {
-        if (address < 0 || address >= size)
-            throw new ArrayIndexOutOfBoundsException(address);
-        return ((mem[address] & 0xff) << 24) | ((mem[address+1] & 0xff) << 16) | ((mem[address+2] & 0xff) << 8) | (mem[address+3] & 0xff);
+        return ((readByte(address) & 0xff) << 24) | ((readByte(address+1) & 0xff) << 16) | ((readByte(address+2) & 0xff) << 8) | (readByte(address+3) & 0xff);
+    }
+
+    public int readShort(int address) {
+        return ( ((int)readByte(address)) << 8 ) | ( (int)readByte(address+1) );
     }
 
     public byte readByte(int address) {
+        if(peripherals.containsKey(address))
+            return peripherals.get(address).get(address);
         if (address < 0 || address >= size)
             throw new ArrayIndexOutOfBoundsException(address);
         return mem[address];
     }
     
     public byte[] read(int address, int size) {
-        if (address < 0 || address + size > this.size)
-            throw new ArrayIndexOutOfBoundsException(address);
         byte[] out = new byte[size];
         for (int i = 0; i < size; i++) {
-            out[i] = mem[address + i];
+            out[i] = readByte(address + i);
         }
         return out;
     }
     
     public int[] readWords(int address, int size) {
-        if (address < 0 || address + size > this.size)
-            throw new ArrayIndexOutOfBoundsException(address);
         int[] out = new int[size];
         for (int i = 0; i < size; i++) {
             out[i] = readWord(address + (i * 4));
@@ -154,5 +168,11 @@ public class RAM {
         }
 
         return str;
+    }
+
+    public void addMMP(MemoryMappedPeripheral peripheral) {
+        for(int addr : peripheral.getAddresses()) {
+            peripherals.put(addr, peripheral);
+        }
     }
 }
