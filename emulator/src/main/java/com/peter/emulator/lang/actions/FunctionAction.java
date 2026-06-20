@@ -220,6 +220,7 @@ public class FunctionAction extends ComplexAction {
                 throw ELAnalysisError.error("Unknown function " + id.fullName + tStr, nameSpan);
             }
         }
+        scope.unit.symbols.add(new ELSymbol.ELFuncCallSymbol(f, nameSpan));
         if (f.ret != null)
             actions.add(new DirectAction("STACK INC %d", Math.ceilDiv(f.ret.sizeof(),4)*4));
         actions.addAll(tempActions);

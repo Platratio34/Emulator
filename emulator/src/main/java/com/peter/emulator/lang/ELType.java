@@ -17,6 +17,7 @@ public class ELType {
     protected int arraySize = 0;
     protected boolean pointer;
     protected boolean address;
+    protected boolean outVar;
     protected ELType subType = null;
 
     public Location location;
@@ -63,6 +64,24 @@ public class ELType {
     public ELType(String base, ArrayList<ELType> genericTypes) {
         this(base);
         this.genericTypes = genericTypes;
+    }
+
+    public ELType copy() {
+        ELType t2 = new ELType();
+        t2.constant = constant;
+        t2.baseClass = baseClass;
+        t2.genericTypes = genericTypes;
+        t2.array = array;
+        t2.arraySize = arraySize;
+        t2.pointer = pointer;
+        t2.address = address;
+        t2.outVar = outVar;
+        t2.subType = subType;
+        t2.location = location;
+        t2.genericLocation = genericLocation;
+        t2.endLocation = endLocation;
+        t2.clazz = clazz;
+        return t2;
     }
 
     public ELClass getELClass() {
@@ -115,6 +134,8 @@ public class ELType {
 
     public String typeString() {
         String out = "";
+        if (outVar)
+            out = "out ";
         if (subType == null) {
             if (constant)
                 out += "const ";
@@ -129,7 +150,7 @@ public class ELType {
                 out += ">";
             }
         } else {
-            out = subType.typeString();
+            out += subType.typeString();
         }
         if (array) {
             if(arraySize > 0) {
@@ -230,11 +251,12 @@ public class ELType {
         t2.pointer = true;
         return t2;
     }
+
     public ELType addressOf() {
         if (constant)
             throw new ELCompileException("Can not get address to constant value");
         ELType t2;
-        if(array)
+        if (array)
             t2 = new ELType(this.subType);
         else
             t2 = new ELType(this);
@@ -274,6 +296,7 @@ public class ELType {
         Builder subBuilder;
         boolean built = false;
         boolean constant = false;
+        boolean outVar = false;
         boolean baseSet = false;
 
         public Builder() {
@@ -311,6 +334,9 @@ public class ELType {
                 case IdentifierToken it -> {
                     if (it.value.equals("const")) {
                         constant = true;
+                        return true;
+                    } else if (it.value.equals("out")) {
+                        outVar = true;
                         return true;
                     } else if (!baseSet) {
                         baseSet = true;
@@ -434,6 +460,7 @@ public class ELType {
                 throw new NullPointerException("Location was null");
             built = true;
             type.constant = constant;
+            type.outVar = outVar;
             return type;
         }
     }

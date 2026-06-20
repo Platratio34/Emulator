@@ -158,18 +158,21 @@
             }
         },
         {
-            "match": "(\\w[\\w\\d_\\.]*)(?:\\s|\\*|\\&|<([^>]*)>|\\[([^\\]]*)\\])*\\s+(\\w[\\w\\d_]*)",
+            "match": "(out\\s+)?(\\w[\\w\\d_\\.]*)(?:\\s|\\*|\\&|<([^>]*)>|\\[([^\\]]*)\\])*\\s+(\\w[\\w\\d_]*)",
             "captures": {
                 "1": {
-                    "patterns": [{"include": "#identifier.type"}]
+                    "name": "keyword.other.compiler"
                 },
                 "2": {
-                    "patterns": [{"include": "#type.list"}]
+                    "patterns": [{"include": "#identifier.type"}]
                 },
                 "3": {
-                    "name": "variable.other.constant"
+                    "patterns": [{"include": "#type.list"}]
                 },
                 "4": {
+                    "name": "variable.other.constant"
+                },
+                "5": {
                     "name": "entity.name.variable"
                 }
             }

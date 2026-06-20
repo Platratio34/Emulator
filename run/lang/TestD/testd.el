@@ -91,10 +91,9 @@ namespace TestD {
         }
     }
 
-    public static StructA* testA(StructA& str) {
+    public static void testA(StructA& str) {
         str.a = 32;
         str.b = 0xffffffff;
-        return str;
     }
 
     struct StructA {

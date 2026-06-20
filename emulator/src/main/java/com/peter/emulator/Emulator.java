@@ -20,10 +20,11 @@ public class Emulator {
     public PeripheralManager peripheralManager = new PeripheralManager(ram, cores[0]);
     public final EmulatorGui gui;
     public final ConsolePeripheral console = new ConsolePeripheral(0x0002_0100);
+    public final StoragePeripheral vd0 = new StoragePeripheral(Main.ROOT_PATH.resolve("devices/vd0"));
 
     public Emulator() {
         peripheralManager.addPeripheral(console);
-        peripheralManager.addPeripheral(new StoragePeripheral(Main.ROOT_PATH.resolve("devices/vd0")));
+        peripheralManager.addPeripheral(vd0);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             stop();
         }));
