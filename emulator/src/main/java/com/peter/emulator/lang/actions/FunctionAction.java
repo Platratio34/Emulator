@@ -221,7 +221,7 @@ public class FunctionAction extends ComplexAction {
             }
         }
         if (f.ret != null)
-            actions.add(new DirectAction("STACK INC %d", f.ret.sizeof()));
+            actions.add(new DirectAction("STACK INC %d", Math.ceilDiv(f.ret.sizeof(),4)*4));
         actions.addAll(tempActions);
         actions.add(new DirectAction("GOTO PUSH :%s", f.getQualifiedName(true)));
         if (f.ret == null) {

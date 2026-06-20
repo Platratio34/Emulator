@@ -1,8 +1,12 @@
 package com.peter.emulator.peripherals;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 
+import com.peter.emulator.CPU;
 import com.peter.emulator.Packer;
 import com.peter.emulator.components.RAM;
 
@@ -14,9 +18,13 @@ public class StoragePeripheral implements DMAPeripheral {
     public final int[] serial = Packer.packChar((nextSerial++) + "", 16);
 
     protected RAM ram;
+    protected CPU cpu;
     protected int deviceId;
 
     protected final Path rootPath;
+
+    protected final HashMap<Integer, File> openFiles = new HashMap<>();
+    protected int nextHandle = 1;
 
     public StoragePeripheral(Path rootPath) {
         this.rootPath = rootPath;
@@ -34,8 +42,8 @@ public class StoragePeripheral implements DMAPeripheral {
     public void message(int[] msg) {
         switch (msg[0]) {
             case 0x01 -> { // list files
-                int startPathPntr = msg[1]; // null terminated char buffer
-                int rplyAddr = msg[2]; // start address of reply buffer
+                int startPathPntr = cpu.translateAddress(msg[1]); // null terminated char buffer
+                int rplyAddr = cpu.translateAddress(msg[2]); // start address of reply buffer
                 int rplyEnd = rplyAddr + msg[3]; // length of reply buffer (then added to start for simpler logic)
                 int offset = msg[4]; // offset within the name list to read from
                 String startPath = ram.readStringNT(startPathPntr);
@@ -66,14 +74,73 @@ public class StoragePeripheral implements DMAPeripheral {
                 ram.writeWord(PeripheralManager.PERIPHERAL_RSP_STATUS, 0x0100_0000 | deviceId);
             }
             case 0x02 -> { // get file descriptor
-                int pathPntr = msg[1]; // pointer to null terminated path string
-                int rplyPntr = msg[2]; // start address of reply buffer
-                int rplyEnd = rplyPntr + msg[3]; // length of reply buffer (then added to start for simpler logic)
+                int pathPntr = cpu.translateAddress(msg[1]); // pointer to null terminated path string
+                // int rplyPntr = cpu.translateAddress(msg[2]); // start address of reply buffer
+                // int rplyEnd = rplyPntr + msg[3]; // length of reply buffer (then added to start for simpler logic)
 
                 String path = ram.readStringNT(pathPntr);
                 File f = rootPath.resolve(path).toFile();
+                if(!f.exists()) {
+                    ram.copyWords(new int[] { 0x01, 0x0, 0x0 }, PeripheralManager.PERIPHERAL_RSP_DATA);
+                    ram.writeWord(PeripheralManager.PERIPHERAL_RSP_STATUS, 0x0100_0000 | deviceId);
+                    return;
+                }
+                int len = 0;
+                boolean isDir = f.isDirectory();
+                if (!isDir) {
+                    len = (int) f.length();
+                }
+
+                ram.copyWords(new int[] { 0x01, isDir ? 0x2 : 0x1, len }, PeripheralManager.PERIPHERAL_RSP_DATA);
+                ram.writeWord(PeripheralManager.PERIPHERAL_RSP_STATUS, 0x0100_0000 | deviceId);
+            }
+            case 0x10 -> { // open handle
+                int pathPntr = cpu.translateAddress(msg[1]); // pointer to null terminated path string
+                String path = ram.readStringNT(pathPntr);
+                File f = rootPath.resolve(path).toFile();
+                if (!f.exists())
+                    if (!f.exists()) {
+                        ram.copyWords(new int[] { 0x02, 0x0 }, PeripheralManager.PERIPHERAL_RSP_DATA);
+                        ram.writeWord(PeripheralManager.PERIPHERAL_RSP_STATUS, 0x0100_0000 | deviceId);
+                        return;
+                    }
+                int handle = nextHandle++;
+                openFiles.put(handle, f);
+                ram.copyWords(new int[] { 0x01, handle }, PeripheralManager.PERIPHERAL_RSP_DATA);
+                ram.writeWord(PeripheralManager.PERIPHERAL_RSP_STATUS, 0x0100_0000 | deviceId);
+                return;
+            }
+            case 0x11 -> { // read from handle
+                int handle = msg[1];
+                int buffStart = cpu.translateAddress(msg[2]);
+                int buffSize = msg[3];
+                int offset = msg[3];
+                if (!openFiles.containsKey(handle)) {
+                    ram.copyWords(new int[] { 0x02, handle, 0x0 }, PeripheralManager.PERIPHERAL_RSP_DATA);
+                    ram.writeWord(PeripheralManager.PERIPHERAL_RSP_STATUS, 0x0100_0000 | deviceId);
+                    return;
+                }
+                File f = openFiles.get(handle);
+                int written = 0;
+                byte[] bytes;
+                try {
+                    bytes = Files.readAllBytes(f.toPath());
+                } catch (IOException e) {
+                    ram.copyWords(new int[] { 0x0f, handle, 0x0 }, PeripheralManager.PERIPHERAL_RSP_DATA);
+                    ram.writeWord(PeripheralManager.PERIPHERAL_RSP_STATUS, 0x0100_0000 | deviceId);
+                    System.err.println(e);
+                    return;
+                }
+                for (int i = 0; i < buffSize; i++) {
+                    int j = i + offset;
+                    if (j >= bytes.length) {
+                        break;
+                    }
+                    written++;
+                    ram.writeByte(buffStart++, bytes[j]);
+                }
                 
-                ram.copyWords(new int[] { 0x01 }, PeripheralManager.PERIPHERAL_RSP_DATA);
+                ram.copyWords(new int[] { 0x01, handle, written }, PeripheralManager.PERIPHERAL_RSP_DATA);
                 ram.writeWord(PeripheralManager.PERIPHERAL_RSP_STATUS, 0x0100_0000 | deviceId);
             }
 
@@ -90,8 +157,9 @@ public class StoragePeripheral implements DMAPeripheral {
     }
 
     @Override
-    public void link(RAM ram, int deviceId) {
+    public void link(RAM ram, CPU cpu, int deviceId) {
         this.ram = ram;
+        this.cpu = cpu;
         this.deviceId = deviceId;
     }
 
@@ -121,5 +189,4 @@ public class StoragePeripheral implements DMAPeripheral {
     public int getType() {
         return DEVICE_TYPE;
     }
-
 }

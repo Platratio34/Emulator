@@ -40,7 +40,7 @@ public class ActionScope {
                     unit.errors.warning("Duplicate variable name `" + name + "`");
                     continue;
                 }
-                o -= type.sizeof();
+                o -= Math.ceilDiv(type.sizeof(), 4) * 4;
                 var.offset = o;
                 stackVars.put(name, var);
             }
@@ -66,10 +66,10 @@ public class ActionScope {
             errors.warning("Duplicate variable name `" + name + "`");
             return var;
         }
-        var.offset = stackOff;
-        stackOff += type.sizeof();
-        stackVars.put(name, var);
         type.analyze(unit.errors, namespace, unit);
+        var.offset = stackOff;
+        stackOff += (Math.ceilDiv(var.sizeof(), 4) * 4);
+        stackVars.put(name, var);
         return var;
     }
     
@@ -120,7 +120,7 @@ public class ActionScope {
             return parent.hasType(it);
         if(it.value.equals("void"))
             return true;
-        ELType baseType = new ELType(it.debugString());
+        ELType baseType = new ELType(it.typeString());
         if (ELPrimitives.PRIMITIVE_TYPES.containsKey(baseType))
             return true;
         return namespace.hasType(baseType);

@@ -13,6 +13,8 @@ public class ExpressionAction extends ComplexAction {
 
     public final Register targetReg;
     public final ELType outType;
+
+    protected static int nextStr = 0;
     
     public ExpressionAction(ActionScope scope, ArrayList<Token> tokens, Register targetReg) {
         super(scope);
@@ -231,7 +233,12 @@ public class ExpressionAction extends ComplexAction {
                             throw ELAnalysisError.error(
                                     "Unable to resolve non-pointer, address, or array (was " + t.typeString() + ")",
                                     it);
-                        actions.add(new DirectAction("LOAD MEM %s %s", tR, tR));
+                        String size = switch(t.sizeof()) {
+                            case 1 -> " BYTE";
+                            case 2 -> " SHORT";
+                            default -> "";
+                        };
+                        actions.add(new DirectAction("LOAD MEM%s %s %s", size, tR, tR));
                         resolvePointer--;
                         if(!t.isVoidPtr())
                             t = t.resolve(it.span());
@@ -329,7 +336,12 @@ public class ExpressionAction extends ComplexAction {
                             throw ELAnalysisError.error(
                                     "Unable to resolve non-pointer, address, or array (was " + t.typeString() + ")",
                                     st);
-                        actions.add(new DirectAction("LOAD MEM %s %s", tR, tR));
+                        String size = switch(t.sizeof()) {
+                            case 1 -> " BYTE";
+                            case 2 -> " SHORT";
+                            default -> "";
+                        };
+                        actions.add(new DirectAction("LOAD MEM%s %s %s", size, tR, tR));
                         resolvePointer--;
                         if (t != null && !t.isVoidPtr())
                             t = t.resolve(st.span());
@@ -411,9 +423,16 @@ public class ExpressionAction extends ComplexAction {
                         throw ELAnalysisError.error("Can not get address of a string literal", tkn);
                     if(wI > 0 || tokens.size() > 1)
                         throw ELAnalysisError.error("String literal must be only element of expression", tkn);
-                    if(!st.ch)
-                        throw ELAnalysisError.error("Only character allowed in expression", tkn);
-                    addDirect("LOAD %s '%s'", targetReg, st.value.replace("\n","\\n").replace("\0","\\0"));
+                    if (st.ch) {
+                        addDirect("LOAD %s '%s'", targetReg, st.escapedValue());
+                        lastType = ELPrimitives.CHAR;
+                    } else {
+                        String id = "exp_str_" + (nextStr++);
+                        addDirect("#define %s \"%s\"", id, st.escapedValue());
+                        addDirect("LOAD %s %s", targetReg, id);
+                        lastType = ELPrimitives.CHAR.pointerTo();
+                    }
+                    
                     // Register tR = (lastType == null) ? targetReg : scope.firstFree();
                 }
                 default -> {

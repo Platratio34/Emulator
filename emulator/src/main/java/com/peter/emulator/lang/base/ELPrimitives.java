@@ -39,7 +39,7 @@ public class ELPrimitives {
 
         @Override
         public int getSize() {
-            return 4;
+            return 1;
         };
     };
     public static final ELType UINT8 = new ELType("uint8", UINT8_CLASS, INTERNAL_LOCATION);
@@ -52,7 +52,7 @@ public class ELPrimitives {
 
         @Override
         public int getSize() {
-            return 4;
+            return 1;
         };
     }.withParent(OBJECT_CLASS, OBJECT);
     public static final ELType CHAR = new ELType("char", CHAR_CLASS, INTERNAL_LOCATION);
@@ -64,7 +64,7 @@ public class ELPrimitives {
         }
 
         public int getSize() {
-            return 4;
+            return 2;
         };
     }.withParent(OBJECT_CLASS, OBJECT);
     public static final ELType UINT16 = new ELType("uint16", UINT16_CLASS, INTERNAL_LOCATION);

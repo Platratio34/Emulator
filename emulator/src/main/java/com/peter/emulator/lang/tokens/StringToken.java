@@ -52,7 +52,7 @@ public class StringToken extends Token {
     }
 
     public String escapedValue() {
-        return value.replace("\\","\\\\").replace("\n","\\n").replace("\r","\\r").replace("\"","\\\"").replace("\'","\\'");
+        return value.replace("\\","\\\\").replace("\n","\\n").replace("\r","\\r").replace("\"","\\\"").replace("\'","\\'").replace("\0","\\0");
     }
 
     @Override

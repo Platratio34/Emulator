@@ -17,7 +17,7 @@ public class Emulator {
     public final CPU[] cores = new CPU[] {
         new CPU(0, ram, mmu)
     };
-    public PeripheralManager peripheralManager = new PeripheralManager(ram);
+    public PeripheralManager peripheralManager = new PeripheralManager(ram, cores[0]);
     public final EmulatorGui gui;
     public final ConsolePeripheral console = new ConsolePeripheral(0x0002_0100);
 

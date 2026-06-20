@@ -1,5 +1,6 @@
 import SysD;
 import Console;
+import FS;
 
 namespace TestD {
 
@@ -7,6 +8,7 @@ namespace TestD {
     public static const char* str = "// Test";
     public static char[5] testStr = "Test\n";
     public static char[7] testStr2 = "Test2\n\0";
+    public static char[9] path = "test.txt\0";
     public static char tc;
 
     @Entrypoint(raw)
@@ -33,6 +35,21 @@ namespace TestD {
         Console.printStr(&testStr2, 0);
         Console.printChar('a');
         Console.printChar('\n');
+
+        asm("#breakpoint");
+        uint32 fh;
+        FS.openFile("test.txt\0", &fh);
+        if(fh == 0) {
+            Console.printStr("ERROR\n\0", 0);
+        } else {
+            Console.printStr("Opened\n\0", 0);
+            char[32] buffer;
+            uint32 read;
+            FS.readFile(fh, &buffer, 32, 0, &read);
+            Console.printStr(&buffer, read);
+        }
+        
+        asm("#breakpoint");
 
         wait(1000);
         // funcC();

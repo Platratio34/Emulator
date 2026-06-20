@@ -2,11 +2,13 @@ package com.peter.emulator.peripherals;
 
 import java.util.HashMap;
 
+import com.peter.emulator.CPU;
 import com.peter.emulator.components.RAM;
 
 public class PeripheralManager {
 
     private final RAM ram;
+    private final CPU cpu;
     private final HashMap<Integer, Peripheral> peripherals = new HashMap<>();
     private int nextId = 1;
 
@@ -17,14 +19,16 @@ public class PeripheralManager {
     public static final int PERIPHERAL_RSP_STATUS = 0x2_0080;
     public static final int PERIPHERAL_RSP_DATA = 0x2_0084;
 
-    public PeripheralManager(RAM ram) {
+    public PeripheralManager(RAM ram, CPU cpu) {
         this.ram = ram;
+        this.cpu = cpu;
     }
 
     public void tick() {
         ram.writeByte(PERIPHERAL_START, (byte)0x01);
         int w = ram.readWord(PERIPHERAL_START);
         if ((w & 0x00ff_0000) == 0x0001_0000) {
+            ram.writeWord(PeripheralManager.PERIPHERAL_RSP_STATUS, 0x0);
             try {
                 int d = w & 0xffff;
                 if (d == 0) {
@@ -55,7 +59,7 @@ public class PeripheralManager {
         int deviceId = nextId++;
         peripherals.put(deviceId, peripheral);
         switch (peripheral) {
-            case DMAPeripheral dmap -> dmap.link(ram, deviceId);
+            case DMAPeripheral dmap -> dmap.link(ram, cpu, deviceId);
             case MemoryMappedPeripheral mmp -> ram.addMMP(mmp);
             default -> {}
         }

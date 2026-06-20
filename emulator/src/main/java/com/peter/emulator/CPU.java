@@ -237,8 +237,13 @@ public class CPU {
     public int readMemShort(int addr) {
         return ram.readShort(mmu.translate(this, addr));
     }
+
     public byte readMemByte(int addr) {
         return ram.readByte(mmu.translate(this, addr));
+    }
+    
+    public int translateAddress(int addr) {
+        return mmu.translate(this, addr);
     }
     
     public void stackPush(int val) {

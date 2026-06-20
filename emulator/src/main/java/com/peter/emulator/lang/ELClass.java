@@ -102,7 +102,7 @@ public class ELClass extends Namespace {
                 size += o + vSize;
             }
         }
-        size += size % 4;
+        size += 4 - (size % 4);
         return size;
     }
 

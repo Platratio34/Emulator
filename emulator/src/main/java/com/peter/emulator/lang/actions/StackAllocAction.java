@@ -16,8 +16,8 @@ public class StackAllocAction extends Action {
 
     @Override
     public String toAssembly() {
-        if (type.sizeof() != 4 || reg == null)
-            return "STACK INC " + type.sizeof();
+        if (type.sizeof() >= 4 || reg == null)
+            return "STACK INC " + (Math.ceilDiv(type.sizeof(), 4) * 4);
         return String.format("STACK PUSH %s", reg);
     }
 

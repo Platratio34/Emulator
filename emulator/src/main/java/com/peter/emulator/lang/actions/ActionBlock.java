@@ -362,6 +362,8 @@ public class ActionBlock extends ComplexAction {
                         boolean regTarget = false;
                         ELType t;
                         Action assignAction = null;
+
+                        String size;
                         if (targetVal.value.equals("SysD")) { // if lh is SysD
                             if (dma)
                                 throw ELAnalysisError.error("DMA is not allowed with SysD pseudo-variables", tkn);
@@ -394,6 +396,7 @@ public class ActionBlock extends ComplexAction {
                             } else {
                                 throw ELAnalysisError.error("Unknown SysD variable `" + vN + "`", it);
                             }
+                            size = "";
                         } else {
                             rT = scope.firstFree();
                             rT.reserve();
@@ -407,11 +410,18 @@ public class ActionBlock extends ComplexAction {
                                 t = t.resolve(it.span());
                             }
                             if(rA.returnVar != null && (!dma && (rA.returnVar.finalVal || t.isConstant())))
-                                throw ELAnalysisError.error("Cannot assign to "+(rA.returnVar.finalVal ? "final variable" : "constant"), it.startLocation.span(actionSpan.end()));
+                                throw ELAnalysisError.error(
+                                        "Cannot assign to " + (rA.returnVar.finalVal ? "final variable" : "constant"),
+                                        it.startLocation.span(actionSpan.end()));
+                            size = switch(t.sizeof()) {
+                                case 1 -> " BYTE";
+                                case 2 -> " SHORT";
+                                default -> "";
+                            };
                             actions.add(rA);
                             if (!r.fistFree())
                                 throw ELAnalysisError.error("No free register", targetVal);
-                            assignAction = new DirectAction("STORE %s %s", r, rT);
+                            assignAction = new DirectAction("STORE%s %s %s", size, r, rT);
                         }
 
                         if (ot.type == OperatorToken.Type.INC) {
@@ -426,9 +436,9 @@ public class ActionBlock extends ComplexAction {
                                     actions.add(new DirectAction("COPY %s %s", r, rT));
                                 }
                             } else {
-                                actions.add(new DirectAction("LOAD MEM %s %s", r, rT));
+                                actions.add(new DirectAction("LOAD MEM%s %s %s", size, r, rT));
                                 actions.add(new DirectAction("INC %s 1", r));
-                                actions.add(new DirectAction("STORE %s %s", r, rT));
+                                actions.add(new DirectAction("STORE%s %s %s", size, r, rT));
                             }
                             rT.release();
                             wI += 2;
@@ -447,9 +457,9 @@ public class ActionBlock extends ComplexAction {
                                 }
                             } else {
                                 Register r2 = scope.firstFree();
-                                actions.add(new DirectAction("LOAD MEM %s %s", r2, rT));
+                                actions.add(new DirectAction("LOAD MEM%s %s %s", size, r2, rT));
                                 actions.add(new DirectAction("INC %s -1", r2));
-                                actions.add(new DirectAction("STORE %s %s", r2, rT));
+                                actions.add(new DirectAction("STORE%s %s %s", size, r2, rT));
                             }
                             rT.release();
                             wI += 2;
@@ -457,7 +467,7 @@ public class ActionBlock extends ComplexAction {
                         }
 
                         if(t.isAddress()) {
-                            actions.add(new DirectAction("LOAD MEM %s %s", rT, rT)); // resolve the address
+                            actions.add(new DirectAction("LOAD MEM%s %s %s", size, rT, rT)); // resolve the address
                             t = t.resolve(targetVal.span());
                         }
                         
@@ -477,20 +487,20 @@ public class ActionBlock extends ComplexAction {
                         ExpressionAction expA = new ExpressionAction(scope, exp, r);
                         actions.add(expA);
 
-                        if(expA.outType != null && !expA.outType.canCastTo(t)) {
+                        if (expA.outType != null && !expA.outType.canCastTo(t)) {
                             r.release();
                             rT.release();
                             throw ELAnalysisError.error("Invalid assign, can not cast " + expA.outType.typeString()
                                     + " to " + t.typeString(), it.startLocation.span(actionSpan.end()));
                         }
-
+                        
                         if (ot.type == OperatorToken.Type.ADD_ASSIGN) {
                             Register r2 = scope.firstFree();
-                            actions.add(new DirectAction("LOAD MEM %s %s", r2, rT));
+                            actions.add(new DirectAction("LOAD MEM%s %s %s", size, r2, rT));
                             actions.add(new DirectAction("ADD %s %s %s", r, r2, r));
                         } else if (ot.type == OperatorToken.Type.SUB_ASSIGN) {
                             Register r2 = scope.firstFree();
-                            actions.add(new DirectAction("LOAD MEM %s %s", r2, rT));
+                            actions.add(new DirectAction("LOAD MEM%s %s %s", size, r2, rT));
                             actions.add(new DirectAction("SUB %s %s %s", r, r2, r));
                         }
                         actions.add(assignAction);

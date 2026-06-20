@@ -133,8 +133,13 @@ public class ResolveAction extends ComplexAction {
                 t = v.type;
             }
         // }
+        String size = switch (v.sizeof()) {
+            case 2 -> " SHORT";
+            case 1 -> " BYTE";
+            default -> "";
+        };
         if (byValue && v.varType != ELVariable.Type.CONST)
-            addDirect("LOAD MEM %s %s", reg, reg);
+            addDirect("LOAD MEM%s %s %s", size, reg, reg);
         returnType = t;
         returnVar = v;
     }

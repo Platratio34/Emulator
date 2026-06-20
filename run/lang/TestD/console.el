@@ -49,14 +49,13 @@ namespace Console {
         asm("LOAD r4 Console.CONSOLE_END\nLOAD r5 Console.CONSOLE_START");
         asm("GOTO GT r14 :printStr_len");
             asm(":printStr_l1");
-                asm("LOAD MEM r3 r2\nGOTO EQ r3 :printStr_l1_exit");
-                asm("STORE BYTE r3 r1\nINC r2 4\nGOTO :printStr_l1");
+                asm("LOAD MEM BYTE r3 r2\nGOTO EQ r3 :printStr_l1_exit");
+                asm("STORE BYTE r3 r1\nINC r2 1\nGOTO :printStr_l1");
             asm(":printStr_l1_exit");
             asm("GOTO :printStr_exit");
         asm(":printStr_len");
-            asm("INC r1 -3");
             asm(":printStr_l2");
-                asm("COPY MEM r2 r1 INC_RG");
+                asm("COPY BYTE MEM r2 r1 INC_RG");
                 asm("INC r14 -1\nGOTO GT r14 :printStr_l2");
         asm(":printStr_exit");
         asm("LOAD r3 &Console.consolePntr\nSTORE r1 r3");

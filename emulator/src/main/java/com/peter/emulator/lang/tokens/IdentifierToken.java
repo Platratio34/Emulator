@@ -118,6 +118,16 @@ public class IdentifierToken extends Token {
         return out;
     }
 
+    public String typeString() {
+        String out = value;
+        if (subTokens != null) {
+            for (Token t : subTokens) {
+                out += "." + ((IdentifierToken) t).debugString();
+            }
+        }
+        return out;
+    }
+
     public static boolean validStart(char c) {
         return Character.isAlphabetic(c) || c == '_';
     }

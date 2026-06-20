@@ -118,8 +118,8 @@ public class Assembler {
                             }
                             str = str2;
                             memSet.add(new MemSet(name, str));
-                            // valAdd += Math.ceilDiv(str.length(), 4);
-                            valAdd += str.length();
+                            valAdd += Math.ceilDiv(str.length(), 4);
+                            // valAdd += str.length();
                             symbols.addDefinition(new ValueSymbol(name, -1, -1, "char*", str), lineN + 1);
                         } else if (parts[2].startsWith("[")) {
                             Matcher m = DEFINE_ARRAY_PATTERN.matcher(line);
@@ -194,8 +194,8 @@ public class Assembler {
                             }
                             str = str2;
                             memSet.add(new MemSet(name, str));
-                            // valAdd += Math.ceilDiv(str.length(), 4);
-                            valAdd += str.length();
+                            valAdd += Math.ceilDiv(str.length(), 4);
+                            // valAdd += str.length();
                             symbols.addVariable(new VariableSymbol(name, -1, -1, "char*", str), lineN + 1);
                         } else if (parts[2].startsWith("[")) {
                             Matcher m = DEFINE_ARRAY_PATTERN.matcher(line);
@@ -1256,13 +1256,12 @@ public class Assembler {
 
         public MemSet(String name, String str) {
             this.name = name;
-            // bytes = values;
             int len = str.length();
-            values = new int[len];
-            for (int i = 0; i < len; i++) {
-                values[i] = str.charAt(i);
-            }
-            /*
+            // values = new int[len];
+            // for (int i = 0; i < len; i++) {
+            //     values[i] = str.charAt(i);
+            // }
+            
             values = new int[Math.ceilDiv(len, 4)];
             for (int i = 0; i < str.length(); i += 4) {
                 int v = ((int) str.charAt(i)) << 24;
@@ -1273,7 +1272,7 @@ public class Assembler {
                 if(i+3 < len)
                     v |= (int) str.charAt(i + 3);
                 values[i / 4] = v;
-            }*/
+            }
         }
     }
 
