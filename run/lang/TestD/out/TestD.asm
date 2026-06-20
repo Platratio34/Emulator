@@ -155,39 +155,27 @@ GOTO :printStr_l1
 
 // 8 54:14
 :printStr_l1_exit
-//  asm(":printStr_l1_exit");
-
-// 9 55:14
 GOTO :printStr_exit
-//  asm("GOTO :printStr_exit");
+//  asm(":printStr_l1_exit\nGOTO :printStr_exit");
 
-// 10 56:10
+// 9 55:10
 :printStr_len
 //  asm(":printStr_len");
 
-// 11 57:14
-:printStr_l2
-//  asm(":printStr_l2");
-
-// 12 58:18
+// 10 56:14
 COPY BYTE MEM r2 r1 INC_RG
 //  asm("COPY BYTE MEM r2 r1 INC_RG");
 
-// 13 59:18
+// 11 57:14
 INC r14 -1
-GOTO GT r14 :printStr_l2
-//  asm("INC r14 -1\nGOTO GT r14 :printStr_l2");
+GOTO GT r14 :printStr_len
+//  asm("INC r14 -1\nGOTO GT r14 :printStr_len");
 
-// 14 60:10
+// 12 58:10
 :printStr_exit
-//  asm(":printStr_exit");
+//  asm(":printStr_exit")
 
-// 15 61:10
-LOAD r3 &Console.consolePntr
-STORE r1 r3
-//  asm("LOAD r3 &Console.consolePntr\nSTORE r1 r3")
-
-// 16 61:58
+// 13 58:31
 // ;
 
 :func_exit_Console.printStr_char*_uint32
@@ -223,93 +211,68 @@ GOTO POP
 #function Console.intToHex_uint32_char* value uint32, str char*
 STACK PUSH r15
 COPY rStack r15
-// 0 65:10
-LOAD r1 7
-STACK PUSH r1
-//  uint32 i = 7;
+// 0 62:10
+LOAD r14 7
+//  asm("LOAD r14 7");
 
-// 1 67:10
-:while_condition_0
-COPY r15 r1
-LOAD MEM r1 r1
-LOAD r2 0
-SUB r1 r2 r1
-SET FORCE LEQ r1 r1
-GOTO EQ r1 :while_end_0
-// 0 68:14
+// 1 63:10
 COPY r15 r1
 INC r1 -16
 LOAD MEM r1 r1
-LOAD r2 15
-AND r1 r1 r2
-STACK PUSH r1
-//  uint32 part = value & 0xf;
+//  asm("COPY r15 r1\nINC r1 -16\nLOAD MEM r1 r1");
 
-// 1 69:14
-COPY r15 r1
-INC r1 4
-LOAD MEM r1 r1
-LOAD r2 10
-SUB r1 r2 r1
-SET FORCE GT r1 r1
-GOTO EQ r1 :if_else_1
-// 0 70:18
-COPY r15 r1
-INC r1 -12
+// 2 64:10
 COPY r15 r2
+INC r2 -12
 LOAD MEM r2 r2
-LOAD MEM r1 r1
-ADD r1 r1 r2
-COPY r15 r2
-INC r2 4
-LOAD MEM r2 r2
-INC r2 48
-STORE BYTE r2 r1
-//  str[i] = part + 0x30;
+INC r2 8
+//  asm("COPY r15 r2\nINC r2 -12\nLOAD MEM r2 r2\nINC r2 8");
 
-GOTO :if_end_1
-:if_else_1
-// 0 72:18
-COPY r15 r1
-INC r1 -12
-COPY r15 r2
-LOAD MEM r2 r2
-LOAD MEM r1 r1
-ADD r1 r1 r2
-COPY r15 r2
-INC r2 4
-LOAD MEM r2 r2
-INC r2 87
-STORE BYTE r2 r1
-//  str[i] = part + 0x57;
+// 3 65:10
+LOAD r3 0xf
+LOAD r6 0xa
+//  asm("LOAD r3 0xf\nLOAD r6 0xa");
 
-:if_end_1
-//  if(part < 0xa) {str[i] = part + 0x30;} else {str[i] = part + 0x57;}
+// 4 66:10
+:intToHex_l1
+//  asm(":intToHex_l1");
 
-// 2 74:14
-COPY r15 r1
-INC r1 -16
-COPY r15 r2
-INC r2 -16
-LOAD MEM r2 r2
-RSH r2 r2 4
-STORE r2 r1
-//  value = value >> 4;
-
-// 3 75:14
-COPY r15 r1
-LOAD MEM r2 r1
+// 5 67:14
 INC r2 -1
-STORE r2 r1
-//  i--;
+AND r4 r1 r3
+RSH r1 r1 4
+//  asm("INC r2 -1\nAND r4 r1 r3\nRSH r1 r1 4");
 
-STACK DEC 4
-GOTO :while_condition_0
-:while_end_0
-//  while(i >= 0) {uint32 part = value & 0xf; if(part < 0xa) {str[i] = part + 0x30;} else {str[i] = part + 0x57;} value = value >> 4; i--;}
+// 6 68:14
+SUB r5 r4 r6
+GOTO GEQ r5 :intToHex_gt
+//  asm("SUB r5 r4 r6\nGOTO GEQ r5 :intToHex_gt");
+
+// 7 69:18
+INC r4 0x30
+STORE BYTE r4 r2
+GOTO :intToHex_l1_end
+//  asm("INC r4 0x30\nSTORE BYTE r4 r2\nGOTO :intToHex_l1_end");
+
+// 8 70:14
+:intToHex_gt
+//  asm(":intToHex_gt");
+
+// 9 71:18
+INC r4 0x57
+STORE BYTE r4 r2
+//  asm("INC r4 0x57\nSTORE BYTE r4 r2");
+
+// 10 72:14
+:intToHex_l1_end
+INC r14 -1
+GOTO GEQ r14 :intToHex_l1
+//  asm(":intToHex_l1_end\nINC r14 -1\nGOTO GEQ r14 :intToHex_l1")
+
+// 11 72:76
+// ;
 
 :func_exit_Console.intToHex_uint32_char*
-STACK DEC 4
 STACK POP r15
 GOTO POP
 #endfunction void
@@ -486,7 +449,7 @@ COPY r15 r1
 LOAD MEM r1 r1
 INC r1 -255
 SET FORCE EQ r1 r1
-GOTO EQ r1 :if_end_2
+GOTO EQ r1 :if_end_0
 // 0 84:14
 HALT
 //  asm("HALT")
@@ -494,7 +457,7 @@ HALT
 // 1 84:25
 // ;
 
-:if_end_2
+:if_end_0
 //  if(code == 0xff) {asm("HALT");}
 
 :func_exit_TestD.onInterrupt
@@ -507,12 +470,12 @@ INTERRUPT RET
 STACK PUSH r15
 COPY rStack r15
 // 0 89:10
-:while_condition_3
+:while_condition_1
 COPY r15 r1
 INC r1 -12
 LOAD MEM r1 r1
 SET FORCE GT r1 r1
-GOTO EQ r1 :while_end_3
+GOTO EQ r1 :while_end_1
 // 0 90:14
 COPY r15 r1
 INC r1 -12
@@ -521,8 +484,8 @@ INC r2 -1
 STORE r2 r1
 //  time--;
 
-GOTO :while_condition_3
-:while_end_3
+GOTO :while_condition_1
+:while_end_1
 //  while(time > 0) {time--;}
 
 :func_exit_TestD.wait_uint32
@@ -671,7 +634,7 @@ COPY r15 r1
 INC r1 28
 LOAD MEM r1 r1
 SET FORCE EQ r1 r1
-GOTO EQ r1 :if_else_4
+GOTO EQ r1 :if_else_2
 // 0 43:14
 #define exp_str_1 "ERROR\n\0"
 LOAD r1 exp_str_1
@@ -685,8 +648,8 @@ STACK DEC 8
 // 1 43:46
 // ;
 
-GOTO :if_end_4
-:if_else_4
+GOTO :if_end_2
+:if_else_2
 // 0 45:14
 #define exp_str_2 "Opened\n\0"
 LOAD r1 exp_str_2
@@ -781,9 +744,12 @@ GOTO PUSH :Console.printStr_char*_uint32
 STACK DEC 8
 //  Console.printStr(& str2, 0);
 
-// 11 57:14
-#breakpoint
-//  asm("#breakpoint");
+// 11 56:14
+LOAD r1 '\n'
+STACK PUSH r1
+GOTO PUSH :Console.printChar_char
+STACK DEC 4
+//  Console.printChar('\n');
 
 // 12 58:14
 COPY r15 r1
@@ -830,8 +796,8 @@ STACK DEC 8
 // ;
 
 STACK DEC 52
-:if_end_4
-//  if(fh == 0) {Console.printStr("ERROR\n\0", 0);} else {Console.printStr("Opened\n\0", 0); char[32] buffer; uint32 read; uint32 state; FS.readFile(fh, & buffer, 32, 0, & read, & state); asm("#breakpoint"); char[10] str2; str2[8] = '\n'; str2[9] = '\0'; Console.intToHex(state, & str2); Console.printStr(& str2, 0); asm("#breakpoint"); Console.intToHex(read, & str2); Console.printStr(& str2, 0); Console.printChar('\n'); Console.printStr(& buffer, read);}
+:if_end_2
+//  if(fh == 0) {Console.printStr("ERROR\n\0", 0);} else {Console.printStr("Opened\n\0", 0); char[32] buffer; uint32 read; uint32 state; FS.readFile(fh, & buffer, 32, 0, & read, & state); asm("#breakpoint"); char[10] str2; str2[8] = '\n'; str2[9] = '\0'; Console.intToHex(state, & str2); Console.printStr(& str2, 0); Console.printChar('\n'); Console.intToHex(read, & str2); Console.printStr(& str2, 0); Console.printChar('\n'); Console.printStr(& buffer, read);}
 
 // 20 65:10
 #breakpoint

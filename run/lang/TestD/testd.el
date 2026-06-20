@@ -53,8 +53,8 @@ namespace TestD {
             str2[9] = '\0';
             Console.intToHex(state, &str2);
             Console.printStr(&str2, 0);
-            // Console.printChar('\n');
-            asm("#breakpoint");
+            Console.printChar('\n');
+            // asm("#breakpoint");
             Console.intToHex(read, &str2);
             Console.printStr(&str2, 0);
             

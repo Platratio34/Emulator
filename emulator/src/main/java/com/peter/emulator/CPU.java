@@ -1,6 +1,9 @@
 package com.peter.emulator;
 
 import static com.peter.emulator.MachineCode.*;
+
+import com.peter.emulator.MachineCode.ConditionalOperator;
+import com.peter.emulator.MachineCode.MathOperator;
 import com.peter.emulator.components.MMU;
 import com.peter.emulator.components.RAM;
 import com.peter.emulator.debug.Debugger;
@@ -385,21 +388,20 @@ public class CPU {
                 // }
             }
             case MATH -> {
-                int mOp = op & MASK_MATH_OP;
                 int rd = (op & MASK_MATH_RD) >> 16;
                 int ra = (op & MASK_MATH_RA) >> 8;
                 int rb = (op & MASK_MATH_RB);
-                switch (mOp) {
-                    case MATH_ADD -> {
+                switch (MathOperator.fromMachineCode(op)) {
+                    case ADD -> {
                         setReg(rd, getReg(ra) + getReg(rb));
                     }
-                    case MATH_SUB -> {
+                    case SUB -> {
                         setReg(rd, getReg(ra) - getReg(rb));
                     }
-                    case MATH_MUL -> {
+                    case MUL -> {
                         setReg(rd, getReg(ra) * getReg(rb));
                     }
-                    case MATH_INC -> {
+                    case INC -> {
                         int inc = op & MASK_MATH_INC;
                         if ((inc & 0x8000) != 0) {
                             setReg(rd, getReg(rd) - (inc & 0x7fff));
@@ -407,211 +409,113 @@ public class CPU {
                             setReg(rd, getReg(rd) + inc + 1);
                         }
                     }
-                    case MATH_AND -> {
+                    case AND -> {
                         setReg(rd, getReg(ra) & getReg(rb));
                     }
-                    case MATH_OR -> {
+                    case OR -> {
                         setReg(rd, getReg(ra) | getReg(rb));
                     }
-                    case MATH_NAND -> {
+                    case NAND -> {
                         setReg(rd, ~(getReg(ra) & getReg(rb)));
                     }
-                    case MATH_NOR -> {
+                    case NOR -> {
                         setReg(rd, ~(getReg(ra) | getReg(rb)));
                     }
-                    case MATH_NOT -> {
+                    case NOT -> {
                         setReg(rd, ~getReg(ra));
                     }
-                    case MATH_XOR -> {
+                    case XOR -> {
                         setReg(rd, getReg(ra) ^ getReg(rb));
                     }
-                    case MATH_LSHIFT -> {
+                    case LSHIFT -> {
                         setReg(rd, getReg(ra) << rb);
                     }
-                    case MATH_RSHIFT -> {
+                    case RSHIFT -> {
                         setReg(rd, getReg(ra) >> rb);
+                    }
+                    case UNKNOWN -> {
                     }
                 }
             }
             case GOTO -> {
-                int type = op & MASK_GOTO_OP;
+                boolean rel = (op & MASK_GOTO_REL) != 0;
+                boolean push = (op & MASK_GOTO_PUSH) != 0;
+                boolean pop = (op & MASK_GOTO_POP) != 0;
                 int ra = (op & MASK_GOTO_RA) >> 8;
                 int rg = op & MASK_GOTO_RG;
-                switch (type) {
-                    case GOTO_UNCD -> {
-                        pgmPtr = getReg(ra);
-                    }
-                    case GOTO_EQ_ZERO -> {
-                        if (getReg(rg) == 0) {
-                            pgmPtr = getReg(ra);
-                        }
-                    }
-                    case GOTO_LEQ_ZERO -> {
-                        if (getReg(rg) <= 0) {
-                            pgmPtr = getReg(ra);
-                        }
-                    }
-                    case GOTO_GT_ZERO -> {
-                        if (getReg(rg) > 0) {
-                            pgmPtr = getReg(ra);
-                        }
-                    }
-                    case GOTO_NOT_ZERO -> {
-                        if (getReg(rg) != 0) {
-                            pgmPtr = getReg(ra);
-                        }
-                    }
-
-                    case GOTO_REL_UNCD -> {
-                        pgmPtr += 4;
-                        pgmPtr += next;
-                    }
-                    case GOTO_REL_EQ_ZERO -> {
-                        pgmPtr += 4;
-                        if (getReg(rg) == 0) {
-                            pgmPtr += next;
-                        }
-                    }
-                    case GOTO_REL_LEQ_ZERO -> {
-                        pgmPtr += 4;
-                        if (getReg(rg) <= 0) {
-                            pgmPtr += next;
-                        }
-                    }
-                    case GOTO_REL_GT_ZERO -> {
-                        pgmPtr += 4;
-                        if (getReg(rg) > 0) {
-                            pgmPtr += next;
-                        }
-                    }
-                    case GOTO_REL_NOT_ZERO -> {
-                        pgmPtr += 4;
-                        if (registers[rg] != 0) {
-                            pgmPtr += next;
-                        }
-                    }
-
-                    case GOTO_PUSH_UNCD -> {
-                        stackPush(pgmPtr);
-                        pgmPtr = getReg(ra);
-                    }
-                    case GOTO_PUSH_EQ_ZERO -> {
-                        if (getReg(rg) == 0) {
-                            stackPush(pgmPtr);
-                            pgmPtr = getReg(ra);
-                        }
-                    }
-                    case GOTO_PUSH_LEQ_ZERO -> {
-                        if (getReg(rg) <= 0) {
-                            stackPush(pgmPtr);
-                            pgmPtr = getReg(ra);
-                        }
-                    }
-                    case GOTO_PUSH_GT_ZERO -> {
-                        if (getReg(rg) > 0) {
-                            stackPush(pgmPtr);
-                            pgmPtr = getReg(ra);
-                        }
-                    }
-                    case GOTO_PUSH_NOT_ZERO -> {
-                        if (getReg(rg) != 0) {
-                            stackPush(pgmPtr);
-                            pgmPtr = getReg(ra);
-                        }
-                    }
-
-                    case GOTO_PUSH_REL_UNCD -> {
-                        pgmPtr += 4;
-                        stackPush(pgmPtr);
-                            pgmPtr += next;
-                    }
-                    case GOTO_PUSH_REL_EQ_ZERO -> {
-                        pgmPtr += 4;
-                        if (getReg(rg) == 0) {
-                            stackPush(pgmPtr);
-                            pgmPtr += next;
-                        }
-                    }
-                    case GOTO_PUSH_REL_LEQ_ZERO -> {
-                        pgmPtr += 4;
-                        if (getReg(rg) <= 0) {
-                            stackPush(pgmPtr);
-                            pgmPtr += next;
-                        }
-                    }
-                    case GOTO_PUSH_REL_GT_ZERO -> {
-                        pgmPtr += 4;
-                        if (getReg(rg) > 0) {
-                            stackPush(pgmPtr);
-                            pgmPtr += next;
-                        }
-                    }
-                    case GOTO_PUSH_REL_NOT_ZERO -> {
-                        pgmPtr += 4;
-                        if (registers[rg] != 0) {
-                            stackPush(pgmPtr);
-                            pgmPtr += next;
-                        }
-                    }
-
-                    case GOTO_POP_UNCD -> {
+                boolean condVal = switch(ConditionalOperator.fromMachineCode(op)) {
+                    case UNCONDITIONAL -> true;
+                    case EQ_ZERO -> getReg(rg) == 0;
+                    case LEQ_ZERO -> getReg(rg) <= 0;
+                    case GT_ZERO -> getReg(rg) > 0;
+                    case NEQ_ZERO -> getReg(rg) != 0;
+                    case LT_ZERO -> getReg(rg) < 0;
+                    case GEQ_ZERO -> getReg(rg) >= 0;
+                    case UNKNOWN -> true;
+                };
+                if (rel)
+                    pgmPtr += 4;
+                if (condVal) {
+                    if (pop) {
                         pgmPtr = stackPop();
-                    }
-                    case GOTO_POP_EQ_ZERO -> {
-                        if (getReg(rg) == 0) {
-                            pgmPtr = stackPop();
-                        }
-                    }
-                    case GOTO_POP_LEQ_ZERO -> {
-                        if (getReg(rg) <= 0) {
-                            pgmPtr = stackPop();
-                        }
-                    }
-                    case GOTO_POP_GT_ZERO -> {
-                        if (getReg(rg) > 0) {
-                            pgmPtr = stackPop();
-                        }
-                    }
-                    case GOTO_POP_NOT_ZERO -> {
-                        if (registers[rg] != 0) {
-                            pgmPtr = stackPop();
-                        }
+                    } else {
+                        if (push)
+                            stackPush(pgmPtr);
+                        if (rel)
+                            pgmPtr += next;
+                        else
+                            pgmPtr = getReg(ra);
                     }
                 }
             }
             case SET -> {
                 boolean forced = (op & SET_FORCED) != 0;
-                int type = op & MASK_SET_OP;
                 int rd = (op & MASK_SET_RD) >> 8;
                 int rg = op & MASK_SET_RG;
-                switch (type) {
-                    case GOTO_EQ_ZERO -> {
+                switch (ConditionalOperator.fromMachineCode(op)) {
+                    case EQ_ZERO -> {
                         if (getReg(rg) == 0) {
                             setReg(rd, 1);
                         } else if (forced) {
                             setReg(rd, 0);
                         }
                     }
-                    case GOTO_LEQ_ZERO -> {
+                    case LEQ_ZERO -> {
                         if (getReg(rg) <= 0) {
                             setReg(rd, 1);
                         } else if (forced) {
                             setReg(rd, 0);
                         }
                     }
-                    case GOTO_GT_ZERO -> {
+                    case GT_ZERO -> {
                         if (getReg(rg) > 0) {
                             setReg(rd, 1);
                         } else if (forced) {
                             setReg(rd, 0);
                         }
                     }
-                    case GOTO_NOT_ZERO -> {
+                    case NEQ_ZERO -> {
                         if (getReg(rg) != 0) {
                             setReg(rd, 1);
                         } else if (forced) {
                             setReg(rd, 0);
                         }
+                    }
+                    case LT_ZERO -> {
+                        if (getReg(rg) < 0) {
+                            setReg(rd, 1);
+                        } else if (forced) {
+                            setReg(rd, 0);
+                        }
+                    }
+                    case GEQ_ZERO -> {
+                        if (getReg(rg) >= 0) {
+                            setReg(rd, 1);
+                        } else if (forced) {
+                            setReg(rd, 0);
+                        }
+                    }
+                    case UNCONDITIONAL, UNKNOWN -> {
                     }
                 }
             }

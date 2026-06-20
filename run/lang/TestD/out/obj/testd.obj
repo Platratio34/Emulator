@@ -1,45 +1,45 @@
 {
     "variables": {
         "TestD.testStr": {
-            "address": 2372,
-            "start": 2372,
-            "end": 2379,
+            "address": 2232,
+            "start": 2232,
+            "end": 2239,
             "type": "char*"
         },
         "TestD.v": {
-            "address": 2360,
-            "start": 2360,
-            "end": 2363,
+            "address": 2220,
+            "start": 2220,
+            "end": 2223,
             "type": "uint32"
         },
         "Console.consolePntr": {
-            "address": 2336,
-            "start": 2336,
-            "end": 2339,
+            "address": 2196,
+            "start": 2196,
+            "end": 2199,
             "type": "uint32"
         },
         "TestD.testStr2": {
-            "address": 2364,
-            "start": 2364,
-            "end": 2371,
+            "address": 2224,
+            "start": 2224,
+            "end": 2231,
             "type": "char*"
         },
         "TestD.path": {
-            "address": 2348,
-            "start": 2348,
-            "end": 2359,
+            "address": 2208,
+            "start": 2208,
+            "end": 2219,
             "type": "char*"
         },
         "TestD.tc": {
-            "address": 2380,
-            "start": 2380,
-            "end": 2383,
+            "address": 2240,
+            "start": 2240,
+            "end": 2243,
             "type": "uint32"
         },
         "Console.CONSOLE_SETUP_CMD": {
-            "address": 2324,
-            "start": 2324,
-            "end": 2335,
+            "address": 2184,
+            "start": 2184,
+            "end": 2195,
             "type": "uint32*"
         }
     },
@@ -47,20 +47,20 @@
         "TestD.testA_StructA&": {
             "args": ["str StructA&"],
             "rt": "StructA*",
-            "start": 2224,
-            "end": 2320
+            "start": 2084,
+            "end": 2180
         },
         "TestD.main": {
             "args": [],
             "rt": "void",
-            "start": 1216,
-            "end": 2128
+            "start": 1052,
+            "end": 1988
         },
         "TestD.wait_uint32": {
             "args": ["time uint32"],
             "rt": "void",
-            "start": 1148,
-            "end": 1216
+            "start": 984,
+            "end": 1052
         },
         "Console.intToHex_uint32_char*": {
             "args": [
@@ -68,8 +68,8 @@
                 "str char*"
             ],
             "rt": "void",
-            "start": 368,
-            "end": 648
+            "start": 356,
+            "end": 484
         },
         "FS.readFile_uint32_void*_uint32_uint32_uint32&_uint32&": {
             "args": [
@@ -81,8 +81,8 @@
                 "state uint32&"
             ],
             "rt": "void",
-            "start": 768,
-            "end": 964
+            "start": 604,
+            "end": 800
         },
         "Console.printStr_char*_uint32": {
             "args": [
@@ -91,7 +91,7 @@
             ],
             "rt": "void",
             "start": 192,
-            "end": 328
+            "end": 316
         },
         "Console.setupConsole": {
             "args": [],
@@ -102,20 +102,20 @@
         "Console.printChar_char": {
             "args": ["c char"],
             "rt": "void",
-            "start": 328,
-            "end": 368
+            "start": 316,
+            "end": 356
         },
         "TestD.onInterrupt": {
             "args": [],
             "rt": "void",
-            "start": 1084,
-            "end": 1148
+            "start": 920,
+            "end": 984
         },
         "TestD.funcb_uint32": {
             "args": ["a uint32"],
             "rt": "void",
-            "start": 2128,
-            "end": 2176
+            "start": 1988,
+            "end": 2036
         },
         "Console.peripheralCommand_uint32_uint32_uint32*": {
             "args": [
@@ -133,8 +133,8 @@
                 "b uint32*"
             ],
             "rt": "void",
-            "start": 2176,
-            "end": 2224
+            "start": 2036,
+            "end": 2084
         },
         "FS.openFile_char*_uint32&": {
             "args": [
@@ -142,8 +142,8 @@
                 "handle uint32&"
             ],
             "rt": "void",
-            "start": 648,
-            "end": 768
+            "start": 484,
+            "end": 604
         },
         "FS.peripheralCommand_uint32_uint32_uint32*": {
             "args": [
@@ -152,8 +152,8 @@
                 "cmd uint32*"
             ],
             "rt": "void",
-            "start": 964,
-            "end": 1084
+            "start": 800,
+            "end": 920
         }
     },
     "breakpoints": {},
@@ -214,8 +214,8 @@
             "value": "131073"
         },
         "TestD.str": {
-            "start": 2340,
-            "end": 2347,
+            "start": 2200,
+            "end": 2207,
             "type": "char*",
             "value": "// Test"
         },
@@ -226,8 +226,8 @@
             "value": "131074"
         },
         "exp_str_2": {
-            "start": 2404,
-            "end": 2411,
+            "start": 2264,
+            "end": 2271,
             "type": "char*",
             "value": "Opened\n\u0000"
         },
@@ -238,8 +238,8 @@
             "value": "131074"
         },
         "exp_str_0": {
-            "start": 2384,
-            "end": 2395,
+            "start": 2244,
+            "end": 2255,
             "type": "char*",
             "value": "test.txt\u0000"
         },
@@ -256,8 +256,8 @@
             "value": "131073"
         },
         "exp_str_1": {
-            "start": 2396,
-            "end": 2403,
+            "start": 2256,
+            "end": 2263,
             "type": "char*",
             "value": "ERROR\n\u0000"
         },
@@ -293,4 +293,5 @@
         }
     },
     "syscalls": {}
+}{}
 }

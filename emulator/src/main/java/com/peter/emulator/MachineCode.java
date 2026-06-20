@@ -1,5 +1,7 @@
 package com.peter.emulator;
 
+import java.util.HashMap;
+
 public class MachineCode {
 
     public static final int MASK_INSTRUCTION = 0xff00_0000;
@@ -39,48 +41,15 @@ public class MachineCode {
     public static final int MASK_MATH_RA = 0x0000_ff00;
     public static final int MASK_MATH_RB = 0x0000_00ff;
     public static final int MASK_MATH_INC = 0x0000_ffff;
-    public static final int MATH_ADD = 0x10 << 16;
-    public static final int MATH_SUB = 0x20 << 16;
-    public static final int MATH_INC = 0x30 << 16;
-    public static final int MATH_AND = 0x40 << 16;
-    public static final int MATH_OR = 0x50 << 16;
-    public static final int MATH_NAND = 0x60 << 16;
-    public static final int MATH_NOR = 0x70 << 16;
-    public static final int MATH_NOT = 0x80 << 16;
-    public static final int MATH_XOR = 0x90 << 16;
-    public static final int MATH_LSHIFT = 0xa0 << 16;
-    public static final int MATH_RSHIFT = 0xb0 << 16;
-    public static final int MATH_MUL = 0xc0 << 16;
     
     public static final int GOTO = 0x05 << 24;
     public static final int MASK_GOTO_OP = 0x00ff_0000;
     public static final int MASK_GOTO_RA = 0x0000_ff00;
     public static final int MASK_GOTO_RG = 0x0000_00ff;
-    public static final int GOTO_UNCD = 0x00 << 16;
-    public static final int GOTO_EQ_ZERO = 0x01 << 16;
-    public static final int GOTO_LEQ_ZERO = 0x02 << 16;
-    public static final int GOTO_GT_ZERO = 0x03 << 16;
-    public static final int GOTO_NOT_ZERO = 0x04 << 16;
-    public static final int GOTO_REL_UNCD = 0x08 << 16;
-    public static final int GOTO_REL_EQ_ZERO = 0x09 << 16;
-    public static final int GOTO_REL_LEQ_ZERO = 0x0a << 16;
-    public static final int GOTO_REL_GT_ZERO = 0x0b << 16;
-    public static final int GOTO_REL_NOT_ZERO = 0x0c << 16;
-    public static final int GOTO_PUSH_UNCD = 0x10 << 16;
-    public static final int GOTO_PUSH_EQ_ZERO = 0x11 << 16;
-    public static final int GOTO_PUSH_LEQ_ZERO = 0x12 << 16;
-    public static final int GOTO_PUSH_GT_ZERO = 0x13 << 16;
-    public static final int GOTO_PUSH_NOT_ZERO = 0x14 << 16;
-    public static final int GOTO_PUSH_REL_UNCD = 0x18 << 16;
-    public static final int GOTO_PUSH_REL_EQ_ZERO = 0x19 << 16;
-    public static final int GOTO_PUSH_REL_LEQ_ZERO = 0x1a << 16;
-    public static final int GOTO_PUSH_REL_GT_ZERO = 0x1b << 16;
-    public static final int GOTO_PUSH_REL_NOT_ZERO = 0x1c << 16;
-    public static final int GOTO_POP_UNCD = 0x20 << 16;
-    public static final int GOTO_POP_EQ_ZERO = 0x21 << 16;
-    public static final int GOTO_POP_LEQ_ZERO = 0x22 << 16;
-    public static final int GOTO_POP_GT_ZERO = 0x23 << 16;
-    public static final int GOTO_POP_NOT_ZERO = 0x24 << 16;
+    public static final int MASK_GOTO_COND = 0b0000_1111 << 16;
+    public static final int MASK_GOTO_REL = 0b0001_0000 << 16;
+    public static final int MASK_GOTO_PUSH = 0b0010_0000 << 16;
+    public static final int MASK_GOTO_POP = 0b0100_0000 << 16;
     
     public static final int SET = 0x06 << 24;
     public static final int MASK_SET_OP = 0x000f_0000;
@@ -241,74 +210,66 @@ public class MachineCode {
                 } else {
                     inc += 1;
                 }
-                return switch (op) {
-                    case MATH_ADD -> String.format("ADD %s = %s + %s", rd, ra, rb);
-                    case MATH_SUB -> String.format("SUB %s = %s - %s", rd, ra, rb);
-                    case MATH_INC -> String.format("INC %s = %s + %d", rd, rd, inc);
-                    case MATH_AND -> String.format("AND %s = %s & %s", rd, ra, rb);
-                    case MATH_OR -> String.format("OR %s = %s | %s", rd, ra, rb);
-                    case MATH_NAND -> String.format("NAND %s = %s !& %s", rd, ra, rb);
-                    case MATH_NOR -> String.format("NOR %s = %s !| %s", rd, ra, rb);
-                    case MATH_NOT -> String.format("NOT %s = ~%s", rd, ra);
-                    case MATH_XOR -> String.format("XOR %s = %s ^ %s", rd, ra, rb);
-                    case MATH_LSHIFT -> String.format("SHIFT %s = %s << %d", rd, ra, instruction & MASK_MATH_RB);
-                    case MATH_RSHIFT -> String.format("SHIFT %s = %s >> %d", rd, ra, instruction & MASK_MATH_RB);
-                    case MATH_MUL -> String.format("MUL %s = %s * %d", rd, ra, instruction & MASK_MATH_RB);
+                return switch (MathOperator.fromMachineCode(instruction)) {
+                    case ADD -> String.format("ADD %s = %s + %s", rd, ra, rb);
+                    case SUB -> String.format("SUB %s = %s - %s", rd, ra, rb);
+                    case INC -> String.format("INC %s = %s + %d", rd, rd, inc);
+                    case AND -> String.format("AND %s = %s & %s", rd, ra, rb);
+                    case OR -> String.format("OR %s = %s | %s", rd, ra, rb);
+                    case NAND -> String.format("NAND %s = %s !& %s", rd, ra, rb);
+                    case NOR -> String.format("NOR %s = %s !| %s", rd, ra, rb);
+                    case NOT -> String.format("NOT %s = ~%s", rd, ra);
+                    case XOR -> String.format("XOR %s = %s ^ %s", rd, ra, rb);
+                    case LSHIFT -> String.format("SHIFT %s = %s << %d", rd, ra, instruction & MASK_MATH_RB);
+                    case RSHIFT -> String.format("SHIFT %s = %s >> %d", rd, ra, instruction & MASK_MATH_RB);
+                    case MUL -> String.format("MUL %s = %s * %d", rd, ra, instruction & MASK_MATH_RB);
                     
-                    default -> String.format("MATH (%x)", instruction);
-                }
-                ;
+                    case UNKNOWN -> String.format("MATH (%x)", instruction);
+                };
             }
             case GOTO -> {
-                int op = instruction & MASK_GOTO_OP;
+                boolean rel = (instruction & MASK_GOTO_REL) != 0;
+                boolean push = (instruction & MASK_GOTO_PUSH) != 0;
+                boolean pop = (instruction & MASK_GOTO_POP) != 0;
                 int raV = (instruction & MASK_GOTO_RA) >> 8;
                 String ra = translateReg(raV);
                 String rg = translateReg(instruction & MASK_GOTO_RG);
-                return switch (op) {
-                    case GOTO_UNCD -> String.format("GOTO %s", ra);
-                    case GOTO_REL_UNCD -> String.format("GOTO pPtr + %s", next);
-                    case GOTO_PUSH_UNCD -> String.format("GOTO PUSH %s", ra);
-                    case GOTO_PUSH_REL_UNCD -> String.format("GOTO PUSH pPtr + %s", next);
-                    case GOTO_POP_UNCD -> String.format("GOTO POP");
+                String out = "GOTO";
+                if (push) {
+                    out += " PUSH";
+                } else if (pop) {
+                    out += " POP";
+                }
+                if (rel) {
+                    out += String.format(" pPtr + %s", next);
+                } else if(!pop) {
+                    out += " " + ra;
+                }
+                out += switch (ConditionalOperator.fromMachineCode(instruction)) {
+                    case UNCONDITIONAL -> "";
+                    case EQ_ZERO -> String.format(" %s == 0", rg);
+                    case LEQ_ZERO -> String.format(" %s <= 0", rg);
+                    case GT_ZERO -> String.format(" %s > 0", rg);
+                    case NEQ_ZERO -> String.format(" %s != 0", rg);
+                    case LT_ZERO -> String.format(" %s < 0", rg);
+                    case GEQ_ZERO -> String.format(" %s >= 0", rg);
 
-                    case GOTO_EQ_ZERO -> String.format("GOTO %s ? %s == 0", ra, rg);
-                    case GOTO_REL_EQ_ZERO -> String.format("GOTO pPtr + %s ? %s == 0", next, rg);
-                    case GOTO_PUSH_EQ_ZERO -> String.format("GOTO PUSH %s ? %s == 0", ra, rg);
-                    case GOTO_PUSH_REL_EQ_ZERO -> String.format("GOTO PUSH pPtr + %s ? %s == 0", next, rg);
-                    case GOTO_POP_EQ_ZERO -> String.format("GOTO POP ? %s == 0", rg);
-
-                    case GOTO_LEQ_ZERO -> String.format("GOTO %s ? %s <= 0", ra, rg);
-                    case GOTO_REL_LEQ_ZERO -> String.format("GOTO pPtr + %s ? %s <= 0", next, rg);
-                    case GOTO_PUSH_LEQ_ZERO -> String.format("GOTO PUSH %s ? %s <= 0", ra, rg);
-                    case GOTO_PUSH_REL_LEQ_ZERO -> String.format("GOTO PUSH pPtr + %s ? %s <= 0", next, rg);
-                    case GOTO_POP_LEQ_ZERO -> String.format("GOTO POP ? %s <= 0", rg);
-
-                    case GOTO_GT_ZERO -> String.format("GOTO %s ? %s > 0", ra, rg);
-                    case GOTO_REL_GT_ZERO -> String.format("GOTO pPtr + %s ? %s > 0", next, rg);
-                    case GOTO_PUSH_GT_ZERO -> String.format("GOTO PUSH %s ? %s > 0", ra, rg);
-                    case GOTO_PUSH_REL_GT_ZERO -> String.format("GOTO PUSH pPtr + %s ? %s > 0", next, rg);
-                    case GOTO_POP_GT_ZERO -> String.format("GOTO POP ? %s > 0", rg);
-
-                    case GOTO_NOT_ZERO -> String.format("GOTO %s ? %s != 0", ra, rg);
-                    case GOTO_REL_NOT_ZERO -> String.format("GOTO pPtr + %s ? %s != 0", next, rg);
-                    case GOTO_PUSH_NOT_ZERO -> String.format("GOTO PUSH %s ? %s != 0", ra, rg);
-                    case GOTO_PUSH_REL_NOT_ZERO -> String.format("GOTO PUSH pPtr + %s ? %s != 0", next, rg);
-                    case GOTO_POP_NOT_ZERO -> String.format("GOTO POP ? %s != 0", rg);
-
-                    default -> String.format("GOTO (%x)", instruction);
+                    default -> String.format(" COND(%02x)", (instruction & MASK_GOTO_COND) >> 16);
                 };
+                return out;
             }
             case SET -> {
-                int op = instruction & MASK_SET_OP;
                 int rdV = (instruction & MASK_SET_RD) >> 8;
                 String rd = translateReg(rdV);
                 String rg = translateReg(instruction & MASK_SET_RG);
                 String forced = ((instruction & SET_FORCED) != 0) ? "FORCED " : "";
-                return switch (op) {
-                    case GOTO_EQ_ZERO -> String.format("SET %s%s ? %s == 0", forced, rd, rg);
-                    case GOTO_LEQ_ZERO -> String.format("SET %s%s ? %s <= 0", forced, rd, rg);
-                    case GOTO_GT_ZERO -> String.format("SET %s%s ? %s > 0", forced, rd, rg);
-                    case GOTO_NOT_ZERO -> String.format("SET %s%s ? %s != 0", forced, rd, rg);
+                return switch (ConditionalOperator.fromMachineCode(instruction)) {
+                    case EQ_ZERO -> String.format("SET %s%s ? %s == 0", forced, rd, rg);
+                    case LEQ_ZERO -> String.format("SET %s%s ? %s <= 0", forced, rd, rg);
+                    case GT_ZERO -> String.format("SET %s%s ? %s > 0", forced, rd, rg);
+                    case NEQ_ZERO -> String.format("SET %s%s ? %s != 0", forced, rd, rg);
+                    case LT_ZERO -> String.format("SET %s%s ? %s < 0", forced, rd, rg);
+                    case GEQ_ZERO -> String.format("SET %s%s ? %s >= 0", forced, rd, rg);
 
                     default -> String.format("SET (%x)", instruction);
                 };
@@ -432,6 +393,75 @@ public class MachineCode {
 
     public static String toHex(int num) {
         String str = String.format("%08x", num);
-        return str.substring(0,4)+"_"+str.substring(4);
+        return str.substring(0, 4) + "_" + str.substring(4);
+    }
+    
+    public static enum ConditionalOperator {
+        UNCONDITIONAL(0x0),
+        EQ_ZERO(0x1 << 16),
+        LEQ_ZERO(0x2 << 16),
+        GT_ZERO(0x3 << 16),
+        NEQ_ZERO(0x4 << 16),
+        LT_ZERO(0x5 << 16),
+        GEQ_ZERO(0x6 << 16),
+        UNKNOWN(0xf << 16);
+        
+        public final int value;
+        private static HashMap<Integer, ConditionalOperator> byValue;
+
+        private ConditionalOperator(int value) {
+            this.value = value;
+            addValue();
+        }
+
+        private void addValue() {
+            if (byValue == null)
+                byValue = new HashMap<>();
+            byValue.put(value, this);
+        }
+
+        public static ConditionalOperator fromMachineCode(int instr) {
+            instr &= MASK_GOTO_COND;
+            if (byValue.containsKey(instr))
+                return byValue.get(instr);
+            return UNKNOWN;
+        }
+    }
+    
+    public static enum MathOperator {
+        ADD(0x10 << 16),
+        SUB(0x20 << 16),
+        INC(0x30 << 16),
+        AND(0x40 << 16),
+        OR(0x50 << 16),
+        NAND(0x60 << 16),
+        NOR(0x70 << 16),
+        NOT(0x80 << 16),
+        XOR(0x90 << 16),
+        LSHIFT(0xa0 << 16),
+        RSHIFT(0xb0 << 16),
+        MUL(0xc0 << 16),
+        UNKNOWN(0xf0 << 16);
+        
+        public final int value;
+        private static HashMap<Integer, MathOperator> byValue;
+
+        private MathOperator(int value) {
+            this.value = value;
+            addValue();
+        }
+
+        private void addValue() {
+            if (byValue == null)
+                byValue = new HashMap<>();
+            byValue.put(value, this);
+        }
+
+        public static MathOperator fromMachineCode(int instr) {
+            instr &= MASK_MATH_OP;
+            if (byValue.containsKey(instr))
+                return byValue.get(instr);
+            return UNKNOWN;
+        }
     }
 }

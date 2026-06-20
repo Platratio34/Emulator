@@ -10,6 +10,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.peter.emulator.MachineCode.*;
+
+import com.peter.emulator.MachineCode.ConditionalOperator;
+import com.peter.emulator.MachineCode.MathOperator;
 import com.peter.emulator.assembly.SymbolFile.FunctionSymbol;
 import com.peter.emulator.assembly.SymbolFile.ValueSymbol;
 import com.peter.emulator.assembly.SymbolFile.VariableSymbol;
@@ -92,7 +95,6 @@ public class Assembler {
                                 if (c == '\\') {
                                     if (j+1 < str.length()) {
                                         char n = str.charAt(j + 1);
-                                        System.out.println("Escape "+n);
                                         switch (n) {
                                             case 'n' -> {
                                                 str2 += "\n";
@@ -331,12 +333,10 @@ public class Assembler {
                     continue;
                 }
                 if (parts.length > nI) {
-                    boolean cond = parts[nI].equals("EQ");
-                    cond |= parts[nI].equals("LEQ");
-                    cond |= parts[nI].equals("GT");
-                    cond |= parts[nI].equals("NEQ");
-                    if (cond)
-                        nI += 2;
+                    switch(parts[nI]) {
+                        case "EQ", "LEQ", "GT", "NEQ", "LT", "GEQ" -> nI += 2;
+                        default -> {}
+                    }
                 }
                 if (parts.length < nI) {
                     System.err.println("invalid goto");
@@ -553,7 +553,7 @@ public class Assembler {
                         int rd = getReg(parts[1]);
                         int ra = getReg(parts[2]);
                         int rb = getReg(parts[3]);
-                        data[addr++] = (Entry.Math(MATH_ADD, rd, ra, rb));
+                        data[addr++] = (Entry.Math(MathOperator.ADD, rd, ra, rb));
                     }
                     case "SUB" -> {
                         if (parts.length < 4) {
@@ -564,7 +564,7 @@ public class Assembler {
                         int rd = getReg(parts[1]);
                         int ra = getReg(parts[2]);
                         int rb = getReg(parts[3]);
-                        data[addr++] = (Entry.Math(MATH_SUB, rd, ra, rb));
+                        data[addr++] = (Entry.Math(MathOperator.SUB, rd, ra, rb));
                     }
                     case "INC" -> {
                         if (parts.length < 2) {
@@ -588,7 +588,7 @@ public class Assembler {
                         int rd = getReg(parts[1]);
                         int ra = getReg(parts[2]);
                         int rb = getReg(parts[3]);
-                        data[addr++] = (Entry.Math(MATH_MUL, rd, ra, rb));
+                        data[addr++] = (Entry.Math(MathOperator.MUL, rd, ra, rb));
                     }
                     case "AND" -> {
                         if (parts.length < 4) {
@@ -599,7 +599,7 @@ public class Assembler {
                         int rd = getReg(parts[1]);
                         int ra = getReg(parts[2]);
                         int rb = getReg(parts[3]);
-                        data[addr++] = (Entry.Math(MATH_AND, rd, ra, rb));
+                        data[addr++] = (Entry.Math(MathOperator.AND, rd, ra, rb));
                     }
                     case "OR" -> {
                         if (parts.length < 4) {
@@ -610,7 +610,7 @@ public class Assembler {
                         int rd = getReg(parts[1]);
                         int ra = getReg(parts[2]);
                         int rb = getReg(parts[3]);
-                        data[addr++] = (Entry.Math(MATH_OR, rd, ra, rb));
+                        data[addr++] = (Entry.Math(MathOperator.OR, rd, ra, rb));
                     }
                     case "NOR" -> {
                         if (parts.length < 4) {
@@ -621,7 +621,7 @@ public class Assembler {
                         int rd = getReg(parts[1]);
                         int ra = getReg(parts[2]);
                         int rb = getReg(parts[3]);
-                        data[addr++] = (Entry.Math(MATH_NOR, rd, ra, rb));
+                        data[addr++] = (Entry.Math(MathOperator.NOR, rd, ra, rb));
                     }
                     case "LSH" -> {
                         if (parts.length < 4) {
@@ -632,7 +632,7 @@ public class Assembler {
                         int rd = getReg(parts[1]);
                         int ra = getReg(parts[2]);
                         int rb = getVal(parts[3]);
-                        data[addr++] = (Entry.Math(MATH_LSHIFT, rd, ra, rb));
+                        data[addr++] = (Entry.Math(MathOperator.LSHIFT, rd, ra, rb));
                     }
                     case "RSH" -> {
                         if (parts.length < 4) {
@@ -643,7 +643,7 @@ public class Assembler {
                         int rd = getReg(parts[1]);
                         int ra = getReg(parts[2]);
                         int rb = getVal(parts[3]);
-                        data[addr++] = (Entry.Math(MATH_RSHIFT, rd, ra, rb));
+                        data[addr++] = (Entry.Math(MathOperator.RSHIFT, rd, ra, rb));
                     }
                     case "GOTO" -> {
                         if (parts.length < 2) {
@@ -657,23 +657,26 @@ public class Assembler {
                         if (push || pop) {
                             nI++;
                         }
-                        boolean eq = false;
-                        boolean leq = false;
-                        boolean gt = false;
-                        boolean neq = false;
+                        ConditionalOperator cond = ConditionalOperator.UNCONDITIONAL;
                         if (parts.length < nI) {
                             errors.add(new AssemblerError("Invalid goto instruction", lineN,
                                     line.length(), line, source));
                             continue;
                         }
                         if (parts.length > nI) {
-                            eq = parts[nI].equals("EQ");
-                            leq = parts[nI].equals("LEQ");
-                            gt = parts[nI].equals("GT");
-                            neq = parts[nI].equals("NEQ");
+                            cond = switch(parts[nI]) {
+                                case "EQ" -> ConditionalOperator.EQ_ZERO;
+                                case "LEQ" -> ConditionalOperator.LEQ_ZERO;
+                                case "GT" -> ConditionalOperator.GT_ZERO;
+                                case "NEQ" -> ConditionalOperator.NEQ_ZERO;
+                                case "LT" -> ConditionalOperator.LT_ZERO;
+                                case "GEQ" -> ConditionalOperator.GEQ_ZERO;
+
+                                default -> ConditionalOperator.UNCONDITIONAL;
+                            };
                         }
                         int ro = 0;
-                        if (eq || leq || gt || neq) {
+                        if (cond != ConditionalOperator.UNCONDITIONAL) {
                             nI++;
                             if (parts.length < nI) {
                                 errors.add(new AssemblerError("Invalid goto instruction", lineN,
@@ -700,45 +703,21 @@ public class Assembler {
                         }
                         GotoEntry entry;
                         Entry next = relative ? new Entry(0) : null;
-                        if (eq) {
-                            if (push) {
-                                entry = GotoEntry.ZeroPush(relative, ra, ro, target, next);
-                            } else if (pop) {
-                                entry = GotoEntry.ZeroPop(ro);
-                            } else {
-                                entry = GotoEntry.Zero(relative, ra, ro, target, next);
-                            }
-                        } else if (leq) {
-                            if (push) {
-                                entry = GotoEntry.LessEqualPush(relative, ra, ro, target, next);
-                            } else if (pop) {
-                                entry = GotoEntry.LessEqualPop(ro);
-                            } else {
-                                entry = GotoEntry.LessEqual(relative, ra, ro, target, next);
-                            }
-                        } else if (gt) {
-                            if (push) {
-                                entry = GotoEntry.GreaterPush(relative, ra, ro, target, next);
-                            } else if (pop) {
-                                entry = GotoEntry.GreaterPop(ro);
-                            } else {
-                                entry = GotoEntry.Greater(relative, ra, ro, target, next);
-                            }
-                        } else if (neq) {
-                            if (push) {
-                                entry = GotoEntry.NotZeroPush(relative, ra, ro, target, next);
-                            } else if (pop) {
-                                entry = GotoEntry.NotZeroPop(ro);
-                            } else {
-                                entry = GotoEntry.NotZero(relative, ra, ro, target, next);
-                            }
-                        } else {
+                        if (cond == ConditionalOperator.UNCONDITIONAL) {
                             if (push) {
                                 entry = GotoEntry.UnconditionalPush(relative, ra, target, next);
                             } else if (pop) {
                                 entry = GotoEntry.UnconditionalPop();
                             } else {
                                 entry = GotoEntry.Unconditional(relative, ra, target, next);
+                            }
+                        } else {
+                            if (push) {
+                                entry = GotoEntry.ConditionalPush(relative, cond, ra, ro, target, next);
+                            } else if (pop) {
+                                entry = GotoEntry.ConditionalPop(cond, ro);
+                            } else {
+                                entry = GotoEntry.Conditional(relative, cond, ra, ro, target, next);
                             }
                         }
                         data[addr++] = (entry);
@@ -757,16 +736,20 @@ public class Assembler {
                         String op = parts[forced ? 2 : 1];
                         int rg = getReg(parts[forced ? 3 : 2]);
                         int rd = getReg(parts[forced ? 4 : 3]);
-                        switch (op) {
-                            case "EQ" -> data[addr++] = Entry.Set(forced, GOTO_EQ_ZERO, rg, rd);
-                            case "LEQ" -> data[addr++] = Entry.Set(forced, GOTO_LEQ_ZERO, rg, rd);
-                            case "GT" -> data[addr++] = Entry.Set(forced, GOTO_GT_ZERO, rg, rd);
-                            case "NEQ" -> data[addr++] = Entry.Set(forced, GOTO_NOT_ZERO, rg, rd);
-                            default -> {
-                                errors.add(new AssemblerError("Invalid set instruction operator: SET (FORCED) <EQ|LEQ|GEQ|NEQ> [rg] [rd]", lineN, line.length(), line, source));
-                                continue;
-                            }
+                        ConditionalOperator cond = switch (op) {
+                            case "EQ" -> ConditionalOperator.EQ_ZERO;
+                            case "LEQ" -> ConditionalOperator.LEQ_ZERO;
+                            case "GT" -> ConditionalOperator.GT_ZERO;
+                            case "NEQ" -> ConditionalOperator.NEQ_ZERO;
+                            case "LT" -> ConditionalOperator.LT_ZERO;
+                            case "GEQ" -> ConditionalOperator.GEQ_ZERO;
+                            default -> ConditionalOperator.UNKNOWN;
                         };
+                        if (cond == ConditionalOperator.UNKNOWN) {
+                            errors.add(new AssemblerError("Invalid set instruction operator: SET (FORCED) <EQ|LEQ|GEQ|NEQ> [rg] [rd]", lineN, line.length(), line, source));
+                            continue;
+                        }
+                        data[addr++] = Entry.Set(forced, cond, rg, rd);
                     }
                     case "STACK" -> {
                         if(parts.length == 2) {
@@ -1082,8 +1065,8 @@ public class Assembler {
         //     return new Entry(STORE | (rs << 16) | STORE_SIZE_BYTE | STORE_SOURCE_REG_REG | rd);
         // }
 
-        public static Entry Math(int op, int rd, int ra, int rb) {
-            return new Entry(MATH | op | ((rd & 0xf) << 16) | (ra << 8) | rb);
+        public static Entry Math(MathOperator op, int rd, int ra, int rb) {
+            return new Entry(MATH | op.value | ((rd & 0xf) << 16) | (ra << 8) | rb);
         }
 
         public static Entry MathInc(int rd, int inc) {
@@ -1095,7 +1078,7 @@ public class Assembler {
                 inc -= 1;
                 inc &= 0x7fff;
             }
-            return new Entry(MATH | MATH_INC | ((rd & 0xf) << 16) | inc);
+            return new Entry(MATH | MathOperator.INC.value | ((rd & 0xf) << 16) | inc);
         }
         
         public static Entry Stack(boolean push, int rg) {
@@ -1126,8 +1109,8 @@ public class Assembler {
             return new Entry(SYSCALL | SYSCALL_INTERRUPT | op | (rg & MASK_SYSCALL_RG));
         }
 
-        public static Entry Set(boolean forced, int op, int rg, int rd) {
-            return new Entry(SET | (forced ? SET_FORCED : 0x00) | op | (rg << 8) | rd);
+        public static Entry Set(boolean forced, ConditionalOperator op, int rg, int rd) {
+            return new Entry(SET | (forced ? SET_FORCED : 0x00) | op.value | (rg << 8) | rd);
         }
     }
 
@@ -1159,68 +1142,78 @@ public class Assembler {
         }
 
         public static GotoEntry Unconditional(boolean relative, int ra, String target, Entry next) {
-            return new GotoEntry(GOTO | (relative ? GOTO_REL_UNCD : GOTO_UNCD) | (ra << 8), target, next);
+            return new GotoEntry(GOTO | (relative ? MASK_GOTO_REL : 0) | (ra << 8), target, next);
         }
 
         public static GotoEntry UnconditionalPush(boolean relative, int ra, String target, Entry next) {
-            return new GotoEntry(GOTO | (relative ? GOTO_PUSH_REL_UNCD : GOTO_PUSH_UNCD) | (ra << 8), target, next);
+            return new GotoEntry(GOTO | MASK_GOTO_PUSH | (relative ? MASK_GOTO_REL : 0) | (ra<<8), target, next);
         }
 
         public static GotoEntry UnconditionalPop() {
-            return new GotoEntry(GOTO | GOTO_POP_UNCD, "", null);
+            return new GotoEntry(GOTO | MASK_GOTO_POP, "", null);
         }
 
-        public static GotoEntry Zero(boolean relative, int ra, int ro, String target, Entry next) {
-            return new GotoEntry(GOTO | (relative ? GOTO_REL_EQ_ZERO : GOTO_EQ_ZERO) | (ra << 8) | ro, target, next);
+        public static GotoEntry Conditional(boolean relative, ConditionalOperator op, int ra, int ro, String target, Entry next) {
+            return new GotoEntry(GOTO | (relative ? MASK_GOTO_REL : 0) | op.value | (ra << 8) | ro, target, next);
+        }
+        public static GotoEntry ConditionalPush(boolean relative, ConditionalOperator op, int ra, int ro, String target, Entry next) {
+            return new GotoEntry(GOTO | MASK_GOTO_PUSH | (relative ? MASK_GOTO_REL : 0) | op.value | (ra << 8) | ro, target, next);
+        }
+        public static GotoEntry ConditionalPop(ConditionalOperator op, int ro) {
+            return new GotoEntry(GOTO | MASK_GOTO_POP | op.value | ro, "", null);
         }
 
-        public static GotoEntry ZeroPush(boolean relative, int ra, int ro, String target, Entry next) {
-            return new GotoEntry(GOTO | (relative ? GOTO_PUSH_REL_EQ_ZERO : GOTO_PUSH_EQ_ZERO) | (ra << 8) | ro,
-                    target, next);
-        }
+        // public static GotoEntry Zero(boolean relative, int ra, int ro, String target, Entry next) {
+        //     return new GotoEntry(GOTO | (relative ? GOTO_REL_EQ_ZERO : GOTO_EQ_ZERO) | (ra << 8) | ro, target, next);
+        // }
 
-        public static GotoEntry ZeroPop(int ro) {
-            return new GotoEntry(GOTO | GOTO_POP_EQ_ZERO | ro, "", null);
-        }
+        // public static GotoEntry ZeroPush(boolean relative, int ra, int ro, String target, Entry next) {
+        //     return new GotoEntry(GOTO | (relative ? GOTO_PUSH_REL_EQ_ZERO : GOTO_PUSH_EQ_ZERO) | (ra << 8) | ro,
+        //             target, next);
+        // }
 
-        public static GotoEntry LessEqual(boolean relative, int ra, int ro, String target, Entry next) {
-            return new GotoEntry(GOTO | (relative ? GOTO_REL_LEQ_ZERO : GOTO_LEQ_ZERO) | (ra << 8) | ro, target, next);
-        }
+        // public static GotoEntry ZeroPop(int ro) {
+        //     return new GotoEntry(GOTO | GOTO_POP_EQ_ZERO | ro, "", null);
+        // }
 
-        public static GotoEntry LessEqualPush(boolean relative, int ra, int ro, String target, Entry next) {
-            return new GotoEntry(GOTO | (relative ? GOTO_PUSH_REL_LEQ_ZERO : GOTO_PUSH_LEQ_ZERO) | (ra << 8) | ro,
-                    target, next);
-        }
+        // public static GotoEntry LessEqual(boolean relative, int ra, int ro, String target, Entry next) {
+        //     return new GotoEntry(GOTO | (relative ? GOTO_REL_LEQ_ZERO : GOTO_LEQ_ZERO) | (ra << 8) | ro, target, next);
+        // }
 
-        public static GotoEntry LessEqualPop(int ro) {
-            return new GotoEntry(GOTO | GOTO_POP_LEQ_ZERO | ro, "", null);
-        }
+        // public static GotoEntry LessEqualPush(boolean relative, int ra, int ro, String target, Entry next) {
+        //     return new GotoEntry(GOTO | (relative ? GOTO_PUSH_REL_LEQ_ZERO : GOTO_PUSH_LEQ_ZERO) | (ra << 8) | ro,
+        //             target, next);
+        // }
 
-        public static GotoEntry Greater(boolean relative, int ra, int ro, String target, Entry next) {
-            return new GotoEntry(GOTO | (relative ? GOTO_REL_GT_ZERO : GOTO_GT_ZERO) | (ra << 8) | ro, target, next);
-        }
+        // public static GotoEntry LessEqualPop(int ro) {
+        //     return new GotoEntry(GOTO | GOTO_POP_LEQ_ZERO | ro, "", null);
+        // }
 
-        public static GotoEntry GreaterPush(boolean relative, int ra, int ro, String target, Entry next) {
-            return new GotoEntry(GOTO | (relative ? GOTO_PUSH_REL_GT_ZERO : GOTO_PUSH_GT_ZERO) | (ra << 8) | ro,
-                    target, next);
-        }
+        // public static GotoEntry Greater(boolean relative, int ra, int ro, String target, Entry next) {
+        //     return new GotoEntry(GOTO | (relative ? GOTO_REL_GT_ZERO : GOTO_GT_ZERO) | (ra << 8) | ro, target, next);
+        // }
 
-        public static GotoEntry GreaterPop(int ro) {
-            return new GotoEntry(GOTO | GOTO_POP_GT_ZERO | ro, "", null);
-        }
+        // public static GotoEntry GreaterPush(boolean relative, int ra, int ro, String target, Entry next) {
+        //     return new GotoEntry(GOTO | (relative ? GOTO_PUSH_REL_GT_ZERO : GOTO_PUSH_GT_ZERO) | (ra << 8) | ro,
+        //             target, next);
+        // }
 
-        public static GotoEntry NotZero(boolean relative, int ra, int ro, String target, Entry next) {
-            return new GotoEntry(GOTO | (relative ? GOTO_REL_NOT_ZERO : GOTO_NOT_ZERO) | (ra << 8) | ro, target, next);
-        }
+        // public static GotoEntry GreaterPop(int ro) {
+        //     return new GotoEntry(GOTO | GOTO_POP_GT_ZERO | ro, "", null);
+        // }
 
-        public static GotoEntry NotZeroPush(boolean relative, int ra, int ro, String target, Entry next) {
-            return new GotoEntry(GOTO | (relative ? GOTO_PUSH_REL_NOT_ZERO : GOTO_PUSH_NOT_ZERO) | (ra << 8) | ro,
-                    target, next);
-        }
+        // public static GotoEntry NotZero(boolean relative, int ra, int ro, String target, Entry next) {
+        //     return new GotoEntry(GOTO | (relative ? GOTO_REL_NOT_ZERO : GOTO_NOT_ZERO) | (ra << 8) | ro, target, next);
+        // }
 
-        public static GotoEntry NotZeroPop(int ro) {
-            return new GotoEntry(GOTO | GOTO_POP_NOT_ZERO | ro, "", null);
-        }
+        // public static GotoEntry NotZeroPush(boolean relative, int ra, int ro, String target, Entry next) {
+        //     return new GotoEntry(GOTO | (relative ? GOTO_PUSH_REL_NOT_ZERO : GOTO_PUSH_NOT_ZERO) | (ra << 8) | ro,
+        //             target, next);
+        // }
+
+        // public static GotoEntry NotZeroPop(int ro) {
+        //     return new GotoEntry(GOTO | GOTO_POP_NOT_ZERO | ro, "", null);
+        // }
 
         public void setOffset(int offset) {
             next.instruction = offset;

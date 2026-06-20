@@ -51,28 +51,36 @@ namespace Console {
             asm(":printStr_l1");
                 asm("LOAD MEM BYTE r3 r2\nGOTO EQ r3 :printStr_l1_exit");
                 asm("STORE BYTE r3 r1\nINC r2 1\nGOTO :printStr_l1");
-            asm(":printStr_l1_exit");
-            asm("GOTO :printStr_exit");
+            asm(":printStr_l1_exit\nGOTO :printStr_exit");
         asm(":printStr_len");
-            asm(":printStr_l2");
-                asm("COPY BYTE MEM r2 r1 INC_RG");
-                asm("INC r14 -1\nGOTO GT r14 :printStr_l2");
+            asm("COPY BYTE MEM r2 r1 INC_RG");
+            asm("INC r14 -1\nGOTO GT r14 :printStr_len");
         asm(":printStr_exit");
-        asm("LOAD r3 &Console.consolePntr\nSTORE r1 r3");
     }
 
     public static void intToHex(uint32 value, char* str) {
-        uint32 i = 7;
-        // asm("#breakpoint");
-        while(i >= 0) {
-            uint32 part = value & 0xf;
-            if(part < 0xa) {
-                str[i] = part + 0x30;
-            } else {
-                str[i] = part + 0x57;
-            }
-            value = value >> 4;
-            i--;
-        }
+        asm("LOAD r14 7");
+        asm("COPY r15 r1\nINC r1 -16\nLOAD MEM r1 r1"); // value
+        asm("COPY r15 r2\nINC r2 -12\nLOAD MEM r2 r2\nINC r2 8"); // str
+        asm("LOAD r3 0xf\nLOAD r6 0xa");
+        asm(":intToHex_l1");
+            asm("INC r2 -1\nAND r4 r1 r3\nRSH r1 r1 4");
+            asm("SUB r5 r4 r6\nGOTO GEQ r5 :intToHex_gt");
+                asm("INC r4 0x30\nSTORE BYTE r4 r2\nGOTO :intToHex_l1_end");
+            asm(":intToHex_gt");
+                asm("INC r4 0x57\nSTORE BYTE r4 r2");
+            asm(":intToHex_l1_end\nINC r14 -1\nGOTO GEQ r14 :intToHex_l1");
+        // uint32 i = 7;
+        // // asm("#breakpoint");
+        // while(i >= 0) {
+        //     uint32 part = value & 0xf;
+        //     if(part < 0xa) {
+        //         str[i] = part + 0x30;
+        //     } else {
+        //         str[i] = part + 0x57;
+        //     }
+        //     value = value >> 4;
+        //     i--;
+        // }
     }
 }
