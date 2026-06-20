@@ -39,9 +39,10 @@ namespace FS {
         handle = *RSP_DATA_2;
     }
 
-    public static void readFile(uint32 handle, void* buffer, uint32 size, uint32 offset, uint32& read) {
+    public static void readFile(uint32 handle, void* buffer, uint32 size, uint32 offset, uint32& read, uint32& state) {
         uint32[5] msg = {0x11, handle, buffer, size, offset};
         peripheralCommand(2, 5, &msg);
+        state = *RSP_DATA;
         read = *RSP_DATA_3;
     }
 }

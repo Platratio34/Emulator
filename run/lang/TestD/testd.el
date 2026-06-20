@@ -36,7 +36,7 @@ namespace TestD {
         Console.printChar('a');
         Console.printChar('\n');
 
-        asm("#breakpoint");
+        // asm("#breakpoint");
         uint32 fh;
         FS.openFile("test.txt\0", &fh);
         if(fh == 0) {
@@ -45,7 +45,20 @@ namespace TestD {
             Console.printStr("Opened\n\0", 0);
             char[32] buffer;
             uint32 read;
-            FS.readFile(fh, &buffer, 32, 0, &read);
+            uint32 state;
+            FS.readFile(fh, &buffer, 32, 0, &read, &state);
+            asm("#breakpoint");
+            char[10] str2;
+            str2[8] = '\n';
+            str2[9] = '\0';
+            Console.intToHex(state, &str2);
+            Console.printStr(&str2, 0);
+            // Console.printChar('\n');
+            asm("#breakpoint");
+            Console.intToHex(read, &str2);
+            Console.printStr(&str2, 0);
+            
+            Console.printChar('\n');
             Console.printStr(&buffer, read);
         }
         

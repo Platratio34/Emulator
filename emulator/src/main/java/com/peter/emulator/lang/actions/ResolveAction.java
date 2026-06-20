@@ -99,7 +99,7 @@ public class ResolveAction extends ComplexAction {
                     actions.add(indexExp);
                     if (!rIndex.reserve())
                         System.err.println("??");
-                    int wds = v.sizeof();
+                    int wds = t.resolve(it.span()).sizeof();
                     if (wds > 1) {
                         Register rSize = scope.firstFree();
                         addDirect("LOAD %s %d\nMUL %s %s %s", rSize, wds, rIndex, rIndex, rSize);

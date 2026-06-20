@@ -151,10 +151,10 @@ public class ExpressionAction extends ComplexAction {
                             }
                             
                             case GEQ -> {
-                                if (nt.numValue != 0) {
+                                // if (nt.numValue != 0) {
                                     actions.add(new DirectAction("LOAD %s %d", tR, nt.numValue));
                                     actions.add(new DirectAction("SUB %s %s %s", targetReg, tR, targetReg));
-                                }
+                                // }
                                 actions.add(new DirectAction("SET FORCE LEQ %s %s", targetReg, targetReg));
                             }
                             case ANGLE_LEFT -> {

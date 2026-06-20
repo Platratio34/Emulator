@@ -236,6 +236,8 @@ public class FunctionAction extends ComplexAction {
             } else {
                 actions.add(new DirectAction("COPY r1 %s", MachineCode.translateReg(targetReg)));
             }
+        } else if(stackSize > 0) {
+            actions.add(new DirectAction("STACK DEC %d", stackSize));
         }
         if (!onStack) {
             for (int i = r.reg; i > 0; i--) {

@@ -114,7 +114,8 @@ public class StoragePeripheral implements DMAPeripheral {
                 int handle = msg[1];
                 int buffStart = cpu.translateAddress(msg[2]);
                 int buffSize = msg[3];
-                int offset = msg[3];
+                int offset = msg[4];
+                System.out.println(String.format("- %x %x %x %x", handle, buffStart, buffSize, offset));
                 if (!openFiles.containsKey(handle)) {
                     ram.copyWords(new int[] { 0x02, handle, 0x0 }, PeripheralManager.PERIPHERAL_RSP_DATA);
                     ram.writeWord(PeripheralManager.PERIPHERAL_RSP_STATUS, 0x0100_0000 | deviceId);
@@ -125,6 +126,7 @@ public class StoragePeripheral implements DMAPeripheral {
                 byte[] bytes;
                 try {
                     bytes = Files.readAllBytes(f.toPath());
+                    System.out.println("- "+bytes.length);
                 } catch (IOException e) {
                     ram.copyWords(new int[] { 0x0f, handle, 0x0 }, PeripheralManager.PERIPHERAL_RSP_DATA);
                     ram.writeWord(PeripheralManager.PERIPHERAL_RSP_STATUS, 0x0100_0000 | deviceId);
@@ -140,6 +142,7 @@ public class StoragePeripheral implements DMAPeripheral {
                     ram.writeByte(buffStart++, bytes[j]);
                 }
                 
+                System.out.println("- "+written);
                 ram.copyWords(new int[] { 0x01, handle, written }, PeripheralManager.PERIPHERAL_RSP_DATA);
                 ram.writeWord(PeripheralManager.PERIPHERAL_RSP_STATUS, 0x0100_0000 | deviceId);
             }

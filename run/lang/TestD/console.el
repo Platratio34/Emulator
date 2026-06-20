@@ -60,4 +60,19 @@ namespace Console {
         asm(":printStr_exit");
         asm("LOAD r3 &Console.consolePntr\nSTORE r1 r3");
     }
+
+    public static void intToHex(uint32 value, char* str) {
+        uint32 i = 7;
+        // asm("#breakpoint");
+        while(i >= 0) {
+            uint32 part = value & 0xf;
+            if(part < 0xa) {
+                str[i] = part + 0x30;
+            } else {
+                str[i] = part + 0x57;
+            }
+            value = value >> 4;
+            i--;
+        }
+    }
 }
