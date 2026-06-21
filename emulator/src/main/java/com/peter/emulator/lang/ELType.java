@@ -42,6 +42,10 @@ public class ELType {
         }
         location = new Location("", 0, 0);
         endLocation = location;
+        if (ELPrimitives.PRIMITIVE_TYPES.containsKey(this)) {
+            clazz = ELPrimitives.PRIMITIVE_TYPES.get(this);
+            return;
+        }
     }
 
     public ELType(String base, ELClass clazz, Location location) {
@@ -55,16 +59,16 @@ public class ELType {
         endLocation = location;
     }
 
-    public ELType(String base, boolean pointer, boolean array) {
-        this(base);
-        this.pointer = pointer;
-        this.array = array;
-    }
+    // public ELType(String base, boolean pointer, boolean array) {
+    //     this(base);
+    //     this.pointer = pointer;
+    //     this.array = array;
+    // }
 
-    public ELType(String base, ArrayList<ELType> genericTypes) {
-        this(base);
-        this.genericTypes = genericTypes;
-    }
+    // public ELType(String base, ArrayList<ELType> genericTypes) {
+    //     this(base);
+    //     this.genericTypes = genericTypes;
+    // }
 
     public ELType copy() {
         ELType t2 = new ELType();
@@ -90,16 +94,25 @@ public class ELType {
 
     @Override
     public String toString() {
-        String out = "ELType{";
+        String out = "ELType{"+typeString();
+        if (constant)
+            out += ", const";
+        if (pointer)
+            out += ", pointer";
+        if (array) {
+            out += ", array["+arraySize+"]";
+        }
+        if (address)
+            out += ", address";
         if (subType == null) {
-            out += "baseClass=\"" + baseClass + "\"";
+            out += ", baseClass=\"" + baseClass + "\"";
             if (clazz != null) {
                 out += ", clazz=" + clazz.toString();
             } else {
                 out += ", clazz=null";
             }
         } else {
-            out += "subType=" + subType.toString();
+            out += ", subType=" + subType.toString();
         }
         if (!genericTypes.isEmpty()) {
             out += ", generics={";
@@ -112,15 +125,6 @@ public class ELType {
             }
             out += "}";
         }
-        if (constant)
-            out += ", const";
-        if (pointer)
-            out += ", pointer";
-        if (array) {
-            out += ", array["+arraySize+"]";
-        }
-        if (address)
-            out += ", address";
         return out + "}";
     }
 
@@ -461,6 +465,10 @@ public class ELType {
             built = true;
             type.constant = constant;
             type.outVar = outVar;
+            ELType base = type.baseRef();
+            if (ELPrimitives.PRIMITIVE_TYPES != null && ELPrimitives.PRIMITIVE_TYPES.containsKey(base)) {
+                base.clazz = ELPrimitives.PRIMITIVE_TYPES.get(base);
+            }
             return type;
         }
     }
@@ -480,10 +488,11 @@ public class ELType {
         t.genericLocation = location;
         t.endLocation = location;
         t.clazz = clazz;
+        t.outVar = t.outVar;
         return t;
     }
 
-    private ELType baseRef() {
+    public ELType baseRef() {
         return (subType != null) ? subType.baseRef() : this;
     }
     public ELType base() {
@@ -622,14 +631,21 @@ public class ELType {
     }
     
     public int sizeof() {
+        System.out.println(toString());
         if(pointer || address)
             return 4;
         if (array) {
             return arraySize * subType.sizeof();
         }
-        if(clazz == null)
-            return 4;
-        return clazz.getSize();
+        if (subType != null) {
+            System.out.println("sub");
+            return subType.sizeof();
+        }
+        if (clazz != null)
+            return clazz.getSize();
+        // System.out.println("no class");
+        throw new RuntimeException("No class for type "+typeString());
+        // return 4;
     }
 
     public int stepSize() {

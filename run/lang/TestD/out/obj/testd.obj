@@ -1,66 +1,54 @@
 {
     "variables": {
         "TestD.testStr": {
-            "address": 2232,
-            "start": 2232,
-            "end": 2239,
+            "address": 2416,
+            "start": 2416,
+            "end": 2423,
             "type": "char*"
         },
         "TestD.v": {
-            "address": 2220,
-            "start": 2220,
-            "end": 2223,
-            "type": "uint32"
-        },
-        "Console.consolePntr": {
-            "address": 2196,
-            "start": 2196,
-            "end": 2199,
+            "address": 2404,
+            "start": 2404,
+            "end": 2407,
             "type": "uint32"
         },
         "TestD.testStr2": {
-            "address": 2224,
-            "start": 2224,
-            "end": 2231,
+            "address": 2408,
+            "start": 2408,
+            "end": 2415,
             "type": "char*"
         },
         "TestD.path": {
-            "address": 2208,
-            "start": 2208,
-            "end": 2219,
+            "address": 2392,
+            "start": 2392,
+            "end": 2403,
             "type": "char*"
         },
         "TestD.tc": {
-            "address": 2240,
-            "start": 2240,
-            "end": 2243,
+            "address": 2424,
+            "start": 2424,
+            "end": 2427,
             "type": "uint32"
-        },
-        "Console.CONSOLE_SETUP_CMD": {
-            "address": 2184,
-            "start": 2184,
-            "end": 2195,
-            "type": "uint32*"
         }
     },
     "functions": {
         "TestD.testA_StructA&": {
             "args": ["str StructA&"],
-            "rt": "StructA*",
-            "start": 2084,
-            "end": 2180
+            "rt": "void",
+            "start": 2316,
+            "end": 2380
         },
         "TestD.main": {
             "args": [],
             "rt": "void",
-            "start": 1052,
-            "end": 1988
+            "start": 1184,
+            "end": 2220
         },
         "TestD.wait_uint32": {
             "args": ["time uint32"],
             "rt": "void",
-            "start": 984,
-            "end": 1052
+            "start": 1116,
+            "end": 1184
         },
         "Console.intToHex_uint32_char*": {
             "args": [
@@ -68,21 +56,8 @@
                 "str char*"
             ],
             "rt": "void",
-            "start": 356,
-            "end": 484
-        },
-        "FS.readFile_uint32_void*_uint32_uint32_uint32&_uint32&": {
-            "args": [
-                "handle uint32",
-                "buffer void*",
-                "size uint32",
-                "offset uint32",
-                "read uint32&",
-                "state uint32&"
-            ],
-            "rt": "void",
-            "start": 604,
-            "end": 800
+            "start": 488,
+            "end": 616
         },
         "Console.printStr_char*_uint32": {
             "args": [
@@ -90,42 +65,57 @@
                 "len uint32"
             ],
             "rt": "void",
-            "start": 192,
-            "end": 316
+            "start": 332,
+            "end": 448
         },
-        "Console.setupConsole": {
-            "args": [],
+        "Console.read_char*_uint32": {
+            "args": [
+                "buffer char*",
+                "bufferSize uint32"
+            ],
             "rt": "void",
             "start": 8,
-            "end": 72
+            "end": 332
+        },
+        "FS.readFile_uint32_void*_uint32_uint32_out": {
+            "args": [
+                "uint32&_out uint32& handle uint32",
+                "buffer void*",
+                "size uint32",
+                "offset uint32",
+                "read out uint32&",
+                "state out uint32&"
+            ],
+            "rt": "void",
+            "start": 736,
+            "end": 932
         },
         "Console.printChar_char": {
             "args": ["c char"],
             "rt": "void",
-            "start": 316,
-            "end": 356
+            "start": 448,
+            "end": 488
         },
         "TestD.onInterrupt": {
             "args": [],
             "rt": "void",
-            "start": 920,
-            "end": 984
+            "start": 1052,
+            "end": 1116
         },
         "TestD.funcb_uint32": {
             "args": ["a uint32"],
             "rt": "void",
-            "start": 1988,
-            "end": 2036
+            "start": 2220,
+            "end": 2268
         },
-        "Console.peripheralCommand_uint32_uint32_uint32*": {
+        "FS.openFile_char*_out": {
             "args": [
-                "deviceId uint32",
-                "cmdSize uint32",
-                "cmd uint32*"
+                "uint32& path char*",
+                "handle out uint32&"
             ],
             "rt": "void",
-            "start": 72,
-            "end": 192
+            "start": 616,
+            "end": 736
         },
         "TestD.funcb_uint32_uint32*": {
             "args": [
@@ -133,17 +123,8 @@
                 "b uint32*"
             ],
             "rt": "void",
-            "start": 2036,
-            "end": 2084
-        },
-        "FS.openFile_char*_uint32&": {
-            "args": [
-                "path char*",
-                "handle uint32&"
-            ],
-            "rt": "void",
-            "start": 484,
-            "end": 604
+            "start": 2268,
+            "end": 2316
         },
         "FS.peripheralCommand_uint32_uint32_uint32*": {
             "args": [
@@ -152,8 +133,8 @@
                 "cmd uint32*"
             ],
             "rt": "void",
-            "start": 800,
-            "end": 920
+            "start": 932,
+            "end": 1052
         }
     },
     "breakpoints": {},
@@ -189,11 +170,11 @@
             "type": "const uint32",
             "value": "131076"
         },
-        "Console.CONSOLE_START": {
+        "Console.CONSOLE_IN_COUNT": {
             "start": -1,
             "end": -1,
             "type": "const uint32",
-            "value": "131328"
+            "value": "131330"
         },
         "Console.CMD_START": {
             "start": -1,
@@ -214,10 +195,16 @@
             "value": "131073"
         },
         "TestD.str": {
-            "start": 2200,
-            "end": 2207,
+            "start": 2384,
+            "end": 2391,
             "type": "char*",
             "value": "// Test"
+        },
+        "Console.CONSOLE_OUT": {
+            "start": -1,
+            "end": -1,
+            "type": "const uint32",
+            "value": "131328"
         },
         "FS.CMD_DEVICE": {
             "start": -1,
@@ -226,8 +213,8 @@
             "value": "131074"
         },
         "exp_str_2": {
-            "start": 2264,
-            "end": 2271,
+            "start": 2448,
+            "end": 2455,
             "type": "char*",
             "value": "Opened\n\u0000"
         },
@@ -237,9 +224,21 @@
             "type": "const uint32",
             "value": "131074"
         },
+        "Console.CONSOLE_IN": {
+            "start": -1,
+            "end": -1,
+            "type": "const uint32",
+            "value": "131329"
+        },
+        "exp_str_3": {
+            "start": 2456,
+            "end": 2459,
+            "type": "char*",
+            "value": "\n> \u0000"
+        },
         "exp_str_0": {
-            "start": 2244,
-            "end": 2255,
+            "start": 2428,
+            "end": 2439,
             "type": "char*",
             "value": "test.txt\u0000"
         },
@@ -256,8 +255,8 @@
             "value": "131073"
         },
         "exp_str_1": {
-            "start": 2256,
-            "end": 2263,
+            "start": 2440,
+            "end": 2447,
             "type": "char*",
             "value": "ERROR\n\u0000"
         },
@@ -284,6 +283,10 @@
             "end": -1,
             "type": "const uint32",
             "value": "131072"
+        }
+    },
+    "syscalls": {}
+}"
         },
         "Console.CONSOLE_END": {
             "start": -1,
@@ -293,5 +296,4 @@
         }
     },
     "syscalls": {}
-}{}
 }

@@ -467,7 +467,7 @@ public class ActionBlock extends ComplexAction {
                         }
 
                         if(t.isAddress()) {
-                            actions.add(new DirectAction("LOAD MEM%s %s %s", size, rT, rT)); // resolve the address
+                            actions.add(new DirectAction("LOAD MEM %s %s", rT, rT)); // resolve the address
                             t = t.resolve(targetVal.span());
                         }
                         

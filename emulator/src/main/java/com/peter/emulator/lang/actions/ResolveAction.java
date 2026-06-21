@@ -105,7 +105,8 @@ public class ResolveAction extends ComplexAction {
                         addDirect("LOAD %s %d\nMUL %s %s %s", rSize, wds, rIndex, rIndex, rSize);
                         rSize.release();
                     }
-                    addDirect("LOAD MEM %s %s", reg, reg);
+                    if(t.isPointer())
+                        addDirect("LOAD MEM %s %s", reg, reg);
                     addDirect("ADD %s %s %s", reg, reg, rIndex);
                     rIndex.release();
                     t = t.resolve(it.span());
@@ -119,7 +120,7 @@ public class ResolveAction extends ComplexAction {
                 else
                     break;
 
-                if (t.isPointer() || t.isAddress() || t.isArray()) {
+                if (t.isPointer() || t.isAddress()) {
                     addDirect("LOAD MEM %s %s", reg, reg);
                     t = t.resolve(it.span());
                 }
@@ -133,7 +134,7 @@ public class ResolveAction extends ComplexAction {
                 t = v.type;
             }
         // }
-        String size = switch (v.sizeof()) {
+        String size = switch (t.sizeof()) {
             case 2 -> " SHORT";
             case 1 -> " BYTE";
             default -> "";

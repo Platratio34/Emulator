@@ -72,7 +72,7 @@
             }
         },
         {
-            "match": "^(LOAD\\s+MEM)(?:\\s+(\\S+)(?:\\s+(\\S+))?)?",
+            "match": "^(LOAD\\s+MEM(?:\\s+BYTE|\\s+SHORT)?)(?:\\s+(\\S+)(?:\\s+(\\S+))?)?",
             "captures": {
                 "1": {
                     "name": "keyword.control.instruction"
@@ -108,7 +108,7 @@
             }
         },
         {
-            "match": "^(STORE)(?:\\s+(\\S+)(?:\\s+(\\S+))?)?",
+            "match": "^(STORE(?:\\s+BYTE|\\s+SHORT)?)(?:\\s+(\\S+)(?:\\s+(\\S+))?)?(\\s+INC_RG)?(\\s+INC_RA)?",
             "captures": {
                 "1": {
                     "name": "keyword.control.instruction"
@@ -123,11 +123,17 @@
                     "patterns": [
                         { "include": "#register" }
                     ]
+                },
+                "4": {
+                    "name": "keyword.control.instruction"
+                },
+                "5": {
+                    "name": "keyword.control.instruction"
                 }
             }
         },
         {
-            "match": "^(COPY(?:\\s+MEM)?)(?:\\s+(\\S+)(?:\\s+(\\S+))?)?",
+            "match": "^(COPY(?:\\s+BYTE|\\s+SHORT)?(?:\\s+MEM)?)(?:\\s+(\\S+)(?:\\s+(\\S+))?)?(\\s+INC_RG)?(\\s+INC_RA)?",
             "captures": {
                 "1": {
                     "name": "keyword.control.instruction"
@@ -141,6 +147,12 @@
                     "patterns": [
                         { "include": "#register" }
                     ]
+                },
+                "4": {
+                    "name": "keyword.control.instruction"
+                },
+                "5": {
+                    "name": "keyword.control.instruction"
                 }
             }
         },
@@ -216,7 +228,7 @@
             "match": "^(HALT|SYSRETURN)\\b"
         },
         {
-            "match": "^(GOTO(?:\\s+(?:PUSH|POP))?(?:\\s+(?:EQ|LEQ|GT|NEQ))?)(?:\\s+(r\\S+))?(?:\\s+(\\:\\S+))?",
+            "match": "^(GOTO(?:\\s+(?:PUSH|POP))?(?:\\s+(?:EQ|LEQ|GT|NEQ|LT|GEQ))?)(?:\\s+(r\\S+))?(?:\\s+(\\:\\S+))?",
             "captures": {
                 "1": {
                     "name": "keyword.control.instruction"
@@ -232,7 +244,7 @@
             }
         },
         {
-            "match": "^(SET(?:\\s+FORCE)(?:\\s+(?:EQ|LEQ|GT|NEQ))?)(?:\\s+(r\\S+)(?:\\s+(\\S+))?)?",
+            "match": "^(SET(?:\\s+FORCE)(?:\\s+(?:EQ|LEQ|GT|NEQ|LT|GEQ))?)(?:\\s+(r\\S+)(?:\\s+(\\S+))?)?",
             "captures": {
                 "1": {
                     "name": "keyword.control.instruction"
@@ -342,7 +354,7 @@
     ],
     "repository": {
         "function.parameter": {
-            "match": "\\s+([^\\s,]+)(?:(?:\\s+const)?(?:\\s+(\\w+)(\\**\\s+\\**)(?:\\s+(\\w+))?)?)?(,)?",
+            "match": "(?:\\s+([^\\s,]+))?(?:(?:\\s+const)?(?:\\s+(\\w+)(\\**\\s+\\**)(?:\\s+(\\w+))?)?)?(,)?",
             "captures": {
                 "1": {
                     "patterns": [
@@ -410,6 +422,10 @@
                 {
                     "name": "constant.numeric",
                     "match": "(0x[0-9a-f_]+|[\\-\\+]?\\d+)"
+                },
+                {
+                    "name": "support.function",
+                    "match": "&:([\\w][\\w_\\d\\.]*)"
                 },
                 {
                     "name": "entity.name.variable",

@@ -28,10 +28,15 @@ public class ELPrimitives {
     public static final ELType OBJECT = new ELType("Object", OBJECT_CLASS, INTERNAL_LOCATION);
 
     // bool
-    public static final ELClass BOOL_CLASS = new ELClass("bool", INTERNAL_NAMESPACE, INTERNAL_UNIT).withParent(OBJECT_CLASS, OBJECT);
+    public static final ELClass BOOL_CLASS = new ELClass("bool", INTERNAL_NAMESPACE, INTERNAL_UNIT) {
+        @Override
+        public int getSize() {
+            return 1;
+        };
+    };
     public static final ELType BOOL = new ELType("bool", BOOL_CLASS, INTERNAL_LOCATION);
     // uint8
-    public static final ELClass UINT8_CLASS = new ELClass("uint8", OBJECT_CLASS, INTERNAL_UNIT) {
+    public static final ELClass UINT8_CLASS = new ELClass("uint8", INTERNAL_NAMESPACE, INTERNAL_UNIT) {
         @Override
         public boolean canStaticCast(ELType target) {
             return target.equals(CHAR) || target.equals(UINT16) || target.equals(UINT32);
@@ -54,6 +59,11 @@ public class ELPrimitives {
         public int getSize() {
             return 1;
         };
+
+        @Override
+        public String toString() {
+            return "prim::" + super.toString();
+        }
     }.withParent(OBJECT_CLASS, OBJECT);
     public static final ELType CHAR = new ELType("char", CHAR_CLASS, INTERNAL_LOCATION);
     // uint16

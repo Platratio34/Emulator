@@ -26,6 +26,8 @@ public class EmulatorGui {
     protected JButton interruptButton;
     protected JTextArea interruptCode;
 
+    protected ConsoleFrame consoleFrame;
+
     public static final Font monFont = new Font("Monospaced", Font.PLAIN, 12);
     
     public EmulatorGui(Emulator emulator) {
@@ -100,12 +102,15 @@ public class EmulatorGui {
             
             peripheralMemoryPanel = new MemoryPanel(emulator.cores[0], 0x2_0000, 4);
             p.add(peripheralMemoryPanel);
-            consoleMemoryPanel = new MemoryPanel(emulator.cores[0], 0x2_0100, 4);
-            p.add(consoleMemoryPanel);
+            // consoleMemoryPanel = new MemoryPanel(emulator.cores[0], 0x2_0100, 4);
+            // p.add(consoleMemoryPanel);
 
-            frame.setSize(1500, 500);
+            frame.setSize(1500, 800);
             
             frame.setVisible(true);
+
+            consoleFrame = new ConsoleFrame(emulator.console);
+            consoleFrame.setVisible(true);
 
         });
     }
@@ -120,7 +125,7 @@ public class EmulatorGui {
             stackPanel.update();
             kernalPanel.update();
             peripheralMemoryPanel.update();
-            consoleMemoryPanel.update();
+            // consoleMemoryPanel.update();
             updating = false;
         });
     }

@@ -9,44 +9,21 @@ namespace Console {
     public static const uint32* CMD_START = 0x2_0008;
     public static const uint32 CMD_WRITTEN = 0x0001;
     
-    public static const uint32 CONSOLE_START = 0x2_0100;
-    public static const uint32 CONSOLE_END = 0x2_0200;
-    public static void* consolePntr = CONSOLE_START;
-
-    static final uint32[3] CONSOLE_SETUP_CMD = {0x0001,0x2_0100,0x2_0200};
-
-    protected static void peripheralCommand(uint32 deviceId, uint32 cmdSize, uint32* cmd) {
-        *CMD_SIZE = cmdSize;
-        
-        asm("LOAD r1 Console.CMD_START");
-
-        asm("COPY r15 r3\nINC r3 -12\nLOAD MEM r3 r3");
-
-        asm(":peripheralCommand_l0");
-
-        asm("COPY MEM r3 r1");
-        asm("INC r1 4\nINC r3 4\nINC r2 -1");
-
-        asm("GOTO GT r2 :peripheralCommand_l0");
-
-        *CMD_ADDR = 0x0101_0000 | deviceId;
-    }
-
-    public static void setupConsole() {
-        peripheralCommand(0x001, 0x003, &CONSOLE_SETUP_CMD);
-    }
+    public static const char* CONSOLE_OUT = 0x2_0100;
+    public static const char* CONSOLE_IN = 0x2_0101;
+    public static const uint8* CONSOLE_IN_COUNT = 0x2_0102;
 
     public static void printChar(char c) {
-        asm("LOAD r1 Console.CONSOLE_START");
+        asm("LOAD r1 Console.CONSOLE_OUT");
         asm("COPY r15 r2\nINC r2 -12\nLOAD MEM r2 r2"); // c
         asm("STORE BYTE r2 r1");
     }
 
     public static void printStr(char* str, uint32 len) {
         asm("COPY r15 r14\nINC r14 -12\nLOAD MEM r14 r14"); // len
-        asm("LOAD r1 Console.CONSOLE_START"); // consolePntr
+        asm("LOAD r1 Console.CONSOLE_OUT"); // consolePntr
         asm("COPY r15 r2\nINC r2 -16\nLOAD MEM r2 r2"); // str
-        asm("LOAD r4 Console.CONSOLE_END\nLOAD r5 Console.CONSOLE_START");
+        asm("LOAD r5 Console.CONSOLE_OUT");
         asm("GOTO GT r14 :printStr_len");
             asm(":printStr_l1");
                 asm("LOAD MEM BYTE r3 r2\nGOTO EQ r3 :printStr_l1_exit");
@@ -70,17 +47,22 @@ namespace Console {
             asm(":intToHex_gt");
                 asm("INC r4 0x57\nSTORE BYTE r4 r2");
             asm(":intToHex_l1_end\nINC r14 -1\nGOTO GEQ r14 :intToHex_l1");
-        // uint32 i = 7;
-        // // asm("#breakpoint");
-        // while(i >= 0) {
-        //     uint32 part = value & 0xf;
-        //     if(part < 0xa) {
-        //         str[i] = part + 0x30;
-        //     } else {
-        //         str[i] = part + 0x57;
-        //     }
-        //     value = value >> 4;
-        //     i--;
-        // }
+    }
+
+    public static void read(char* buffer, uint32 bufferSize) {
+        while(*CONSOLE_IN_COUNT == 0) {}
+        uint32 inCount = *CONSOLE_IN_COUNT;
+        if(bufferSize < inCount) {
+            inCount = bufferSize;
+        }
+        uint32 i = 0;
+        while(inCount > 0) {
+            buffer[i] = *CONSOLE_IN;
+            inCount--;
+            i++;
+        }
+        if(i < bufferSize) {
+            buffer[i] = '\0';
+        }
     }
 }

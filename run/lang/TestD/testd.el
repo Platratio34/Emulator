@@ -61,6 +61,11 @@ namespace TestD {
             Console.printChar('\n');
             Console.printStr(&buffer, read);
         }
+
+        Console.printStr("\n> \0",0);
+        char[32] buff;
+        Console.read(&buff, 32);
+        Console.printStr(&buff, 0);
         
         asm("#breakpoint");
 

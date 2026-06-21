@@ -260,22 +260,28 @@ public class ExpressionAction extends ComplexAction {
                         t = t.addressOf();
                     }
                     while (resolvePointer > 0) {
+                        
                         _wasConst = false;
                         if (!t.isResolvable())
                             throw ELAnalysisError.error(
                                     "Unable to resolve non-pointer, address, or array (was " + t.typeString() + ")",
                                     it);
-                        String size = switch (t.sizeof()) {
-                            case 1 -> " BYTE";
-                            case 2 -> " SHORT";
-                            default -> "";
-                        };
-                        actions.add(new DirectAction("LOAD MEM%s %s %s", size, tR, tR));
-                        resolvePointer--;
                         if (!t.isVoidPtr())
                             t = t.resolve(it.span());
                         else
                             t = null;
+                        String size;
+                        if (t != null) {
+                            size = switch (t.sizeof()) {
+                                case 1 -> " BYTE";
+                                case 2 -> " SHORT";
+                                default -> "";
+                            };
+                        } else {
+                            size = "";
+                        }
+                        actions.add(new DirectAction("LOAD MEM%s %s %s", size, tR, tR));
+                        resolvePointer--;
                     }
                     if (lastType != null) {
                         if (t != null && !t.canCastTo(lastType))

@@ -1,5 +1,7 @@
 package com.peter.emulator.peripherals;
 
+import java.util.function.Consumer;
+
 import com.peter.emulator.Packer;
 
 public class ConsolePeripheral implements MemoryMappedPeripheral {
@@ -19,6 +21,8 @@ public class ConsolePeripheral implements MemoryMappedPeripheral {
     protected int inReadPointer = 0;
     protected int bufferCount = 0;
 
+    public Consumer<Character> outConsumer;
+
     public ConsolePeripheral(int startAddress) {
         this.startAddress = startAddress;
         inAddress = startAddress + 1;
@@ -36,6 +40,8 @@ public class ConsolePeripheral implements MemoryMappedPeripheral {
         if(address == startAddress) {
             System.out.print((char) value);
             lastChar = value;
+            if(outConsumer != null)
+                outConsumer.accept((char)value);
         }
     }
 
