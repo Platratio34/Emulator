@@ -7,6 +7,7 @@ import com.peter.emulator.CPU;
 import com.peter.emulator.Emulator;
 import com.peter.emulator.assembly.SymbolFile;
 import com.peter.emulator.assembly.SymbolFile.FunctionSymbol;
+import com.peter.emulator.assembly.SymbolFile.LineSymbol;
 import com.peter.emulator.assembly.SymbolFile.VariableSymbol;
 
 public class Debugger {
@@ -73,6 +74,22 @@ public class Debugger {
             if (symbols.breakpoints.contains(cpu.pgmPtr)) {
                 emulator.setWait(true);
             }
+        }
+    }
+
+    public String getLine(CPU cpu, String defLine) {
+        if (cpu.privilegeMode) {
+            for (LineSymbol line : kernalSymbols.lineSymbols) {
+                if (line.start <= cpu.pgmPtr && line.end >= cpu.pgmPtr)
+                    return line.name;
+            }
+            return defLine;
+        } else {
+            for (LineSymbol line : symbols.lineSymbols) {
+                if (line.start <= cpu.pgmPtr && line.end >= cpu.pgmPtr)
+                    return line.name;
+            }
+            return defLine;
         }
     }
 

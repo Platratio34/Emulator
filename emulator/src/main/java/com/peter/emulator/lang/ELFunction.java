@@ -286,7 +286,7 @@ public class ELFunction {
             //     paramList.add(params.get(paramOrder.get(i)));
             // }
             // bodyBlock.scope.addParams(paramOrder, paramList, errors);
-            bodyBlock.parse(body, errors);
+            bodyBlock.parse(body, errors, true);
             actions.add(bodyBlock);
         }
     }

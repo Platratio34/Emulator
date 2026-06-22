@@ -1,33 +1,33 @@
 {
     "variables": {
         "TestD.testStr": {
-            "address": 2416,
-            "start": 2416,
-            "end": 2423,
+            "address": 2560,
+            "start": 2560,
+            "end": 2567,
             "type": "char[5]"
         },
         "TestD.v": {
-            "address": 2404,
-            "start": 2404,
-            "end": 2407,
+            "address": 2548,
+            "start": 2548,
+            "end": 2551,
             "type": "uint32"
         },
         "TestD.testStr2": {
-            "address": 2408,
-            "start": 2408,
-            "end": 2415,
+            "address": 2552,
+            "start": 2552,
+            "end": 2559,
             "type": "char[7]"
         },
         "TestD.path": {
-            "address": 2392,
-            "start": 2392,
-            "end": 2403,
+            "address": 2536,
+            "start": 2536,
+            "end": 2547,
             "type": "char[9]"
         },
         "TestD.tc": {
-            "address": 2424,
-            "start": 2424,
-            "end": 2427,
+            "address": 2568,
+            "start": 2568,
+            "end": 2571,
             "type": "char"
         }
     },
@@ -35,20 +35,20 @@
         "TestD.testA_StructA&": {
             "args": ["str StructA&"],
             "rt": "void",
-            "start": 2316,
-            "end": 2380
+            "start": 2460,
+            "end": 2524
         },
         "TestD.main": {
             "args": [],
             "rt": "void",
-            "start": 1184,
-            "end": 2220
+            "start": 1352,
+            "end": 2364
         },
         "TestD.wait_uint32": {
             "args": ["time uint32"],
             "rt": "void",
-            "start": 1116,
-            "end": 1184
+            "start": 1284,
+            "end": 1352
         },
         "Console.intToHex_uint32_char*": {
             "args": [
@@ -100,13 +100,13 @@
             "args": [],
             "rt": "void",
             "start": 1052,
-            "end": 1116
+            "end": 1284
         },
         "TestD.funcb_uint32": {
             "args": ["a uint32"],
             "rt": "void",
-            "start": 2220,
-            "end": 2268
+            "start": 2364,
+            "end": 2412
         },
         "FS.openFile_char*_out": {
             "args": [
@@ -123,8 +123,8 @@
                 "b uint32*"
             ],
             "rt": "void",
-            "start": 2268,
-            "end": 2316
+            "start": 2412,
+            "end": 2460
         },
         "FS.peripheralCommand_uint32_uint32_uint32*": {
             "args": [
@@ -138,19 +138,56 @@
         }
     },
     "breakpoints": {},
+    "lines": {},
     "version": 1,
     "definitions": {
-        "FS.RSP_DATA_3": {
-            "start": -1,
-            "end": -1,
-            "type": "const uint32*",
-            "value": "131212"
-        },
         "FS.CMD_ADDR": {
             "start": -1,
             "end": -1,
             "type": "const uint32*",
             "value": "131072"
+        },
+        "Console.CMD_SIZE": {
+            "start": -1,
+            "end": -1,
+            "type": "const uint32*",
+            "value": "131076"
+        },
+        "Console.CMD_START": {
+            "start": -1,
+            "end": -1,
+            "type": "const uint32*",
+            "value": "131080"
+        },
+        "FS.CMD_STATUS": {
+            "start": -1,
+            "end": -1,
+            "type": "const uint32*",
+            "value": "131073"
+        },
+        "FS.CMD_DEVICE": {
+            "start": -1,
+            "end": -1,
+            "type": "const uint32*",
+            "value": "131074"
+        },
+        "Console.CMD_DEVICE": {
+            "start": -1,
+            "end": -1,
+            "type": "const uint32*",
+            "value": "131074"
+        },
+        "Console.CMD_ADDR": {
+            "start": -1,
+            "end": -1,
+            "type": "const uint32*",
+            "value": "131072"
+        },
+        "FS.RSP_DATA_3": {
+            "start": -1,
+            "end": -1,
+            "type": "const uint32*",
+            "value": "131212"
         },
         "FS.CMD_WRITTEN": {
             "start": -1,
@@ -164,23 +201,11 @@
             "type": "const uint32*",
             "value": "131208"
         },
-        "Console.CMD_SIZE": {
-            "start": -1,
-            "end": -1,
-            "type": "const uint32*",
-            "value": "131076"
-        },
         "Console.CONSOLE_IN_COUNT": {
             "start": -1,
             "end": -1,
             "type": "const uint8*",
             "value": "131330"
-        },
-        "Console.CMD_START": {
-            "start": -1,
-            "end": -1,
-            "type": "const uint32*",
-            "value": "131080"
         },
         "FS.RSP_STATUS": {
             "start": -1,
@@ -188,15 +213,15 @@
             "type": "const uint32*",
             "value": "131200"
         },
-        "FS.CMD_STATUS": {
-            "start": -1,
-            "end": -1,
-            "type": "const uint32*",
-            "value": "131073"
+        "exp_str_4": {
+            "start": 2616,
+            "end": 2619,
+            "type": "\\0\"",
+            "value": "\n> \u0000"
         },
         "TestD.str": {
-            "start": 2384,
-            "end": 2391,
+            "start": 2528,
+            "end": 2535,
             "type": "Test\"",
             "value": "// Test"
         },
@@ -206,23 +231,11 @@
             "type": "const char*",
             "value": "131328"
         },
-        "FS.CMD_DEVICE": {
-            "start": -1,
-            "end": -1,
-            "type": "const uint32*",
-            "value": "131074"
-        },
         "exp_str_2": {
-            "start": 2448,
-            "end": 2455,
+            "start": 2600,
+            "end": 2607,
             "type": "char*",
-            "value": "Opened\n\u0000"
-        },
-        "Console.CMD_DEVICE": {
-            "start": -1,
-            "end": -1,
-            "type": "const uint32*",
-            "value": "131074"
+            "value": "ERROR\n\u0000"
         },
         "Console.CONSOLE_IN": {
             "start": -1,
@@ -231,16 +244,16 @@
             "value": "131329"
         },
         "exp_str_3": {
-            "start": 2456,
-            "end": 2459,
-            "type": "\\0\"",
-            "value": "\n> \u0000"
+            "start": 2608,
+            "end": 2615,
+            "type": "char*",
+            "value": "Opened\n\u0000"
         },
         "exp_str_0": {
-            "start": 2428,
-            "end": 2439,
-            "type": "char*",
-            "value": "test.txt\u0000"
+            "start": 2572,
+            "end": 2587,
+            "type": "\\0\"",
+            "value": "\nInterrupt: \u0000"
         },
         "Console.CMD_WRITTEN": {
             "start": -1,
@@ -255,10 +268,10 @@
             "value": "131073"
         },
         "exp_str_1": {
-            "start": 2440,
-            "end": 2447,
+            "start": 2588,
+            "end": 2599,
             "type": "char*",
-            "value": "ERROR\n\u0000"
+            "value": "test.txt\u0000"
         },
         "FS.RSP_DATA": {
             "start": -1,
@@ -277,24 +290,8 @@
             "end": -1,
             "type": "const uint32*",
             "value": "131076"
-        },
-        "Console.CMD_ADDR": {
-            "start": -1,
-            "end": -1,
-            "type": "const uint32*",
-            "value": "131072"
         }
     },
     "syscalls": {}
-}": -1,
-            "end": -1,
-            "type": "const uint32",
-            "value": "131072"
-        }
-    },
-    "syscalls": {}
-} "131584"
-        }
-    },
-    "syscalls": {}
+} {}
 }

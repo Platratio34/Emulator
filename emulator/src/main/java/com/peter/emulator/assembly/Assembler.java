@@ -399,15 +399,19 @@ public class Assembler {
         for (int lineN = 0; lineN < lines.length; lineN++) {
             try {
                 String line = lines[lineN].trim();
+                String[] parts = line.split("\s+");
                 if (line.isBlank() || line.startsWith("//"))
                     continue;
                 if (line.startsWith("#") || line.startsWith(":")) { // compiler instruction
                     if (line.startsWith("#breakpoint")) {
                         symbols.addBreakpoint(addr * 4 - 4);
+                    } else if (line.startsWith("#lineend")) {
+                        symbols.endLine(addr * 4 - 4);
+                    } else if (line.startsWith("#line")) {
+                        symbols.startLine(parts[1], parts[2], addr * 4);
                     }
                     continue;
                 }
-                String[] parts = line.split("\s+");
                 switch (parts[0]) {
                     case "HALT" -> {
                         data[addr++] = (Entry.Direct(0xffff_ffff));

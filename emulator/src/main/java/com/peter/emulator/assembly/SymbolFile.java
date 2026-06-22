@@ -1,5 +1,6 @@
 package com.peter.emulator.assembly;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -15,6 +16,8 @@ public class SymbolFile {
     public final HashMap<String, VariableSymbol> variables = new HashMap<>();
     public final HashMap<String, Integer> syscalls = new HashMap<>();
     public final HashSet<Integer> breakpoints = new HashSet<>();
+    public final ArrayList<LineSymbol> lineSymbols = new ArrayList<>();
+    protected LineSymbol lastLine = null;
 
     public SymbolFile() {
     }
@@ -79,6 +82,19 @@ public class SymbolFile {
         syscalls.put(name, index);
     }
 
+    public void startLine(String file, String lineStr, int address) {
+        endLine(address - 4);
+        lastLine = new LineSymbol(address, file, lineStr);
+        lineSymbols.add(lastLine);
+    }
+
+    public void endLine(int address) {
+        if (lastLine != null) {
+            lastLine.end = address;
+            lastLine = null;
+        }
+    }
+
     public SymbolFile combine(SymbolFile other, int otherOffset) {
         for (FunctionSymbol functionSymbol : other.functions.values()) {
             FunctionSymbol f2 = functionSymbol.copy();
@@ -114,6 +130,9 @@ public class SymbolFile {
         for (Integer addr : other.breakpoints) {
             addBreakpoint(addr + otherOffset);
         }
+        for (LineSymbol line : other.lineSymbols) {
+            lineSymbols.add(line.offset(otherOffset));
+        }
         return this;
     }
     
@@ -145,6 +164,13 @@ public class SymbolFile {
         for (Integer addr : breakpoints) {
             jsonBreakpoints.put(addr);
         }
+        if (!lineSymbols.isEmpty()) {
+            JSONArray jsonLines = new JSONArray();
+            json.put("lines", jsonSyscalls);
+            for (LineSymbol line : lineSymbols) {
+                jsonLines.put(line.toJSON());
+            }
+        }
         return json.toString(4);
     }
     public String toFileKernal() {
@@ -173,6 +199,13 @@ public class SymbolFile {
         json.put("breakpoints", jsonSyscalls);
         for (Integer addr : breakpoints) {
             jsonBreakpoints.put(addr);
+        }
+        if (!lineSymbols.isEmpty()) {
+            JSONArray jsonLines = new JSONArray();
+            json.put("lines", jsonSyscalls);
+            for (LineSymbol line : lineSymbols) {
+                jsonLines.put(line.toJSON());
+            }
         }
         return json.toString(4);
     }
@@ -204,6 +237,12 @@ public class SymbolFile {
                     JSONArray jsonBreakpoints = json.getJSONArray("breakpoints");
                     for (int i = 0; i < jsonBreakpoints.length(); i++) {
                         symbols.addBreakpoint(jsonBreakpoints.getInt(i));
+                    }
+                }
+                if(json.has("lines")) {
+                    JSONArray jsonLines = json.getJSONArray("lines");
+                    for (int i = 0; i < jsonLines.length(); i++) {
+                        symbols.lineSymbols.add(LineSymbol.fromJSON(jsonLines.getJSONObject(i)));
                     }
                 }
             }
@@ -368,8 +407,9 @@ public class SymbolFile {
             this.args = args;
             this.rt = rt;
         }
-        
-        public FunctionSymbol(String name, int start, int end, String[] args, String rt, boolean isSyscall, boolean hasSyscall) {
+
+        public FunctionSymbol(String name, int start, int end, String[] args, String rt, boolean isSyscall,
+                boolean hasSyscall) {
             super(name, start, end);
             this.args = args;
             this.rt = rt;
@@ -388,9 +428,9 @@ public class SymbolFile {
             JSONObject json = super.toJSON();
             json.put("args", args);
             json.put("rt", rt);
-            if(isSyscall)
+            if (isSyscall)
                 json.put("isSyscall", true);
-            if(hasSyscall)
+            if (hasSyscall)
                 json.put("hasSyscall", true);
             return json;
         }
@@ -424,9 +464,44 @@ public class SymbolFile {
             if (sourceLine >= 0) {
                 line = String.format(" (line %d)", sourceLine);
             }
-            if(source != null)
+            if (source != null)
                 return String.format("%s:%s(%s) %s%s", source, name, argStr, rt, line);
             return String.format("%s(%s) %s%s", name, argStr, rt, line);
+        }
+
+    }
+    
+    public static class LineSymbol extends Symbol {
+
+        public final String file;
+        public final String lineStr;
+
+        public LineSymbol(int start, String file, String lineStr) {
+            super(file + "@" + lineStr, start, start);
+            this.file = file;
+            this.lineStr = lineStr;
+        }
+
+        public LineSymbol offset(int offset) {
+            return new LineSymbol(start + offset, end + offset, file, lineStr);
+        }
+        public LineSymbol(int start, int end, String file, String lineStr) {
+            super(file + "@" + lineStr, start, end);
+            this.file = file;
+            this.lineStr = lineStr;
+        }
+
+        @Override
+        public JSONObject toJSON() {
+            JSONObject json = super.toJSON();
+            json.put("file", file);
+            json.put("lineStr", lineStr);
+            return json;
+        }
+
+        public static LineSymbol fromJSON(JSONObject json) {
+            return new LineSymbol(json.getInt("start"), json.getInt("end"), json.getString("file"),
+                    json.getString("lineStr"));
         }
 
     }

@@ -8,6 +8,8 @@ public class ELAssembler {
 
     public ProgramModule module;
 
+    public boolean withDebug = true;
+
     public ELAssembler(ProgramModule pm) {
         module = pm;
     }

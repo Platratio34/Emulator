@@ -21,7 +21,7 @@ public class ActionBlock extends ComplexAction {
         super(scope);
     }
 
-    public void parse(ArrayList<Token> tokens, ErrorSet errors) {
+    public void parse(ArrayList<Token> tokens, ErrorSet errors, boolean withDebug) {
         int wI = 0;
         int l = 0;
         if(scope.function != null) {
@@ -51,9 +51,10 @@ public class ActionBlock extends ComplexAction {
                     actions.add(new DirectAction("// " + line + "\n"));
                 }
                 last = wI;
-                actions.add(
-                        new DirectAction(
-                                "// " + (l++) + " " + tkn.startLocation.line() + ":" + tkn.startLocation.col()));
+                addDirect("// " + (l++) + " " + tkn.startLocation.line() + ":" + tkn.startLocation.col());
+                if (withDebug) {
+                    addDirect("#line %s %d:%d", tkn.startLocation.file(), tkn.startLocation.line(), tkn.startLocation.col());
+                }
                 boolean dma = false;
                 if (tkn instanceof OperatorToken ot && ot.type == OperatorToken.Type.POINTER) {
                     dma = true;
@@ -96,7 +97,7 @@ public class ActionBlock extends ComplexAction {
                                 r.release();
                                 // actions.add(new DirectAction(":if_true_%d", index));
                                 ActionBlock innerBlock = new ActionBlock(scope.createChild());
-                                innerBlock.parse(iBT.subTokens, errors);
+                                innerBlock.parse(iBT.subTokens, errors, withDebug);
                                 actions.add(innerBlock);
                                 if (elsePresent) {
                                     actions.add(new DirectAction("GOTO :if_end_%d", index));
@@ -105,7 +106,7 @@ public class ActionBlock extends ComplexAction {
                                         throw ELAnalysisError.error("Expected block after else", tokens.get(wI).span());
                                     actions.add(new DirectAction(":if_else_%d", index));
                                     ActionBlock elseBlock = new ActionBlock(scope.createChild());
-                                    elseBlock.parse(tokens.get(wI).subTokens, errors);
+                                    elseBlock.parse(tokens.get(wI).subTokens, errors, withDebug);
                                     actions.add(elseBlock);
                                     wI++;
                                 }
@@ -118,7 +119,7 @@ public class ActionBlock extends ComplexAction {
                                 // set is (initializer; condition; incrementor)
                                 // also block
                                 ActionBlock innerBlock = new ActionBlock(scope.createChild());
-                                innerBlock.parse(tokens.get(wI).subTokens, errors);
+                                innerBlock.parse(tokens.get(wI).subTokens, errors, withDebug);
                                 wI++;
                                 continue;
                             }
@@ -143,7 +144,7 @@ public class ActionBlock extends ComplexAction {
                                 actions.add(new DirectAction("GOTO EQ %s :while_end_%d", r, index));
                                 r.release();
                                 ActionBlock innerBlock = new ActionBlock(scope.createChild());
-                                innerBlock.parse(tokens.get(wI).subTokens, errors);
+                                innerBlock.parse(tokens.get(wI).subTokens, errors, withDebug);
                                 actions.add(innerBlock);
                                 actions.add(new DirectAction("GOTO :while_condition_%d",index));
                                 actions.add(new DirectAction(":while_end_%d",index));
@@ -539,9 +540,11 @@ public class ActionBlock extends ComplexAction {
                 line += " ";
             line += t2.debugString();
         }
-        actions.add(new DirectAction("// " + line + "\n"));
+        addDirect("// %s\n", line);
+        if (withDebug)
+            addDirect("#lineend");
         if(scope.function != null) 
-            actions.add(new DirectAction(":func_exit_"+scope.function.getQualifiedName(true)));
+            addDirect(":func_exit_"+scope.function.getQualifiedName(true));
         if(scope.getStackOffDif() > 0)
             actions.add(scope.getStackResetAction());
         if(scope.function != null)

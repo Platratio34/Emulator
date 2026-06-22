@@ -14,13 +14,17 @@ public class DebuggerPanel extends JPanel {
     public final CPU cpu;
     protected Debugger debugger;
 
+    // protected final JLabel lineLbl;
     protected final JLabel funcLbl;
     protected final JPanel varPanel;
     protected final HashMap<String, VarDisplay> varDisplays = new HashMap<>();
 
     public DebuggerPanel(CPU cpu) {
-        super(new GridLayout(2, 1));
+        super(new GridLayout(-1, 1));
         this.cpu = cpu;
+
+        // this.lineLbl = new JLabel();
+        // add(lineLbl);
 
         this.funcLbl = new JLabel();
         add(funcLbl);
@@ -42,7 +46,8 @@ public class DebuggerPanel extends JPanel {
             }
         }
         // String str = debugger.printStack()
-        funcLbl.setText("<html>"+debugger.printStack().replace("\n","<br>")+"</html>");
+        // lineLbl.setText();
+        funcLbl.setText(String.format("<html>%s<br/>%s</html>", debugger.getLine(cpu, ""), debugger.printStack().replace("\n","<br>")));
         for (VarDisplay vd : varDisplays.values()) {
             vd.update();
         }

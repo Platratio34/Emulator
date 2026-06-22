@@ -47,13 +47,13 @@ namespace TestD {
             uint32 read;
             uint32 state;
             FS.readFile(fh, &buffer, 32, 0, &read, &state);
-            asm("#breakpoint");
+            // asm("#breakpoint");
             char[10] str2;
             str2[8] = '\n';
             str2[9] = '\0';
             Console.intToHex(state, &str2);
             Console.printStr(&str2, 0);
-            Console.printChar('\n');
+            // Console.printChar('\n');
             // asm("#breakpoint");
             Console.intToHex(read, &str2);
             Console.printStr(&str2, 0);
@@ -67,7 +67,7 @@ namespace TestD {
         Console.read(&buff, 32);
         Console.printStr(&buff, 0);
         
-        asm("#breakpoint");
+        // asm("#breakpoint");
 
         wait(1000);
         // funcC();
@@ -85,6 +85,12 @@ namespace TestD {
     internal static void onInterrupt() {
         uint32 code = SysD.rIC;
         asm("LOAD rIC 0");
+        char[9] str;
+        str[8] = '\0';
+        Console.intToHex(code, &str);
+        Console.printStr("\nInterrupt: \0", 0);
+        Console.printStr(&str, 8);
+        Console.printChar('\n');
         if(code == 0xff) {
             asm("HALT");
         }
