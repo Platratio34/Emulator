@@ -4,7 +4,7 @@
     "fileTypes": [],
     "patterns": [
         {
-            "match": "^(#define)(?:\\s+(\\S+)(?:\\s+(\"[^\"]*\"|'[^']*'|\\S+))?)?",
+            "match": "^(#define)(?:\\s+(\\S+)(?:\\s+(\"[^\"]*\"|'[^']*'|\\S+))?)?(\\s+\\w[\\w*&\\[\\]\\d_]+)?",
             "captures": {
                 "1": {
                     "name": "keyword.other.compiler"
@@ -18,11 +18,14 @@
                         { "include": "#string.quoted" },
                         { "include": "#char.quoted" }
                     ]
+                },
+                "4": {
+                    "name": "storage.type"
                 }
             }
         },
         {
-            "match": "^(#var)(?:\\s+(\\S+)(?:\\s+(\"[^\"]*\"|'[^']*'|\\S+))?)?",
+            "match": "^(#var)(?:\\s+(\\S+)(?:\\s+(\"[^\"]*\"|'[^']*'|\\S+))?)?(\\s+\\w[\\w*&\\[\\]\\d_]+)?",
             "captures": {
                 "1": {
                     "name": "keyword.other.compiler"
@@ -36,6 +39,9 @@
                         { "include": "#string.quoted" },
                         { "include": "#char.quoted" }
                     ]
+                },
+                "4": {
+                    "name": "storage.type"
                 }
             }
         },

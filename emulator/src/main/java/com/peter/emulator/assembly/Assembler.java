@@ -85,6 +85,7 @@ public class Assembler {
                     }
                     case "define" -> {
                         String name = parts[1];
+                        String type = parts.length > 3 ? parts[3] : null;
                         if (parts[2].startsWith("\"")) {
                             Matcher m = STRING_PATTERN.matcher(line);
                             m.find();
@@ -122,7 +123,9 @@ public class Assembler {
                             memSet.add(new MemSet(name, str));
                             valAdd += Math.ceilDiv(str.length(), 4);
                             // valAdd += str.length();
-                            symbols.addDefinition(new ValueSymbol(name, -1, -1, "char*", str), lineN + 1);
+                            if (type == null)
+                                type = "char*";
+                            symbols.addDefinition(new ValueSymbol(name, -1, -1, type, str), lineN + 1);
                         } else if (parts[2].startsWith("[")) {
                             Matcher m = DEFINE_ARRAY_PATTERN.matcher(line);
                             if (!m.find()) {
@@ -141,26 +144,32 @@ public class Assembler {
                             }
                             memSet.add(new MemSet(name, val));
                             valAdd += val.length;
-                            symbols.addDefinition(new ValueSymbol(name, -1, -1, "uint32*", content), lineN + 1);
+                            if (type == null)
+                                type = "uint32*";
+                            symbols.addDefinition(new ValueSymbol(name, -1, -1, type, content), lineN + 1);
                         } else if (parts[2].startsWith("(")) {
                             Matcher m = ALLOC_PATTERN.matcher(parts[2]);
                             m.find();
                             int size = Math.ceilDiv(getVal(m.group(1)), 4);
                             memSet.add(new MemSet(name, new int[size]));
                             valAdd += size;
-                            symbols.addDefinition(new ValueSymbol(name, -1, -1, "uint32[" + size + "]*", ""),
+                            if (type == null)
+                                type = "uint32[" + size + "]*";
+                            symbols.addDefinition(new ValueSymbol(name, -1, -1, type, ""),
                                     lineN + 1);
                         } else {
                             int val = getVal(parts[2]);
                             defines.put(name, val);
+                            if (type == null)
+                                type = "uint32";
                             symbols.addDefinition(
-                                    new ValueSymbol(name, -1, -1,
-                                            parts[2].startsWith("'") ? "const char" : "const uint32", val + ""),
+                                    new ValueSymbol(name, -1, -1, "const "+type, val + ""),
                                     lineN + 1);
                         }
                     }
                     case "var" -> {
                         String name = parts[1];
+                        String type = parts.length > 3 ? parts[3] : "uint32";
                         if (parts[2].startsWith("\"")) {
                             Matcher m = STRING_PATTERN.matcher(line);
                             m.find();
@@ -198,7 +207,9 @@ public class Assembler {
                             memSet.add(new MemSet(name, str));
                             valAdd += Math.ceilDiv(str.length(), 4);
                             // valAdd += str.length();
-                            symbols.addVariable(new VariableSymbol(name, -1, -1, "char*", str), lineN + 1);
+                            if (type == null)
+                                type = "char*";
+                            symbols.addVariable(new VariableSymbol(name, -1, -1, type, str), lineN + 1);
                         } else if (parts[2].startsWith("[")) {
                             Matcher m = DEFINE_ARRAY_PATTERN.matcher(line);
                             if (!m.find()) {
@@ -217,22 +228,27 @@ public class Assembler {
                             }
                             memSet.add(new MemSet(name, val));
                             valAdd += val.length;
-                            symbols.addVariable(new VariableSymbol(name, -1, -1, "uint32*", content), lineN + 1);
+                            if (type == null)
+                                type = "uint32*";
+                            symbols.addVariable(new VariableSymbol(name, -1, -1, type, content), lineN + 1);
                         } else if (parts[2].startsWith("(")) {
                             Matcher m = ALLOC_PATTERN.matcher(parts[2]);
                             m.find();
                             int size = Math.ceilDiv(getVal(m.group(1)), 4);
                             memSet.add(new MemSet(name, new int[size]));
                             valAdd += size;
-                            symbols.addVariable(new VariableSymbol(name, -1, -1, "uint32[" + size + "]*", ""),
+                            if (type == null)
+                                type = "uint32[" + size + "]*";
+                            symbols.addVariable(new VariableSymbol(name, -1, -1, type, ""),
                                     lineN + 1);
                         } else {
                             int val = getVal(parts[2]);
                             memSet.add(new MemSet(name, new int[] {val}));
                             valAdd++;
+                            if (type == null)
+                                type = "uint32";
                             symbols.addVariable(
-                                    new VariableSymbol(name, -1, -1,
-                                            parts[2].startsWith("'") ? "char" : "uint32", val + ""),
+                                    new VariableSymbol(name, -1, -1, type, val + ""),
                                     lineN + 1);
                         }
                     }

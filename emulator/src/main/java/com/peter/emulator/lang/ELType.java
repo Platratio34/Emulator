@@ -631,7 +631,7 @@ public class ELType {
     }
     
     public int sizeof() {
-        System.out.println(toString());
+        // System.out.println(toString());
         if(pointer || address)
             return 4;
         if (array) {

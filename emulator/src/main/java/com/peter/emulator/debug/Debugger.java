@@ -90,43 +90,24 @@ public class Debugger {
             if (!kernalSymbols.variables.containsKey(name)) {
                 return "unknown";
             }
-            VariableSymbol vs = kernalSymbols.variables.get(name);
-            if (vs.type.equals("char*")) {
-                String out = "\"";
-                for (int i = vs.start; i <= vs.end; i += 4) {
-                    char c = (char) cpu.readMem(i);
-                    switch(c) {
-                        case '\n' -> out += "\\n";
-                        case '\t' -> out += "\\t";
-                        case '\0' -> out += "\\0";
-                        case '\\' -> out += "\\\\";
-                        default -> out += c;
-                    }
-                }
-                return out + "\"";
-            }
-            return Integer.toString(cpu.readMem(vs.address));
+            return readVar(cpu, kernalSymbols.variables.get(name));
         } else {
             if (!symbols.variables.containsKey(name)) {
                 return "unknown";
             }
-            VariableSymbol vs = symbols.variables.get(name);
-            if (vs.type.equals("char*")) {
-                String out = "\"";
-                for (int i = vs.start; i <= vs.end; i++) {
-                    char c = (char) cpu.readMem(i);
-                    switch(c) {
-                        case '\n' -> out += "\\n";
-                        case '\t' -> out += "\\t";
-                        case '\0' -> out += "\\0";
-                        case '\\' -> out += "\\\\";
-                        default -> out += c;
-                    }
-                }
-                return out + "\"";
-            }
-            return Integer.toString(cpu.readMem(vs.address));
+            return readVar(cpu, symbols.variables.get(name));
         }
+    }
+
+    private String readVar(CPU cpu, VariableSymbol vs) {
+        return switch (vs.type) {
+            case "char*" -> "\"" + cpu.ram.readString(cpu.translateAddress(vs.start), vs.end - vs.start) + "\"";
+            case "char" -> "'" + (char) cpu.readMemByte(vs.address) + "'";
+            case "uint8" -> Integer.toString(cpu.readMemByte(vs.address));
+            case "boolean" -> cpu.readMemByte(vs.address) != 0 ? "true" : "false";
+            case "uint16" -> Integer.toString(cpu.readMemShort(vs.address));
+            default -> Integer.toString(cpu.readMem(vs.address));
+        };
     }
 
     public Set<String> getVars() {

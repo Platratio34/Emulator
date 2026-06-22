@@ -1,32 +1,32 @@
 // static data
 // Console
-#define Console.CMD_DEVICE 0x0002_0002 // uint32*
-#define Console.CONSOLE_OUT 0x0002_0100 // char*
-#define Console.CMD_WRITTEN 0x0001 // uint32
-#define Console.CMD_ADDR 0x0002_0000 // uint32*
-#define Console.CMD_STATUS 0x0002_0001 // uint32*
-#define Console.CONSOLE_IN 0x0002_0101 // char*
-#define Console.CONSOLE_IN_COUNT 0x0002_0102 // uint8*
-#define Console.CMD_START 0x0002_0008 // uint32*
-#define Console.CMD_SIZE 0x0002_0004 // uint32*
+#define Console.CMD_DEVICE 0x0002_0002 uint32*
+#define Console.CONSOLE_OUT 0x0002_0100 char*
+#define Console.CMD_WRITTEN 0x0001 uint32
+#define Console.CMD_ADDR 0x0002_0000 uint32*
+#define Console.CMD_STATUS 0x0002_0001 uint32*
+#define Console.CONSOLE_IN 0x0002_0101 char*
+#define Console.CONSOLE_IN_COUNT 0x0002_0102 uint8*
+#define Console.CMD_START 0x0002_0008 uint32*
+#define Console.CMD_SIZE 0x0002_0004 uint32*
 // FS
-#define FS.CMD_DEVICE 0x0002_0002 // uint32*
-#define FS.CMD_WRITTEN 0x0001 // uint32
-#define FS.RSP_DATA_2 0x0002_0088 // uint32*
-#define FS.RSP_DATA_3 0x0002_008c // uint32*
-#define FS.CMD_ADDR 0x0002_0000 // uint32*
-#define FS.RSP_STATUS 0x0002_0080 // uint32*
-#define FS.CMD_STATUS 0x0002_0001 // uint32*
-#define FS.RSP_DATA 0x0002_0084 // uint32*
-#define FS.CMD_START 0x0002_0008 // uint32*
-#define FS.CMD_SIZE 0x0002_0004 // uint32*
+#define FS.CMD_DEVICE 0x0002_0002 uint32*
+#define FS.CMD_WRITTEN 0x0001 uint32
+#define FS.RSP_DATA_2 0x0002_0088 uint32*
+#define FS.RSP_DATA_3 0x0002_008c uint32*
+#define FS.CMD_ADDR 0x0002_0000 uint32*
+#define FS.RSP_STATUS 0x0002_0080 uint32*
+#define FS.CMD_STATUS 0x0002_0001 uint32*
+#define FS.RSP_DATA 0x0002_0084 uint32*
+#define FS.CMD_START 0x0002_0008 uint32*
+#define FS.CMD_SIZE 0x0002_0004 uint32*
 // TestD
-#define TestD.str "// Test" // char*
-#var TestD.path "test.txt\0" // char[9]
-#var TestD.v 0x0000 // uint32
-#var TestD.testStr2 "Test2\n\0" // char[7]
-#var TestD.testStr "Test\n" // char[5]
-#var TestD.tc 0x00 // char
+#define TestD.str "// Test" char*
+#var TestD.path "test.txt\0" char[9]
+#var TestD.v 0x0000 uint32
+#var TestD.testStr2 "Test2\n\0" char[7]
+#var TestD.testStr "Test\n" char[5]
+#var TestD.tc 0x00 char
 
 //--------
 // text

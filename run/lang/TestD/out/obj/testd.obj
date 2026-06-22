@@ -4,7 +4,7 @@
             "address": 2416,
             "start": 2416,
             "end": 2423,
-            "type": "char*"
+            "type": "char[5]"
         },
         "TestD.v": {
             "address": 2404,
@@ -16,19 +16,19 @@
             "address": 2408,
             "start": 2408,
             "end": 2415,
-            "type": "char*"
+            "type": "char[7]"
         },
         "TestD.path": {
             "address": 2392,
             "start": 2392,
             "end": 2403,
-            "type": "char*"
+            "type": "char[9]"
         },
         "TestD.tc": {
             "address": 2424,
             "start": 2424,
             "end": 2427,
-            "type": "uint32"
+            "type": "char"
         }
     },
     "functions": {
@@ -143,13 +143,13 @@
         "FS.RSP_DATA_3": {
             "start": -1,
             "end": -1,
-            "type": "const uint32",
+            "type": "const uint32*",
             "value": "131212"
         },
         "FS.CMD_ADDR": {
             "start": -1,
             "end": -1,
-            "type": "const uint32",
+            "type": "const uint32*",
             "value": "131072"
         },
         "FS.CMD_WRITTEN": {
@@ -161,55 +161,55 @@
         "FS.RSP_DATA_2": {
             "start": -1,
             "end": -1,
-            "type": "const uint32",
+            "type": "const uint32*",
             "value": "131208"
         },
         "Console.CMD_SIZE": {
             "start": -1,
             "end": -1,
-            "type": "const uint32",
+            "type": "const uint32*",
             "value": "131076"
         },
         "Console.CONSOLE_IN_COUNT": {
             "start": -1,
             "end": -1,
-            "type": "const uint32",
+            "type": "const uint8*",
             "value": "131330"
         },
         "Console.CMD_START": {
             "start": -1,
             "end": -1,
-            "type": "const uint32",
+            "type": "const uint32*",
             "value": "131080"
         },
         "FS.RSP_STATUS": {
             "start": -1,
             "end": -1,
-            "type": "const uint32",
+            "type": "const uint32*",
             "value": "131200"
         },
         "FS.CMD_STATUS": {
             "start": -1,
             "end": -1,
-            "type": "const uint32",
+            "type": "const uint32*",
             "value": "131073"
         },
         "TestD.str": {
             "start": 2384,
             "end": 2391,
-            "type": "char*",
+            "type": "Test\"",
             "value": "// Test"
         },
         "Console.CONSOLE_OUT": {
             "start": -1,
             "end": -1,
-            "type": "const uint32",
+            "type": "const char*",
             "value": "131328"
         },
         "FS.CMD_DEVICE": {
             "start": -1,
             "end": -1,
-            "type": "const uint32",
+            "type": "const uint32*",
             "value": "131074"
         },
         "exp_str_2": {
@@ -221,19 +221,19 @@
         "Console.CMD_DEVICE": {
             "start": -1,
             "end": -1,
-            "type": "const uint32",
+            "type": "const uint32*",
             "value": "131074"
         },
         "Console.CONSOLE_IN": {
             "start": -1,
             "end": -1,
-            "type": "const uint32",
+            "type": "const char*",
             "value": "131329"
         },
         "exp_str_3": {
             "start": 2456,
             "end": 2459,
-            "type": "char*",
+            "type": "\\0\"",
             "value": "\n> \u0000"
         },
         "exp_str_0": {
@@ -251,7 +251,7 @@
         "Console.CMD_STATUS": {
             "start": -1,
             "end": -1,
-            "type": "const uint32",
+            "type": "const uint32*",
             "value": "131073"
         },
         "exp_str_1": {
@@ -263,36 +263,37 @@
         "FS.RSP_DATA": {
             "start": -1,
             "end": -1,
-            "type": "const uint32",
+            "type": "const uint32*",
             "value": "131204"
         },
         "FS.CMD_START": {
             "start": -1,
             "end": -1,
-            "type": "const uint32",
+            "type": "const uint32*",
             "value": "131080"
         },
         "FS.CMD_SIZE": {
             "start": -1,
             "end": -1,
-            "type": "const uint32",
+            "type": "const uint32*",
             "value": "131076"
         },
         "Console.CMD_ADDR": {
             "start": -1,
+            "end": -1,
+            "type": "const uint32*",
+            "value": "131072"
+        }
+    },
+    "syscalls": {}
+}": -1,
             "end": -1,
             "type": "const uint32",
             "value": "131072"
         }
     },
     "syscalls": {}
-}"
-        },
-        "Console.CONSOLE_END": {
-            "start": -1,
-            "end": -1,
-            "type": "const uint32",
-            "value": "131584"
+} "131584"
         }
     },
     "syscalls": {}

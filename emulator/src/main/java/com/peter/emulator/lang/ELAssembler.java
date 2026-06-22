@@ -48,13 +48,13 @@ public class ELAssembler {
         for (ELVariable v : ns.staticVariables.values()) {
             out += (v.varType == Type.CONST) ? "#define" : "#var";
             if (v.type.isArray()) {
-                out += String.format(" %s %s // %s\n", v.getQualifiedName(), (v.startingValue == null) ? String.format("(%d)", v.sizeof()) : v.startingValue.valueString(),
+                out += String.format(" %s %s %s\n", v.getQualifiedName(), (v.startingValue == null) ? String.format("(%d)", v.sizeof()) : v.startingValue.valueString(),
                         v.typeString());
             } else if (v.sizeof() > 4) {
-                out += String.format(" %s %s // %s\n", v.getQualifiedName(), String.format("(%d)", v.sizeof()),
+                out += String.format(" %s %s %s\n", v.getQualifiedName(), String.format("(%d)", v.sizeof()),
                         v.typeString());
             } else {
-                out += String.format(" %s %s // %s\n", v.getQualifiedName(),
+                out += String.format(" %s %s %s\n", v.getQualifiedName(),
                         (v.startingValue == null) ? "0x00" : v.startingValue.valueString(), v.typeString());
             }
         }
