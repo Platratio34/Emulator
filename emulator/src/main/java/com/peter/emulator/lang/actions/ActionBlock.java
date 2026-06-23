@@ -27,6 +27,9 @@ public class ActionBlock extends ComplexAction {
         if(scope.function != null) {
             actions.add(new DirectAction("STACK PUSH r15"));
             actions.add(new DirectAction("COPY rStack r15"));
+            for (ELVariable var : scope.stackVars.values()) {
+                addDirect(String.format("#stackVar %s %s %d", var.type.typeString(), var.name, var.offset));
+            }
         }
         int last = -1;
         while (wI < tokens.size()) {
@@ -171,15 +174,34 @@ public class ActionBlock extends ComplexAction {
                                     }
                                     default -> throw ELAnalysisError.error("asm function may only take string literal or const", t);
                                 }
-                                if (wI >= tokens.size() || !(tokens.get(wI) instanceof OperatorToken ot
-                                        && ot.type == OperatorToken.Type.SEMICOLON))
-                                    throw ELAnalysisError.error("Missing semicolon",
-                                            tokens.get(wI - 1).endLocation.span());
+                                // if (wI >= tokens.size() || !(tokens.get(wI) instanceof OperatorToken ot
+                                //         && ot.type == OperatorToken.Type.SEMICOLON))
+                                //     throw ELAnalysisError.error("Missing semicolon",
+                                //             tokens.get(wI - 1).endLocation.span());
+                                
+                                if (wI < tokens.size()) {
+                                    if (!(tokens.get(wI) instanceof OperatorToken ot && ot.type == OperatorToken.Type.SEMICOLON)) {
+                                        throw ELAnalysisError
+                                                .error("Unexpected token after asm macro, expected ';'", tkn.endLocation.span());
+                                    }
+                                    wI++;
+                                } else {
+                                    throw ELAnalysisError.error("Unexpected end of block after asm macro", tkn.endLocation.span());
+                                }
                                 continue;
                             }
                             default -> { // function call
                                 actions.add(new FunctionAction(scope, -1, it, errors));
                                 wI += 1;
+                                if (wI < tokens.size()) {
+                                    if (!(tokens.get(wI) instanceof OperatorToken ot && ot.type == OperatorToken.Type.SEMICOLON)) {
+                                        throw ELAnalysisError
+                                                .error("Unexpected token after function call, expected ';'", tkn.endLocation.span());
+                                    }
+                                    wI++;
+                                } else {
+                                    throw ELAnalysisError.error("Unexpected end of block after function call", tkn.endLocation.span());
+                                }
                                 continue;
                             }
                         }
@@ -300,6 +322,7 @@ public class ActionBlock extends ComplexAction {
                                                 if (r == null)
                                                     throw ELAnalysisError.error("No free register", tkn);
                                                 actions.add(new ExpressionAction(scope, expTkns, r));
+                                                addDirect(String.format("#stackVar %s %s", type.typeString(), var.name));
                                                 actions.add(new DirectAction("STACK PUSH %s", r));
                                                 r.release();
                                                 expTkns = new ArrayList<>();
@@ -314,6 +337,7 @@ public class ActionBlock extends ComplexAction {
                                         if (r == null)
                                             throw ELAnalysisError.error("No free register", tkn);
                                         actions.add(new ExpressionAction(scope, expTkns, r));
+                                        addDirect(String.format("#stackVar %s %s", type.typeString(), var.name));
                                         actions.add(new DirectAction("STACK PUSH %s", r));
                                         r.release();
                                         n++;

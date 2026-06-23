@@ -42,11 +42,14 @@ public class CPUPanel extends JPanel {
 
         setLayout(new GridLayout(0, 1));
 
+        JPanel panel = new JPanel(new GridLayout(0,1));
+        add(panel);
+
         nameLbl = new JLabel(name);
-        add(nameLbl);
+        panel.add(nameLbl);
 
         regPanelOuter = new JPanel();
-        add(regPanelOuter);
+        panel.add(regPanelOuter);
         regPanel = new JPanel();
         regPanel.setLayout(new GridLayout(12,8, 5, 0));
         Dimension d = regPanel.getPreferredSize();
@@ -154,7 +157,7 @@ public class CPUPanel extends JPanel {
 
         instrLbl = new JLabel(MachineCode.translate(cpu.readMem(cpu.pgmPtr), cpu.readMem(cpu.pgmPtr+1)));
         instrLbl.setFont(EmulatorGui.monFont);
-        add(instrLbl);
+        panel.add(instrLbl);
 
         debuggerPanel = new DebuggerPanel(cpu);
         add(debuggerPanel);

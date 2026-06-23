@@ -17,6 +17,8 @@ public class SymbolFile {
     public final HashMap<String, Integer> syscalls = new HashMap<>();
     public final HashSet<Integer> breakpoints = new HashSet<>();
     public final ArrayList<LineSymbol> lineSymbols = new ArrayList<>();
+    public final ArrayList<StackVarSymbol> stackVarSymbols = new ArrayList<>();
+    protected final ArrayList<StackVarSymbol> cStackVarSymbols = new ArrayList<>();
     protected LineSymbol lastLine = null;
 
     public SymbolFile() {
@@ -95,6 +97,31 @@ public class SymbolFile {
         }
     }
 
+    public void addStackVar(String type, String name, int offset, int address) {
+        StackVarSymbol sv = new StackVarSymbol(type, name, offset, address);
+        stackVarSymbols.add(sv);
+        cStackVarSymbols.add(sv);
+    }
+
+    public boolean endStackVar(String name, int address) {
+        if (cStackVarSymbols.isEmpty()) {
+            // System.out.println("no vars");
+            return false;
+        }
+        for (int i = cStackVarSymbols.size() - 1; i >= 0; i--) {
+            StackVarSymbol sv = cStackVarSymbols.get(i);
+            // System.out.println(String.format("\"%s\" ?= \"%s\"", sv.name, name));
+            if (sv.name.equals(name)) {
+                // System.out.println("Found");
+                cStackVarSymbols.remove(i);
+                sv.end = address;
+                return true;
+            }
+        }
+        // System.out.println("Not found");
+        return false;
+    }
+
     public SymbolFile combine(SymbolFile other, int otherOffset) {
         for (FunctionSymbol functionSymbol : other.functions.values()) {
             FunctionSymbol f2 = functionSymbol.copy();
@@ -133,6 +160,9 @@ public class SymbolFile {
         for (LineSymbol line : other.lineSymbols) {
             lineSymbols.add(line.offset(otherOffset));
         }
+        for (StackVarSymbol stackVar : other.stackVarSymbols) {
+            stackVarSymbols.add(stackVar.offset(otherOffset));
+        }
         return this;
     }
     
@@ -166,9 +196,16 @@ public class SymbolFile {
         }
         if (!lineSymbols.isEmpty()) {
             JSONArray jsonLines = new JSONArray();
-            json.put("lines", jsonSyscalls);
+            json.put("lines", jsonLines);
             for (LineSymbol line : lineSymbols) {
                 jsonLines.put(line.toJSON());
+            }
+        }
+        if (!stackVarSymbols.isEmpty()) {
+            JSONArray jsonStackVars = new JSONArray();
+            json.put("stackVars", jsonStackVars);
+            for (StackVarSymbol stackVar : stackVarSymbols) {
+                jsonStackVars.put(stackVar.toJSON());
             }
         }
         return json.toString(4);
@@ -202,9 +239,16 @@ public class SymbolFile {
         }
         if (!lineSymbols.isEmpty()) {
             JSONArray jsonLines = new JSONArray();
-            json.put("lines", jsonSyscalls);
+            json.put("lines", jsonLines);
             for (LineSymbol line : lineSymbols) {
                 jsonLines.put(line.toJSON());
+            }
+        }
+        if (!stackVarSymbols.isEmpty()) {
+            JSONArray jsonStackVars = new JSONArray();
+            json.put("stackVars", jsonStackVars);
+            for (StackVarSymbol stackVar : stackVarSymbols) {
+                jsonStackVars.put(stackVar.toJSON());
             }
         }
         return json.toString(4);
@@ -243,6 +287,12 @@ public class SymbolFile {
                     JSONArray jsonLines = json.getJSONArray("lines");
                     for (int i = 0; i < jsonLines.length(); i++) {
                         symbols.lineSymbols.add(LineSymbol.fromJSON(jsonLines.getJSONObject(i)));
+                    }
+                }
+                if(json.has("stackVars")) {
+                    JSONArray jsonLines = json.getJSONArray("stackVars");
+                    for (int i = 0; i < jsonLines.length(); i++) {
+                        symbols.stackVarSymbols.add(StackVarSymbol.fromJSON(jsonLines.getJSONObject(i)));
                     }
                 }
             }
@@ -485,6 +535,7 @@ public class SymbolFile {
         public LineSymbol offset(int offset) {
             return new LineSymbol(start + offset, end + offset, file, lineStr);
         }
+
         public LineSymbol(int start, int end, String file, String lineStr) {
             super(file + "@" + lineStr, start, end);
             this.file = file;
@@ -502,6 +553,52 @@ public class SymbolFile {
         public static LineSymbol fromJSON(JSONObject json) {
             return new LineSymbol(json.getInt("start"), json.getInt("end"), json.getString("file"),
                     json.getString("lineStr"));
+        }
+
+    }
+    
+    public static class StackVarSymbol extends Symbol {
+
+        public final String type;
+        public final int offset;
+        public int address = -1;
+
+        public StackVarSymbol(String type, String name, int offset, int start) {
+            super(name, start, start);
+            this.type = type;
+            this.offset = offset;
+        }
+
+        public StackVarSymbol(String type, String name, int offset, int start, int end) {
+            super(name, start, end);
+            this.type = type;
+            this.offset = offset;
+        }
+
+        @Override
+        public JSONObject toJSON() {
+            JSONObject json = super.toJSON();
+            json.put("type", type);
+            json.put("offset", offset);
+            return json;
+        }
+
+        public static StackVarSymbol fromJSON(JSONObject json) {
+            return new StackVarSymbol(json.getString("type"), json.getString("name"), json.getInt("offset"), json.getInt("start"),
+                    json.getInt("end"));
+        }
+
+        public StackVarSymbol offset(int addrOffset) {
+            return new StackVarSymbol(type, name, offset, start + addrOffset, end + addrOffset);
+        }
+
+        public StackVarSymbol activate(int stackPointer) {
+            return new StackVarSymbol(type, name, offset, start, end).withAddress(stackPointer + offset);
+        }
+
+        private StackVarSymbol withAddress(int address) {
+            this.address = address;
+            return this;
         }
 
     }

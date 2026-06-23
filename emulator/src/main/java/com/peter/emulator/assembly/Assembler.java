@@ -409,6 +409,21 @@ public class Assembler {
                         symbols.endLine(addr * 4 - 4);
                     } else if (line.startsWith("#line")) {
                         symbols.startLine(parts[1], parts[2], addr * 4);
+                    } else if (line.startsWith("#stackVarClear")) {
+                        if (!symbols.endStackVar(parts[1], addr * 4)) {
+                            errors.add(new AssemblerError("Invalid stackVarClear, no such variable `"+parts[1]+"`", lineN,
+                                    line.length(), line, source));
+                            continue;
+                        }
+                    } else if (line.startsWith("#stackVar")) {
+                        int next = 1;
+                        String type = parts[next++];
+                        while (type.equals("out") || type.equals("const")) {
+                            type = parts[next++];
+                        }
+                        String name = parts[next++];
+                        int offset = parts.length > next ? Integer.parseInt(parts[next]) : 0;
+                        symbols.addStackVar(type, name, offset, addr * 4);
                     }
                     continue;
                 }

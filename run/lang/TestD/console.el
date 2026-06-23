@@ -23,7 +23,6 @@ namespace Console {
         asm("COPY r15 r14\nINC r14 -12\nLOAD MEM r14 r14"); // len
         asm("LOAD r1 Console.CONSOLE_OUT"); // consolePntr
         asm("COPY r15 r2\nINC r2 -16\nLOAD MEM r2 r2"); // str
-        asm("LOAD r5 Console.CONSOLE_OUT");
         asm("GOTO GT r14 :printStr_len");
             asm(":printStr_l1");
                 asm("LOAD MEM BYTE r3 r2\nGOTO EQ r3 :printStr_l1_exit");
@@ -50,15 +49,16 @@ namespace Console {
     }
 
     public static void read(char* buffer, uint32 bufferSize) {
-        while(*CONSOLE_IN_COUNT == 0) {}
+        asm("#breakpoint");
+        asm("LOAD r1 Console.CONSOLE_IN_COUNT\n:read_l0\nLOAD MEM BYTE r2 r1\nGOTO EQ r2 :read_l0");
         uint32 inCount = *CONSOLE_IN_COUNT;
         if(bufferSize < inCount) {
             inCount = bufferSize;
         }
         uint32 i = 0;
-        while(inCount > 0) {
+        while(i < inCount) {
             buffer[i] = *CONSOLE_IN;
-            inCount--;
+            // inCount--;
             i++;
         }
         if(i < bufferSize) {

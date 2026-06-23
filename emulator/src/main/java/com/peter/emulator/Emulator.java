@@ -3,6 +3,7 @@ package com.peter.emulator;
 import com.peter.Main;
 import com.peter.emulator.components.MMU;
 import com.peter.emulator.components.RAM;
+import com.peter.emulator.components.TimerUnit;
 import com.peter.emulator.gui.EmulatorGui;
 import com.peter.emulator.peripherals.ConsolePeripheral;
 import com.peter.emulator.peripherals.PeripheralManager;
@@ -12,17 +13,19 @@ public class Emulator {
 
     public final RAM ram = new RAM();
     public final MMU mmu = new MMU();
-    public float tickSpeed = 60;
+    public float tickSpeed = 120;
 
     public final CPU[] cores = new CPU[] {
         new CPU(0, ram, mmu)
     };
     public PeripheralManager peripheralManager = new PeripheralManager(ram, cores[0]);
     public final EmulatorGui gui;
+    public final TimerUnit timerUnit = new TimerUnit(0x0002_0200, cores[0]);
     public final ConsolePeripheral console = new ConsolePeripheral(0x0002_0100);
     public final StoragePeripheral vd0 = new StoragePeripheral(Main.ROOT_PATH.resolve("devices/vd0"));
 
     public Emulator() {
+        peripheralManager.addPeripheral(timerUnit);
         peripheralManager.addPeripheral(console);
         peripheralManager.addPeripheral(vd0);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -32,6 +35,7 @@ public class Emulator {
     }
 
     protected void tick() {
+        // System.out.println("tick");
         for (CPU cpu : cores) {
             cpu.tick();
         }
@@ -122,7 +126,7 @@ public class Emulator {
         if(newWait == wait || !running)
             return;
         wait = newWait;
-        if(!wait) {
+        if(!wait && waiting) {
             waiting = false;
             thread.interrupt();
         }

@@ -494,11 +494,11 @@ public class ExpressionAction extends ComplexAction {
         //     throw ELAnalysisError.error("Un-typed expression", tokens.getFirst().startLocation.span(tokens.getLast().endLocation));
         outType = lastType;
         if (_wasConst) {
-            // wasConst = true;
-            wasConst = false;
+            wasConst = true;
+            // wasConst = false;
             constValue = _constValue;
-            // actions.clear();
-            // addDirect("LOAD %s %d", targetReg, constValue);
+            actions.clear();
+            addDirect("LOAD %s %d", targetReg, constValue);
         } else {
             wasConst = false;
             constValue = 0;

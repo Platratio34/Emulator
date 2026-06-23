@@ -32,16 +32,16 @@ namespace FS {
         *CMD_ADDR = 0x0101_0000 | deviceId;
     }
 
-    public static void openFile(char* path, out uint32& handle) {
+    public static void openFile(char* path, out uint32& status, out uint32& handle) {
         uint32[2] msg = {0x10, path};
-        peripheralCommand(2, 2, &msg);
-        // uint32 rspStatus = *RSP_STATUS;
+        peripheralCommand(3, 2, &msg);
+        status = *RSP_STATUS;
         handle = *RSP_DATA_2;
     }
 
     public static void readFile(uint32 handle, void* buffer, uint32 size, uint32 offset, out uint32& read, out uint32& state) {
         uint32[5] msg = {0x11, handle, buffer, size, offset};
-        peripheralCommand(2, 5, &msg);
+        peripheralCommand(3, 5, &msg);
         state = *RSP_DATA;
         read = *RSP_DATA_3;
     }

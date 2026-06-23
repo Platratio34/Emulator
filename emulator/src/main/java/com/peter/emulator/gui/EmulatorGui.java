@@ -15,7 +15,7 @@ public class EmulatorGui {
     protected MemoryPanel stackPanel;
     protected MemoryPanel kernalPanel;
     protected MemoryPanel peripheralMemoryPanel;
-    protected MemoryPanel consoleMemoryPanel;
+    protected MemoryPanel timerMemoryPanel;
 
     protected JPanel buttonGrid;
     protected JButton pauseBtn;
@@ -102,8 +102,8 @@ public class EmulatorGui {
             
             peripheralMemoryPanel = new MemoryPanel(emulator.cores[0], 0x2_0000, 4);
             p.add(peripheralMemoryPanel);
-            // consoleMemoryPanel = new MemoryPanel(emulator.cores[0], 0x2_0100, 4);
-            // p.add(consoleMemoryPanel);
+            timerMemoryPanel = new MemoryPanel(emulator.cores[0], 0x2_0200, 2);
+            p.add(timerMemoryPanel);
 
             frame.setSize(1500, 800);
             
@@ -125,7 +125,7 @@ public class EmulatorGui {
             stackPanel.update();
             kernalPanel.update();
             peripheralMemoryPanel.update();
-            // consoleMemoryPanel.update();
+            timerMemoryPanel.update();
             updating = false;
         });
     }

@@ -98,12 +98,12 @@ public class StoragePeripheral implements DMAPeripheral {
                 int pathPntr = cpu.translateAddress(msg[1]); // pointer to null terminated path string
                 String path = ram.readStringNT(pathPntr);
                 File f = rootPath.resolve(path).toFile();
-                if (!f.exists())
-                    if (!f.exists()) {
-                        ram.copyWords(new int[] { 0x02, 0x0 }, PeripheralManager.PERIPHERAL_RSP_DATA);
-                        ram.writeWord(PeripheralManager.PERIPHERAL_RSP_STATUS, 0x0100_0000 | deviceId);
-                        return;
-                    }
+                if (!f.exists()) {
+                    System.err.println("File did not exist "+f.getAbsolutePath());
+                    ram.copyWords(new int[] { 0x02, 0x0 }, PeripheralManager.PERIPHERAL_RSP_DATA);
+                    ram.writeWord(PeripheralManager.PERIPHERAL_RSP_STATUS, 0x0100_0000 | deviceId);
+                    return;
+                }
                 int handle = nextHandle++;
                 openFiles.put(handle, f);
                 ram.copyWords(new int[] { 0x01, handle }, PeripheralManager.PERIPHERAL_RSP_DATA);

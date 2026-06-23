@@ -7,6 +7,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import com.peter.emulator.CPU;
+import com.peter.emulator.assembly.SymbolFile.StackVarSymbol;
 import com.peter.emulator.debug.Debugger;
 
 public class DebuggerPanel extends JPanel {
@@ -16,6 +17,7 @@ public class DebuggerPanel extends JPanel {
 
     // protected final JLabel lineLbl;
     protected final JLabel funcLbl;
+    protected final JPanel sVarPanel;
     protected final JPanel varPanel;
     protected final HashMap<String, VarDisplay> varDisplays = new HashMap<>();
 
@@ -28,6 +30,9 @@ public class DebuggerPanel extends JPanel {
 
         this.funcLbl = new JLabel();
         add(funcLbl);
+
+        sVarPanel = new JPanel(new GridLayout(0, 3));
+        add(sVarPanel);
 
         varPanel = new JPanel(new GridLayout(0, 3));
         add(varPanel);
@@ -50,6 +55,26 @@ public class DebuggerPanel extends JPanel {
         funcLbl.setText(String.format("<html>%s<br/>%s</html>", debugger.getLine(cpu, ""), debugger.printStack().replace("\n","<br>")));
         for (VarDisplay vd : varDisplays.values()) {
             vd.update();
+        }
+
+        sVarPanel.removeAll();
+        for (StackVarSymbol sv : debugger.activeStackVars) {
+            JLabel lbl = new JLabel();
+            lbl.setText(String.format("%s: %s", sv.name, debugger.readVar(cpu, sv)));
+            sVarPanel.add(lbl);
+        }
+    }
+
+    protected class StackVarDisplay extends JLabel {
+        public final String name;
+
+        public StackVarDisplay(String name) {
+            this.name = name;
+            update();
+        }
+
+        public void update() {
+            setText(String.format("%s: %s", name, debugger.getVar(cpu, name)));
         }
     }
 

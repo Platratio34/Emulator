@@ -99,7 +99,13 @@ public class ActionScope {
     }
 
     public DirectAction getStackResetAction() {
-        return new DirectAction("STACK DEC %d", stackOff - stackOffStart);
+        String sVarStr = "// End of scope";
+        for (ELVariable var : stackVars.values()) {
+            // if (var.offset < 0)
+            //     continue;
+            sVarStr += String.format("\n#stackVarClear %s", var.name);
+        }
+        return new DirectAction("STACK DEC %d\n%s", stackOff - stackOffStart, sVarStr);
     }
     
     public Namespace getNamespace() {
@@ -159,6 +165,10 @@ public class ActionScope {
      * @return the resolve action
      */
     public ResolveAction loadVar(IdentifierToken id, Register reg, boolean byValue) {
+        return loadVar(this, id, reg, byValue);
+    }
+
+    protected ResolveAction loadVar(ActionScope scope, IdentifierToken id, Register reg, boolean byValue) {
         if (id.value.equals("this")) {
             Namespace ns = getNamespace();
             ELFunction func = getFunction();
@@ -175,14 +185,14 @@ public class ActionScope {
         }
         if(stackVars.containsKey(id.value)) {
             ELVariable v = stackVars.get(id.value);
-            return new ResolveAction(this, reg, v, id, byValue);
+            return new ResolveAction(scope, reg, v, id, byValue);
         }
         if(parent != null)
-            return parent.loadVar(id, reg, byValue);
+            return parent.loadVar(scope, id, reg, byValue);
         ELVariable v = namespace.getFirstVar(id, unit);
         if(v == null)
             return null;
-        return new ResolveAction(this, reg, v, id, byValue);
+        return new ResolveAction(scope, reg, v, id, byValue);
     }
 
     // public void reserve(Register reg) {

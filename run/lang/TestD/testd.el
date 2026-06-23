@@ -11,6 +11,8 @@ namespace TestD {
     public static char[9] path = "test.txt\0";
     public static char tc;
 
+    public static const uint32* TIMERS = 0x0002_0200;
+
     @Entrypoint(raw)
     public static void main() {
         asm("LOAD rIH &:TestD.onInterrupt");
@@ -38,9 +40,15 @@ namespace TestD {
 
         // asm("#breakpoint");
         uint32 fh;
-        FS.openFile("test.txt\0", &fh);
+        uint32 rstat;
+        char[10] str2;
+        str2[8] = '\n';
+        str2[9] = '\0';
+        FS.openFile("test.txt\0", &rstat, &fh);
         if(fh == 0) {
             Console.printStr("ERROR\n\0", 0);
+            Console.intToHex(rstat, &str2);
+            Console.printStr(&str2, 0);
         } else {
             Console.printStr("Opened\n\0", 0);
             char[32] buffer;
@@ -48,9 +56,6 @@ namespace TestD {
             uint32 state;
             FS.readFile(fh, &buffer, 32, 0, &read, &state);
             // asm("#breakpoint");
-            char[10] str2;
-            str2[8] = '\n';
-            str2[9] = '\0';
             Console.intToHex(state, &str2);
             Console.printStr(&str2, 0);
             // Console.printChar('\n');
@@ -63,13 +68,14 @@ namespace TestD {
         }
 
         Console.printStr("\n> \0",0);
+        asm("#breakpoint");
         char[32] buff;
         Console.read(&buff, 32);
         Console.printStr(&buff, 0);
-        
-        // asm("#breakpoint");
 
-        wait(1000);
+        TIMERS[1] = 120 * 5;
+
+        wait(2000);
         // funcC();
     }
 
@@ -87,12 +93,21 @@ namespace TestD {
         asm("LOAD rIC 0");
         char[9] str;
         str[8] = '\0';
-        Console.intToHex(code, &str);
-        Console.printStr("\nInterrupt: \0", 0);
-        Console.printStr(&str, 8);
-        Console.printChar('\n');
+        // Console.intToHex(code, &str);
+        // Console.printStr("\nInterrupt: \0", 0);
+        // Console.printStr(&str, 8);
+        // Console.printChar('\n');
         if(code == 0xff) {
             asm("HALT");
+        }
+        if(code == 0x01) { // timer
+            uint32 i = 1;
+            while(i < 16) {
+                if(TIMERS[i] == 0xffff_ffff) {
+                    TIMERS[i] = 0x0;
+                }
+                i++;
+            }
         }
     }
 

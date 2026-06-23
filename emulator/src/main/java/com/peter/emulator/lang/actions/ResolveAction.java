@@ -96,18 +96,20 @@ public class ResolveAction extends ComplexAction {
                     if (indexExp.outType != null && !indexExp.outType.equals(ELPrimitives.UINT32))
                         throw ELAnalysisError.error("Index must resolve to a uint32",
                                 id.index.subFirst().startLocation.span(id.index.subLast().endLocation));
-                    actions.add(indexExp);
-                    if (!rIndex.reserve())
-                        System.err.println("??");
-                    int wds = t.resolve(it.span()).sizeof();
-                    if (wds > 1) {
-                        Register rSize = scope.firstFree();
-                        addDirect("LOAD %s %d\nMUL %s %s %s", rSize, wds, rIndex, rIndex, rSize);
-                        rSize.release();
+                    int size = t.resolve(it.span()).sizeof();
+                    // if(t.isPointer())
+                    //     addDirect("LOAD MEM %s %s", reg, reg);
+                    if (indexExp.wasConst) {
+                        addDirect("INC %s %d", reg, indexExp.constValue * size);
+                    } else {
+                        actions.add(indexExp);
+                        if (size > 1) {
+                            Register rSize = scope.firstFree();
+                            addDirect("LOAD %s %d\nMUL %s %s %s", rSize, size, rIndex, rIndex, rSize);
+                            rSize.release();
+                        }
+                        addDirect("ADD %s %s %s", reg, reg, rIndex);
                     }
-                    if(t.isPointer())
-                        addDirect("LOAD MEM %s %s", reg, reg);
-                    addDirect("ADD %s %s %s", reg, reg, rIndex);
                     rIndex.release();
                     t = t.resolve(it.span());
                 }
@@ -133,6 +135,7 @@ public class ResolveAction extends ComplexAction {
                 v = clazz.memberVariables.get(it.value);
                 t = v.type;
             }
+
         // }
         String size = switch (t.sizeof()) {
             case 2 -> " SHORT";

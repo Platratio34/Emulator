@@ -2,6 +2,8 @@ package com.peter.emulator;
 
 import static com.peter.emulator.MachineCode.*;
 
+import java.util.ArrayDeque;
+
 import com.peter.emulator.MachineCode.ConditionalOperator;
 import com.peter.emulator.MachineCode.MathOperator;
 import com.peter.emulator.components.MMU;
@@ -47,6 +49,7 @@ public class CPU {
     public int interruptCode = 0;
     // rIH
     public int interruptHandler = 0;
+    protected ArrayDeque<Integer> interruptQueue = new ArrayDeque<>();
 
     public Debugger debugger = null;
     public boolean printInstr = false;
@@ -263,6 +266,10 @@ public class CPU {
     }
 
     public void interrupt(int code) {
+        if (interruptCode != 0) {
+            interruptQueue.add(code);
+            return;
+        }
         interruptCode = code;
     }
 
@@ -273,6 +280,10 @@ public class CPU {
         if (!running)
             return;
 
+        if (interruptCode == 0 && !inInterrupt && !interruptQueue.isEmpty()) {
+            interruptCode = interruptQueue.pop();
+        }
+        
         if (interruptCode != 0 && !inInterrupt) {
             inInterrupt = true;
             System.err.println("Interrupt: "+interruptCode);

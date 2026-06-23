@@ -23,6 +23,7 @@
 // TestD
 #define TestD.str "// Test" char*
 #var TestD.path "test.txt\0" char[9]
+#define TestD.TIMERS 0x0002_0200 uint32*
 #var TestD.v 0x0000 uint32
 #var TestD.testStr2 "Test2\n\0" char[7]
 #var TestD.testStr "Test\n" char[5]
@@ -36,28 +37,30 @@
 #function Console.read_char*_uint32 buffer char*, bufferSize uint32
 STACK PUSH r15
 COPY rStack r15
-// 0 53:10
+#stackVar char* buffer -16
+#stackVar uint32 bufferSize -12
+// 0 52:10
+#line run\lang\TestD\console.el 52:10
+#breakpoint
+//  asm("#breakpoint");
+
+// 1 53:10
 #line run\lang\TestD\console.el 53:10
-:while_condition_0
 LOAD r1 Console.CONSOLE_IN_COUNT
-LOAD MEM BYTE r1 r1
-SET FORCE EQ r1 r1
-GOTO EQ r1 :while_end_0
-// 
+:read_l0
+LOAD MEM BYTE r2 r1
+GOTO EQ r2 :read_l0
+//  asm("LOAD r1 Console.CONSOLE_IN_COUNT\n:read_l0\nLOAD MEM BYTE r2 r1\nGOTO EQ r2 :read_l0");
 
-#lineend
-GOTO :while_condition_0
-:while_end_0
-//  while(* CONSOLE_IN_COUNT == 0) {}
-
-// 1 54:10
+// 2 54:10
 #line run\lang\TestD\console.el 54:10
 LOAD r1 Console.CONSOLE_IN_COUNT
 LOAD MEM BYTE r1 r1
+#stackVar uint32 inCount
 STACK PUSH r1
 //  uint32 inCount =* CONSOLE_IN_COUNT;
 
-// 2 55:10
+// 3 55:10
 #line run\lang\TestD\console.el 55:10
 COPY r15 r1
 INC r1 -12
@@ -66,7 +69,7 @@ COPY r15 r2
 LOAD MEM r2 r2
 SUB r1 r1 r2
 SET FORCE LT r1 r1
-GOTO EQ r1 :if_end_1
+GOTO EQ r1 :if_end_0
 // 0 56:14
 #line run\lang\TestD\console.el 56:14
 COPY r15 r1
@@ -77,22 +80,27 @@ STORE r2 r1
 //  inCount = bufferSize;
 
 #lineend
-:if_end_1
+:if_end_0
 //  if(bufferSize < inCount) {inCount = bufferSize;}
 
-// 3 58:10
+// 4 58:10
 #line run\lang\TestD\console.el 58:10
 LOAD r1 0
+#stackVar uint32 i
 STACK PUSH r1
 //  uint32 i = 0;
 
-// 4 59:10
+// 5 59:10
 #line run\lang\TestD\console.el 59:10
-:while_condition_2
+:while_condition_1
 COPY r15 r1
+INC r1 4
 LOAD MEM r1 r1
-SET FORCE GT r1 r1
-GOTO EQ r1 :while_end_2
+COPY r15 r2
+LOAD MEM r2 r2
+SUB r1 r1 r2
+SET FORCE LT r1 r1
+GOTO EQ r1 :while_end_1
 // 0 60:14
 #line run\lang\TestD\console.el 60:14
 COPY r15 r1
@@ -100,22 +108,13 @@ INC r1 -16
 COPY r15 r2
 INC r2 4
 LOAD MEM r2 r2
-LOAD MEM r1 r1
 ADD r1 r1 r2
 LOAD r2 Console.CONSOLE_IN
 LOAD MEM BYTE r2 r2
 STORE BYTE r2 r1
 //  buffer[i] =* CONSOLE_IN;
 
-// 1 61:14
-#line run\lang\TestD\console.el 61:14
-COPY r15 r1
-LOAD MEM r2 r1
-INC r2 -1
-STORE r2 r1
-//  inCount--;
-
-// 2 62:14
+// 1 62:14
 #line run\lang\TestD\console.el 62:14
 COPY r15 r1
 INC r1 4
@@ -125,11 +124,11 @@ STORE r2 r1
 //  i++;
 
 #lineend
-GOTO :while_condition_2
-:while_end_2
-//  while(inCount > 0) {buffer[i] =* CONSOLE_IN; inCount--; i++;}
+GOTO :while_condition_1
+:while_end_1
+//  while(i < inCount) {buffer[i] =* CONSOLE_IN; i++;}
 
-// 5 64:10
+// 6 64:10
 #line run\lang\TestD\console.el 64:10
 COPY r15 r1
 INC r1 4
@@ -139,7 +138,7 @@ INC r2 -12
 LOAD MEM r2 r2
 SUB r1 r1 r2
 SET FORCE LT r1 r1
-GOTO EQ r1 :if_end_3
+GOTO EQ r1 :if_end_2
 // 0 65:14
 #line run\lang\TestD\console.el 65:14
 COPY r15 r1
@@ -147,19 +146,23 @@ INC r1 -16
 COPY r15 r2
 INC r2 4
 LOAD MEM r2 r2
-LOAD MEM r1 r1
 ADD r1 r1 r2
 LOAD r2 '\0'
 STORE BYTE r2 r1
 //  buffer[i] = '\0';
 
 #lineend
-:if_end_3
+:if_end_2
 //  if(i < bufferSize) {buffer[i] = '\0';}
 
 #lineend
 :func_exit_Console.read_char*_uint32
 STACK DEC 8
+// End of scope
+#stackVarClear i
+#stackVarClear buffer
+#stackVarClear inCount
+#stackVarClear bufferSize
 STACK POP r15
 GOTO POP
 #endfunction void
@@ -167,6 +170,8 @@ GOTO POP
 #function Console.printStr_char*_uint32 str char*, len uint32
 STACK PUSH r15
 COPY rStack r15
+#stackVar char* str -16
+#stackVar uint32 len -12
 // 0 23:10
 #line run\lang\TestD\console.el 23:10
 COPY r15 r14
@@ -188,62 +193,53 @@ LOAD MEM r2 r2
 
 // 3 26:10
 #line run\lang\TestD\console.el 26:10
-LOAD r5 Console.CONSOLE_OUT
-//  asm("LOAD r5 Console.CONSOLE_OUT");
-
-// 4 27:10
-#line run\lang\TestD\console.el 27:10
 GOTO GT r14 :printStr_len
 //  asm("GOTO GT r14 :printStr_len");
 
-// 5 28:14
-#line run\lang\TestD\console.el 28:14
+// 4 27:14
+#line run\lang\TestD\console.el 27:14
 :printStr_l1
 //  asm(":printStr_l1");
 
-// 6 29:18
-#line run\lang\TestD\console.el 29:18
+// 5 28:18
+#line run\lang\TestD\console.el 28:18
 LOAD MEM BYTE r3 r2
 GOTO EQ r3 :printStr_l1_exit
 //  asm("LOAD MEM BYTE r3 r2\nGOTO EQ r3 :printStr_l1_exit");
 
-// 7 30:18
-#line run\lang\TestD\console.el 30:18
+// 6 29:18
+#line run\lang\TestD\console.el 29:18
 STORE BYTE r3 r1
 INC r2 1
 GOTO :printStr_l1
 //  asm("STORE BYTE r3 r1\nINC r2 1\nGOTO :printStr_l1");
 
-// 8 31:14
-#line run\lang\TestD\console.el 31:14
+// 7 30:14
+#line run\lang\TestD\console.el 30:14
 :printStr_l1_exit
 GOTO :printStr_exit
 //  asm(":printStr_l1_exit\nGOTO :printStr_exit");
 
-// 9 32:10
-#line run\lang\TestD\console.el 32:10
+// 8 31:10
+#line run\lang\TestD\console.el 31:10
 :printStr_len
 //  asm(":printStr_len");
 
-// 10 33:14
-#line run\lang\TestD\console.el 33:14
+// 9 32:14
+#line run\lang\TestD\console.el 32:14
 COPY BYTE MEM r2 r1 INC_RG
 //  asm("COPY BYTE MEM r2 r1 INC_RG");
 
-// 11 34:14
-#line run\lang\TestD\console.el 34:14
+// 10 33:14
+#line run\lang\TestD\console.el 33:14
 INC r14 -1
 GOTO GT r14 :printStr_len
 //  asm("INC r14 -1\nGOTO GT r14 :printStr_len");
 
-// 12 35:10
-#line run\lang\TestD\console.el 35:10
+// 11 34:10
+#line run\lang\TestD\console.el 34:10
 :printStr_exit
-//  asm(":printStr_exit")
-
-// 13 35:31
-#line run\lang\TestD\console.el 35:31
-// ;
+//  asm(":printStr_exit");
 
 #lineend
 :func_exit_Console.printStr_char*_uint32
@@ -254,6 +250,7 @@ GOTO POP
 #function Console.printChar_char c char
 STACK PUSH r15
 COPY rStack r15
+#stackVar char c -12
 // 0 17:10
 #line run\lang\TestD\console.el 17:10
 LOAD r1 Console.CONSOLE_OUT
@@ -269,11 +266,7 @@ LOAD MEM r2 r2
 // 2 19:10
 #line run\lang\TestD\console.el 19:10
 STORE BYTE r2 r1
-//  asm("STORE BYTE r2 r1")
-
-// 3 19:33
-#line run\lang\TestD\console.el 19:33
-// ;
+//  asm("STORE BYTE r2 r1");
 
 #lineend
 :func_exit_Console.printChar_char
@@ -284,78 +277,76 @@ GOTO POP
 #function Console.intToHex_uint32_char* value uint32, str char*
 STACK PUSH r15
 COPY rStack r15
-// 0 39:10
-#line run\lang\TestD\console.el 39:10
+#stackVar char* str -12
+#stackVar uint32 value -16
+// 0 38:10
+#line run\lang\TestD\console.el 38:10
 LOAD r14 7
 //  asm("LOAD r14 7");
 
-// 1 40:10
-#line run\lang\TestD\console.el 40:10
+// 1 39:10
+#line run\lang\TestD\console.el 39:10
 COPY r15 r1
 INC r1 -16
 LOAD MEM r1 r1
 //  asm("COPY r15 r1\nINC r1 -16\nLOAD MEM r1 r1");
 
-// 2 41:10
-#line run\lang\TestD\console.el 41:10
+// 2 40:10
+#line run\lang\TestD\console.el 40:10
 COPY r15 r2
 INC r2 -12
 LOAD MEM r2 r2
 INC r2 8
 //  asm("COPY r15 r2\nINC r2 -12\nLOAD MEM r2 r2\nINC r2 8");
 
-// 3 42:10
-#line run\lang\TestD\console.el 42:10
+// 3 41:10
+#line run\lang\TestD\console.el 41:10
 LOAD r3 0xf
 LOAD r6 0xa
 //  asm("LOAD r3 0xf\nLOAD r6 0xa");
 
-// 4 43:10
-#line run\lang\TestD\console.el 43:10
+// 4 42:10
+#line run\lang\TestD\console.el 42:10
 :intToHex_l1
 //  asm(":intToHex_l1");
 
-// 5 44:14
-#line run\lang\TestD\console.el 44:14
+// 5 43:14
+#line run\lang\TestD\console.el 43:14
 INC r2 -1
 AND r4 r1 r3
 RSH r1 r1 4
 //  asm("INC r2 -1\nAND r4 r1 r3\nRSH r1 r1 4");
 
-// 6 45:14
-#line run\lang\TestD\console.el 45:14
+// 6 44:14
+#line run\lang\TestD\console.el 44:14
 SUB r5 r4 r6
 GOTO GEQ r5 :intToHex_gt
 //  asm("SUB r5 r4 r6\nGOTO GEQ r5 :intToHex_gt");
 
-// 7 46:18
-#line run\lang\TestD\console.el 46:18
+// 7 45:18
+#line run\lang\TestD\console.el 45:18
 INC r4 0x30
 STORE BYTE r4 r2
 GOTO :intToHex_l1_end
 //  asm("INC r4 0x30\nSTORE BYTE r4 r2\nGOTO :intToHex_l1_end");
 
-// 8 47:14
-#line run\lang\TestD\console.el 47:14
+// 8 46:14
+#line run\lang\TestD\console.el 46:14
 :intToHex_gt
 //  asm(":intToHex_gt");
 
-// 9 48:18
-#line run\lang\TestD\console.el 48:18
+// 9 47:18
+#line run\lang\TestD\console.el 47:18
 INC r4 0x57
 STORE BYTE r4 r2
 //  asm("INC r4 0x57\nSTORE BYTE r4 r2");
 
-// 10 49:14
-#line run\lang\TestD\console.el 49:14
+// 10 48:14
+#line run\lang\TestD\console.el 48:14
 :intToHex_l1_end
 INC r14 -1
 GOTO GEQ r14 :intToHex_l1
-//  asm(":intToHex_l1_end\nINC r14 -1\nGOTO GEQ r14 :intToHex_l1")
-
-// 11 49:76
-#line run\lang\TestD\console.el 49:76
-// ;
+//  asm(":intToHex_l1_end\nINC r14 -1\nGOTO GEQ r14 :intToHex_l1");
 
 #lineend
 :func_exit_Console.intToHex_uint32_char*
@@ -365,22 +356,27 @@ GOTO POP
 
 // FS
 
-#function FS.openFile_char*_out uint32& path char*, handle out uint32&
+#function FS.openFile_char*_out uint32&_out uint32& path char*, status out uint32&, handle out uint32&
 STACK PUSH r15
 COPY rStack r15
+#stackVar char* path -20
+#stackVar out uint32& handle -12
+#stackVar out uint32& status -16
 // 0 36:10
 #line run\lang\TestD\fs.el 36:10
 LOAD r1 16
+#stackVar uint32[2] msg
 STACK PUSH r1
 COPY r15 r1
-INC r1 -16
+INC r1 -20
 LOAD MEM r1 r1
+#stackVar uint32[2] msg
 STACK PUSH r1
 //  uint32[2] msg = {0x10, path};
 
 // 1 37:10
 #line run\lang\TestD\fs.el 37:10
-LOAD r1 2
+LOAD r1 3
 STACK PUSH r1
 LOAD r1 2
 STACK PUSH r1
@@ -388,9 +384,19 @@ COPY r15 r1
 STACK PUSH r1
 GOTO PUSH :FS.peripheralCommand_uint32_uint32_uint32*
 STACK DEC 12
-//  peripheralCommand(2, 2, & msg);
+//  peripheralCommand(3, 2, & msg);
 
-// 2 39:10
+// 2 38:10
+#line run\lang\TestD\fs.el 38:10
+COPY r15 r1
+INC r1 -16
+LOAD MEM r1 r1
+LOAD r2 FS.RSP_STATUS
+LOAD MEM r2 r2
+STORE r2 r1
+//  status =* RSP_STATUS;
+
+// 3 39:10
 #line run\lang\TestD\fs.el 39:10
 COPY r15 r1
 INC r1 -12
@@ -401,8 +407,13 @@ STORE r2 r1
 //  handle =* RSP_DATA_2;
 
 #lineend
-:func_exit_FS.openFile_char*_out uint32&
+:func_exit_FS.openFile_char*_out uint32&_out uint32&
 STACK DEC 8
+// End of scope
+#stackVarClear msg
+#stackVarClear path
+#stackVarClear handle
+#stackVarClear status
 STACK POP r15
 GOTO POP
 #endfunction void
@@ -410,31 +421,42 @@ GOTO POP
 #function FS.readFile_uint32_void*_uint32_uint32_out uint32&_out uint32& handle uint32, buffer void*, size uint32, offset uint32, read out uint32&, state out uint32&
 STACK PUSH r15
 COPY rStack r15
+#stackVar out uint32& read -16
+#stackVar uint32 offset -20
+#stackVar uint32 size -24
+#stackVar uint32 handle -32
+#stackVar out uint32& state -12
+#stackVar void* buffer -28
 // 0 43:10
 #line run\lang\TestD\fs.el 43:10
 LOAD r1 17
+#stackVar uint32[5] msg
 STACK PUSH r1
 COPY r15 r1
 INC r1 -32
 LOAD MEM r1 r1
+#stackVar uint32[5] msg
 STACK PUSH r1
 COPY r15 r1
 INC r1 -28
 LOAD MEM r1 r1
+#stackVar uint32[5] msg
 STACK PUSH r1
 COPY r15 r1
 INC r1 -24
 LOAD MEM r1 r1
+#stackVar uint32[5] msg
 STACK PUSH r1
 COPY r15 r1
 INC r1 -20
 LOAD MEM r1 r1
+#stackVar uint32[5] msg
 STACK PUSH r1
 //  uint32[5] msg = {0x11, handle, buffer, size, offset};
 
 // 1 44:10
 #line run\lang\TestD\fs.el 44:10
-LOAD r1 2
+LOAD r1 3
 STACK PUSH r1
 LOAD r1 5
 STACK PUSH r1
@@ -442,7 +464,7 @@ COPY r15 r1
 STACK PUSH r1
 GOTO PUSH :FS.peripheralCommand_uint32_uint32_uint32*
 STACK DEC 12
-//  peripheralCommand(2, 5, & msg);
+//  peripheralCommand(3, 5, & msg);
 
 // 2 45:10
 #line run\lang\TestD\fs.el 45:10
@@ -467,6 +489,14 @@ STORE r2 r1
 #lineend
 :func_exit_FS.readFile_uint32_void*_uint32_uint32_out uint32&_out uint32&
 STACK DEC 20
+// End of scope
+#stackVarClear msg
+#stackVarClear read
+#stackVarClear offset
+#stackVarClear size
+#stackVarClear handle
+#stackVarClear state
+#stackVarClear buffer
 STACK POP r15
 GOTO POP
 #endfunction void
@@ -474,6 +504,9 @@ GOTO POP
 #function FS.peripheralCommand_uint32_uint32_uint32* deviceId uint32, cmdSize uint32, cmd uint32*
 STACK PUSH r15
 COPY rStack r15
+#stackVar uint32 cmdSize -16
+#stackVar uint32* cmd -12
+#stackVar uint32 deviceId -20
 // 0 19:10
 #line run\lang\TestD\fs.el 19:10
 LOAD r1 FS.CMD_SIZE
@@ -539,97 +572,128 @@ GOTO POP
 #function TestD.onInterrupt
 STACK PUSH r15
 COPY rStack r15
-// 0 86:10
-#line run\lang\TestD\testd.el 86:10
+// 0 92:10
+#line run\lang\TestD\testd.el 92:10
 COPY rIC r1
+#stackVar uint32 code
 STACK PUSH r1
 //  uint32 code = SysD.rIC;
 
-// 1 87:10
-#line run\lang\TestD\testd.el 87:10
+// 1 93:10
+#line run\lang\TestD\testd.el 93:10
 LOAD rIC 0
 //  asm("LOAD rIC 0");
 
-// 2 88:10
-#line run\lang\TestD\testd.el 88:10
+// 2 94:10
+#line run\lang\TestD\testd.el 94:10
+#stackVar char[9] str
 STACK INC 12
 //  char[9] str;
 
-// 3 89:10
-#line run\lang\TestD\testd.el 89:10
+// 3 95:10
+#line run\lang\TestD\testd.el 95:10
 COPY r15 r1
 INC r1 4
-LOAD r2 8
-ADD r1 r1 r2
+INC r1 8
 LOAD r2 '\0'
 STORE BYTE r2 r1
 //  str[8] = '\0';
 
-// 4 90:10
-#line run\lang\TestD\testd.el 90:10
-COPY r15 r1
-LOAD MEM r1 r1
-STACK PUSH r1
-COPY r15 r1
-INC r1 4
-STACK PUSH r1
-GOTO PUSH :Console.intToHex_uint32_char*
-STACK DEC 8
-//  Console.intToHex(code, & str);
-
-// 5 91:10
-#line run\lang\TestD\testd.el 91:10
-#define exp_str_0 "\nInterrupt: \0"
-LOAD r1 exp_str_0
-STACK PUSH r1
-LOAD r1 0
-STACK PUSH r1
-GOTO PUSH :Console.printStr_char*_uint32
-STACK DEC 8
-//  Console.printStr("\nInterrupt: \0", 0);
-
-// 6 92:10
-#line run\lang\TestD\testd.el 92:10
-COPY r15 r1
-INC r1 4
-STACK PUSH r1
-LOAD r1 8
-STACK PUSH r1
-GOTO PUSH :Console.printStr_char*_uint32
-STACK DEC 8
-//  Console.printStr(& str, 8);
-
-// 7 93:10
-#line run\lang\TestD\testd.el 93:10
-LOAD r1 '\n'
-STACK PUSH r1
-GOTO PUSH :Console.printChar_char
-STACK DEC 4
-//  Console.printChar('\n');
-
-// 8 94:10
-#line run\lang\TestD\testd.el 94:10
+// 4 100:10
+#line run\lang\TestD\testd.el 100:10
 COPY r15 r1
 LOAD MEM r1 r1
 INC r1 -255
 SET FORCE EQ r1 r1
-GOTO EQ r1 :if_end_4
-// 0 95:14
-#line run\lang\TestD\testd.el 95:14
+GOTO EQ r1 :if_end_3
+// 0 101:14
+#line run\lang\TestD\testd.el 101:14
 HALT
-//  asm("HALT")
-
-// 1 95:25
-#line run\lang\TestD\testd.el 95:25
-// ;
+//  asm("HALT");
 
 #lineend
-:if_end_4
+:if_end_3
 //  if(code == 0xff) {asm("HALT");}
+
+// 5 103:10
+#line run\lang\TestD\testd.el 103:10
+COPY r15 r1
+LOAD MEM r1 r1
+INC r1 -1
+SET FORCE EQ r1 r1
+GOTO EQ r1 :if_end_4
+// 0 104:14
+#line run\lang\TestD\testd.el 104:14
+LOAD r1 1
+#stackVar uint32 i
+STACK PUSH r1
+//  uint32 i = 1;
+
+// 1 105:14
+#line run\lang\TestD\testd.el 105:14
+:while_condition_5
+COPY r15 r1
+INC r1 16
+LOAD MEM r1 r1
+INC r1 -16
+SET FORCE LT r1 r1
+GOTO EQ r1 :while_end_5
+// 0 106:18
+#line run\lang\TestD\testd.el 106:18
+LOAD r1 TestD.TIMERS
+COPY r15 r2
+INC r2 16
+LOAD MEM r2 r2
+LOAD r3 4
+MUL r2 r2 r3
+ADD r1 r1 r2
+INC r1 1
+SET FORCE EQ r1 r1
+GOTO EQ r1 :if_end_6
+// 0 107:22
+#line run\lang\TestD\testd.el 107:22
+LOAD r1 TestD.TIMERS
+COPY r15 r2
+INC r2 16
+LOAD MEM r2 r2
+LOAD r3 4
+MUL r2 r2 r3
+ADD r1 r1 r2
+LOAD r2 0
+STORE r2 r1
+//  TIMERS[i] = 0x0;
+
+#lineend
+:if_end_6
+//  if(TIMERS[i] == 0xffff_ffff) {TIMERS[i] = 0x0;}
+
+// 1 109:18
+#line run\lang\TestD\testd.el 109:18
+COPY r15 r1
+INC r1 16
+LOAD MEM r2 r1
+INC r2 1
+STORE r2 r1
+//  i++;
+
+#lineend
+GOTO :while_condition_5
+:while_end_5
+//  while(i < 16) {if(TIMERS[i] == 0xffff_ffff) {TIMERS[i] = 0x0;} i++;}
+
+#lineend
+STACK DEC 4
+// End of scope
+#stackVarClear i
+:if_end_4
+//  if(code == 0x01) {uint32 i = 1; while(i < 16) {if(TIMERS[i] == 0xffff_ffff) {TIMERS[i] = 0x0;} i++;}}
 
 #lineend
 :func_exit_TestD.onInterrupt
 STACK DEC 16
+// End of scope
+#stackVarClear str
+#stackVarClear code
 STACK POP r15
 INTERRUPT RET
 #endfunction void
@@ -637,16 +701,17 @@ INTERRUPT RET
 #function TestD.wait_uint32 time uint32
 STACK PUSH r15
 COPY rStack r15
-// 0 100:10
-#line run\lang\TestD\testd.el 100:10
-:while_condition_5
+#stackVar uint32 time -12
+// 0 115:10
+#line run\lang\TestD\testd.el 115:10
+:while_condition_7
 COPY r15 r1
 INC r1 -12
 LOAD MEM r1 r1
 SET FORCE GT r1 r1
-GOTO EQ r1 :while_end_5
-// 0 101:14
-#line run\lang\TestD\testd.el 101:14
+GOTO EQ r1 :while_end_7
+// 0 116:14
+#line run\lang\TestD\testd.el 116:14
 COPY r15 r1
 INC r1 -12
 LOAD MEM r2 r1
@@ -655,8 +720,8 @@ STORE r2 r1
 //  time--;
 
 #lineend
-GOTO :while_condition_5
-:while_end_5
+GOTO :while_condition_7
+:while_end_7
 //  while(time > 0) {time--;}
 
 #lineend
@@ -669,24 +734,26 @@ GOTO POP
 #function TestD.main
 STACK PUSH r15
 COPY rStack r15
-// 0 16:10
-#line run\lang\TestD\testd.el 16:10
+// 0 18:10
+#line run\lang\TestD\testd.el 18:10
 LOAD rIH &:TestD.onInterrupt
 //  asm("LOAD rIH &:TestD.onInterrupt");
 
-// 1 17:10
-#line run\lang\TestD\testd.el 17:10
+// 1 19:10
+#line run\lang\TestD\testd.el 19:10
+#stackVar uint32 b
 STACK INC 4
 //  uint32 b;
 
-// 2 18:10
-#line run\lang\TestD\testd.el 18:10
+// 2 20:10
+#line run\lang\TestD\testd.el 20:10
 COPY rPgm r1
+#stackVar uint32 a
 STACK PUSH r1
 //  uint32 a = SysD.rPgm;
 
-// 3 19:10
-#line run\lang\TestD\testd.el 19:10
+// 3 21:10
+#line run\lang\TestD\testd.el 21:10
 LOAD r1 &TestD.v
 COPY r15 r2
 INC r2 4
@@ -694,13 +761,14 @@ LOAD MEM r2 r2
 STORE r2 r1
 //  v = a;
 
-// 4 20:10
-#line run\lang\TestD\testd.el 20:10
+// 4 22:10
+#line run\lang\TestD\testd.el 22:10
+#stackVar char c
 STACK INC 4
 //  char c;
 
-// 5 21:10
-#line run\lang\TestD\testd.el 21:10
+// 5 23:10
+#line run\lang\TestD\testd.el 23:10
 COPY r15 r1
 INC r1 8
 COPY r15 r2
@@ -708,8 +776,8 @@ LOAD MEM r2 r2
 STORE BYTE r2 r1
 //  c = b;
 
-// 6 23:10
-#line run\lang\TestD\testd.el 23:10
+// 6 25:10
+#line run\lang\TestD\testd.el 25:10
 COPY r15 r1
 COPY r15 r2
 INC r2 4
@@ -722,16 +790,16 @@ ADD r2 r2 r3
 STORE r2 r1
 //  b = a + 1 + c;
 
-// 7 24:10
-#line run\lang\TestD\testd.el 24:10
+// 7 26:10
+#line run\lang\TestD\testd.el 26:10
 COPY r15 r1
 INC r1 8
 LOAD r2 32
 STORE BYTE r2 r1
 //  c = 32;
 
-// 8 25:10
-#line run\lang\TestD\testd.el 25:10
+// 8 27:10
+#line run\lang\TestD\testd.el 27:10
 COPY r15 r1
 INC r1 8
 LOAD MEM BYTE r1 r1
@@ -740,25 +808,26 @@ GOTO PUSH :TestD.funcb_uint32
 STACK DEC 4
 //  funcb(c);
 
-// 9 26:10
-#line run\lang\TestD\testd.el 26:10
+// 9 28:10
+#line run\lang\TestD\testd.el 28:10
 LOAD r1 64
 LOAD r2 &TestD.v
 STORE r1 r2
 //  asm("LOAD r1 64\nLOAD r2 &TestD.v\nSTORE r1 r2");
 
-// 10 27:10
-#line run\lang\TestD\testd.el 27:10
+// 10 29:10
+#line run\lang\TestD\testd.el 29:10
 // Test
 //  asm(str);
 
-// 11 29:10
-#line run\lang\TestD\testd.el 29:10
+// 11 31:10
+#line run\lang\TestD\testd.el 31:10
+#stackVar StructA sA
 STACK INC 16
 //  StructA sA;
 
-// 12 30:10
-#line run\lang\TestD\testd.el 30:10
+// 12 32:10
+#line run\lang\TestD\testd.el 32:10
 COPY r15 r1
 INC r1 12
 STACK PUSH r1
@@ -766,8 +835,8 @@ GOTO PUSH :TestD.testA_StructA&
 STACK DEC 4
 //  testA(& sA);
 
-// 13 34:10
-#line run\lang\TestD\testd.el 34:10
+// 13 36:10
+#line run\lang\TestD\testd.el 36:10
 LOAD r1 &TestD.testStr
 STACK PUSH r1
 LOAD r1 5
@@ -776,8 +845,8 @@ GOTO PUSH :Console.printStr_char*_uint32
 STACK DEC 8
 //  Console.printStr(& testStr, 5);
 
-// 14 35:10
-#line run\lang\TestD\testd.el 35:10
+// 14 37:10
+#line run\lang\TestD\testd.el 37:10
 LOAD r1 &TestD.testStr2
 STACK PUSH r1
 LOAD r1 0
@@ -786,68 +855,122 @@ GOTO PUSH :Console.printStr_char*_uint32
 STACK DEC 8
 //  Console.printStr(& testStr2, 0);
 
-// 15 36:10
-#line run\lang\TestD\testd.el 36:10
+// 15 38:10
+#line run\lang\TestD\testd.el 38:10
 LOAD r1 'a'
 STACK PUSH r1
 GOTO PUSH :Console.printChar_char
 STACK DEC 4
 //  Console.printChar('a');
 
-// 16 37:10
-#line run\lang\TestD\testd.el 37:10
+// 16 39:10
+#line run\lang\TestD\testd.el 39:10
 LOAD r1 '\n'
 STACK PUSH r1
 GOTO PUSH :Console.printChar_char
 STACK DEC 4
 //  Console.printChar('\n');
 
-// 17 40:10
-#line run\lang\TestD\testd.el 40:10
+// 17 42:10
+#line run\lang\TestD\testd.el 42:10
+#stackVar uint32 fh
 STACK INC 4
 //  uint32 fh;
 
-// 18 41:10
-#line run\lang\TestD\testd.el 41:10
-#define exp_str_1 "test.txt\0"
-LOAD r1 exp_str_1
+// 18 43:10
+#line run\lang\TestD\testd.el 43:10
+#stackVar uint32 rstat
+STACK INC 4
+//  uint32 rstat;
+
+// 19 44:10
+#line run\lang\TestD\testd.el 44:10
+#stackVar char[10] str2
+STACK INC 12
+//  char[10] str2;
+
+// 20 45:10
+#line run\lang\TestD\testd.el 45:10
+COPY r15 r1
+INC r1 36
+INC r1 8
+LOAD r2 '\n'
+STORE BYTE r2 r1
+//  str2[8] = '\n';
+
+// 21 46:10
+#line run\lang\TestD\testd.el 46:10
+COPY r15 r1
+INC r1 36
+INC r1 9
+LOAD r2 '\0'
+STORE BYTE r2 r1
+//  str2[9] = '\0';
+
+// 22 47:10
+#line run\lang\TestD\testd.el 47:10
+#define exp_str_0 "test.txt\0"
+LOAD r1 exp_str_0
+STACK PUSH r1
+COPY r15 r1
+INC r1 32
 STACK PUSH r1
 COPY r15 r1
 INC r1 28
 STACK PUSH r1
-GOTO PUSH :FS.openFile_char*_out uint32&
-STACK DEC 8
-//  FS.openFile("test.txt\0", & fh);
+GOTO PUSH :FS.openFile_char*_out uint32&_out uint32&
+STACK DEC 12
+//  FS.openFile("test.txt\0", & rstat, & fh);
 
-// 19 42:10
-#line run\lang\TestD\testd.el 42:10
+// 23 48:10
+#line run\lang\TestD\testd.el 48:10
 COPY r15 r1
 INC r1 28
 LOAD MEM r1 r1
 SET FORCE EQ r1 r1
-GOTO EQ r1 :if_else_6
-// 0 43:14
-#line run\lang\TestD\testd.el 43:14
-#define exp_str_2 "ERROR\n\0"
-LOAD r1 exp_str_2
+GOTO EQ r1 :if_else_8
+// 0 49:14
+#line run\lang\TestD\testd.el 49:14
+#define exp_str_1 "ERROR\n\0"
+LOAD r1 exp_str_1
 STACK PUSH r1
 LOAD r1 0
 STACK PUSH r1
 GOTO PUSH :Console.printStr_char*_uint32
 STACK DEC 8
-//  Console.printStr("ERROR\n\0", 0)
+//  Console.printStr("ERROR\n\0", 0);
 
-// 1 43:46
-#line run\lang\TestD\testd.el 43:46
-// ;
+// 1 50:14
+#line run\lang\TestD\testd.el 50:14
+COPY r15 r1
+INC r1 32
+LOAD MEM r1 r1
+STACK PUSH r1
+COPY r15 r1
+INC r1 36
+STACK PUSH r1
+GOTO PUSH :Console.intToHex_uint32_char*
+STACK DEC 8
+//  Console.intToHex(rstat, & str2);
+
+// 2 51:14
+#line run\lang\TestD\testd.el 51:14
+COPY r15 r1
+INC r1 36
+STACK PUSH r1
+LOAD r1 0
+STACK PUSH r1
+GOTO PUSH :Console.printStr_char*_uint32
+STACK DEC 8
+//  Console.printStr(& str2, 0);
 
 #lineend
-GOTO :if_end_6
-:if_else_6
-// 0 45:14
-#line run\lang\TestD\testd.el 45:14
-#define exp_str_3 "Opened\n\0"
-LOAD r1 exp_str_3
+GOTO :if_end_8
+:if_else_8
+// 0 53:14
+#line run\lang\TestD\testd.el 53:14
+#define exp_str_2 "Opened\n\0"
+LOAD r1 exp_str_2
 STACK PUSH r1
 LOAD r1 0
 STACK PUSH r1
@@ -855,86 +978,64 @@ GOTO PUSH :Console.printStr_char*_uint32
 STACK DEC 8
 //  Console.printStr("Opened\n\0", 0);
 
-// 1 46:14
-#line run\lang\TestD\testd.el 46:14
+// 1 54:14
+#line run\lang\TestD\testd.el 54:14
+#stackVar char[32] buffer
 STACK INC 32
 //  char[32] buffer;
 
-// 2 47:14
-#line run\lang\TestD\testd.el 47:14
+// 2 55:14
+#line run\lang\TestD\testd.el 55:14
+#stackVar uint32 read
 STACK INC 4
 //  uint32 read;
 
-// 3 48:14
-#line run\lang\TestD\testd.el 48:14
+// 3 56:14
+#line run\lang\TestD\testd.el 56:14
+#stackVar uint32 state
 STACK INC 4
 //  uint32 state;
 
-// 4 49:14
-#line run\lang\TestD\testd.el 49:14
+// 4 57:14
+#line run\lang\TestD\testd.el 57:14
 COPY r15 r1
 INC r1 28
 LOAD MEM r1 r1
 STACK PUSH r1
 COPY r15 r1
-INC r1 32
+INC r1 48
 STACK PUSH r1
 LOAD r1 32
 STACK PUSH r1
 LOAD r1 0
 STACK PUSH r1
 COPY r15 r1
-INC r1 64
+INC r1 80
 STACK PUSH r1
 COPY r15 r1
-INC r1 68
+INC r1 84
 STACK PUSH r1
 GOTO PUSH :FS.readFile_uint32_void*_uint32_uint32_out uint32&_out uint32&
 STACK DEC 24
 //  FS.readFile(fh, & buffer, 32, 0, & read, & state);
 
-// 5 51:14
-#line run\lang\TestD\testd.el 51:14
-STACK INC 12
-//  char[10] str2;
-
-// 6 52:14
-#line run\lang\TestD\testd.el 52:14
+// 5 59:14
+#line run\lang\TestD\testd.el 59:14
 COPY r15 r1
-INC r1 72
-LOAD r2 8
-ADD r1 r1 r2
-LOAD r2 '\n'
-STORE BYTE r2 r1
-//  str2[8] = '\n';
-
-// 7 53:14
-#line run\lang\TestD\testd.el 53:14
-COPY r15 r1
-INC r1 72
-LOAD r2 9
-ADD r1 r1 r2
-LOAD r2 '\0'
-STORE BYTE r2 r1
-//  str2[9] = '\0';
-
-// 8 54:14
-#line run\lang\TestD\testd.el 54:14
-COPY r15 r1
-INC r1 68
+INC r1 84
 LOAD MEM r1 r1
 STACK PUSH r1
 COPY r15 r1
-INC r1 72
+INC r1 36
 STACK PUSH r1
 GOTO PUSH :Console.intToHex_uint32_char*
 STACK DEC 8
 //  Console.intToHex(state, & str2);
 
-// 9 55:14
-#line run\lang\TestD\testd.el 55:14
+// 6 60:14
+#line run\lang\TestD\testd.el 60:14
 COPY r15 r1
-INC r1 72
+INC r1 36
 STACK PUSH r1
 LOAD r1 0
 STACK PUSH r1
@@ -942,23 +1043,23 @@ GOTO PUSH :Console.printStr_char*_uint32
 STACK DEC 8
 //  Console.printStr(& str2, 0);
 
-// 10 58:14
-#line run\lang\TestD\testd.el 58:14
+// 7 63:14
+#line run\lang\TestD\testd.el 63:14
 COPY r15 r1
-INC r1 64
+INC r1 80
 LOAD MEM r1 r1
 STACK PUSH r1
 COPY r15 r1
-INC r1 72
+INC r1 36
 STACK PUSH r1
 GOTO PUSH :Console.intToHex_uint32_char*
 STACK DEC 8
 //  Console.intToHex(read, & str2);
 
-// 11 59:14
-#line run\lang\TestD\testd.el 59:14
+// 8 64:14
+#line run\lang\TestD\testd.el 64:14
 COPY r15 r1
-INC r1 72
+INC r1 36
 STACK PUSH r1
 LOAD r1 0
 STACK PUSH r1
@@ -966,40 +1067,40 @@ GOTO PUSH :Console.printStr_char*_uint32
 STACK DEC 8
 //  Console.printStr(& str2, 0);
 
-// 12 61:14
-#line run\lang\TestD\testd.el 61:14
+// 9 66:14
+#line run\lang\TestD\testd.el 66:14
 LOAD r1 '\n'
 STACK PUSH r1
 GOTO PUSH :Console.printChar_char
 STACK DEC 4
 //  Console.printChar('\n');
 
-// 13 62:14
-#line run\lang\TestD\testd.el 62:14
+// 10 67:14
+#line run\lang\TestD\testd.el 67:14
 COPY r15 r1
-INC r1 32
+INC r1 48
 STACK PUSH r1
 COPY r15 r1
-INC r1 64
+INC r1 80
 LOAD MEM r1 r1
 STACK PUSH r1
 GOTO PUSH :Console.printStr_char*_uint32
 STACK DEC 8
-//  Console.printStr(& buffer, read)
-
-// 14 62:45
-#line run\lang\TestD\testd.el 62:45
-// ;
+//  Console.printStr(& buffer, read);
 
 #lineend
-STACK DEC 52
-:if_end_6
-//  if(fh == 0) {Console.printStr("ERROR\n\0", 0);} else {Console.printStr("Opened\n\0", 0); char[32] buffer; uint32 read; uint32 state; FS.readFile(fh, & buffer, 32, 0, & read, & state); char[10] str2; str2[8] = '\n'; str2[9] = '\0'; Console.intToHex(state, & str2); Console.printStr(& str2, 0); Console.intToHex(read, & str2); Console.printStr(& str2, 0); Console.printChar('\n'); Console.printStr(& buffer, read);}
+STACK DEC 40
+// End of scope
+#stackVarClear read
+#stackVarClear buffer
+#stackVarClear state
+:if_end_8
+//  if(fh == 0) {Console.printStr("ERROR\n\0", 0); Console.intToHex(rstat, & str2); Console.printStr(& str2, 0);} else {Console.printStr("Opened\n\0", 0); char[32] buffer; uint32 read; uint32 state; FS.readFile(fh, & buffer, 32, 0, & read, & state); Console.intToHex(state, & str2); Console.printStr(& str2, 0); Console.intToHex(read, & str2); Console.printStr(& str2, 0); Console.printChar('\n'); Console.printStr(& buffer, read);}
 
-// 20 65:10
-#line run\lang\TestD\testd.el 65:10
-#define exp_str_4 "\n> \0"
-LOAD r1 exp_str_4
+// 24 70:10
+#line run\lang\TestD\testd.el 70:10
+#define exp_str_3 "\n> \0"
+LOAD r1 exp_str_3
 STACK PUSH r1
 LOAD r1 0
 STACK PUSH r1
@@ -1007,15 +1108,21 @@ GOTO PUSH :Console.printStr_char*_uint32
 STACK DEC 8
 //  Console.printStr("\n> \0", 0);
 
-// 21 66:10
-#line run\lang\TestD\testd.el 66:10
+// 25 71:10
+#line run\lang\TestD\testd.el 71:10
+#breakpoint
+//  asm("#breakpoint");
+
+// 26 72:10
+#line run\lang\TestD\testd.el 72:10
+#stackVar char[32] buff
 STACK INC 32
 //  char[32] buff;
 
-// 22 67:10
-#line run\lang\TestD\testd.el 67:10
+// 27 73:10
+#line run\lang\TestD\testd.el 73:10
 COPY r15 r1
-INC r1 32
+INC r1 48
 STACK PUSH r1
 LOAD r1 32
 STACK PUSH r1
@@ -1023,10 +1130,10 @@ GOTO PUSH :Console.read_char*_uint32
 STACK DEC 8
 //  Console.read(& buff, 32);
 
-// 23 68:10
-#line run\lang\TestD\testd.el 68:10
+// 28 74:10
+#line run\lang\TestD\testd.el 74:10
 COPY r15 r1
-INC r1 32
+INC r1 48
 STACK PUSH r1
 LOAD r1 0
 STACK PUSH r1
@@ -1034,21 +1141,34 @@ GOTO PUSH :Console.printStr_char*_uint32
 STACK DEC 8
 //  Console.printStr(& buff, 0);
 
-// 24 72:10
-#line run\lang\TestD\testd.el 72:10
-LOAD r1 1000
+// 29 76:10
+#line run\lang\TestD\testd.el 76:10
+LOAD r1 TestD.TIMERS
+INC r1 4
+LOAD r2 600
+STORE r2 r1
+//  TIMERS[1] = 120* 5;
+
+// 30 78:10
+#line run\lang\TestD\testd.el 78:10
+LOAD r1 2000
 STACK PUSH r1
 GOTO PUSH :TestD.wait_uint32
 STACK DEC 4
-//  wait(1000)
-
-// 25 72:20
-#line run\lang\TestD\testd.el 72:20
-// ;
+//  wait(2000);
 
 #lineend
 :func_exit_TestD.main
-STACK DEC 64
+STACK DEC 80
+// End of scope
+#stackVarClear a
+#stackVarClear b
+#stackVarClear fh
+#stackVarClear c
+#stackVarClear str2
+#stackVarClear rstat
+#stackVarClear buff
+#stackVarClear sA
 STACK POP r15
 HALT
 #endfunction void
@@ -1056,8 +1176,9 @@ HALT
 #function TestD.funcb_uint32 a uint32
 STACK PUSH r15
 COPY rStack r15
-// 0 77:10
-#line run\lang\TestD\testd.el 77:10
+#stackVar uint32 a -12
+// 0 83:10
+#line run\lang\TestD\testd.el 83:10
 LOAD r1 &TestD.v
 COPY r15 r2
 INC r2 -12
@@ -1076,8 +1197,10 @@ GOTO POP
 #function TestD.funcb_uint32_uint32* a uint32, b uint32*
 STACK PUSH r15
 COPY rStack r15
-// 0 81:10
-#line run\lang\TestD\testd.el 81:10
+#stackVar uint32 a -16
+#stackVar uint32* b -12
+// 0 87:10
+#line run\lang\TestD\testd.el 87:10
 LOAD r1 &TestD.v
 COPY r15 r2
 INC r2 -16
@@ -1096,8 +1219,9 @@ GOTO POP
 #function TestD.testA_StructA& str StructA&
 STACK PUSH r15
 COPY rStack r15
-// 0 106:10
-#line run\lang\TestD\testd.el 106:10
+#stackVar StructA& str -12
+// 0 121:10
+#line run\lang\TestD\testd.el 121:10
 COPY r15 r1
 INC r1 -12
 LOAD MEM r1 r1
@@ -1105,8 +1229,8 @@ LOAD r2 32
 STORE r2 r1
 //  str.a = 32;
 
-// 1 107:10
-#line run\lang\TestD\testd.el 107:10
+// 1 122:10
+#line run\lang\TestD\testd.el 122:10
 COPY r15 r1
 INC r1 -12
 LOAD MEM r1 r1
