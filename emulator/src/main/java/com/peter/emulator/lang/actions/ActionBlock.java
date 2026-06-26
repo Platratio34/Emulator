@@ -191,7 +191,7 @@ public class ActionBlock extends ComplexAction {
                                 continue;
                             }
                             default -> { // function call
-                                actions.add(new FunctionAction(scope, -1, it, errors));
+                                actions.add(new FunctionAction(scope, null, it));
                                 wI += 1;
                                 if (wI < tokens.size()) {
                                     if (!(tokens.get(wI) instanceof OperatorToken ot && ot.type == OperatorToken.Type.SEMICOLON)) {
@@ -249,7 +249,9 @@ public class ActionBlock extends ComplexAction {
                             }
                             Register r = scope.firstFree();
                             ExpressionAction eA = new ExpressionAction(scope, exp, r);
-                            if(eA.outType.canCastTo(scope.getFunction().ret))
+                            if (!eA.outType.canCastTo(funcRet)) {
+                                throw ELAnalysisError.error(String.format("Invalid return type. Can not cast %s to %s", eA.outType.typeString(), funcRet.typeString()), it);
+                            }
                             actions.add(eA);
                             Register r2 = scope.firstFree();
                             actions.add(new DirectAction("COPY r15 %s\nINC %s %d\nSTORE %s %s", r2, r2, scope.returnOffset, r, r2));
@@ -568,7 +570,10 @@ public class ActionBlock extends ComplexAction {
         if (withDebug)
             addDirect("#lineend");
         if(scope.function != null) 
-            addDirect(":func_exit_"+scope.function.getQualifiedName(true));
+            addDirect(":func_exit_" + scope.function.getQualifiedName(true));
+        
+        // TODO desconstructors here
+
         if(scope.getStackOffDif() > 0)
             actions.add(scope.getStackResetAction());
         if(scope.function != null)

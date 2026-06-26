@@ -12,12 +12,12 @@ public class PeripheralManager {
     private final HashMap<Integer, Peripheral> peripherals = new HashMap<>();
     private int nextId = 1;
 
-    public static final int PERIPHERAL_START = 0x2_0000;
-    public static final int PERIPHERAL_CMD_SIZE = 0x2_0004;
-    public static final int PERIPHERAL_CMD_MSG = 0x2_0008;
+    public static final int PERIPHERAL_START = 0x1_0000;
+    public static final int PERIPHERAL_CMD_SIZE = 0x1_0004;
+    public static final int PERIPHERAL_CMD_MSG = 0x1_0008;
     
-    public static final int PERIPHERAL_RSP_STATUS = 0x2_0080;
-    public static final int PERIPHERAL_RSP_DATA = 0x2_0084;
+    public static final int PERIPHERAL_RSP_STATUS = 0x1_0080;
+    public static final int PERIPHERAL_RSP_DATA = 0x1_0084;
 
     public PeripheralManager(RAM ram, CPU cpu) {
         this.ram = ram;
@@ -45,7 +45,7 @@ public class PeripheralManager {
                 }
             } catch (Exception e) {
                 System.err.println("Exception in peripheral manager, dumping message memory");
-                System.err.println(ram.debugPrint(0x2_0000, 16));
+                System.err.println(ram.debugPrint(0x1_0000, 16));
                 throw e;
             }
             ram.writeByte(PERIPHERAL_START + 1, (byte)0x2);

@@ -13,6 +13,7 @@ import org.json.JSONException;
 
 import com.peter.emulator.Emulator;
 import com.peter.emulator.assembly.Assembler;
+import com.peter.emulator.assembly.AssemblerError;
 import com.peter.emulator.debug.Debugger;
 import com.peter.emulator.lang.ELAnalysisError;
 import com.peter.emulator.lang.ELAnalysisError.Severity;
@@ -43,16 +44,16 @@ public class Main {
         LanguageServer ls = new LanguageServer();
 
         ProgramModule kernal = null;
-        // try {
-        //     kernal = ls.addModule(ROOT_PATH.resolve("lang/Kernal").toFile());
-        //     kernal.addRefModule("SysD");
-        // } catch (JSONException e) {
-        //     // TODO Auto-generated catch block
-        //     e.printStackTrace();
-        // } catch (IOException e) {
-        //     // TODO Auto-generated catch block
-        //     e.printStackTrace();
-        // }
+        try {
+            kernal = ls.addModule(ROOT_PATH.resolve("lang/Kernal").toFile());
+            kernal.addRefModule("SysD");
+        } catch (JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
 
         // ProgramModule system;
         // try {
@@ -168,7 +169,7 @@ public class Main {
             if (kernal.length == 0)
                 throw new IOException("Error building kernal");
             emulator.ram.copy(kernal, 0);
-            emulator.ram.copy(kernalBuilder.sysCallTable(), 0x1_0000);
+            emulator.ram.copy(kernalBuilder.sysCallTable(), MachineCode.SYSCALL_TABLE_START);
             
             try {
                 Files.write(ROOT_PATH.resolve("bin/kernal.bin"), kernalBuilder.binary(), StandardOpenOption.CREATE, StandardOpenOption.WRITE );
@@ -201,6 +202,7 @@ public class Main {
         Path p = ROOT_PATH.resolve("lang/TestD/out/TestD.asm");
 
         Assembler assembler = new Assembler();
+        assembler.setKernalOffset();
         try {
             assembler.setSource(p);
         } catch (IOException e) {
@@ -213,12 +215,41 @@ public class Main {
             return;
         }
         try {
-            Files.writeString(ROOT_PATH.resolve("lang/TestD/out/obj/testd.obj"), assembler.symbols.toFile(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+            Files.writeString(ROOT_PATH.resolve("lang/TestD/out/obj/testd.obj"), assembler.symbols.toFile(), StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        emulator.ram.copyWords(assembler.build());
+        try {
+            Files.write(ROOT_PATH.resolve("devices/vd0/kernal.bin"), Assembler.toBytes(assembler.build()), StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        // Assembler bootAssembler = new Assembler();
+        // try {
+        //     bootAssembler.setSource(ROOT_PATH.resolve("boot.asm"));
+        //     if (!bootAssembler.assemble()) {
+        //         for (AssemblerError err : bootAssembler.errors) {
+        //             System.err.println(err);
+        //         }
+        //         return;
+        //     }
+
+        //     Files.write(ROOT_PATH.resolve("boot.bin"), Assembler.toBytes(bootAssembler.build()), StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        // } catch (IOException e) {
+        //     e.printStackTrace();
+        //     return;
+        // }
+        // emulator.ram.copyWords(bootAssembler.build());
+        try {
+            emulator.ram.copy(Files.readAllBytes(ROOT_PATH.resolve("boot.bin")));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+
         emulator.cores[0].debugger = new Debugger(assembler.symbols, assembler.symbols, emulator);
         
         // Assembler assembler = new Assembler();
@@ -254,15 +285,15 @@ public class Main {
         // System.out.println("Kernal");
         // System.out.println(emulator.ram.debugPrint(0x0000, 8));
         System.out.println(String.format("Stack (Pointer: 0x%x)", emulator.cores[0].stackPtr));
-        System.out.println(emulator.ram.debugPrint(0x1000, 8));
+        System.out.println(emulator.ram.debugPrint(0x8000, 8));
         System.out.println("Syscall table");
-        System.out.println(emulator.ram.debugPrint(0x1_0000, 4));
+        System.out.println(emulator.ram.debugPrint(0xf000, 4));
         System.out.println();
         
         // System.out.println("Console");
-        // System.out.println(emulator.ram.debugPrint(0x2_0100, 3));
+        // System.out.println(emulator.ram.debugPrint(0x1_0100, 3));
         System.out.println("Peripheral Manager");
-        System.out.println(emulator.ram.debugPrint(0x2_0000, 4));
+        System.out.println(emulator.ram.debugPrint(0x1_0000, 4));
         System.out.println("Heap");
         System.out.println(emulator.ram.debugPrint(0x9000, 8));
         

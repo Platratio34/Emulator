@@ -192,7 +192,11 @@ public class ActionScope {
         ELVariable v = namespace.getFirstVar(id, unit);
         if(v == null)
             return null;
-        return new ResolveAction(scope, reg, v, id, byValue);
+        try {
+            return new ResolveAction(scope, reg, v, id, byValue);
+        } catch (RuntimeException e) {
+            throw ELAnalysisError.error(e.getMessage(), id);
+        }
     }
 
     // public void reserve(Register reg) {
@@ -270,5 +274,13 @@ public class ActionScope {
                 r.release();
             }
         }
+    }
+
+    public ELFunction findFunction(Identifier id, ArrayList<ELType> types) {
+        ArrayList<ELVariable> varStack = getVarStack(id);
+        if (varStack != null && !varStack.isEmpty()) {
+            return null;
+        }
+        return null;
     }
 }

@@ -1,25 +1,25 @@
 // static data
 // Console
-#define Console.CMD_DEVICE 0x0002_0002 uint32*
-#define Console.CONSOLE_OUT 0x0002_0100 char*
+#define Console.CMD_DEVICE 0x0001_0002 uint32*
+#define Console.CONSOLE_OUT 0x0001_0100 char*
 #define Console.CMD_WRITTEN 0x0001 uint32
-#define Console.CMD_ADDR 0x0002_0000 uint32*
-#define Console.CMD_STATUS 0x0002_0001 uint32*
-#define Console.CONSOLE_IN 0x0002_0101 char*
-#define Console.CONSOLE_IN_COUNT 0x0002_0102 uint8*
-#define Console.CMD_START 0x0002_0008 uint32*
-#define Console.CMD_SIZE 0x0002_0004 uint32*
+#define Console.CMD_ADDR 0x2710 uint32*
+#define Console.CMD_STATUS 0x0001_0001 uint32*
+#define Console.CONSOLE_IN 0x0001_0101 char*
+#define Console.CONSOLE_IN_COUNT 0x0001_0102 uint8*
+#define Console.CMD_START 0x0001_0008 uint32*
+#define Console.CMD_SIZE 0x0001_0004 uint32*
 // FS
-#define FS.CMD_DEVICE 0x0002_0002 uint32*
+#define FS.CMD_DEVICE 0x0001_0002 uint32*
 #define FS.CMD_WRITTEN 0x0001 uint32
-#define FS.RSP_DATA_2 0x0002_0088 uint32*
-#define FS.RSP_DATA_3 0x0002_008c uint32*
-#define FS.CMD_ADDR 0x0002_0000 uint32*
-#define FS.RSP_STATUS 0x0002_0080 uint32*
-#define FS.CMD_STATUS 0x0002_0001 uint32*
-#define FS.RSP_DATA 0x0002_0084 uint32*
-#define FS.CMD_START 0x0002_0008 uint32*
-#define FS.CMD_SIZE 0x0002_0004 uint32*
+#define FS.RSP_DATA_2 0x0001_0088 uint32*
+#define FS.RSP_DATA_3 0x0001_008c uint32*
+#define FS.CMD_ADDR 0x0001_0000 uint32*
+#define FS.RSP_STATUS 0x0001_0080 uint32*
+#define FS.CMD_STATUS 0x0001_0001 uint32*
+#define FS.RSP_DATA 0x0001_0084 uint32*
+#define FS.CMD_START 0x0001_0008 uint32*
+#define FS.CMD_SIZE 0x0001_0004 uint32*
 // TestD
 #define TestD.str "// Test" char*
 #var TestD.path "test.txt\0" char[9]
@@ -69,7 +69,7 @@ COPY r15 r2
 LOAD MEM r2 r2
 SUB r1 r1 r2
 SET FORCE LT r1 r1
-GOTO EQ r1 :if_end_0
+GOTO EQ r1 :if_end_10
 // 0 56:14
 #line run\lang\TestD\console.el 56:14
 COPY r15 r1
@@ -80,7 +80,7 @@ STORE r2 r1
 //  inCount = bufferSize;
 
 #lineend
-:if_end_0
+:if_end_10
 //  if(bufferSize < inCount) {inCount = bufferSize;}
 
 // 4 58:10
@@ -92,7 +92,7 @@ STACK PUSH r1
 
 // 5 59:10
 #line run\lang\TestD\console.el 59:10
-:while_condition_1
+:while_condition_11
 COPY r15 r1
 INC r1 4
 LOAD MEM r1 r1
@@ -100,7 +100,7 @@ COPY r15 r2
 LOAD MEM r2 r2
 SUB r1 r1 r2
 SET FORCE LT r1 r1
-GOTO EQ r1 :while_end_1
+GOTO EQ r1 :while_end_11
 // 0 60:14
 #line run\lang\TestD\console.el 60:14
 COPY r15 r1
@@ -124,8 +124,8 @@ STORE r2 r1
 //  i++;
 
 #lineend
-GOTO :while_condition_1
-:while_end_1
+GOTO :while_condition_11
+:while_end_11
 //  while(i < inCount) {buffer[i] =* CONSOLE_IN; i++;}
 
 // 6 64:10
@@ -138,7 +138,7 @@ INC r2 -12
 LOAD MEM r2 r2
 SUB r1 r1 r2
 SET FORCE LT r1 r1
-GOTO EQ r1 :if_end_2
+GOTO EQ r1 :if_end_12
 // 0 65:14
 #line run\lang\TestD\console.el 65:14
 COPY r15 r1
@@ -152,7 +152,7 @@ STORE BYTE r2 r1
 //  buffer[i] = '\0';
 
 #lineend
-:if_end_2
+:if_end_12
 //  if(i < bufferSize) {buffer[i] = '\0';}
 
 #lineend
@@ -605,14 +605,14 @@ COPY r15 r1
 LOAD MEM r1 r1
 INC r1 -255
 SET FORCE EQ r1 r1
-GOTO EQ r1 :if_end_3
+GOTO EQ r1 :if_end_13
 // 0 101:14
 #line run\lang\TestD\testd.el 101:14
 HALT
 //  asm("HALT");
 
 #lineend
-:if_end_3
+:if_end_13
 //  if(code == 0xff) {asm("HALT");}
 
 // 5 103:10
@@ -621,7 +621,7 @@ COPY r15 r1
 LOAD MEM r1 r1
 INC r1 -1
 SET FORCE EQ r1 r1
-GOTO EQ r1 :if_end_4
+GOTO EQ r1 :if_end_14
 // 0 104:14
 #line run\lang\TestD\testd.el 104:14
 LOAD r1 1
@@ -631,13 +631,13 @@ STACK PUSH r1
 
 // 1 105:14
 #line run\lang\TestD\testd.el 105:14
-:while_condition_5
+:while_condition_15
 COPY r15 r1
 INC r1 16
 LOAD MEM r1 r1
 INC r1 -16
 SET FORCE LT r1 r1
-GOTO EQ r1 :while_end_5
+GOTO EQ r1 :while_end_15
 // 0 106:18
 #line run\lang\TestD\testd.el 106:18
 LOAD r1 TestD.TIMERS
@@ -649,7 +649,7 @@ MUL r2 r2 r3
 ADD r1 r1 r2
 INC r1 1
 SET FORCE EQ r1 r1
-GOTO EQ r1 :if_end_6
+GOTO EQ r1 :if_end_16
 // 0 107:22
 #line run\lang\TestD\testd.el 107:22
 LOAD r1 TestD.TIMERS
@@ -664,7 +664,7 @@ STORE r2 r1
 //  TIMERS[i] = 0x0;
 
 #lineend
-:if_end_6
+:if_end_16
 //  if(TIMERS[i] == 0xffff_ffff) {TIMERS[i] = 0x0;}
 
 // 1 109:18
@@ -677,15 +677,15 @@ STORE r2 r1
 //  i++;
 
 #lineend
-GOTO :while_condition_5
-:while_end_5
+GOTO :while_condition_15
+:while_end_15
 //  while(i < 16) {if(TIMERS[i] == 0xffff_ffff) {TIMERS[i] = 0x0;} i++;}
 
 #lineend
 STACK DEC 4
 // End of scope
 #stackVarClear i
-:if_end_4
+:if_end_14
 //  if(code == 0x01) {uint32 i = 1; while(i < 16) {if(TIMERS[i] == 0xffff_ffff) {TIMERS[i] = 0x0;} i++;}}
 
 #lineend
@@ -704,12 +704,12 @@ COPY rStack r15
 #stackVar uint32 time -12
 // 0 115:10
 #line run\lang\TestD\testd.el 115:10
-:while_condition_7
+:while_condition_17
 COPY r15 r1
 INC r1 -12
 LOAD MEM r1 r1
 SET FORCE GT r1 r1
-GOTO EQ r1 :while_end_7
+GOTO EQ r1 :while_end_17
 // 0 116:14
 #line run\lang\TestD\testd.el 116:14
 COPY r15 r1
@@ -720,8 +720,8 @@ STORE r2 r1
 //  time--;
 
 #lineend
-GOTO :while_condition_7
-:while_end_7
+GOTO :while_condition_17
+:while_end_17
 //  while(time > 0) {time--;}
 
 #lineend
@@ -909,8 +909,8 @@ STORE BYTE r2 r1
 
 // 22 47:10
 #line run\lang\TestD\testd.el 47:10
-#define exp_str_0 "test.txt\0"
-LOAD r1 exp_str_0
+#define exp_str_1 "test.txt\0"
+LOAD r1 exp_str_1
 STACK PUSH r1
 COPY r15 r1
 INC r1 32
@@ -928,11 +928,11 @@ COPY r15 r1
 INC r1 28
 LOAD MEM r1 r1
 SET FORCE EQ r1 r1
-GOTO EQ r1 :if_else_8
+GOTO EQ r1 :if_else_18
 // 0 49:14
 #line run\lang\TestD\testd.el 49:14
-#define exp_str_1 "ERROR\n\0"
-LOAD r1 exp_str_1
+#define exp_str_2 "ERROR\n\0"
+LOAD r1 exp_str_2
 STACK PUSH r1
 LOAD r1 0
 STACK PUSH r1
@@ -965,12 +965,12 @@ STACK DEC 8
 //  Console.printStr(& str2, 0);
 
 #lineend
-GOTO :if_end_8
-:if_else_8
+GOTO :if_end_18
+:if_else_18
 // 0 53:14
 #line run\lang\TestD\testd.el 53:14
-#define exp_str_2 "Opened\n\0"
-LOAD r1 exp_str_2
+#define exp_str_3 "Opened\n\0"
+LOAD r1 exp_str_3
 STACK PUSH r1
 LOAD r1 0
 STACK PUSH r1
@@ -1094,13 +1094,13 @@ STACK DEC 40
 #stackVarClear read
 #stackVarClear buffer
 #stackVarClear state
-:if_end_8
+:if_end_18
 //  if(fh == 0) {Console.printStr("ERROR\n\0", 0); Console.intToHex(rstat, & str2); Console.printStr(& str2, 0);} else {Console.printStr("Opened\n\0", 0); char[32] buffer; uint32 read; uint32 state; FS.readFile(fh, & buffer, 32, 0, & read, & state); Console.intToHex(state, & str2); Console.printStr(& str2, 0); Console.intToHex(read, & str2); Console.printStr(& str2, 0); Console.printChar('\n'); Console.printStr(& buffer, read);}
 
 // 24 70:10
 #line run\lang\TestD\testd.el 70:10
-#define exp_str_3 "\n> \0"
-LOAD r1 exp_str_3
+#define exp_str_4 "\n> \0"
+LOAD r1 exp_str_4
 STACK PUSH r1
 LOAD r1 0
 STACK PUSH r1

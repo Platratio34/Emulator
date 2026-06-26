@@ -93,16 +93,16 @@ public class EmulatorGui {
             p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
             frame.getContentPane().add(p, BorderLayout.EAST);
 
-            stackPanel = new MemoryPanel(emulator.cores[0], 0x1000, 8);
+            stackPanel = new MemoryPanel(emulator.cores[0], 0x8000, 8);
             stackPanel.stack = true;
             p.add(stackPanel);
 
-            kernalPanel = new MemoryPanel(emulator.cores[0], 0, 32);
+            kernalPanel = new MemoryPanel(emulator.cores[0], 0x1000, 32);
             p.add(kernalPanel);
             
-            peripheralMemoryPanel = new MemoryPanel(emulator.cores[0], 0x2_0000, 4);
+            peripheralMemoryPanel = new MemoryPanel(emulator.cores[0], 0x1_0000, 8);
             p.add(peripheralMemoryPanel);
-            timerMemoryPanel = new MemoryPanel(emulator.cores[0], 0x2_0200, 2);
+            timerMemoryPanel = new MemoryPanel(emulator.cores[0], 0x1_0200, 2);
             p.add(timerMemoryPanel);
 
             frame.setSize(1500, 800);

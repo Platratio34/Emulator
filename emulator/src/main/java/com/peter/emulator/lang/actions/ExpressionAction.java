@@ -239,17 +239,24 @@ public class ExpressionAction extends ComplexAction {
                         }
 
                         default -> {
-                            ResolveAction rA = scope.loadVar(it, tR, !addressOf);
-                            if (rA == null)
-                                throw ELAnalysisError.error("Unable to resolve variable `" + it.debugString() + "`",
-                                        it);
-                            actions.add(rA);
-                            t = rA.returnType;
-                            if (t.isConstant() && t.canCastTo(ELPrimitives.UINT32) && (_wasConst || lastOp == null)) {
-                                _wasConst = true;
-                                _constValue = applyConstValue(_constValue, ((ELNumberValue)(rA.returnVar.startingValue)).value, lastOp);
-                            } else {
+                            if (it.hasParams()) {
+                                FunctionAction fA = new FunctionAction(scope, tR, it);
+                                actions.add(fA);
+                                t = fA.retType;
                                 _wasConst = false;
+                            } else {
+                                ResolveAction rA = scope.loadVar(it, tR, !addressOf);
+                                if (rA == null)
+                                    throw ELAnalysisError.error("Unable to resolve variable `" + it.debugString() + "`",
+                                            it);
+                                actions.add(rA);
+                                t = rA.returnType;
+                                if (t.isConstant() && t.canCastTo(ELPrimitives.UINT32) && (_wasConst || lastOp == null)) {
+                                    _wasConst = true;
+                                    _constValue = applyConstValue(_constValue, ((ELNumberValue)(rA.returnVar.startingValue)).value, lastOp);
+                                } else {
+                                    _wasConst = false;
+                                }
                             }
                         }
                     }

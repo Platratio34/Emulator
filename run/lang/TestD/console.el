@@ -2,16 +2,16 @@ import SysD;
 
 namespace Console {
 
-    public static const uint32* CMD_ADDR = 0x2_0000;
-    public static const uint32* CMD_STATUS = 0x2_0001;
-    public static const uint32* CMD_DEVICE = 0x2_0002;
-    public static const uint32* CMD_SIZE = 0x2_0004;
-    public static const uint32* CMD_START = 0x2_0008;
+    public static const uint32* CMD_ADDR = 10000;
+    public static const uint32* CMD_STATUS = 0x1_0001;
+    public static const uint32* CMD_DEVICE = 0x1_0002;
+    public static const uint32* CMD_SIZE = 0x1_0004;
+    public static const uint32* CMD_START = 0x1_0008;
     public static const uint32 CMD_WRITTEN = 0x0001;
     
-    public static const char* CONSOLE_OUT = 0x2_0100;
-    public static const char* CONSOLE_IN = 0x2_0101;
-    public static const uint8* CONSOLE_IN_COUNT = 0x2_0102;
+    public static const char* CONSOLE_OUT = 0x1_0100;
+    public static const char* CONSOLE_IN = 0x1_0101;
+    public static const uint8* CONSOLE_IN_COUNT = 0x1_0102;
 
     public static void printChar(char c) {
         asm("LOAD r1 Console.CONSOLE_OUT");

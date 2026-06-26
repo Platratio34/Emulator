@@ -31,6 +31,7 @@ public class Assembler {
     protected String source = "[literal]";
 
     public SymbolFile symbols = new SymbolFile();
+    protected int offset = 0;
 
     private static final Pattern DEFINE_ARRAY_PATTERN = Pattern.compile("#(?:define|var)\\s+[\\w\\.]+\\s+\\[([^\\]]+)\\]");
     private static final Pattern DEFINE_ARRAY_VALUE_PATTERN = Pattern.compile("(0x[0-9a-f_]+|\\d+|\\w+)(?:,\\s*)?");
@@ -60,6 +61,10 @@ public class Assembler {
     private boolean inSyscall = false;
     public final ArrayList<AssemblerError> errors = new ArrayList<>();
 
+    protected int getAddress(int wordI) {
+        return (wordI * 4) + offset;
+    }
+
     public boolean assemble() {
         errors.clear();
         // mapping
@@ -73,7 +78,7 @@ public class Assembler {
             String[] parts = line.split("\s+");
             if (line.charAt(0) == ':') {
                 String name = parts[0].substring(1);
-                labels.put(name, addr*4);
+                labels.put(name, getAddress(addr));
                 continue;
             }
             if (line.startsWith("#")) {
@@ -263,12 +268,12 @@ public class Assembler {
                         boolean isSyscall = functionName.startsWith("syscall::");
                         if (isSyscall) {
                             String syscallName = functionName.substring(9);
-                            syscallDef.put(syscallName, addr);
+                            syscallDef.put(syscallName, getAddress(addr));
                             inSyscall = true;
                             // System.out.println("Test?: " + functionName);
                         }
-                        labels.put(functionName, addr*4);
-                        functions.put(functionName, addr*4);
+                        labels.put(functionName, getAddress(addr));
+                        functions.put(functionName, getAddress(addr));
                         ArrayList<String> args = new ArrayList<>();
                         int j = 2;
                         String arg = "";
@@ -288,7 +293,7 @@ public class Assembler {
                             args.add(arg);
                         }
                         cFunction = symbols.addFunction(
-                                new FunctionSymbol(functionName, addr*4, -1, args.toArray(String[]::new), "void",
+                                new FunctionSymbol(functionName, getAddress(addr), -1, args.toArray(String[]::new), "void",
                                         isSyscall, false),
                                 lineN + 1);
                     }
@@ -298,7 +303,7 @@ public class Assembler {
                                     line, source));
                             continue;
                         }
-                        cFunction.end = addr*4;
+                        cFunction.end = getAddress(addr);
                         cFunction.endLine = lineN;
                         if (parts.length >= 2 && !parts[1].startsWith("//"))
                             cFunction.rt = parts[1];
@@ -378,8 +383,8 @@ public class Assembler {
         }
         data = new Entry[addr + valAdd];
         for (MemSet set : memSet) {
-            defines.put(set.name, addr*4);
-            symbols.updateDefinition(set.name, addr*4, (addr + set.values.length) * 4 - 1);
+            defines.put(set.name, getAddress(addr));
+            symbols.updateDefinition(set.name, getAddress(addr), getAddress(addr + set.values.length) - 1);
             for (int i = 0; i < set.values.length; i++) {
                 data[addr++] = Entry.Literal(set.values[i]);
             }
@@ -404,13 +409,13 @@ public class Assembler {
                     continue;
                 if (line.startsWith("#") || line.startsWith(":")) { // compiler instruction
                     if (line.startsWith("#breakpoint")) {
-                        symbols.addBreakpoint(addr * 4 - 4);
+                        symbols.addBreakpoint(getAddress(addr-1));
                     } else if (line.startsWith("#lineend")) {
-                        symbols.endLine(addr * 4 - 4);
+                        symbols.endLine(getAddress(addr-1));
                     } else if (line.startsWith("#line")) {
-                        symbols.startLine(parts[1], parts[2], addr * 4);
+                        symbols.startLine(parts[1], parts[2], getAddress(addr));
                     } else if (line.startsWith("#stackVarClear")) {
-                        if (!symbols.endStackVar(parts[1], addr * 4)) {
+                        if (!symbols.endStackVar(parts[1], getAddress(addr))) {
                             errors.add(new AssemblerError("Invalid stackVarClear, no such variable `"+parts[1]+"`", lineN,
                                     line.length(), line, source));
                             continue;
@@ -423,7 +428,7 @@ public class Assembler {
                         }
                         String name = parts[next++];
                         int offset = parts.length > next ? Integer.parseInt(parts[next]) : 0;
-                        symbols.addStackVar(type, name, offset, addr * 4);
+                        symbols.addStackVar(type, name, offset, getAddress(addr));
                     }
                     continue;
                 }
@@ -904,7 +909,7 @@ public class Assembler {
                     if(!labels.containsKey(ge.target))
                         throw new RuntimeException("Invalid label "+ge.target);
                     int tW = labels.get(ge.target);
-                    int off = tW - (i*4) - 8;
+                    int off = tW - getAddress(i) - 8;
                     ge.setOffset(off);
                 }
             }
@@ -1309,5 +1314,16 @@ public class Assembler {
     }
     public Set<String> getSyscallMap() {
         return syscallDef.keySet();
+    }
+
+    public void setOffset(int i) {
+        offset = i;
+    }
+
+    public void setKernalOffset() {
+        offset = KERNAL_OFFSET;
+    }
+    public void setProcessOffset() {
+        offset = PROCESS_OFFSET;
     }
 }

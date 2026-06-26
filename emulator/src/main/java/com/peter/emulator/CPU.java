@@ -28,9 +28,9 @@ public class CPU {
     // rPgmI
     public int pgmPtrI = 0;
     // rStack
-    public int stackPtr = 0x1000;
+    public int stackPtr = 0x8000;
     // rStackI
-    public int stackPtrI = 0x1000;
+    public int stackPtrI = 0x8000;
     // rPID
     public int pid = 0;
     // rPIDI
@@ -555,7 +555,7 @@ public class CPU {
                         if (!privilegeMode) {
                             return;
                         }
-                        int ptr = readMem(0x1_0000);
+                        int ptr = readMem(SYSCALL_TABLE_START);
                         pgmPtr = ptr;
                         privilegeMode = false;
                     }
@@ -590,13 +590,13 @@ public class CPU {
                     default -> {
                         privilegeMode = true;
                         int function = op & MASK_SYSCALL_FUNCTION;
-                        int ptr = readMem((function<<2) + 0x1_0000);
+                        int ptr = readMem((function<<2) + SYSCALL_TABLE_START);
                         if (ptr == 0xffff_ffff) {
                             running = false;
                             // TODO: interrupt?
                             throw new RuntimeException(String.format("Unknown syscall: 0x%x", function));
                         }
-                        writeMem(0x1_0000, pgmPtr);
+                        writeMem(SYSCALL_TABLE_START, pgmPtr);
                         pgmPtr = ptr;
                     }
                 }

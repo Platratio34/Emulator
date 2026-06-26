@@ -7,7 +7,6 @@ import com.peter.emulator.lang.ELAnalysisError;
 import com.peter.emulator.lang.ELFunction;
 import com.peter.emulator.lang.ELSymbol;
 import com.peter.emulator.lang.ELType;
-import com.peter.emulator.lang.ErrorSet;
 import com.peter.emulator.lang.Identifier;
 import com.peter.emulator.lang.Location;
 import com.peter.emulator.lang.Span;
@@ -19,10 +18,10 @@ import com.peter.emulator.lang.tokens.Token;
 
 public class FunctionAction extends ComplexAction {
 
-    public final int targetReg;
+    public final Register targetReg;
     public ELType retType = null;
 
-    public FunctionAction(ActionScope scope, int targetReg, IdentifierToken it, ErrorSet errors) {
+    public FunctionAction(ActionScope scope, Register targetReg, IdentifierToken it) {
         super(scope);
         this.targetReg = targetReg;
         if (!it.hasParamsSub()) {
@@ -132,7 +131,8 @@ public class FunctionAction extends ComplexAction {
             switch (id.parts[1]) {
                 case "memSet" -> {
                     // void SysD.memSet(uint32 addr, uint32 value);
-                    if (types.size() != 2 || !((types.get(0).canCastTo(ELPrimitives.UINT32) || types.get(0).canCastTo(ELPrimitives.VOID_PTR))
+                    if (types.size() != 2 || !((types.get(0).canCastTo(ELPrimitives.UINT32)
+                            || types.get(0).canCastTo(ELPrimitives.VOID_PTR))
                             && types.get(1).canCastTo(ELPrimitives.UINT32))) {
 
                         throw ELAnalysisError.error(String.format(
@@ -140,9 +140,9 @@ public class FunctionAction extends ComplexAction {
                                 tStr), startOfParams.span(endOfParams));
                     }
                     actions.add(new DirectAction("STORE r1 r2"));
-                    
+
                     for (int i = r.reg; i > 0; i--) {
-                        if(pushed[i])
+                        if (pushed[i])
                             actions.add(new DirectAction("STACK POP %s", MachineCode.translateReg(i)));
                         else if (reserved[i])
                             scope.release(i);
@@ -157,10 +157,10 @@ public class FunctionAction extends ComplexAction {
                                 "Found no overload of SysD.memSet matching %s; Found SysD.memSet(uint32 addr, uint32 value)",
                                 tStr), startOfParams.span(endOfParams));
                     }
-                    actions.add(new DirectAction("LOAD r1 %s", MachineCode.translateReg(targetReg)));
-                    
+                    actions.add(new DirectAction("LOAD r1 %s", targetReg));
+
                     for (int i = r.reg; i > 0; i--) {
-                        if(pushed[i])
+                        if (pushed[i])
                             actions.add(new DirectAction("STACK POP %s", MachineCode.translateReg(i)));
                         else if (reserved[i])
                             scope.release(i);
@@ -186,11 +186,12 @@ public class FunctionAction extends ComplexAction {
                     */
                     String loopLabel = String.format("loop_%d", ActionBlock.subIndex++);
 
-                    actions.add(new DirectAction("ADD r1 r1 r2\nADD r4 r4 r5\nSUB r3 r3 r2\n:%s\nCOPY MEM r1 r4\nINC r3 -1\nGOTO GT r3 :%s", loopLabel, loopLabel));
-                    
-                    
+                    actions.add(new DirectAction(
+                            "ADD r1 r1 r2\nADD r4 r4 r5\nSUB r3 r3 r2\n:%s\nCOPY MEM r1 r4\nINC r3 -1\nGOTO GT r3 :%s",
+                            loopLabel, loopLabel));
+
                     for (int i = r.reg; i > 0; i--) {
-                        if(pushed[i])
+                        if (pushed[i])
                             actions.add(new DirectAction("STACK POP %s", MachineCode.translateReg(i)));
                         else if (reserved[i])
                             scope.release(i);
@@ -202,10 +203,11 @@ public class FunctionAction extends ComplexAction {
                     return;
                 }
                 default -> {
-                    throw ELAnalysisError.error("Unknown SysD function: `"+id.parts[1]+"`", nameSpan);
+                    throw ELAnalysisError.error("Unknown SysD function: `" + id.parts[1] + "`", nameSpan);
                 }
             }
         }
+        
         ELFunction f = scope.namespace.findFunction(id, types);
         boolean includedFunction = f == null;
         if (includedFunction)
@@ -228,16 +230,16 @@ public class FunctionAction extends ComplexAction {
         if (f.ret == null) {
             if (onStack && stackSize > 0)
                 actions.add(new DirectAction("STACK DEC %d", stackSize));
-        } else if(targetReg >= 0) {
+        } else if(targetReg != null) {
             retType = f.ret;
             if (onStack) {
                 if(stackSize-4 > 0)
                     actions.add(new DirectAction("STACK DEC %d", stackSize-4));
-                actions.add(new DirectAction("STACK POP %s", MachineCode.translateReg(targetReg)));
+                actions.add(new DirectAction("STACK POP %s", targetReg));
             } else {
-                actions.add(new DirectAction("COPY r1 %s", MachineCode.translateReg(targetReg)));
+                actions.add(new DirectAction("COPY r1 %s", targetReg));
             }
-        } else if(stackSize > 0) {
+        } else if(onStack && stackSize > 0) {
             actions.add(new DirectAction("STACK DEC %d", stackSize));
         }
         if (!onStack) {

@@ -92,10 +92,12 @@ public class ResolveAction extends ComplexAction {
                     
                     Register rIndex = scope.firstFree();
                     // addDirect("// index; %s", rIndex);
-                    ExpressionAction indexExp = new ExpressionAction(scope, id.index.subTokens, rIndex);
+                    ExpressionAction indexExp = new ExpressionAction(scope, it.index.subTokens, rIndex);
                     if (indexExp.outType != null && !indexExp.outType.equals(ELPrimitives.UINT32))
                         throw ELAnalysisError.error("Index must resolve to a uint32",
-                                id.index.subFirst().startLocation.span(id.index.subLast().endLocation));
+                                it.index.subFirst().startLocation.span(it.index.subLast().endLocation));
+                    ELType resolvedType = t.resolve(it.span());
+                    resolvedType.analyze(scope.unit.errors, scope.namespace, scope.unit);
                     int size = t.resolve(it.span()).sizeof();
                     // if(t.isPointer())
                     //     addDirect("LOAD MEM %s %s", reg, reg);

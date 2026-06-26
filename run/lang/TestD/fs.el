@@ -2,18 +2,18 @@ import SysD;
 
 namespace FS {
 
-    public static const uint32* CMD_ADDR = 0x2_0000;
-    public static const uint32* CMD_STATUS = 0x2_0001;
-    public static const uint32* CMD_DEVICE = 0x2_0002;
-    public static const uint32* CMD_SIZE = 0x2_0004;
-    public static const uint32* CMD_START = 0x2_0008;
+    public static const uint32* CMD_ADDR = 0x1_0000;
+    public static const uint32* CMD_STATUS = 0x1_0001;
+    public static const uint32* CMD_DEVICE = 0x1_0002;
+    public static const uint32* CMD_SIZE = 0x1_0004;
+    public static const uint32* CMD_START = 0x1_0008;
 
     public static const uint32 CMD_WRITTEN = 0x0001;
     
-    public static const uint32* RSP_STATUS = 0x2_0080;
-    public static const uint32* RSP_DATA = 0x2_0084;
-    public static const uint32* RSP_DATA_2 = 0x2_0088;
-    public static const uint32* RSP_DATA_3 = 0x2_008c;
+    public static const uint32* RSP_STATUS = 0x1_0080;
+    public static const uint32* RSP_DATA = 0x1_0084;
+    public static const uint32* RSP_DATA_2 = 0x1_0088;
+    public static const uint32* RSP_DATA_3 = 0x1_008c;
 
     protected static void peripheralCommand(uint32 deviceId, uint32 cmdSize, uint32* cmd) {
         *CMD_SIZE = cmdSize;

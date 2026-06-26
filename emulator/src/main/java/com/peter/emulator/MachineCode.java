@@ -100,6 +100,12 @@ public class MachineCode {
 
     public static final int REG_PRIVILEGED_MODE_I = 0xef;
 
+    public static final int SYSCALL_TABLE_START = 0xf000;
+    
+    public static final int KERNAL_OFFSET = 0x1000;
+    public static final int PERIPHERAL_START = 0x1_0000;
+    public static final int PROCESS_OFFSET = 0x2_0000;
+
     public static String translateReg(int reg) {
         return switch (reg) {
             case REG_PGM_PNTR -> "rPgm";
