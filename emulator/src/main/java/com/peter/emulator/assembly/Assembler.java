@@ -479,50 +479,50 @@ public class Assembler {
                     }
                     case "COPY" -> {
                         if (parts.length < 3) {
-                            errors.add(new AssemblerError("Invalid copy instruction: COPY <SHORT|BYTE> <MEM> [rs] [rd] <INC_RA>", lineN,
+                            errors.add(new AssemblerError("Invalid copy instruction: COPY [rs] [rd] | COPY MEM <SHORT|BYTE> [rs] [rd] (INC_RS) (INC_RD)", lineN,
                                     line.length(), line, source));
                             continue;
                         }
-                        int size = STORE_SIZE_WORD;
                         int next = 1;
-                        switch(parts[next]) {
-                            case "SHORT" -> {size = STORE_SIZE_SHORT;next++;}
-                            case "BYTE" -> {size = STORE_SIZE_BYTE;next++;}
-                        }
                         StoreEntry entry;
                         if (parts[next].equals("MEM")) {
                             next++;
                             if (parts.length < next+2) {
-                                errors.add(new AssemblerError("Invalid copy instruction: COPY <SHORT|BYTE> MEM [rs] [rd] <INC_RG> <INC_RA>", lineN,
+                                errors.add(new AssemblerError("Invalid copy instruction: COPY MEM <SHORT|BYTE> [rs] [rd] (INC_RS) (INC_RD)", lineN,
                                         line.length(), line, source));
                                 continue;
+                            }
+                            int size = STORE_SIZE_WORD;
+                            switch(parts[next]) {
+                                case "SHORT" -> {size = STORE_SIZE_SHORT;next++;}
+                                case "BYTE" -> {size = STORE_SIZE_BYTE;next++;}
                             }
                             int rs = getReg(parts[next++]);
                             int rd = getReg(parts[next++]);
                             entry = new StoreEntry(rs, size, STORE_SOURCE_MEM, rd);
+                            if(parts.length > next) {
+                                switch(parts[next++]) {
+                                    case "INC_RS" -> entry.incRG();
+                                    case "INC_RD" -> entry.incRA();
+                                }
+                            }
+                            if(parts.length > next) {
+                                switch(parts[next++]) {
+                                    case "INC_RS" -> entry.incRG();
+                                    case "INC_RD" -> entry.incRA();
+                                }
+                            }
                         } else {
-                            if (parts.length < next+2) {
-                                errors.add(new AssemblerError("Invalid copy instruction: COPY <SHORT|BYTE> [rs] [rd] <INC_RG> <INC_RA>", lineN,
+                            if (parts.length != 3) {
+                                errors.add(new AssemblerError("Invalid copy instruction: COPY [rs] [rd]", lineN,
                                         line.length(), line, source));
                                 continue;
                             }
                             int rs = getReg(parts[next++]);
                             int rd = getReg(parts[next++]);
-                            entry = new StoreEntry(rs, size, STORE_SOURCE_REG_REG, rd);
+                            entry = new StoreEntry(rs, 0x0, STORE_SOURCE_REG_REG, rd);
                         }
                         data[addr++] = entry;
-                        if(parts.length > next) {
-                            switch(parts[next++]) {
-                                case "INC_RG" -> entry.incRG();
-                                case "INC_RA" -> entry.incRA();
-                            }
-                        }
-                        if(parts.length > next) {
-                            switch(parts[next++]) {
-                                case "INC_RG" -> entry.incRG();
-                                case "INC_RA" -> entry.incRA();
-                            }
-                        }
                     }
                     case "STORE" -> {
                         if (parts.length < 2) {
@@ -571,17 +571,8 @@ public class Assembler {
                             entry = new StoreEntry(rg, size, STORE_SOURCE_REG, ra);
                             data[addr++] = entry;
                         }
-                        if(parts.length > next) {
-                            switch(parts[next++]) {
-                                case "INC_RG" -> entry.incRG();
-                                case "INC_RA" -> entry.incRA();
-                            }
-                        }
-                        if(parts.length > next) {
-                            switch(parts[next++]) {
-                                case "INC_RG" -> entry.incRG();
-                                case "INC_RA" -> entry.incRA();
-                            }
+                        if(parts.length > next && parts[next].equals("INC_RA")) {
+                            entry.incRG();
                         }
                     }
                     case "ADD" -> {
@@ -632,7 +623,7 @@ public class Assembler {
                     }
                     case "AND" -> {
                         if (parts.length < 4) {
-                            errors.add(new AssemblerError("Invalid mul instruction: AND [rd] [ra] [rb]", lineN,
+                            errors.add(new AssemblerError("Invalid AND instruction: AND [rd] [ra] [rb]", lineN,
                                     line.length(), line, source));
                             continue;
                         }
@@ -640,6 +631,17 @@ public class Assembler {
                         int ra = getReg(parts[2]);
                         int rb = getReg(parts[3]);
                         data[addr++] = (Entry.Math(MathOperator.AND, rd, ra, rb));
+                    }
+                    case "NAND" -> {
+                        if (parts.length < 4) {
+                            errors.add(new AssemblerError("Invalid NAND instruction: NAND [rd] [ra] [rb]", lineN,
+                                    line.length(), line, source));
+                            continue;
+                        }
+                        int rd = getReg(parts[1]);
+                        int ra = getReg(parts[2]);
+                        int rb = getReg(parts[3]);
+                        data[addr++] = (Entry.Math(MathOperator.NAND, rd, ra, rb));
                     }
                     case "OR" -> {
                         if (parts.length < 4) {
@@ -654,7 +656,7 @@ public class Assembler {
                     }
                     case "NOR" -> {
                         if (parts.length < 4) {
-                            errors.add(new AssemblerError("Invalid mul instruction: NOR [rd] [ra] [rb]", lineN,
+                            errors.add(new AssemblerError("Invalid NOR instruction: NOR [rd] [ra] [rb]", lineN,
                                     line.length(), line, source));
                             continue;
                         }
@@ -663,27 +665,48 @@ public class Assembler {
                         int rb = getReg(parts[3]);
                         data[addr++] = (Entry.Math(MathOperator.NOR, rd, ra, rb));
                     }
-                    case "LSH" -> {
+                    case "XOR" -> {
                         if (parts.length < 4) {
-                            errors.add(new AssemblerError("Invalid mul instruction: LSH [rd] [ra] [rb]", lineN,
+                            errors.add(new AssemblerError("Invalid XOR instruction: XOR [rd] [ra] [rb]", lineN,
                                     line.length(), line, source));
                             continue;
                         }
                         int rd = getReg(parts[1]);
                         int ra = getReg(parts[2]);
-                        int rb = getVal(parts[3]);
-                        data[addr++] = (Entry.Math(MathOperator.LSHIFT, rd, ra, rb));
+                        int rb = getReg(parts[3]);
+                        data[addr++] = (Entry.Math(MathOperator.XOR, rd, ra, rb));
+                    }
+                    case "NOT" -> {
+                        if (parts.length != 3) {
+                            errors.add(new AssemblerError("Invalid NOT instruction: NOT [rd] [ra]", lineN,
+                                    line.length(), line, source));
+                            continue;
+                        }
+                        int rd = getReg(parts[1]);
+                        int ra = getReg(parts[2]);
+                        data[addr++] = (Entry.Math(MathOperator.NOT, rd, ra, 0));
+                    }
+                    case "LSH" -> {
+                        if (parts.length < 4) {
+                            errors.add(new AssemblerError("Invalid mul instruction: LSH [rd] [ra] [amt]", lineN,
+                                    line.length(), line, source));
+                            continue;
+                        }
+                        int rd = getReg(parts[1]);
+                        int ra = getReg(parts[2]);
+                        int amt = getVal(parts[3]);
+                        data[addr++] = (Entry.Math(MathOperator.LSHIFT, rd, ra, amt));
                     }
                     case "RSH" -> {
                         if (parts.length < 4) {
-                            errors.add(new AssemblerError("Invalid mul instruction: RSH [rd] [ra] [rb]", lineN,
+                            errors.add(new AssemblerError("Invalid mul instruction: RSH [rd] [ra] [amt]", lineN,
                                     line.length(), line, source));
                             continue;
                         }
                         int rd = getReg(parts[1]);
                         int ra = getReg(parts[2]);
-                        int rb = getVal(parts[3]);
-                        data[addr++] = (Entry.Math(MathOperator.RSHIFT, rd, ra, rb));
+                        int amt = getVal(parts[3]);
+                        data[addr++] = (Entry.Math(MathOperator.RSHIFT, rd, ra, amt));
                     }
                     case "GOTO" -> {
                         if (parts.length < 2) {
@@ -768,7 +791,7 @@ public class Assembler {
                         boolean forced = false;
                         if (parts.length == 5) {
                             if(!parts[1].equals("FORCE")) {
-                                errors.add(new AssemblerError("Invalid set instruction: SET (FORCED) <EQ|LEQ|GEQ|NEQ> [rg] [rd]", lineN, 0, line, source));
+                                errors.add(new AssemblerError("Invalid set instruction: SET (FORCED) <EQ|LEQ|GEQ|NEQ|LT|GEQ> [rg] [rd]", lineN, 0, line, source));
                                 continue;
                             }
                             forced = true;
@@ -786,7 +809,7 @@ public class Assembler {
                             default -> ConditionalOperator.UNKNOWN;
                         };
                         if (cond == ConditionalOperator.UNKNOWN) {
-                            errors.add(new AssemblerError("Invalid set instruction operator: SET (FORCED) <EQ|LEQ|GEQ|NEQ> [rg] [rd]", lineN, line.length(), line, source));
+                            errors.add(new AssemblerError("Invalid set instruction operator: SET (FORCED) <EQ|LEQ|GEQ|NEQ|LT|GEQ> [rg] [rd]", lineN, line.length(), line, source));
                             continue;
                         }
                         data[addr++] = Entry.Set(forced, cond, rg, rd);

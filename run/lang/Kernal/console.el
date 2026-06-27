@@ -24,7 +24,7 @@ namespace Kernal {
         asm("COPY r15 r2\nINC r2 -16\nLOAD MEM r2 r2"); // str
         asm("COPY r15 r3\nINC r3 -12\nLOAD MEM r3 r3"); // len
         asm(":Kernal.print_char*_uint32_l1");
-            asm("COPY BYTE MEM r2 r1 INC_RG");
+            asm("COPY MEM BYTE r2 r1 INC_RS");
             asm("INC r13 -1\nGOTO GT r13 :Kernal.print_char*_uint32_l1");
     }
 
@@ -37,7 +37,7 @@ namespace Kernal {
             asm("COPY r3 r2\nLOAD r6 0"); // reduce the count to the buffer size and set the flag for no space remaining
         asm(":Kernal.read_char*_uint32_if_end_0");
         asm("COPY r2 r4\nCOPY r15 r5\nINC r5 -20\n:Kernal.read_char*_uint32_l0"); // r4 is now i; r5 is not &buffer
-            asm("COPY BYTE MEM r1 r5 INC_RA\nINC r4 -1"); // copy in character to buffer, then decrement our counter
+            asm("COPY MEM BYTE r1 r5 INC_RD\nINC r4 -1"); // copy in character to buffer, then decrement our counter
             asm("GOTO GT r4 :Kernal.read_char*_uint32_l0");
         asm("GOTO EQ r1 :Kernal.read_char*_uint32_end"); // skip if no space remaining
             asm("LOAD r6 0x0\nSTORE BYTE r6 r5"); // set next byte in the buffer to 0

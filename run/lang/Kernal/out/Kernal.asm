@@ -136,8 +136,8 @@ LOAD MEM r3 r3
 
 // 4 27:14
 #line run\lang\Kernal\console.el 27:14
-COPY BYTE MEM r2 r1 INC_RG
-//  asm("COPY BYTE MEM r2 r1 INC_RG");
+COPY MEM BYTE r2 r1 INC_RS
+//  asm("COPY MEM BYTE r2 r1 INC_RS");
 
 // 5 28:14
 #line run\lang\Kernal\console.el 28:14
@@ -151,7 +151,7 @@ STACK POP r15
 GOTO POP
 #endfunction void
 
-#function Kernal.read_char*_uint32_out uint32& buffer char*, bufferSize uint32, count out uint32&
+#function Kernal.read_char*_uint32_out_uint32& buffer char*, bufferSize uint32, count out uint32&
 STACK PUSH r15
 COPY rStack r15
 #stackVar out uint32& count -12
@@ -209,9 +209,9 @@ INC r5 -20
 
 // 8 40:14
 #line run\lang\Kernal\console.el 40:14
-COPY BYTE MEM r1 r5 INC_RA
+COPY MEM BYTE r1 r5 INC_RD
 INC r4 -1
-//  asm("COPY BYTE MEM r1 r5 INC_RA\nINC r4 -1");
+//  asm("COPY MEM BYTE r1 r5 INC_RD\nINC r4 -1");
 
 // 9 41:14
 #line run\lang\Kernal\console.el 41:14
@@ -242,7 +242,7 @@ STORE r2 r6
 //  asm("COPY r15 r6\nINC r6 -12\nSTORE r2 r6");
 
 #lineend
-:func_exit_Kernal.read_char*_uint32_out uint32&
+:func_exit_Kernal.read_char*_uint32_out_uint32&
 STACK POP r15
 GOTO POP
 #endfunction void

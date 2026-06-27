@@ -560,26 +560,45 @@ connection.onCompletionResolve((item) => {
     return item;
 });
 const compilerLines = {
-    "define": { name: "Define", desc: "Defines a compiler alise for a constant value", usage: "`#define [name] [value]`" },
+    "define": { name: "Define", desc: "Defines a compiler alias for a constant value", usage: "`#define [name] [value]`" },
+    "var": { name: "Variable Define", desc: "Defines a compiler alias for a variable", usage: "`#define [name] [value]`" },
     "syscall": { name: "Syscall Map", desc: "Maps a system call to specified index", usage: "`#syscall [index] [function]`" },
     "function": { name: "Function", desc: "Defines a function", usage: "`#function [name] ({[reg] [type] [name]}...)`" },
     "endfunction": { name: "End Function", desc: "Marks a function as ended. This should be after **all** function code", usage: "`#endfunction ([return])`" },
-    "include": { name: "Include", desc: "Include an OBJ file", usage: "`#include [file]`" }
+    "include": { name: "Include", desc: "Include an OBJ file", usage: "`#include [file]`" },
+    "breakpoint": { name: "Breakpoint", desc: "Mark a debugger breakpoint on the last instruction", usage: "`#breakpoint`" },
+    "line": { name: "Line", desc: "Mark the start of a line for the debugger", usage: "`#line [file] [line]:[col]`" },
+    "lineend": { name: "Line End", desc: "Mark the end of a line for the debugger", usage: "`#lineend`" },
+    "stackVar": { name: "Stack Var", desc: "Mark the start of a stack variable scope", usage: "`#stackVar (out) (const) [type] [name] ([offset])`" },
+    "stackVarClear": { name: "Stack Var Clear", desc: "Mark the end of a stack variable scope. Will clear the most recently defined variable with name", usage: "`#stackVar [name]`" }
 };
 const asmLines = {
     "HALT": { name: "Halt", desc: "Halts the CPU. **Privileged**", usage: "`HALT`" },
     "LOAD": {
         name: "Load", desc: "Load a value into a register. Equivalent to `r[rg] = [value]`", usage: "`LOAD [rg] [value]`", sub: {
-            "MEM": { name: "Load Memory", desc: "Load a value into a register from memory. Equivalent to `r[rg] = mem[r[ra]]`", usage: "`LOAD MEM [rg] [ra]`" },
+            "MEM": {
+                name: "Load Memory", desc: "Load a word into a register from memory. Equivalent to `r[rg] = mem[r[ra]]`", usage: "`LOAD MEM (SHORT|BYTE) [rg] [ra]`", sub: {
+                    "SHORT": { name: "Load Memory Short", desc: "Load a short into a register from memory. Equivalent to `r[rg] = mem[r[ra]]`", usage: "LOAD MEM SHORT [rg] [ra]" },
+                    "BYTE": { name: "Load Memory Byte", desc: "Load a byte into a register from memory. Equivalent to `r[rg] = mem[r[ra]]`", usage: "LOAD MEM BYTE [rg] [ra]" }
+                }
+            },
         }
     },
     "COPY": {
         name: "Copy", desc: "Copy a value between registers. Equivalent to `r[rd] = r[rs]`", usage: "`COPY [rs] [rd]`", sub: {
-            "MEM": { name: "Copy Memory", desc: "Copy a value between memory locations. Equivalent to `mem[r[rd]] = mem[r[rs]]`", usage: "`COPY MEM [rs] [rd]`" },
+            "MEM": {
+                name: "Copy Memory", desc: "Copy a word between memory locations. Equivalent to `mem[r[rd]] = mem[r[rs]]`", usage: "`COPY MEM (SHORT|BYTE) [rs] [rd] (INC_RS) (INC_RD)`", sub: {
+                    "SHORT": { name: "Copy Memory Short", desc: "Copy a short between memory locations. Equivalent to `mem[r[rd]] = mem[r[rs]]`", usage: "`COPY MEM SHORT [rs] [rd] (INC_RS) (INC_RD)`" },
+                    "BYTE": { name: "Copy Memory Byte", desc: "Copy a byte between memory locations. Equivalent to `mem[r[rd]] = mem[r[rs]]`", usage: "`COPY MEM BYTE [rs] [rd] (INC_RS) (INC_RD)`" }
+                }
+            },
         }
     },
     "STORE": {
-        name: "Store", desc: "Store a value from a register into memory. Equivalent to `mem[r[ra]] = r[rg]` or `mem[r[ra]] = [value]`", usage: "`STORE <[rg]|[value]> [ra]`"
+        name: "Store", desc: "Store a word from a register into memory. Equivalent to `mem[r[ra]] = r[rg]` or `mem[r[ra]] = [value]`", usage: "`STORE (SHORT|BYTE) <[rg]|[value]> [ra] (INC_RA)`", sub: {
+            "SHORT": { name: "Store Short", desc: "Store a short from a register into memory. Equivalent to `mem[r[ra]] = r[rg]` or `mem[r[ra]] = [value]`", usage: "`STORE SHORT <[rg]|[value]> [ra] (INC_RA)`" },
+            "BYTE": { name: "Store Byte", desc: "Store a byte from a register into memory. Equivalent to `mem[r[ra]] = r[rg]` or `mem[r[ra]] = [value]`", usage: "`STORE BYTE <[rg]|[value]> [ra] (INC_RA)`" }
+        }
     },
     "ADD": {
         name: "Addition", desc: "Add two registers. Equivalent to `r[rd] = r[ra] + r[rb]`", usage: "`ADD [rd] [ra] [rb]`"
@@ -587,8 +606,35 @@ const asmLines = {
     "SUB": {
         name: "Subtraction", desc: "Subtract two registers. Equivalent to `r[rd] = r[ra] - r[rb]`", usage: "`SUB [rd] [ra] [rb]`"
     },
+    "MUL": {
+        name: "Multiply", desc: "Multiply two registers. Equivalent to `r[rd] = r[ra] * r[rb]`", usage: "`MUL [rd] [ra] [rb]`"
+    },
+    "AND": {
+        name: "Bitwise And", desc: "Bitwise And two registers. Equivalent to `r[rd] = r[ra] & r[rb]`", usage: "`AND [rd] [ra] [rb]`"
+    },
+    "NAND": {
+        name: "Bitwise Not And", desc: "Bitwise Not And two registers. Equivalent to `r[rd] = r[ra] !& r[rb]`", usage: "`NAND [rd] [ra] [rb]`"
+    },
+    "OR": {
+        name: "Bitwise Or", desc: "Bitwise Or two registers. Equivalent to `r[rd] = r[ra] | r[rb]`", usage: "`OR [rd] [ra] [rb]`"
+    },
+    "NOR": {
+        name: "Bitwise Not Or", desc: "Bitwise Not Or two registers. Equivalent to `r[rd] = r[ra] !| r[rb]`", usage: "`NOR [rd] [ra] [rb]`"
+    },
+    "XOR": {
+        name: "Bitwise Exclusive Or", desc: "Bitwise Exclusive Or two registers. Equivalent to `r[rd] = r[ra] ^ r[rb]`", usage: "`XOR [rd] [ra] [rb]`"
+    },
+    "NOT": {
+        name: "Bitwise Not", desc: "Bitwise Not a register. Equivalent to `r[rd] = ~r[ra]`", usage: "`XOR [rd] [ra]`"
+    },
     "INC": {
         name: "Increment", desc: "Increment a register. Equivalent to `r[rg] = r[rg] + [value ?? 1]`", usage: "`INC [rg] ([value])`"
+    },
+    "LSH": {
+        name: "Left Shift", desc: "Left Shift a registers. Equivalent to `r[rd] = r[ra] << amt`", usage: "`LSH [rd] [ra] [amt]`"
+    },
+    "RSH": {
+        name: "Right Shift", desc: "Right Shift a registers. Equivalent to `r[rd] = r[ra] >> amt`", usage: "`RSH [rd] [ra] [amt]`"
     },
     "STACK": {
         name: "Stack", desc: "Stack operation", usage: "`STACK <PUSH|POP> [rg] | STACK <INC|DEC> ([amount])`", sub: {
@@ -610,9 +656,9 @@ const asmLines = {
         }
     },
     "GOTO": {
-        name: "Goto", desc: "Unconditional goto", usage: "`GOTO (<PUSH|POP>) (<EQ|LEQ|GT|NEQ> [rg]) <[:label]|[ra]>`", sub: {
+        name: "Goto", desc: "Unconditional goto", usage: "`GOTO (<PUSH|POP>) (<EQ|LEQ|GT|NEQ|LT|GEQ> [rg]) <[:label]|[ra]>`", sub: {
             "PUSH": {
-                name: "Goto Push", desc: "Unconditional goto that pushes the current program pointer to the stack", usage: "`GOTO PUSH (<EQ|LEQ|GT|NEQ> [rg]) <[:label]|[ra]>`", sub: {
+                name: "Goto Push", desc: "Unconditional goto that pushes the current program pointer to the stack", usage: "`GOTO PUSH (<EQ|LEQ|GT|NEQ|LT|GEQ> [rg]) <[:label]|[ra]>`", sub: {
                     "EQ": {
                         name: "Goto Push Equals Zero", desc: "Conditional goto on `r[rg] == 0` that pushes the current program pointer to the stack", usage: "`GOTO PUSH EQ [rg] <[:label]|[ra]>`"
                     },
@@ -624,11 +670,17 @@ const asmLines = {
                     },
                     "NEQ": {
                         name: "Goto Push Not Equals Zero", desc: "Conditional goto on `r[rg] != 0` that pushes the current program pointer to the stack", usage: "`GOTO PUSH NEQ [rg] <[:label]|[ra]>`"
+                    },
+                    "LT": {
+                        name: "Goto Push Less than Zero", desc: "Conditional goto on `r[rg] < 0` that pushes the current program pointer to the stack", usage: "`GOTO PUSH GT [rg] <[:label]|[ra]>`"
+                    },
+                    "GEQ": {
+                        name: "Goto Push Greater than or Equals Zero", desc: "Conditional goto on `r[rg] >= 0` that pushes the current program pointer to the stack", usage: "`GOTO PUSH LEQ [rg] <[:label]|[ra]>`"
                     }
                 }
             },
             "POP": {
-                name: "Goto Pop", desc: "Unconditional goto that returns the address on the top of the stack", usage: "`GOTO POP (<EQ|LEQ|GT|NEQ> [rg])`", sub: {
+                name: "Goto Pop", desc: "Unconditional goto that returns the address on the top of the stack", usage: "`GOTO POP (<EQ|LEQ|GT|NEQ|LT|GEQ> [rg])`", sub: {
                     "EQ": {
                         name: "Goto Pop Equals Zero", desc: "Conditional goto on `r[rg] == 0` that returns the address on the top of the stack", usage: "`GOTO POP EQ [rg]`"
                     },
@@ -640,6 +692,12 @@ const asmLines = {
                     },
                     "NEQ": {
                         name: "Goto Pop Not Equals Zero", desc: "Conditional goto on `r[rg] != 0` that returns the address on the top of the stack", usage: "`GOTO POP NEQ [rg]`"
+                    },
+                    "LT": {
+                        name: "Goto Pop Less than Zero", desc: "Conditional goto on `r[rg] < 0` that returns the address on the top of the stack", usage: "`GOTO POP GT [rg]`"
+                    },
+                    "GEQ": {
+                        name: "Goto Pop Greater than or Equals Zero", desc: "Conditional goto on `r[rg] >= 0` that returns the address on the top of the stack", usage: "`GOTO POP LEQ [rg]`"
                     }
                 }
             },
@@ -654,6 +712,56 @@ const asmLines = {
             },
             "NEQ": {
                 name: "Goto Not Equals Zero", desc: "Conditional goto on `r[rg] != 0`", usage: "`GOTO NEQ [rg] <[:label]|[ra]>`"
+            },
+            "LT": {
+                name: "Goto Less than Zero", desc: "Conditional goto on `r[rg] < 0`", usage: "`GOTO LT [rg] <[:label]|[ra]>`"
+            },
+            "GEQ": {
+                name: "Goto Greater than or Equals to Zero", desc: "Conditional goto on `r[rg] >= 0`", usage: "`GOTO GEQ [rg] <[:label]|[ra]>`"
+            }
+        }
+    },
+    "SET": {
+        name: "Conditional Set", desc: "Sets `r[rd]` to `1` IF `r[rg]` meets the condition", usage: "`SET (FORCE) <EQ|LEQ|GT|NEQ|LT|GEQ> [rg] [rd]`", sub: {
+            "FORCE": {
+                name: "Conditional Forced Set", desc: "Sets `r[rd]` to `1` IF `r[rg]` meets the condition ELSE sets it to `0`", usage: "`SET FORCE <EQ|LEQ|GT|NEQ|LT|GEQ> [rg] [rd]`", sub: {
+                    "EQ": {
+                        name: "Conditional Forced Set Equals Zero", desc: "Sets `r[rd]` to `1` IF `r[rg] == 0` ELSE sets it to `0`", usage: "`SET FORCE EQ [rg] [rd]`"
+                    },
+                    "LEQ": {
+                        name: "Conditional Forced Set Less than or Equals Zero", desc: "Sets `r[rd]` to `1` IF `r[rg] <= 0` ELSE sets it to `0`", usage: "`SET FORCE LEQ [rg] [rd]`"
+                    },
+                    "GT": {
+                        name: "Conditional Forced Set Greater than Zero", desc: "Sets `r[rd]` to `1` IF `r[rg] > 0` ELSE sets it to `0`", usage: "`SET FORCE GT [rg] [rd]`"
+                    },
+                    "NEQ": {
+                        name: "Conditional Forced Set Not Equals Zero", desc: "Sets `r[rd]` to `1` IF `r[rg] != 0` ELSE sets it to `0`", usage: "`SET FORCE NEQ [rg] [rd]`"
+                    },
+                    "LT": {
+                        name: "Conditional Forced Set Less than Zero", desc: "Sets `r[rd]` to `1` IF `r[rg] < 0` ELSE sets it to `0`", usage: "`SET FORCE LT [rg] [rd]`"
+                    },
+                    "GEQ": {
+                        name: "Conditional Forced Set Greater than or Equals to Zero", desc: "Sets `r[rd]` to `1` IF `r[rg] >= 0` ELSE sets it to `0`", usage: "`SET FORCE GEQ [rg] [rd]`"
+                    }
+                }
+            },
+            "EQ": {
+                name: "Conditional Set Equals Zero", desc: "Sets `r[rd]` to `1` IF `r[rg] == 0`", usage: "`SET EQ [rg] [rd]`"
+            },
+            "LEQ": {
+                name: "Conditional Set Less than or Equals Zero", desc: "Sets `r[rd]` to `1` IF `r[rg] <= 0`", usage: "`SET LEQ [rg] [rd]`"
+            },
+            "GT": {
+                name: "Conditional Set Greater than Zero", desc: "Sets `r[rd]` to `1` IF `r[rg] > 0`", usage: "`SET GT [rg] [rd]`"
+            },
+            "NEQ": {
+                name: "Conditional Set Not Equals Zero", desc: "Sets `r[rd]` to `1` IF `r[rg] != 0`", usage: "`SET NEQ [rg] [rd]`"
+            },
+            "LT": {
+                name: "Conditional Set Less than Zero", desc: "Sets `r[rd]` to `1` IF `r[rg] < 0`", usage: "`SET LT [rg] [rd]`"
+            },
+            "GEQ": {
+                name: "Conditional Set Greater than or Equals to Zero", desc: "Sets `r[rd]` to `1` IF `r[rg] >= 0`", usage: "`SET GEQ [rg] [rd]`"
             }
         }
     }

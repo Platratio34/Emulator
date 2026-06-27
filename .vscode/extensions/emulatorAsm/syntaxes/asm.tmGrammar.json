@@ -114,7 +114,7 @@
             }
         },
         {
-            "match": "^(STORE(?:\\s+BYTE|\\s+SHORT)?)(?:\\s+(\\S+)(?:\\s+(\\S+))?)?(\\s+INC_RG)?(\\s+INC_RA)?",
+            "match": "^(STORE(?:\\s+BYTE|\\s+SHORT)?)(?:\\s+(\\S+)(?:\\s+(\\S+))?)?(\\s+INC_RA)?",
             "captures": {
                 "1": {
                     "name": "keyword.control.instruction"
@@ -132,14 +132,11 @@
                 },
                 "4": {
                     "name": "keyword.control.instruction"
-                },
-                "5": {
-                    "name": "keyword.control.instruction"
                 }
             }
         },
         {
-            "match": "^(COPY(?:\\s+BYTE|\\s+SHORT)?(?:\\s+MEM)?)(?:\\s+(\\S+)(?:\\s+(\\S+))?)?(\\s+INC_RG)?(\\s+INC_RA)?",
+            "match": "^(COPY(?:\\s+MEM(?:\\s+BYTE|\\s+SHORT)?)?)(?:\\s+(\\S+)(?:\\s+(\\S+))?)?(\\s+INC_RS)?(\\s+INC_RD)?",
             "captures": {
                 "1": {
                     "name": "keyword.control.instruction"
@@ -354,8 +351,59 @@
             }
         },
         {
+            "match": "^(#lineend)|^(#line)(?:\\s+(\\S+)(?:\\s+(\\d+:\\d+))?)?",
+            "captures": {
+                "1": {
+                    "name": "keyword.other.compiler"
+                },
+                "2": {
+                    "name": "keyword.other.compiler"
+                },
+                "3": {
+                    "name": "string.unquoted"
+                },
+                "4": {
+                    "name": "string.unquoted"
+                }
+            }
+        },
+        {
+            "match": "^(#stackVarClear)(?:\\s+(\\S+))?",
+            "captures": {
+                "1": {
+                    "name": "keyword.other.compiler"
+                },
+                "2": {
+                    "name": "entity.name.variable"
+                }
+            }
+        },
+        {
+            "match": "^(#stackVar)(?:\\s+(out\\s+)?(const\\s+)?(\\S+)(?:\\s+(\\S+))?(?:\\s+(-?\\d+))?)?",
+            "captures": {
+                "1": {
+                    "name": "keyword.other.compiler"
+                },
+                "2": {
+                    "name": "storage.modifier"
+                },
+                "3": {
+                    "name": "storage.modifier"
+                },
+                "4": {
+                    "name": "storage.type"
+                },
+                "5": {
+                    "name": "entity.name.variable"
+                },
+                "6": {
+                    "name": "constant.numeric"
+                }
+            }
+        },
+        {
             "name": "entity.name.namespace",
-            "match": "^(\\:\\S+)\\b"
+            "match": "^(\\:\\S+)\\s"
         }
     ],
     "repository": {
@@ -431,7 +479,7 @@
                 },
                 {
                     "name": "support.function",
-                    "match": "&:([\\w][\\w_\\d\\.]*)"
+                    "match": "&:([\\w][\\w_\\d\\.\\*&]*)"
                 },
                 {
                     "name": "entity.name.variable",
@@ -449,7 +497,7 @@
         },
         "label": {
             "name": "variable.other.event",
-            "match": "\\b(\\:\\S+)\\b"
+            "match": "\\b(\\:\\S+)\\s"
         }
     }
 }

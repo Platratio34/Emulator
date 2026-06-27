@@ -77,9 +77,9 @@
             "start": 4104,
             "end": 4408
         },
-        "FS.readFile_uint32_void*_uint32_uint32_out": {
+        "FS.readFile_uint32_void*_uint32_uint32_out_uint32&_out_uint32&": {
             "args": [
-                "uint32&_out uint32& handle uint32",
+                "handle uint32",
                 "buffer void*",
                 "size uint32",
                 "offset uint32",
@@ -102,21 +102,21 @@
             "start": 5148,
             "end": 5436
         },
-        "TestD.funcb_uint32": {
-            "args": ["a uint32"],
-            "rt": "void",
-            "start": 6616,
-            "end": 6664
-        },
-        "FS.openFile_char*_out": {
+        "FS.openFile_char*_out_uint32&_out_uint32&": {
             "args": [
-                "uint32&_out uint32& path char*",
+                "path char*",
                 "status out uint32&",
                 "handle out uint32&"
             ],
             "rt": "void",
             "start": 4684,
             "end": 4832
+        },
+        "TestD.funcb_uint32": {
+            "args": ["a uint32"],
+            "rt": "void",
+            "start": 6616,
+            "end": 6664
         },
         "TestD.funcb_uint32_uint32*": {
             "args": [

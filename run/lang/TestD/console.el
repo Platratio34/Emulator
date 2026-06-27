@@ -29,7 +29,7 @@ namespace Console {
                 asm("STORE BYTE r3 r1\nINC r2 1\nGOTO :printStr_l1");
             asm(":printStr_l1_exit\nGOTO :printStr_exit");
         asm(":printStr_len");
-            asm("COPY BYTE MEM r2 r1 INC_RG");
+            asm("COPY MEM BYTE r2 r1 INC_RS");
             asm("INC r14 -1\nGOTO GT r14 :printStr_len");
         asm(":printStr_exit");
     }

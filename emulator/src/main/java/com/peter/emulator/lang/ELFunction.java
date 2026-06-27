@@ -306,7 +306,7 @@ public class ELFunction {
         String o = namespace.getQualifiedName()+"."+cName;
         if(incParams) {
             for(String p : paramOrder) {
-                o += "_"+params.get(p).typeString();
+                o += "_"+params.get(p).typeString().replace(" ","_");
             }
         }
         return o;

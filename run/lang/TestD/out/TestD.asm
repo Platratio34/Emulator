@@ -227,8 +227,8 @@ GOTO :printStr_exit
 
 // 9 32:14
 #line run\lang\TestD\console.el 32:14
-COPY BYTE MEM r2 r1 INC_RG
-//  asm("COPY BYTE MEM r2 r1 INC_RG");
+COPY MEM BYTE r2 r1 INC_RS
+//  asm("COPY MEM BYTE r2 r1 INC_RS");
 
 // 10 33:14
 #line run\lang\TestD\console.el 33:14
@@ -356,7 +356,7 @@ GOTO POP
 
 // FS
 
-#function FS.openFile_char*_out uint32&_out uint32& path char*, status out uint32&, handle out uint32&
+#function FS.openFile_char*_out_uint32&_out_uint32& path char*, status out uint32&, handle out uint32&
 STACK PUSH r15
 COPY rStack r15
 #stackVar char* path -20
@@ -407,7 +407,7 @@ STORE r2 r1
 //  handle =* RSP_DATA_2;
 
 #lineend
-:func_exit_FS.openFile_char*_out uint32&_out uint32&
+:func_exit_FS.openFile_char*_out_uint32&_out_uint32&
 STACK DEC 8
 // End of scope
 #stackVarClear msg
@@ -418,7 +418,7 @@ STACK POP r15
 GOTO POP
 #endfunction void
 
-#function FS.readFile_uint32_void*_uint32_uint32_out uint32&_out uint32& handle uint32, buffer void*, size uint32, offset uint32, read out uint32&, state out uint32&
+#function FS.readFile_uint32_void*_uint32_uint32_out_uint32&_out_uint32& handle uint32, buffer void*, size uint32, offset uint32, read out uint32&, state out uint32&
 STACK PUSH r15
 COPY rStack r15
 #stackVar out uint32& read -16
@@ -487,7 +487,7 @@ STORE r2 r1
 //  read =* RSP_DATA_3;
 
 #lineend
-:func_exit_FS.readFile_uint32_void*_uint32_uint32_out uint32&_out uint32&
+:func_exit_FS.readFile_uint32_void*_uint32_uint32_out_uint32&_out_uint32&
 STACK DEC 20
 // End of scope
 #stackVarClear msg
@@ -918,7 +918,7 @@ STACK PUSH r1
 COPY r15 r1
 INC r1 28
 STACK PUSH r1
-GOTO PUSH :FS.openFile_char*_out uint32&_out uint32&
+GOTO PUSH :FS.openFile_char*_out_uint32&_out_uint32&
 STACK DEC 12
 //  FS.openFile("test.txt\0", & rstat, & fh);
 
@@ -1015,7 +1015,7 @@ STACK PUSH r1
 COPY r15 r1
 INC r1 84
 STACK PUSH r1
-GOTO PUSH :FS.readFile_uint32_void*_uint32_uint32_out uint32&_out uint32&
+GOTO PUSH :FS.readFile_uint32_void*_uint32_uint32_out_uint32&_out_uint32&
 STACK DEC 24
 //  FS.readFile(fh, & buffer, 32, 0, & read, & state);
 
