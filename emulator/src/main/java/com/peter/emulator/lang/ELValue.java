@@ -106,7 +106,7 @@ public abstract class ELValue {
             super(type);
             this.value = value;
             this.ch = ch;
-            if(!(type.equals(ELPrimitives.CHAR) || type.equals(ELPrimitives.CHAR.pointerTo()) || (type.array && type.base().equals(ELPrimitives.CHAR))))
+            if(!(type.equals(ELPrimitives.CHAR) || type.equals(ELPrimitives.CHAR.pointerTo()) || (type.array && type.baseRef().equals(ELPrimitives.CHAR))))
                 throw new ELCompileException("Invalid type for string value: "+type);
         }
 

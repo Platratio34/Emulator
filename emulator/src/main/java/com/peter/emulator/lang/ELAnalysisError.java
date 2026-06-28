@@ -16,6 +16,16 @@ public class ELAnalysisError extends RuntimeException {
         this.span = span;
     }
 
+    public static ELAnalysisError hint(String reason, Span span) {
+        return new ELAnalysisError(Severity.HINT, reason, span);
+    }
+    public static ELAnalysisError hint(String reason, Token token) {
+        return new ELAnalysisError(Severity.HINT, reason, token.span());
+    }
+    public static ELAnalysisError hint(String reason) {
+        return new ELAnalysisError(Severity.HINT, reason, null);
+    }
+
     public static ELAnalysisError info(String reason, Span span) {
         return new ELAnalysisError(Severity.INFO, reason, span);
     }
@@ -42,8 +52,19 @@ public class ELAnalysisError extends RuntimeException {
     public static ELAnalysisError error(String reason, Token token) {
         return new ELAnalysisError(Severity.ERROR, reason, token.span());
     }
+
     public static ELAnalysisError error(String reason) {
         return new ELAnalysisError(Severity.ERROR, reason, null);
+    }
+    
+    public static ELAnalysisError errorF(Span span, String reason, Object... args) {
+        return new ELAnalysisError(Severity.ERROR, String.format(reason, args), span);
+    }
+    public static ELAnalysisError errorF(Token token, String reason, Object... args) {
+        return new ELAnalysisError(Severity.ERROR, String.format(reason, args), token.span());
+    }
+    public static ELAnalysisError errorF(String reason, Object... args) {
+        return new ELAnalysisError(Severity.ERROR, String.format(reason, args), null);
     }
     
     public static ELAnalysisError fatal(String reason, Span span) {

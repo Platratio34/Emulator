@@ -132,6 +132,9 @@ public class ProgramModule {
     }
 
     public void parse(ErrorSet errors) {
+        for (ProgramUnit unit : units.values()) {
+            unit.errors = errors;
+        }
         if (root != null) {
             if (!root.isDirectory()) {
                 throw new RuntimeException("Path " + root.getAbsolutePath() + " does not exist");
@@ -170,6 +173,9 @@ public class ProgramModule {
             if (!languageServer.modules.containsKey(m))
                 errors.error("Could not resolve referenced module " + m);
         }
+        for (ProgramUnit unit : units.values()) {
+            unit.errors = errors;
+        }
         for (Namespace ns : namespaces.values()) {
             ns.resolve(errors);
         }
@@ -178,6 +184,9 @@ public class ProgramModule {
     
     public ErrorSet analyze() {
         ErrorSet errors = new ErrorSet();
+        for (ProgramUnit unit : units.values()) {
+            unit.errors = errors;
+        }
         for (Namespace ns : namespaces.values()) {
             try {
                 ns.analyze(errors);

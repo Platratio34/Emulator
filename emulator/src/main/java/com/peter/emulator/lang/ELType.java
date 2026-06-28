@@ -496,12 +496,13 @@ public class ELType {
     public ELType baseRef() {
         return (subType != null) ? subType.baseRef() : this;
     }
-    public ELType base() {
-        return (subType != null) ? subType.base() : this.nonConst();
-    }
 
     public void analyze(ErrorSet errors, Namespace namespace, ProgramUnit unit) {
-        unit.symbols.add(new ELTypeSymbol(this));
+        if (clazz != null) {
+            return;
+        }
+        if(location != null)
+            unit.symbols.add(new ELTypeSymbol(this));
         if(isVoidPtr())
             return;
         for(ELType type : genericTypes)
@@ -534,8 +535,7 @@ public class ELType {
             if(gT == null) // fully generic type
                 continue;
             if (!pT.canCastTo(gT)) {
-                errors.add(ELAnalysisError
-                        .error(String.format("Invalid type parameter type for parameter %s; Found %s, expected %s or child", gN, pT.typeString(), gT.typeString()), pT.span()));
+                errors.error(String.format("Invalid type parameter type for parameter %s; Found %s, expected %s or child", gN, pT.typeString(), gT.typeString()), pT.span());
 
             }
         }
@@ -583,8 +583,8 @@ public class ELType {
         // check base
         if (ELPrimitives.OBJECT.equals(target) || equals(ELPrimitives.OBJECT))
             return true;
-        ELType base = base();
-        ELType tgtBase = base();
+        ELType base = baseRef();
+        ELType tgtBase = baseRef();
         if (base.clazz != null && tgtBase.clazz != null) {
             boolean sameClass = base.clazz == tgtBase.clazz;
             if (!sameClass) {

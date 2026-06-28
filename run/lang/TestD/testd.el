@@ -38,12 +38,17 @@ namespace TestD {
         Console.printChar('a');
         Console.printChar('\n');
 
-        // asm("#breakpoint");
-        uint32 fh;
-        uint32 rstat;
         char[10] str2;
         str2[8] = '\n';
         str2[9] = '\0';
+
+        StructA* pntr = new StructA();
+
+
+        // asm("#breakpoint");
+        /*
+        uint32 fh;
+        uint32 rstat;
         FS.openFile("test.txt\0", &rstat, &fh);
         if(fh == 0) {
             Console.printStr("ERROR\n\0", 0);
@@ -65,7 +70,7 @@ namespace TestD {
             
             Console.printChar('\n');
             Console.printStr(&buffer, read);
-        }
+        }*/
 
         Console.printStr("\n> \0",0);
         asm("#breakpoint");

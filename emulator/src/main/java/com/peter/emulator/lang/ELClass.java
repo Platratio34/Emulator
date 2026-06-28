@@ -90,10 +90,10 @@ public class ELClass extends Namespace {
         int size = 0;
         if (parent != null && parent != ELPrimitives.OBJECT_CLASS)
             size = parent.getSize();
-        System.out.println(cName);
+        // System.out.println(cName);
         for (int i = 0; i < order.size(); i++) {
             int vSize = memberVariables.get(order.get(i)).sizeof();
-            System.out.println(vSize);
+            // System.out.println(vSize);
             if (vSize == 1) {
                 size++;
             } else if (vSize == 2) {
@@ -103,7 +103,7 @@ public class ELClass extends Namespace {
                 int o = size % 4;
                 size += o + vSize;
             }
-            System.out.println("- "+size);
+            // System.out.println("- "+size);
         }
         return (size + 3) & 0xffff_fffc;
         // size += 4 - (size % 4);
@@ -318,7 +318,7 @@ public class ELClass extends Namespace {
                 ELType t = generics.get(n);
                 if (t == null)
                     return ELPrimitives.OBJECT_CLASS;
-                return getType(t.base(), 0, this, unit);
+                return getType(t.baseRef(), 0, this, unit);
             }
         }
         return super.getType(base, srcNs, unit);
@@ -326,6 +326,7 @@ public class ELClass extends Namespace {
 
     @Override
     public void analyze(ErrorSet errors) {
+        super.analyze(errors);
         for (ELFunction func : memberFunctions.values()) {
             func.analyze(errors);
             if (func.abstractFunction && !abstractClass)
@@ -363,17 +364,20 @@ public class ELClass extends Namespace {
         if (destructor != null) {
             destructor.analyze(errors);
         }
+    }
+    
+    @Override
+    protected void analyzeVars(ErrorSet errors) {
+        super.analyzeVars(errors);
         for (ELVariable var : memberVariables.values()) {
             var.analyze(errors, this);
-            
         }
-        super.analyze(errors);
     }
     
     @Override
     public void resolve(ErrorSet errors) {
         if (parent == null) {
-            ELType base = parentType.base();
+            ELType base = parentType.baseRef();
             parent = getType(base, this, unit);
             if (parent == null) {
                 errors.error(String.format("Could not resolve parent class %s for %s", base.typeString(), getQualifiedName()), parentType.span());

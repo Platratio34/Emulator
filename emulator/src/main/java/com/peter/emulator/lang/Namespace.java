@@ -205,16 +205,23 @@ public class Namespace {
     }
 
     public void analyze(ErrorSet errors) {
+        analyzeVars(errors);
         for (ELFunction func : staticFunctions.values()) {
             func.analyze(errors);
-        }
-        for (ELVariable var : staticVariables.values()) {
-            var.analyze(errors, this);
         }
         for (Namespace namespace : namespaces.values()) {
             namespace.analyze(errors);
         }
-        errors.info("Analyzed namespace "+getQualifiedName());
+        errors.info("Analyzed namespace " + getQualifiedName());
+    }
+
+    protected void analyzeVars(ErrorSet errors) {
+        for (ELVariable var : staticVariables.values()) {
+            var.analyze(errors, this);
+        }
+        for (Namespace namespace : namespaces.values()) {
+            namespace.analyzeVars(errors);
+        }
     }
 
     public boolean hasType(ELType base) {

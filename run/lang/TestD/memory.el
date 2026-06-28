@@ -25,7 +25,7 @@ namespace Memory {
         if(block == nullptr) {
             MemoryBlock* next = blockFreeList;
             blockFreeList = blockFreeList.next;
-            next.start = block.end+1;
+            next.start = block.end + 1;
             next.end = next.start + size - 1;
             next.next = nullptr;
             allocatedBlocks = next;
@@ -42,7 +42,7 @@ namespace Memory {
             }
             MemoryBlock* next = blockFreeList;
             blockFreeList = blockFreeList.next;
-            next.start = block.end+1;
+            next.start = block.end + 1;
             next.end = next.start + size - 1;
             next.next = nullptr;
             block.next = next;
@@ -50,7 +50,7 @@ namespace Memory {
         }
         MemoryBlock* next = blockFreeList;
         blockFreeList = blockFreeList.next;
-        next.start = block.end+1;
+        next.start = block.end + 1;
         next.end = next.start + size - 1;
         next.next = block.next;
         block.next = next;

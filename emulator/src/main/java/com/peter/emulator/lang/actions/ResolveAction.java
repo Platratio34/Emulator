@@ -78,7 +78,7 @@ public class ResolveAction extends ComplexAction {
                     addDirect("INC %s %d", reg, var.offset);
             }
         }
-        scope.addSymbol(new ELVarSymbol(var, it.spanFirst()));
+        // scope.addSymbol(new ELVarSymbol(var, it.spanFirst()));
         // scope.addSymbol(new ELSymbol(var.finalVal ? ELSymbol.Type.VARIABLE_FINAL : ELSymbol.Type.VARIABLE_NAME, it.spanFirst(), "### `%s %s`", var.typeString(), it.value));
         reg.reserve();
         ELVariable v = var;
@@ -97,10 +97,7 @@ public class ResolveAction extends ComplexAction {
                         throw ELAnalysisError.error("Index must resolve to a uint32",
                                 it.index.subFirst().startLocation.span(it.index.subLast().endLocation));
                     ELType resolvedType = t.resolve(it.span());
-                    resolvedType.analyze(scope.unit.errors, scope.namespace, scope.unit);
-                    int size = t.resolve(it.span()).sizeof();
-                    // if(t.isPointer())
-                    //     addDirect("LOAD MEM %s %s", reg, reg);
+                    int size = resolvedType.sizeof();
                     if (indexExp.wasConst) {
                         addDirect("INC %s %d", reg, indexExp.constValue * size);
                     } else {
@@ -113,23 +110,29 @@ public class ResolveAction extends ComplexAction {
                         addDirect("ADD %s %s %s", reg, reg, rIndex);
                     }
                     rIndex.release();
-                    t = t.resolve(it.span());
+                    t = resolvedType;
                 }
                 
                 scope.addSymbol(new ELVarSymbol(v, it.spanFirst()));
-                // scope.addSymbol(new ELSymbol(v.finalVal ? ELSymbol.Type.VARIABLE_FINAL : ELSymbol.Type.VARIABLE_NAME, it.spanFirst(), "### `%s %s`", v.typeString(), v.name));
                 
                 if(it.hasSub())
                     it = it.sub(0);
                 else
                     break;
 
+                
                 if (t.isPointer() || t.isAddress()) {
                     addDirect("LOAD MEM %s %s", reg, reg);
                     t = t.resolve(it.span());
                 }
 
                 ELClass clazz = t.getELClass();
+                if (clazz == null) {
+                    scope.unit.errors.warning(String.format(
+                            "Type `%s` was missing class, analyzing... (found resolving variable `%s`)", t.typeString(), var.debugString()), it);
+                    t.analyze(scope.unit.errors, scope.namespace, scope.unit);
+                    clazz = t.getELClass();
+                }
                 if (clazz == null)
                     throw ELAnalysisError.fatal("Type was missing class (type was `" + t.typeString()+"`; "+t.toString()+")", it);
                 if (!clazz.memberVariables.containsKey(it.value))

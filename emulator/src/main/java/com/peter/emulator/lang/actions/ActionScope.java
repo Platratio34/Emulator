@@ -196,7 +196,7 @@ public class ActionScope {
         try {
             return new ResolveAction(scope, reg, v, id, byValue);
         } catch (RuntimeException e) {
-            throw ELAnalysisError.error(e.getMessage(), id);
+            throw ELAnalysisError.errorF(id, "Exception encountered in Resolve Action: %s", e.toString());
         }
     }
 
@@ -296,7 +296,7 @@ public class ActionScope {
                 if(ns instanceof ELClass clazz) {
                     return clazz;
                 }
-                throw ELAnalysisError.error(String.format("Found class `%s`, but was not class or struct", it.value), it.spanFirst());
+                throw ELAnalysisError.errorF(it.spanFirst(), "Found class `%s`, but was not class or struct", it.value);
             }
         }
         ELClass clazz = namespace.findClass(it, 0);
