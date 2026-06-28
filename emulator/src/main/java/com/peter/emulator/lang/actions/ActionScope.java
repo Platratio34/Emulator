@@ -3,8 +3,8 @@ package com.peter.emulator.lang.actions;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import com.peter.emulator.lang.*;
 import com.peter.emulator.lang.ELFunction.FunctionType;
+import com.peter.emulator.lang.*;
 import com.peter.emulator.lang.base.ELPrimitives;
 import com.peter.emulator.lang.tokens.IdentifierToken;
 
@@ -68,6 +68,7 @@ public class ActionScope {
         }
         type.analyze(unit.errors, namespace, unit);
         var.offset = stackOff;
+        var.analyze(unit.errors, namespace);
         stackOff += (Math.ceilDiv(var.sizeof(), 4) * 4);
         stackVars.put(name, var);
         return var;
@@ -280,6 +281,27 @@ public class ActionScope {
         ArrayList<ELVariable> varStack = getVarStack(id);
         if (varStack != null && !varStack.isEmpty()) {
             return null;
+        }
+        return null;
+    }
+    public ELClass findClass(IdentifierToken it) {
+        if(!it.hasSub()) { // only 1 element
+            for(ELClass clazz : unit.classes) {
+                if(clazz.cName.equals(it.value)) {
+                    return clazz;
+                }
+            }
+            if(unit.hasInclude(it.value)) {
+                Namespace ns = unit.module.getNamespaceIncluded(unit.getInclude(it.value));
+                if(ns instanceof ELClass clazz) {
+                    return clazz;
+                }
+                throw ELAnalysisError.error(String.format("Found class `%s`, but was not class or struct", it.value), it.spanFirst());
+            }
+        }
+        ELClass clazz = namespace.findClass(it, 0);
+        if(clazz == null) {
+
         }
         return null;
     }

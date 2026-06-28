@@ -2,11 +2,12 @@ package com.peter.emulator.lang;
 
 import java.util.ArrayList;
 
+import com.peter.emulator.lang.ELSymbol.ELTypeSymbol;
+import com.peter.emulator.lang.base.ELPrimitives;
 import com.peter.emulator.lang.tokens.IdentifierToken;
 import com.peter.emulator.lang.tokens.NumberToken;
 import com.peter.emulator.lang.tokens.OperatorToken;
 import com.peter.emulator.lang.tokens.Token;
-import com.peter.emulator.lang.base.ELPrimitives;
 
 public class ELType {
 
@@ -500,6 +501,7 @@ public class ELType {
     }
 
     public void analyze(ErrorSet errors, Namespace namespace, ProgramUnit unit) {
+        unit.symbols.add(new ELTypeSymbol(this));
         if(isVoidPtr())
             return;
         for(ELType type : genericTypes)
@@ -649,6 +651,8 @@ public class ELType {
     }
 
     public int stepSize() {
+        if(isVoidPtr())
+            return 4;
         if(!(array || pointer))
             throw new ELCompileException("Can not get step size of non array or pointer");
         return subType.sizeof();

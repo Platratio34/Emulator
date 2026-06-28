@@ -59,7 +59,7 @@ public class ELClass extends Namespace {
         if (memberVariables.containsKey(var.name) || staticVariables.containsKey(var.name) || staticFunctions.containsKey(var.name) || memberFunctions.containsKey(var.name))
             throw new ELCompileException("Duplicate member name: `"+var.name+"` in class "+cName);
         int size = 0;
-        if (parent != null)
+        if (parent != null && parent != ELPrimitives.OBJECT_CLASS)
             size = parent.getSize();
         memberVariables.put(var.name, var);
         for (int i = 0; i < order.size(); i++) {
@@ -88,10 +88,12 @@ public class ELClass extends Namespace {
 
     public int getSize() {
         int size = 0;
-        if (parent != null)
+        if (parent != null && parent != ELPrimitives.OBJECT_CLASS)
             size = parent.getSize();
+        System.out.println(cName);
         for (int i = 0; i < order.size(); i++) {
             int vSize = memberVariables.get(order.get(i)).sizeof();
+            System.out.println(vSize);
             if (vSize == 1) {
                 size++;
             } else if (vSize == 2) {
@@ -101,9 +103,11 @@ public class ELClass extends Namespace {
                 int o = size % 4;
                 size += o + vSize;
             }
+            System.out.println("- "+size);
         }
-        size += 4 - (size % 4);
-        return size;
+        return (size + 3) & 0xffff_fffc;
+        // size += 4 - (size % 4);
+        // return size;
     }
 
     public int getOffset(String member) {
@@ -361,6 +365,7 @@ public class ELClass extends Namespace {
         }
         for (ELVariable var : memberVariables.values()) {
             var.analyze(errors, this);
+            
         }
         super.analyze(errors);
     }

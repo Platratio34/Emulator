@@ -97,8 +97,11 @@ public class ExpressionAction extends ComplexAction {
                     if (not)
                         throw ELAnalysisError.error("Can't not a number literal", tkn);
                     Register tR = (lastType == null) ? targetReg : scope.firstFree();
+                    int val = nt.numValue;
                     if (lastType != null) {
-                        if (!ELPrimitives.UINT32.canCastTo(lastType))
+                        if(lastType.isPointer()) {
+                            val *= lastType.stepSize();
+                        } else if (!ELPrimitives.UINT32.canCastTo(lastType))
                             throw ELAnalysisError.error("Invalid type-cast (uint32 -> " + lastType.typeString() + ")",
                                     tkn);
                     } else {
@@ -106,69 +109,69 @@ public class ExpressionAction extends ComplexAction {
                     }
                     if (lastOp != null) {
                         if (_wasConst) {
-                            _constValue = applyConstValue(_constValue, nt.numValue, lastOp);
+                            _constValue = applyConstValue(_constValue, val, lastOp);
                         }
                         switch (lastOp) {
                             case ADD -> {
-                                actions.add(new DirectAction("INC %s %d", targetReg, nt.numValue));
+                                actions.add(new DirectAction("INC %s %d", targetReg, val));
                             }
                             case SUB -> {
-                                actions.add(new DirectAction("INC %s %d", targetReg, -nt.numValue));
+                                actions.add(new DirectAction("INC %s %d", targetReg, -val));
                             }
                             case POINTER -> {
-                                actions.add(new DirectAction("LOAD %s %d", tR, nt.numValue));
+                                actions.add(new DirectAction("LOAD %s %d", tR, val));
                                 actions.add(new DirectAction("MUL %s %s %s", targetReg, targetReg, tR));
                             }
 
                             case BITWISE_AND -> {
-                                actions.add(new DirectAction("LOAD %s %d", tR, nt.numValue));
+                                actions.add(new DirectAction("LOAD %s %d", tR, val));
                                 actions.add(new DirectAction("AND %s %s %s", targetReg, targetReg, tR));
                             }
                             case BITWISE_OR -> {
-                                actions.add(new DirectAction("LOAD %s %d", tR, nt.numValue));
+                                actions.add(new DirectAction("LOAD %s %d", tR, val));
                                 actions.add(new DirectAction("OR %s %s %s", targetReg, targetReg, tR));
                             }
                             case BITWISE_NOR -> {
-                                actions.add(new DirectAction("LOAD %s %d", tR, nt.numValue));
+                                actions.add(new DirectAction("LOAD %s %d", tR, val));
                                 actions.add(new DirectAction("NOR %s %s %s", targetReg, targetReg, tR));
                             }
 
                             case LEFT_SHIFT -> {
-                                actions.add(new DirectAction("LSH %s %s %d", targetReg, targetReg, nt.numValue));
+                                actions.add(new DirectAction("LSH %s %s %d", targetReg, targetReg, val));
                             }
                             case RIGHT_SHIFT -> {
-                                actions.add(new DirectAction("RSH %s %s %d", targetReg, targetReg, nt.numValue));
+                                actions.add(new DirectAction("RSH %s %s %d", targetReg, targetReg, val));
                             }
 
                             case EQ2 -> {
-                                if (nt.numValue != 0)
-                                    actions.add(new DirectAction("INC %s %d", targetReg, -nt.numValue));
+                                if (val != 0)
+                                    actions.add(new DirectAction("INC %s %d", targetReg, -val));
                                 actions.add(new DirectAction("SET FORCE EQ %s %s", targetReg, targetReg));
                             }
                             case NEQ -> {
-                                if (nt.numValue != 0)
-                                    actions.add(new DirectAction("INC %s %d", targetReg, -nt.numValue));
+                                if (val != 0)
+                                    actions.add(new DirectAction("INC %s %d", targetReg, -val));
                                 actions.add(new DirectAction("SET FORCE NEQ %s %s", targetReg, targetReg));
                             }
                             case LEQ -> {
-                                if (nt.numValue != 0)
-                                    actions.add(new DirectAction("INC %s %d", targetReg, -nt.numValue));
+                                if (val != 0)
+                                    actions.add(new DirectAction("INC %s %d", targetReg, -val));
                                 actions.add(new DirectAction("SET FORCE LEQ %s %s", targetReg, targetReg));
                             }
                             case ANGLE_RIGHT -> {
-                                if (nt.numValue != 0)
-                                    actions.add(new DirectAction("INC %s %d", targetReg, -nt.numValue));
+                                if (val != 0)
+                                    actions.add(new DirectAction("INC %s %d", targetReg, -val));
                                 actions.add(new DirectAction("SET FORCE GT %s %s", targetReg, targetReg));
                             }
 
                             case GEQ -> {
-                                if (nt.numValue != 0)
-                                    actions.add(new DirectAction("INC %s %d", targetReg, -nt.numValue));
+                                if (val != 0)
+                                    actions.add(new DirectAction("INC %s %d", targetReg, -val));
                                 actions.add(new DirectAction("SET FORCE GEQ %s %s", targetReg, targetReg));
                             }
                             case ANGLE_LEFT -> {
-                                if (nt.numValue != 0)
-                                    actions.add(new DirectAction("INC %s %d", targetReg, -nt.numValue));
+                                if (val != 0)
+                                    actions.add(new DirectAction("INC %s %d", targetReg, -val));
                                 actions.add(new DirectAction("SET FORCE LT %s %s", targetReg, targetReg));
                             }
 
@@ -179,8 +182,8 @@ public class ExpressionAction extends ComplexAction {
                         }
                     } else {
                         _wasConst = true;
-                        _constValue = nt.numValue;
-                        actions.add(new DirectAction("LOAD %s %d", tR, nt.numValue));
+                        _constValue = val;
+                        actions.add(new DirectAction("LOAD %s %d", tR, val));
                         tR.reserve();
                     }
                     lastOp = null;
@@ -236,6 +239,23 @@ public class ExpressionAction extends ComplexAction {
                                 scope.addSymbol(new ELSymbol(ELSymbol.Type.VARIABLE_NAME, it.sub(0).span(),
                                         "### `%s %s`\nCPU register `%s`\n\n" + MachineCode.regDesc(vN), t.typeString(),
                                         vN, vN));
+                        }
+                        case "new" -> {
+                            if(wI > 0 || tokens.size() > 2) {
+                                throw ELAnalysisError.error("`new` expression must be only element of expression", tkn.span());
+                            } else if(tokens.size() == 1) {
+                                throw ELAnalysisError.error("Unexpected end of expression. Expected type for `new` expression", tkn.endLocation.span());
+                            }
+                            wI++;
+                            tkn = tokens.get(wI);
+                            if(tkn instanceof IdentifierToken it2) {
+                                NewAction na = new NewAction(scope, it2, tR);
+                                actions.add(na);
+                                t = na.retType;
+                                _wasConst = false;
+                            } else {
+                                throw ELAnalysisError.error("Unexpected token in `new` expression. Expected type, found "+tkn.debugString(), tkn.span());
+                            }
                         }
 
                         default -> {

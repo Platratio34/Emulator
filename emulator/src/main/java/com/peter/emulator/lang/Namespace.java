@@ -398,4 +398,26 @@ public class Namespace {
         }
         return out + "}";
     }
+
+    public ELClass findClass(IdentifierToken it, int i) {
+        String n = (i == 0) ? it.value : it.sub(i-1).value;
+        if(i == it.subSize()-1) { // the last index
+            if(cName.equals(n)) {
+                if(this instanceof ELClass clazz)
+                    return clazz;
+                throw ELAnalysisError.error(String.format("Found namespace `%s`, but was not class or struct", getQualifiedName()), it);
+            }
+            if(namespaces.containsKey(n)) {
+                Namespace ns = namespaces.get(n);
+                if(ns instanceof ELClass clazz)
+                    return clazz;
+                throw ELAnalysisError.error(String.format("Found namespace `%s`, but was not class or struct", ns.getQualifiedName()), it);
+            }
+            return null;
+        }
+        if(n.equals(cName)) {
+            
+        }
+        return null;
+    }
 }

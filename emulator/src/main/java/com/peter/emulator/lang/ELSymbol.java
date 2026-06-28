@@ -79,7 +79,7 @@ public class ELSymbol {
 
         @Override
         public String getText() {
-            return String.format("`%s`", elType.typeString());
+            return String.format("`%s` (%d bytes)", elType.typeString(), elType.sizeof());
         }
     }
 

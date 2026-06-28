@@ -1,6 +1,5 @@
 package com.peter;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -13,14 +12,12 @@ import org.json.JSONException;
 
 import com.peter.emulator.Emulator;
 import com.peter.emulator.assembly.Assembler;
-import com.peter.emulator.assembly.AssemblerError;
 import com.peter.emulator.debug.Debugger;
 import com.peter.emulator.lang.ELAnalysisError;
 import com.peter.emulator.lang.ELAnalysisError.Severity;
-import com.peter.emulator.languageserver.ELLanguageServer;
 import com.peter.emulator.lang.LanguageServer;
-import com.peter.emulator.lang.Namespace;
 import com.peter.emulator.lang.ProgramModule;
+import com.peter.emulator.languageserver.ELLanguageServer;
 
 public class Main {
 
@@ -44,16 +41,16 @@ public class Main {
         LanguageServer ls = new LanguageServer();
 
         ProgramModule kernal = null;
-        try {
-            kernal = ls.addModule(ROOT_PATH.resolve("lang/Kernal").toFile());
-            kernal.addRefModule("SysD");
-        } catch (JSONException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        // try {
+        //     kernal = ls.addModule(ROOT_PATH.resolve("lang/Kernal").toFile());
+        //     kernal.addRefModule("SysD");
+        // } catch (JSONException e) {
+        //     // TODO Auto-generated catch block
+        //     e.printStackTrace();
+        // } catch (IOException e) {
+        //     // TODO Auto-generated catch block
+        //     e.printStackTrace();
+        // }
 
         // ProgramModule system;
         // try {

@@ -3,15 +3,11 @@ package com.peter.emulator.lang.actions;
 import java.util.ArrayList;
 
 import com.peter.emulator.MachineCode;
+import com.peter.emulator.lang.ELSymbol.ELVarSymbol;
 import com.peter.emulator.lang.ELValue.ELStringValue;
 import com.peter.emulator.lang.*;
-import com.peter.emulator.lang.ELSymbol.ELVarSymbol;
-import com.peter.emulator.lang.tokens.BlockToken;
-import com.peter.emulator.lang.tokens.IdentifierToken;
-import com.peter.emulator.lang.tokens.OperatorToken;
-import com.peter.emulator.lang.tokens.StringToken;
-import com.peter.emulator.lang.tokens.Token;
 import com.peter.emulator.lang.base.ELPrimitives;
+import com.peter.emulator.lang.tokens.*;
 
 public class ActionBlock extends ComplexAction {
 
@@ -209,6 +205,7 @@ public class ActionBlock extends ComplexAction {
                     switch (id.fullName) {
                         case "new" -> {
                             wI++;
+                            errors.error("new not allowed outside of epxresion", tkn);
                             tkn = tokens.get(wI);
                             while(!(tkn instanceof OperatorToken ot && ot.type == OperatorToken.Type.SEMICOLON)) {
                                 tkn = tokens.get(wI++);
@@ -452,40 +449,42 @@ public class ActionBlock extends ComplexAction {
                         }
 
                         if (ot.type == OperatorToken.Type.INC) {
+                            int incSize = t.isPointer() ? t.stepSize() : 1;
                             if(!(t.isPointer() || t.equals(ELPrimitives.UINT32)))
                                 throw ELAnalysisError.error("Unable to increment type " + t.typeString(), it.span());
                             if (regTarget) {
                                 if(rT.reg < 0x10) {
-                                    actions.add(new DirectAction("INC %s 1", rT));
+                                    actions.add(new DirectAction("INC %s %d", rT, incSize));
                                 } else {
                                     actions.add(new DirectAction("COPY %s %s", rT, r));
-                                    actions.add(new DirectAction("INC %s 1", r));
+                                    actions.add(new DirectAction("INC %s %d", r, incSize));
                                     actions.add(new DirectAction("COPY %s %s", r, rT));
                                 }
                             } else {
                                 actions.add(new DirectAction("LOAD MEM%s %s %s", size, r, rT));
-                                actions.add(new DirectAction("INC %s 1", r));
+                                actions.add(new DirectAction("INC %s %d", r, incSize));
                                 actions.add(new DirectAction("STORE%s %s %s", size, r, rT));
                             }
                             rT.release();
                             wI += 2;
                             continue;
                         } else if (ot.type == OperatorToken.Type.DEC) {
+                            int incSize = t.isPointer() ? t.stepSize() : 1;
                             if(!(t.isPointer() || t.equals(ELPrimitives.UINT32)))
                                 throw ELAnalysisError.error("Unable to decrement type " + t.typeString(), it.span());
                             if (regTarget) {
                                 if(rT.reg < 0x10) {
-                                    actions.add(new DirectAction("INC %s -1", rT));
+                                    actions.add(new DirectAction("INC %s -%d", rT, incSize));
                                 } else {
                                     Register r2 = scope.firstFree();
                                     actions.add(new DirectAction("COPY %s %s", rT, r2));
-                                    actions.add(new DirectAction("INC %s -1", r2));
+                                    actions.add(new DirectAction("INC %s -%d", r2, incSize));
                                     actions.add(new DirectAction("COPY %s %s", r2, rT));
                                 }
                             } else {
                                 Register r2 = scope.firstFree();
                                 actions.add(new DirectAction("LOAD MEM%s %s %s", size, r2, rT));
-                                actions.add(new DirectAction("INC %s -1", r2));
+                                actions.add(new DirectAction("INC %s -%d", r2, incSize));
                                 actions.add(new DirectAction("STORE%s %s %s", size, r2, rT));
                             }
                             rT.release();

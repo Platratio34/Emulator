@@ -2,11 +2,7 @@ package com.peter.emulator.lang.base;
 
 import java.util.HashMap;
 
-import com.peter.emulator.lang.ELClass;
-import com.peter.emulator.lang.ELType;
-import com.peter.emulator.lang.Location;
-import com.peter.emulator.lang.Namespace;
-import com.peter.emulator.lang.ProgramUnit;
+import com.peter.emulator.lang.*;
 
 public class ELPrimitives {
 
