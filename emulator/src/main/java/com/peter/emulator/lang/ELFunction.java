@@ -9,6 +9,8 @@ import com.peter.emulator.lang.tokens.IdentifierToken;
 import com.peter.emulator.lang.tokens.OperatorToken;
 import com.peter.emulator.lang.tokens.SetToken;
 import com.peter.emulator.lang.tokens.Token;
+import com.peter.emulator.lang.ELSymbol.ELVarSymbol;
+import com.peter.emulator.lang.ELSymbol.Modifier;
 import com.peter.emulator.lang.actions.Action;
 import com.peter.emulator.lang.actions.ActionBlock;
 import com.peter.emulator.lang.actions.ActionScope;
@@ -245,6 +247,7 @@ public class ELFunction {
                     continue;
                 if (t instanceof IdentifierToken it) {
                     addParameter(typeBuilder.build(), it.value);
+                    unit.addSymbol(ELSymbol.Type.PARAMETER, it.span()).withModifiers(Modifier.DECLARATION);
                     typeBuilder = null;
                     continue;
                 }
@@ -289,6 +292,10 @@ public class ELFunction {
             bodyBlock.parse(body, errors, true);
             actions.add(bodyBlock);
         }
+        if(annotations != null)
+            for (ELAnnotation annotation : annotations) {
+                annotation.analyze(unit);
+            }
     }
 
     public static enum FunctionType {

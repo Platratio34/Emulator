@@ -68,6 +68,7 @@ public class ActionBlock extends ComplexAction {
                     if (it.hasParamsSub()) {
                         switch (it.value) {
                             case "if" -> {
+                                scope.unit.addSymbol(ELSymbol.Type.KEYWORD, it.spanFirst());
                                 wI += 1;
                                 // set is the condition
                                 // also block
@@ -114,15 +115,18 @@ public class ActionBlock extends ComplexAction {
                                 continue;
                             }
                             case "for" -> {
+                                scope.unit.addSymbol(ELSymbol.Type.KEYWORD, it.spanFirst());
                                 wI += 1;
                                 // set is (initializer; condition; incrementor)
                                 // also block
                                 ActionBlock innerBlock = new ActionBlock(scope.createChild());
                                 innerBlock.parse(tokens.get(wI).subTokens, errors, withDebug);
+                                scope.unit.errors.warning("For not currently supported");
                                 wI++;
                                 continue;
                             }
                             case "while" -> {
+                                scope.unit.addSymbol(ELSymbol.Type.KEYWORD, it.spanFirst());
                                 wI += 1;
                                 //set is condition
                                 // also block
@@ -151,6 +155,7 @@ public class ActionBlock extends ComplexAction {
                                 continue;
                             }
                             case "asm" -> {
+                                scope.unit.addSymbol(ELSymbol.Type.KEYWORD, it.spanFirst());
                                 wI += 1;
                                 Token t = it.params.get(0);
                                 switch (t) {
@@ -204,6 +209,7 @@ public class ActionBlock extends ComplexAction {
                     }
                     switch (id.fullName) {
                         case "new" -> {
+                            scope.unit.addSymbol(ELSymbol.Type.KEYWORD, it.spanFirst());
                             wI++;
                             errors.error("new not allowed outside of epxresion", tkn);
                             tkn = tokens.get(wI);
@@ -213,6 +219,7 @@ public class ActionBlock extends ComplexAction {
                             continue;
                         }
                         case "delete" -> {
+                            scope.unit.addSymbol(ELSymbol.Type.KEYWORD, it.spanFirst());
                             wI++;
                             tkn = tokens.get(wI);
                             while(!(tkn instanceof OperatorToken ot && ot.type == OperatorToken.Type.SEMICOLON)) {
@@ -221,6 +228,7 @@ public class ActionBlock extends ComplexAction {
                             continue;
                         }
                         case "return" -> {
+                            scope.unit.addSymbol(ELSymbol.Type.KEYWORD, it.spanFirst());
                             wI++;
                             tkn = tokens.get(wI);
                             ArrayList<Token> exp = new ArrayList<>();
@@ -257,6 +265,7 @@ public class ActionBlock extends ComplexAction {
                             continue;
                         }
                         case "continue" -> {
+                            scope.unit.addSymbol(ELSymbol.Type.KEYWORD, it.spanFirst());
                             wI++;
                             tkn = tokens.get(wI);
                             if(!(tkn instanceof OperatorToken ot && ot.type == OperatorToken.Type.SEMICOLON))
@@ -264,6 +273,7 @@ public class ActionBlock extends ComplexAction {
                             continue;
                         }
                         case "break" -> {
+                            scope.unit.addSymbol(ELSymbol.Type.KEYWORD, it.spanFirst());
                             wI++;
                             tkn = tokens.get(wI);
                             if(!(tkn instanceof OperatorToken ot && ot.type == OperatorToken.Type.SEMICOLON))

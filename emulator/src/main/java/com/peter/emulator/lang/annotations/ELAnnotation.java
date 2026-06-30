@@ -4,7 +4,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.function.Function;
 
+import com.peter.emulator.lang.ELSymbol;
+import com.peter.emulator.lang.ELSymbol.ELAnnotationSymbol;
 import com.peter.emulator.lang.Location;
+import com.peter.emulator.lang.ProgramUnit;
 import com.peter.emulator.lang.Span;
 import com.peter.emulator.lang.tokens.AnnotationToken;
 import com.peter.emulator.lang.tokens.Token;
@@ -54,7 +57,15 @@ public class ELAnnotation {
         return out;
     }
 
+    public String getDescription() {
+        return null;
+    }
+
     public Span span() {
         return new Span(startLocation, endLocation);
+    }
+
+    public void analyze(ProgramUnit unit) {
+        unit.addSymbol(new ELAnnotationSymbol(this));
     }
 }

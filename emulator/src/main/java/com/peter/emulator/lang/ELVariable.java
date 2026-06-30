@@ -107,7 +107,7 @@ public class ELVariable {
     public void analyze(ErrorSet errors, Namespace namespace) {
         type.analyze(errors, namespace, unit);
         if(startingValue != null)
-            startingValue.resolve(errors);
+            startingValue.resolve(errors, unit);
     }
 
     public int getAddress() {
@@ -115,7 +115,7 @@ public class ELVariable {
     }
 
     public ELVariable setValue(int i) {
-        startingValue = new ELValue.ELNumberValue(type, i);
+        startingValue = new ELValue.ELNumberValue(type, i, null);
         return this;
     }
 

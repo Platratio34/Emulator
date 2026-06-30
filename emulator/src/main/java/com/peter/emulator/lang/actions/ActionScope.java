@@ -264,6 +264,11 @@ public class ActionScope {
         unit.symbols.add(symbol);
         return symbol;
     }
+    public ELSymbol addSymbol(ELSymbol.Type type, Span span) {
+        ELSymbol symbol = new ELSymbol(type, span);
+        unit.symbols.add(symbol);
+        return symbol;
+    }
 
     public ELFunction getFunction() {
         return (parent != null) ? parent.getFunction() : function;

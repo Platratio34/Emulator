@@ -3,7 +3,7 @@ namespace Memory {
     protected static void* heapStart = 0x2_3000;
     protected static MemoryBlock* allocatedBlocks = 0;
     protected static MemoryBlock* blockFreeList = 0x2_2000;
-    protected static const void* ALLOCATED_BLOCK_LIST = 0x2_2000;
+    protected static const uint32 ALLOCATED_BLOCK_LIST = 0x2_2000;
 
     public static void setup() {
         MemoryBlock* list = blockFreeList;

@@ -497,12 +497,25 @@ public class ELType {
         return (subType != null) ? subType.baseRef() : this;
     }
 
+    private void addSymbol(ProgramUnit unit) {
+        if (subType != null) {
+            subType.addSymbol(unit);
+            if (location == null)
+                return;
+            if(pointer || address)
+                unit.symbols.add(new ELTypeSymbol(this, true));
+        } else {
+            if (location == null)
+                return;
+            unit.symbols.add(new ELTypeSymbol(this, false));
+        }
+    }
+
     public void analyze(ErrorSet errors, Namespace namespace, ProgramUnit unit) {
+        addSymbol(unit);
         if (clazz != null) {
             return;
         }
-        if(location != null)
-            unit.symbols.add(new ELTypeSymbol(this));
         if(isVoidPtr())
             return;
         for(ELType type : genericTypes)

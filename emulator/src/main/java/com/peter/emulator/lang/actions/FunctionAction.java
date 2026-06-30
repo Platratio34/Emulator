@@ -55,7 +55,13 @@ public class FunctionAction extends ComplexAction {
         Location endOfParams = null;
         SetToken params = it.getParamsSub();
         Location startOfParams = params.startLocation;
-        Span nameSpan = it.span();
+        Span nameSpan = it.spanFirst();
+        IdentifierToken it2 = it;
+        while (it2.hasSub()) {
+            scope.addSymbol(ELSymbol.Type.NAMESPACE_NAME, nameSpan);
+            it2 = it2.next();
+            nameSpan = it2.spanFirst();
+        }
         // boolean vNext = true;
         // boolean addr = false;
         ArrayList<Token> exp = new ArrayList<>();

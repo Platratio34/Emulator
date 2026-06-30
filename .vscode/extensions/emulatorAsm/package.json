@@ -37,9 +37,21 @@
                 "path": "./syntaxes/asm.tmGrammar.json"
             },
             {
-                "language": "emulatorlang",
+                "language": "emulatorlangb",
                 "scopeName": "source.el",
                 "path": "./syntaxes/el.tmGrammar.json"
+            }
+        ],
+        "configurationDefaults": {
+            "emulatorlang": {
+                "editor.semanticHighlighting.enabled": true
+            }
+        },
+        "semanticTokenScopes": [
+            {
+                "scopes": {
+                    "variable.static": ["variable.other.static"]
+                }
             }
         ]
     },

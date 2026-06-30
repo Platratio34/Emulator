@@ -6,6 +6,8 @@ import com.peter.emulator.MachineCode;
 import com.peter.emulator.lang.ELAnalysisError;
 import com.peter.emulator.lang.ELSymbol;
 import com.peter.emulator.lang.ELType;
+import com.peter.emulator.lang.ELSymbol.Modifier;
+import com.peter.emulator.lang.ELSymbol.Type;
 import com.peter.emulator.lang.ELValue.ELNumberValue;
 import com.peter.emulator.lang.base.ELPrimitives;
 import com.peter.emulator.lang.tokens.*;
@@ -208,7 +210,7 @@ public class ExpressionAction extends ComplexAction {
                                 _constValue = applyConstValue(_constValue, 0, lastOp);
                             }
                             scope.addSymbol(new ELSymbol(ELSymbol.Type.VARIABLE_CONSTANT, it.span(),
-                                    "### Null pointer literal"));
+                                    "### Null pointer literal")).withModifiers(Modifier.LANGUAGE);
                             actions.add(new DirectAction("LOAD %s 0", tR));
                             t = ELPrimitives.VOID_PTR;
                         }
@@ -238,9 +240,10 @@ public class ExpressionAction extends ComplexAction {
                             if (vN.startsWith("r"))
                                 scope.addSymbol(new ELSymbol(ELSymbol.Type.VARIABLE_NAME, it.sub(0).span(),
                                         "### `%s %s`\nCPU register `%s`\n\n" + MachineCode.regDesc(vN), t.typeString(),
-                                        vN, vN));
+                                        vN, vN)).withModifiers(Modifier.LANGUAGE);
                         }
                         case "new" -> {
+                            scope.addSymbol(Type.KEYWORD, tkn.span());
                             if(wI > 0 || tokens.size() > 2) {
                                 throw ELAnalysisError.error("`new` expression must be only element of expression", tkn.span());
                             } else if(tokens.size() == 1) {

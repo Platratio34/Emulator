@@ -12,14 +12,16 @@ import com.peter.emulator.lang.base.ELPrimitives;
 
 public abstract class ELValue {
     public final ELType type;
+        public final Span span;
 
-    protected ELValue(ELType type) {
+    protected ELValue(ELType type, Span span) {
         this.type = type;
+        this.span = span;
     }
 
     public abstract String valueString();
 
-    public void resolve(ErrorSet errors) {}
+    public void resolve(ErrorSet errors, ProgramUnit unit) {}
 
     public static ELValue value(ELType type, Token tkn, Namespace ns, ProgramUnit unit) {
         return switch (tkn) {
@@ -35,8 +37,8 @@ public abstract class ELValue {
         public final int size;
         public final int value;
 
-        protected ELNumberValue(ELType type, int value) {
-            super(type);
+        protected ELNumberValue(ELType type, int value, Span span) {
+            super(type, span);
             if (type.equals(ELPrimitives.UINT8)) {
                 size = 1;
                 if (value < 0 || value > 0xff)
@@ -71,6 +73,11 @@ public abstract class ELValue {
                 return String.format("0x%04x", value);
             }
         }
+
+        @Override
+        public void resolve(ErrorSet errors, ProgramUnit unit) {
+            unit.addSymbol(ELSymbol.Type.NUMERIC_LITERAL, span);
+        }
     }
 
     public static ELNumberValue number(ELType type, NumberToken nt) {
@@ -83,31 +90,37 @@ public abstract class ELValue {
         } else {
             v = Integer.parseInt(vS);
         }
-        return new ELNumberValue(type, v);
+        return new ELNumberValue(type, v, nt.span());
     }
     
     public static class ELStringValue extends ELValue {
         public final String value;
         public final boolean ch;
 
-        public ELStringValue(String value) {
-            super(ELPrimitives.CHAR.pointerTo());
+        public ELStringValue(String value, Span span) {
+            super(ELPrimitives.CHAR.pointerTo(), span);
             this.value = value;
             ch = false;
         }
 
-        public ELStringValue(char ch) {
-            super(ELPrimitives.CHAR);
+        public ELStringValue(char ch, Span span) {
+            super(ELPrimitives.CHAR, span);
             this.value = ch + "";
             this.ch = true;
         }
 
-        public ELStringValue(ELType type, String value, boolean ch) {
-            super(type);
+        public ELStringValue(ELType type, String value, boolean ch, Span span) {
+            super(type, span);
             this.value = value;
             this.ch = ch;
-            if(!(type.equals(ELPrimitives.CHAR) || type.equals(ELPrimitives.CHAR.pointerTo()) || (type.array && type.baseRef().equals(ELPrimitives.CHAR))))
-                throw new ELCompileException("Invalid type for string value: "+type);
+            if (!(type.equals(ELPrimitives.CHAR) || type.equals(ELPrimitives.CHAR.pointerTo())
+                    || (type.array && type.baseRef().equals(ELPrimitives.CHAR))))
+                throw new ELCompileException("Invalid type for string value: " + type);
+        }
+        
+        @Override
+        public void resolve(ErrorSet errors, ProgramUnit unit) {
+            unit.addSymbol(ELSymbol.Type.STRING_LITERAL, span);
         }
 
         @Override
@@ -118,7 +131,7 @@ public abstract class ELValue {
     }
 
     public static ELStringValue string(ELType type, StringToken st) {
-        return new ELStringValue(type, st.value, st.ch);
+        return new ELStringValue(type, st.value, st.ch, st.span());
     }
 
     public static class ELArrayValue<T extends ELValue> extends ELValue {
@@ -126,13 +139,13 @@ public abstract class ELValue {
         public final ArrayList<T> values = new ArrayList<>();
 
         protected ELArrayValue(ELType type) {
-            super(type);
+            super(type, null);
         }
 
         @Override
-        public void resolve(ErrorSet errors) {
+        public void resolve(ErrorSet errors, ProgramUnit unit) {
             for(ELValue v : values)
-                v.resolve(errors);
+                v.resolve(errors, unit);
         }
 
         @Override
@@ -171,14 +184,14 @@ public abstract class ELValue {
         private String value = "";
 
         protected ELRefValue(ELType type, IdentifierToken it, Namespace ns, ProgramUnit unit) {
-            super(type);
+            super(type, it.span());
             this.it = it;
             this.ns = ns;
             this.unit = unit;
         }
 
         @Override
-        public void resolve(ErrorSet errors) {
+        public void resolve(ErrorSet errors, ProgramUnit unit) {
             ELVariable v = ns.getFirstVar(it, unit);
             if (v == null) {
                 errors.error("Unable to resolve variable `" + it.debugString() + '`', it);

@@ -1528,7 +1528,7 @@
         "Memory.ALLOCATED_BLOCK_LIST": {
             "start": -1,
             "end": -1,
-            "type": "const void*",
+            "type": "const uint32",
             "value": "139264"
         },
         "FS.CMD_SIZE": {

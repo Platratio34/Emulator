@@ -3,6 +3,7 @@ package com.peter.emulator.languageserver;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.lsp4j.*;
@@ -12,7 +13,11 @@ import com.peter.emulator.lang.ELAnalysisError;
 import com.peter.emulator.lang.ELFunction;
 import com.peter.emulator.lang.ELSymbol;
 import com.peter.emulator.lang.ELVariable;
+import com.peter.emulator.lang.Location;
 import com.peter.emulator.lang.ProgramUnit;
+import com.peter.emulator.lang.ELSymbol.ELTypeSymbol;
+import com.peter.emulator.lang.ELSymbol.ELVarSymbol;
+import com.peter.emulator.lang.ELSymbol.Modifier;
 import com.peter.emulator.lang.annotations.ELAnnotation;
 
 public class ELTextDocumentService implements TextDocumentService {
@@ -79,7 +84,7 @@ public class ELTextDocumentService implements TextDocumentService {
                 return null;
             }
             Position hoverPos = params.getPosition();
-            
+
             for (ELSymbol symbol : unit.symbols) {
                 if (symbol.contains(hoverPos, null)) {
                     return new Hover(new MarkupContent("markdown", symbol.getText()));
@@ -92,7 +97,7 @@ public class ELTextDocumentService implements TextDocumentService {
                 lspServer.logWarn("Hover was requested for %s, but program unit had no hover-able symbols", uri);
                 return null;
             }
-            
+
             // for (ELVariable var : unit.variables) {
             //     if (var.span().contains(hoverPos, null)) {
             //         String content = switch(var.varType) {
@@ -130,6 +135,83 @@ public class ELTextDocumentService implements TextDocumentService {
             //     }
             // }
             return null;
+        });
+    }
+    
+    @Override
+    public CompletableFuture<SemanticTokens> semanticTokensFull(SemanticTokensParams params) {
+        URI uri = URI.create(params.getTextDocument().getUri());
+        ProgramUnit unit = lspServer.getUnit(uri);
+        if (unit == null) {
+            lspServer.logError("Semantic tokens were requested for %s, but no program unit could be found", uri);
+            return null;
+        }
+        return CompletableFuture.supplyAsync(() -> {
+            List<Integer> data = new ArrayList<>();
+            unit.symbols.sort((a, b) -> {
+                int aL = a.span.start().line();
+                int bL = b.span.start().line();
+                if (aL != bL) {
+                    return aL - bL;
+                }
+                return a.span.start().col() - b.span.start().col();
+            });
+            // Location last = null;
+            int lastLine = 0;
+            int lastChar = 0;
+            lspServer.logDebug("Providing semantic tokens for %s (%d total symbols)", uri, unit.symbols.size());
+            for (ELSymbol symbol : unit.symbols) {
+                int lineOff = (symbol.span.start().line() - 1) - lastLine;
+                int colOff = (symbol.span.start().col() - 2) - ((lineOff != 0 ) ? 0 : lastChar);
+                lastLine = symbol.span.start().line() - 1;
+                lastChar = symbol.span.start().col() - 2;
+                // last = symbol.span.end();
+
+                int length = symbol.span.end().col() - symbol.span.start().col() + 1;
+                int type = symbol.type.semanticTypeIndex();
+                int modifier = symbol.getModifier();
+                if (symbol instanceof ELVarSymbol vs) {
+                    if (vs.var.finalVal) {
+                        modifier |= Modifier.READ_ONLY.value;
+                    }
+                    switch (vs.var.varType) {
+                        case CONST -> modifier |= Modifier.READ_ONLY.value;
+                        case STATIC -> modifier |= Modifier.STATIC.value;
+                        case SCOPE -> {
+                            if (vs.var.offset < 0) {
+                                type = ELSymbol.Type.PARAMETER.semanticTypeIndex();
+                            }
+                        }
+                        case MEMBER -> {
+                            type = ELSymbol.Type.PROPERTY.semanticTypeIndex();
+                        }
+
+                        default -> {
+                        }
+                    }
+                }
+
+                // if(symbol.span.start().line() < 5) {
+                //     lspServer.logDebug("- %d %d %d %d %d (%s, %s, %s)", lineOff, colOff, length, type, modifier, symbol.span, symbol.getClass().getName(), symbol.type.semanticType);
+                //     if (symbol instanceof ELTypeSymbol ts) {
+                //         lspServer.logDebug("- - %s %s", ts.elType.typeString(), ts.elType.toString());
+                //     }
+                // }
+
+                data.add(lineOff);
+                data.add(colOff);
+                data.add(length);
+                data.add(type);
+                data.add(modifier);
+
+                // if (symbol.contains(hoverPos, null)) {
+                //     // return new Hover(new MarkupContent("markdown", symbol.getText()));
+                // } else {
+                //     // lspServer.logDebug("Hover was requested for %s, but didn't match symbol "+symbol.type+": "+symbol.text, uri);
+                // }
+            }
+
+            return new SemanticTokens(data);
         });
     }
 

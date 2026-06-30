@@ -3,7 +3,7 @@
 #var Memory.heapStart 0x0002_3000 void*
 #var Memory.allocatedBlocks 0x0000 MemoryBlock*
 #var Memory.blockFreeList 0x0002_2000 MemoryBlock*
-#define Memory.ALLOCATED_BLOCK_LIST 0x0002_2000 void*
+#define Memory.ALLOCATED_BLOCK_LIST 0x0002_2000 uint32
 // Console
 #define Console.CMD_DEVICE 0x0001_0002 uint32*
 #define Console.CONSOLE_OUT 0x0001_0100 char*

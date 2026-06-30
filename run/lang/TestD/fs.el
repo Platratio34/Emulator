@@ -1,4 +1,4 @@
-import SysD;
+import SysD as SysD;
 
 namespace FS {
 

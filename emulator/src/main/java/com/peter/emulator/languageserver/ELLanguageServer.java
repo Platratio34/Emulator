@@ -3,13 +3,16 @@ package com.peter.emulator.languageserver;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.services.*;
 
 import com.peter.emulator.lang.ELAnalysisError;
+import com.peter.emulator.lang.ELSymbol;
 import com.peter.emulator.lang.ErrorSet;
 import com.peter.emulator.lang.ProgramUnit;
 
@@ -67,6 +70,14 @@ public class ELLanguageServer extends LSPServer implements LanguageServer, Langu
         capabilities.setDefinitionProvider(false);
         capabilities.setCodeActionProvider(false);
         capabilities.setFoldingRangeProvider(false);
+
+        SemanticTokensWithRegistrationOptions semanticOptions = new SemanticTokensWithRegistrationOptions();
+        semanticOptions.setFull(true);
+        semanticOptions.setRange(false);
+        SemanticTokensLegend legend = new SemanticTokensLegend(ELSymbol.Type.TYPE_NAMES, ELSymbol.Modifier.MODIFIERS);
+        semanticOptions.setLegend(legend);
+        capabilities.setSemanticTokensProvider(semanticOptions);
+        
         capabilities.setDiagnosticProvider(new DiagnosticRegistrationOptions(true, false));
         return capabilities;
     }

@@ -22,4 +22,11 @@ public class ELInterruptHandlerAnnotation extends ELAnnotation {
         raw = r;
     }
 
+    @Override
+    public String getDescription() {
+        String out = "Marks this function as the interrupt handler function. If not marked `raw`, this function will be executed **after** language level interrupts are handled.";
+        out += "\n\nRaw: `" + (raw ? "true": "false") + "`";
+        return out;
+    }
+
 }

@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
+import com.peter.emulator.lang.ELSymbol.Type;
+
 public class ProgramUnit {
 
     public final ProgramModule module;
@@ -85,5 +87,16 @@ public class ProgramUnit {
             return getNamespaceIncluded(id.parts[0]).getFunction(id, 1);
         }
         return null;
+    }
+
+    public ELSymbol addSymbol(Type type, Span span) {
+        ELSymbol symbol = new ELSymbol(type, span);
+        symbols.add(symbol);
+        return symbol;
+    }
+
+    public ELSymbol addSymbol(ELSymbol symbol) {
+        symbols.add(symbol);
+        return symbol;
     }
 }
