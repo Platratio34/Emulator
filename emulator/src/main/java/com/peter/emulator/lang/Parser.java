@@ -3,15 +3,11 @@ package com.peter.emulator.lang;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import com.peter.emulator.lang.tokens.AnnotationToken;
-import com.peter.emulator.lang.tokens.BlockToken;
-import com.peter.emulator.lang.tokens.IdentifierToken;
-import com.peter.emulator.lang.tokens.OperatorToken;
-import com.peter.emulator.lang.tokens.Token;
-import com.peter.emulator.lang.ELSymbol.ELTypeSymbol;
 import com.peter.emulator.lang.ELSymbol.ELVarSymbol;
 import com.peter.emulator.lang.annotations.ELAnnotation;
 import com.peter.emulator.lang.annotations.ELEntrypointAnnotation;
+import com.peter.emulator.lang.tokens.OperatorToken.Type;
+import com.peter.emulator.lang.tokens.*;
 
 public class Parser {
 
@@ -102,8 +98,10 @@ public class Parser {
                                 errors.error("Unexpected token found in import (expected `;`)", tokens.get(workingI).span());
                                 continue;
                             }
+                            unit.addSymbol(ELSymbol.Type.SEMICOLON, tokens.get(workingI).span());
                         } else if (tokens.get(workingI) instanceof OperatorToken ot
                                 && ot.type == OperatorToken.Type.SEMICOLON) {
+                            unit.addSymbol(ELSymbol.Type.SEMICOLON, tokens.get(workingI).span());
                             if (currentNamespace != null) {
                                 errors.error("Import must be outside of namespace", idt);
                                 continue;
@@ -206,6 +204,7 @@ public class Parser {
                                 function.ingestBody(bt);
                             } else if (tokens.get(workingI) instanceof OperatorToken ot
                                     && ot.type == OperatorToken.Type.SEMICOLON) {
+                                unit.addSymbol(ELSymbol.Type.SEMICOLON, ot.span());
                                 // no body;
                             } else {
                                 errors.error("Unexpected token found, expected function body or `;`", tokens.get(workingI).span());
@@ -274,6 +273,7 @@ public class Parser {
                                     && ot.type == OperatorToken.Type.SEMICOLON) {
                                 // no body;
                                 function.bodyLocation = ot.startLocation;
+                                unit.addSymbol(ELSymbol.Type.SEMICOLON, ot.span());
                             } else {
                                 errors.error("Unexpected token found, expected function body or `;`: "+tokens.get(workingI), tokens.get(workingI));
                                 continue;
@@ -310,10 +310,14 @@ public class Parser {
                             if (tokens.get(workingI) instanceof OperatorToken ot) {
                                 switch (ot.type) {
                                     case SEMICOLON -> {
+                                        unit.addSymbol(ELSymbol.Type.SEMICOLON, ot.span());
                                         workingI++;
                                         continue;
                                     }
-                                    case ASSIGN -> workingI++;
+                                    case ASSIGN -> {
+                                        unit.addSymbol(ELSymbol.Type.OPERATOR, ot.span());
+                                        workingI++;
+                                    }
                                     default -> {
                                         errors.error("Unexpected token found, expected `;` or `=`", tokens.get(workingI));
                                         continue;
@@ -327,6 +331,11 @@ public class Parser {
                             while (var.ingestValue(tokens.get(workingI))) {
                                 workingI++;
                             }
+                            if(!(tokens.get(workingI) instanceof OperatorToken ot2 && ot2.type == Type.SEMICOLON)) {
+                                errors.error("Unexpected token found, expected `;`", tokens.get(workingI));
+                                continue;
+                            }
+                            unit.addSymbol(ELSymbol.Type.SEMICOLON, tokens.get(workingI).span());
                         }
                     } else if (idt.value.equals("namespace")) {
                         unit.symbols.add(new ELSymbol(ELSymbol.Type.KEYWORD, idt.span()));
@@ -368,6 +377,7 @@ public class Parser {
                             new Parser(unit, namespace).parse(bt.subTokens, errors);
                         } else if (tokens.get(workingI) instanceof OperatorToken ot
                                 && ot.type == OperatorToken.Type.SEMICOLON) {
+                            unit.addSymbol(ELSymbol.Type.SEMICOLON, ot.span());
                             currentNamespace = namespace;
                         } else {
                             errors.error("Unexpected token found, expected block or `;`", tokens.get(workingI));

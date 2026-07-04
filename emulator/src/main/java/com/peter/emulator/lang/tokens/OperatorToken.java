@@ -3,17 +3,18 @@ package com.peter.emulator.lang.tokens;
 import java.util.HashMap;
 
 import com.peter.emulator.lang.Location;
+import com.peter.emulator.lang.ProgramUnit;
 
 public class OperatorToken extends Token {
     public Type type;
     public boolean indexClosed;
     protected Tokenizer tk;
 
-    public OperatorToken(char c, Location location) {
+    public OperatorToken(char c, Location location, ProgramUnit unit) {
         super(location);
         type = Type.get(c + "");
         if (type == Type.INDEX) {
-            tk = new Tokenizer("", location);
+            tk = new Tokenizer("", location, unit);
             subTokens = tk.tokens;
         }
     }
@@ -22,6 +23,7 @@ public class OperatorToken extends Token {
     public Token ingest(char c, Location location) {
         if(type.next != null && type.hasNext(c)) {
             type = type.getNext(c);
+            endLocation = location;
             return this;
         }
         if (type == Type.INDEX && !indexClosed) {

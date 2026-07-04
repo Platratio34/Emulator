@@ -5,9 +5,9 @@ import java.util.ArrayList;
 import com.peter.emulator.MachineCode;
 import com.peter.emulator.lang.ELAnalysisError;
 import com.peter.emulator.lang.ELSymbol;
-import com.peter.emulator.lang.ELType;
 import com.peter.emulator.lang.ELSymbol.Modifier;
 import com.peter.emulator.lang.ELSymbol.Type;
+import com.peter.emulator.lang.ELType;
 import com.peter.emulator.lang.ELValue.ELNumberValue;
 import com.peter.emulator.lang.base.ELPrimitives;
 import com.peter.emulator.lang.tokens.*;
@@ -40,6 +40,7 @@ public class ExpressionAction extends ComplexAction {
             Token tkn = tokens.get(wI);
             switch (tkn) {
                 case OperatorToken ot -> {
+                    scope.addSymbol(ELSymbol.Type.OPERATOR, ot.span());
                     switch (ot.type) {
                         case ADD, SUB, BITWISE_OR, BITWISE_NOR, LEFT_SHIFT, RIGHT_SHIFT, AND, OR, LEQ, GEQ, ANGLE_LEFT,
                                 ANGLE_RIGHT, NEQ, EQ2 -> {
@@ -197,7 +198,7 @@ public class ExpressionAction extends ComplexAction {
                         case "true", "false" -> {
                             _wasConst = false;
                             scope.addSymbol(
-                                    new ELSymbol(ELSymbol.Type.VARIABLE_CONSTANT, it.span(), "### Boolean literal"));
+                                    new ELSymbol(ELSymbol.Type.VARIABLE_CONSTANT, it.span(), "### Boolean literal")).withModifiers(Modifier.LANGUAGE);
                             actions.add(new DirectAction("LOAD %s %d", tR, it.value.equals("true") ? 1 : 0));
                             t = ELPrimitives.BOOL;
                         }
@@ -497,6 +498,7 @@ public class ExpressionAction extends ComplexAction {
                     lastOp = null;
                 }
                 case StringToken st -> {
+                    scope.addSymbol(ELSymbol.Type.STRING_LITERAL, st.span());
                     _wasConst = false;
                     if (addressOf)
                         throw ELAnalysisError.error("Can not get address of a string literal", tkn);

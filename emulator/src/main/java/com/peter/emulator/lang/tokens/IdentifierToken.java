@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import com.peter.emulator.lang.Identifier;
 import com.peter.emulator.lang.Location;
+import com.peter.emulator.lang.ProgramUnit;
 import com.peter.emulator.lang.Span;
 
 public class IdentifierToken extends Token {
@@ -12,10 +13,12 @@ public class IdentifierToken extends Token {
     public SetToken index = null;
     public SetToken params = null;
     protected boolean indexClosed = false;
+    protected final ProgramUnit unit;
 
-    public IdentifierToken(char c, Location location) {
+    public IdentifierToken(char c, Location location, ProgramUnit unit) {
         super(location);
         value = c + "";
+        this.unit = unit;
     }
 
     private boolean nextIsID = false;
@@ -52,7 +55,7 @@ public class IdentifierToken extends Token {
         if (nextIsID) {
             nextIsID = false;
             if (validStart(c)) {
-                nextId = new IdentifierToken(c, location);
+                nextId = new IdentifierToken(c, location, unit);
                 subTokens = new ArrayList<>();
                 // subTokens.add(nextId);
                 endLocation = location;
@@ -75,13 +78,13 @@ public class IdentifierToken extends Token {
             if (index != null || params != null) {
                 throw new TokenizerError("Unexpected `[` in identifier");
             }
-            index = new SetToken(SetToken.BracketType.SQUARE_BRACKETS, location);
+            index = new SetToken(SetToken.BracketType.SQUARE_BRACKETS, location, unit);
             return this;
         } else if (c == '(') {
             if (params != null || index != null) {
                 throw new TokenizerError("Unexpected `(` in identifier");
             }
-            params = new SetToken(SetToken.BracketType.PARENTHESES, location);
+            params = new SetToken(SetToken.BracketType.PARENTHESES, location, unit);
             return this;
         }
         return null;

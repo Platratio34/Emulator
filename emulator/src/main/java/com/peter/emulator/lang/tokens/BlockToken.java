@@ -1,14 +1,15 @@
 package com.peter.emulator.lang.tokens;
 
 import com.peter.emulator.lang.Location;
+import com.peter.emulator.lang.ProgramUnit;
 
 public class BlockToken extends Token {
     public boolean closed = false;
     protected Tokenizer tk;
 
-    public BlockToken(Location location) {
+    public BlockToken(Location location, ProgramUnit unit) {
         super(location);
-        tk = new Tokenizer("", location);
+        tk = new Tokenizer("", location, unit);
         subTokens = tk.tokens;
     }
 

@@ -1,14 +1,17 @@
 package com.peter.emulator.lang.tokens;
 
 import com.peter.emulator.lang.Location;
+import com.peter.emulator.lang.ProgramUnit;
 
 public class AnnotationToken extends Token {
     public  String name;
     public SetToken params = null;
+    protected final ProgramUnit unit;
 
-    public AnnotationToken(Location location) {
+    public AnnotationToken(Location location, ProgramUnit unit) {
         super(location);
         name = "";
+        this.unit = unit;
     }
 
     @Override
@@ -29,7 +32,7 @@ public class AnnotationToken extends Token {
             endLocation = location;
             return this;
         } else if (c == '(') {
-            params = new SetToken(SetToken.BracketType.PARENTHESES, location);
+            params = new SetToken(SetToken.BracketType.PARENTHESES, location, unit);
             subTokens = params.subTokens;
             endLocation = location;
             return this;

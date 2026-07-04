@@ -49,6 +49,10 @@ public class ELSymbol {
         return text;
     }
 
+    public boolean hasText() {
+        return text != null;
+    }
+
     public Type getType() {
         return type;
     }
@@ -91,6 +95,7 @@ public class ELSymbol {
     public enum Type {
         KEYWORD("keyword.other.compiler", "keyword"),
         INSTRUCTION("keyword.other.instruction","keyword"),
+        SEMICOLON("keyword.other.compiler", "keyword"),
                 
         COMMENT_LINE("comment.line", "comment"),
         COMMENT_BLOCK("comment.block", "comment"),
@@ -189,6 +194,11 @@ public class ELSymbol {
         }
 
         @Override
+        public boolean hasText() {
+            return true;
+        }
+
+        @Override
         public String getText() {
             String out = "`";
             if(var.finalVal)
@@ -214,6 +224,11 @@ public class ELSymbol {
         public ELFuncCallSymbol(ELFunction func, Span span) {
             super(Type.FUNCTION_NAME, span);
             this.func = func;
+        }
+
+        @Override
+        public boolean hasText() {
+            return true;
         }
 
         @Override
@@ -274,6 +289,11 @@ public class ELSymbol {
         public ELAnnotationSymbol(ELAnnotation annotation) {
             super(Type.ANNOTATION, annotation.span());
             this.annotation = annotation;
+        }
+
+        @Override
+        public boolean hasText() {
+            return true;
         }
 
         @Override

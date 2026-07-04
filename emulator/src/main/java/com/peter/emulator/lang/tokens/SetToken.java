@@ -1,6 +1,7 @@
 package com.peter.emulator.lang.tokens;
 
 import com.peter.emulator.lang.Location;
+import com.peter.emulator.lang.ProgramUnit;
 
 public class SetToken extends Token {
     public boolean closed = false;
@@ -8,10 +9,10 @@ public class SetToken extends Token {
 
     protected BracketType type;
 
-    public SetToken(BracketType type, Location location) {
+    public SetToken(BracketType type, Location location, ProgramUnit unit) {
         super(location);
         this.type = type;
-        tk = new Tokenizer("", location);
+        tk = new Tokenizer("", location, unit);
         subTokens = tk.tokens;
     }
 

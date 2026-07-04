@@ -106,7 +106,7 @@ public class ProgramModule {
                     ProgramUnit unit = new ProgramUnit(this, path.toString());
                     units.put(unit.uri, unit);
                     String str = Files.readString(path);
-                    Tokenizer tk = new Tokenizer(str, new Location(path.toString(), 1, 1), false);
+                    Tokenizer tk = new Tokenizer(str, new Location(path.toString(), 1, 1), false, unit);
                     try {
                         Optional<String> err = tk.tokenize();
                         if (err.isPresent()) {

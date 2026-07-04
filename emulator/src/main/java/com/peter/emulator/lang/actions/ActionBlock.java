@@ -7,6 +7,7 @@ import com.peter.emulator.lang.ELSymbol.ELVarSymbol;
 import com.peter.emulator.lang.ELValue.ELStringValue;
 import com.peter.emulator.lang.*;
 import com.peter.emulator.lang.base.ELPrimitives;
+import com.peter.emulator.lang.tokens.OperatorToken.Type;
 import com.peter.emulator.lang.tokens.*;
 
 public class ActionBlock extends ComplexAction {
@@ -161,11 +162,15 @@ public class ActionBlock extends ComplexAction {
                                 switch (t) {
                                     case null -> throw ELAnalysisError.error("asm function must have a string literal or const parameter", it);
 
-                                    case StringToken strT -> actions.add(new DirectAction(strT.value));
+                                    case StringToken strT -> {
+                                        actions.add(new DirectAction(strT.value));
+                                        scope.addSymbol(ELSymbol.Type.STRING_LITERAL, strT.span()); 
+                                    }
 
                                     case IdentifierToken it2 -> {
                                         Identifier id2 = it2.asId();
                                         ELVariable var = scope.getVarStack(id2).getLast();
+                                        scope.addSymbol(new ELVarSymbol(var, it2.span()));
                                         if(var == null)
                                             throw ELAnalysisError.error("Could not resolve variable "+id2.fullName, t.span());
                                         if(var.varType != ELVariable.Type.CONST || !var.type.equals(ELPrimitives.CHAR.pointerTo())) {
@@ -185,6 +190,7 @@ public class ActionBlock extends ComplexAction {
                                         throw ELAnalysisError
                                                 .error("Unexpected token after asm macro, expected ';'", tkn.endLocation.span());
                                     }
+                                    scope.addSymbol(ELSymbol.Type.SEMICOLON, tkn.span());
                                     wI++;
                                 } else {
                                     throw ELAnalysisError.error("Unexpected end of block after asm macro", tkn.endLocation.span());
@@ -199,6 +205,7 @@ public class ActionBlock extends ComplexAction {
                                         throw ELAnalysisError
                                                 .error("Unexpected token after function call, expected ';'", tkn.endLocation.span());
                                     }
+                                    scope.addSymbol(ELSymbol.Type.SEMICOLON, tkn.span());
                                     wI++;
                                 } else {
                                     throw ELAnalysisError.error("Unexpected end of block after function call", tkn.endLocation.span());
@@ -216,6 +223,7 @@ public class ActionBlock extends ComplexAction {
                             while(!(tkn instanceof OperatorToken ot && ot.type == OperatorToken.Type.SEMICOLON)) {
                                 tkn = tokens.get(wI++);
                             }
+                            scope.addSymbol(ELSymbol.Type.SEMICOLON, tkn.span());
                             continue;
                         }
                         case "delete" -> {
@@ -225,6 +233,7 @@ public class ActionBlock extends ComplexAction {
                             while(!(tkn instanceof OperatorToken ot && ot.type == OperatorToken.Type.SEMICOLON)) {
                                 tkn = tokens.get(wI++);
                             }
+                            scope.addSymbol(ELSymbol.Type.SEMICOLON, tkn.span());
                             continue;
                         }
                         case "return" -> {
@@ -242,6 +251,7 @@ public class ActionBlock extends ComplexAction {
                                     throw ELAnalysisError.error("Unexpected end of block in expression", tkn);
                                 tkn = tokens.get(wI);
                             }
+                            scope.addSymbol(ELSymbol.Type.SEMICOLON, tkn.span());
                             wI++;
                             ELFunction func = scope.getFunction();
                             ELType funcRet = func.ret;
@@ -270,6 +280,7 @@ public class ActionBlock extends ComplexAction {
                             tkn = tokens.get(wI);
                             if(!(tkn instanceof OperatorToken ot && ot.type == OperatorToken.Type.SEMICOLON))
                                 throw ELAnalysisError.error("Expected semicolon", tkn);
+                            scope.addSymbol(ELSymbol.Type.SEMICOLON, tkn.span());
                             continue;
                         }
                         case "break" -> {
@@ -278,6 +289,7 @@ public class ActionBlock extends ComplexAction {
                             tkn = tokens.get(wI);
                             if(!(tkn instanceof OperatorToken ot && ot.type == OperatorToken.Type.SEMICOLON))
                                 throw ELAnalysisError.error("Expected semicolon", tkn);
+                            scope.addSymbol(ELSymbol.Type.SEMICOLON, tkn.span());
                             continue;
                         }
                     }
@@ -307,6 +319,7 @@ public class ActionBlock extends ComplexAction {
                         if (tkn instanceof OperatorToken ot) {
                             switch (ot.type) {
                                 case SEMICOLON -> {
+                                    scope.addSymbol(ELSymbol.Type.SEMICOLON, tkn.span());
                                     wI++;
                                     actions.add(new StackAllocAction(scope, var, null));
                                 }
@@ -319,6 +332,7 @@ public class ActionBlock extends ComplexAction {
                                         if(!(tokens.get(wI) instanceof OperatorToken ot2 && ot2.type == OperatorToken.Type.SEMICOLON)) {
                                             throw ELAnalysisError.error("Expected `;` after array declaration", tkn);
                                         }
+                                        scope.addSymbol(ELSymbol.Type.SEMICOLON, tokens.get(wI).span());
                                         ArrayList<Token> expTkns = new ArrayList<>();
                                         int n = 0;
                                         for (int i = 0; i < bt.subSize(); i++) {
@@ -363,6 +377,7 @@ public class ActionBlock extends ComplexAction {
                                                         tkn);
                                             tkn = tokens.get(wI++);
                                         }
+                                        scope.addSymbol(ELSymbol.Type.SEMICOLON, tkn.span());
                                         if (exp.isEmpty())
                                             throw ELAnalysisError.error("Empty expression", tkn);
                                         Register r = scope.firstFree();
@@ -390,6 +405,7 @@ public class ActionBlock extends ComplexAction {
 
                     if (tkn instanceof OperatorToken ot && (ot.type == OperatorToken.Type.ASSIGN || ot.type == OperatorToken.Type.ADD_ASSIGN || ot.type == OperatorToken.Type.SUB_ASSIGN
                             || ot.type == OperatorToken.Type.INC || ot.type == OperatorToken.Type.DEC)) {
+                        scope.addSymbol(ELSymbol.Type.OPERATOR, ot.span());
                         Span actionSpan = tkn.span();
                         Register rT = null;
                         final Register r = new Register(scope);
@@ -476,7 +492,12 @@ public class ActionBlock extends ComplexAction {
                                 actions.add(new DirectAction("STORE%s %s %s", size, r, rT));
                             }
                             rT.release();
-                            wI += 2;
+                            wI++;
+                            if(!(tokens.get(wI) instanceof OperatorToken ot2 && ot2.type == Type.SEMICOLON)) {
+                                throw ELAnalysisError.error("Expected `;` after incrementor", ot.endLocation.span());
+                            }
+                            scope.addSymbol(ELSymbol.Type.SEMICOLON, tokens.get(wI).span());
+                            wI++;
                             continue;
                         } else if (ot.type == OperatorToken.Type.DEC) {
                             int incSize = t.isPointer() ? t.stepSize() : 1;
@@ -498,7 +519,12 @@ public class ActionBlock extends ComplexAction {
                                 actions.add(new DirectAction("STORE%s %s %s", size, r2, rT));
                             }
                             rT.release();
-                            wI += 2;
+                            wI++;
+                            if(!(tokens.get(wI) instanceof OperatorToken ot2 && ot2.type == Type.SEMICOLON)) {
+                                throw ELAnalysisError.error("Expected `;` after decrementor", ot.endLocation.span());
+                            }
+                            scope.addSymbol(ELSymbol.Type.SEMICOLON, tokens.get(wI).span());
+                            wI++;
                             continue;
                         }
 
@@ -516,6 +542,7 @@ public class ActionBlock extends ComplexAction {
                                 throw ELAnalysisError.error("Unexpected end of block. Expected `;` " + tkn, tkn);
                             tkn = tokens.get(wI++);
                         }
+                        scope.addSymbol(ELSymbol.Type.SEMICOLON, tkn.span());
                         wI--;
                         if(exp.isEmpty())
                             throw ELAnalysisError.error("Empty expression", tkn);
@@ -547,6 +574,7 @@ public class ActionBlock extends ComplexAction {
                     }
                 } else {
                     if(tkn instanceof OperatorToken ot && ot.type == OperatorToken.Type.SEMICOLON) {
+                        scope.addSymbol(ELSymbol.Type.SEMICOLON, tkn.span());
                         wI++;
                         continue;
                     }
@@ -562,6 +590,7 @@ public class ActionBlock extends ComplexAction {
                     tkn = tokens.get(wI);
                 }
                 scope.freeScopeHandles(errors, tkn.endLocation.span());
+                scope.addSymbol(ELSymbol.Type.SEMICOLON, tkn.span());
             }
             wI++;
         }
