@@ -190,7 +190,7 @@ public class ActionBlock extends ComplexAction {
                                         throw ELAnalysisError
                                                 .error("Unexpected token after asm macro, expected ';'", tkn.endLocation.span());
                                     }
-                                    scope.addSymbol(ELSymbol.Type.SEMICOLON, tkn.span());
+                                    scope.addSymbol(ELSymbol.Type.SEMICOLON, tokens.get(wI).span());
                                     wI++;
                                 } else {
                                     throw ELAnalysisError.error("Unexpected end of block after asm macro", tkn.endLocation.span());
@@ -205,7 +205,7 @@ public class ActionBlock extends ComplexAction {
                                         throw ELAnalysisError
                                                 .error("Unexpected token after function call, expected ';'", tkn.endLocation.span());
                                     }
-                                    scope.addSymbol(ELSymbol.Type.SEMICOLON, tkn.span());
+                                    scope.addSymbol(ELSymbol.Type.SEMICOLON, tokens.get(wI).span());
                                     wI++;
                                 } else {
                                     throw ELAnalysisError.error("Unexpected end of block after function call", tkn.endLocation.span());

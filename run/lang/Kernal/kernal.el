@@ -42,7 +42,7 @@ namespace Kernal {
         // stack: [...pgmPtr,rPM,r0...r15 [HEAD]]
         // void* stack = SysD.rStack; // stack: [...pgmPtr,rPM,r0...r15,var(stack) [HEAD], [stack*]]
         // stack -= 2; // now points to r15; stack: [...pgmPtr,rPM,r0...r15 [stack*],var(stack,+17) [HEAD]]
-        ProcessState* oldState = &processStates[SysD.rPID];
+        ProcessState& oldState = &processStates[SysD.rPID];
         oldState.pid = 0;
         ProcessState.updateInterrupt(oldState);
 

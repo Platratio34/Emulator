@@ -16,12 +16,14 @@ public class ELType {
     protected ArrayList<ELType> genericTypes = new ArrayList<>();
     protected boolean array;
     protected int arraySize = 0;
+    protected ELValue arraySizeValue = null;
     protected boolean pointer;
     protected boolean address;
     protected boolean outVar;
     protected ELType subType = null;
 
     public Location location;
+    public Span nameSpan;
     public Location genericLocation = null;
     public Location endLocation;
 
@@ -78,11 +80,13 @@ public class ELType {
         t2.genericTypes = genericTypes;
         t2.array = array;
         t2.arraySize = arraySize;
+        t2.arraySizeValue = arraySizeValue;
         t2.pointer = pointer;
         t2.address = address;
         t2.outVar = outVar;
         t2.subType = subType;
         t2.location = location;
+        t2.nameSpan = nameSpan;
         t2.genericLocation = genericLocation;
         t2.endLocation = endLocation;
         t2.clazz = clazz;
@@ -347,6 +351,7 @@ public class ELType {
                         baseSet = true;
                         type.baseClass = new Identifier(it);
                         type.location = token.startLocation;
+                        type.nameSpan = it.nameSpan();
                         type.endLocation = token.endLocation;
                         // if (it.hasSub()) {
                         //     Identifier.Builder b = type.baseClass.builder();
@@ -409,9 +414,12 @@ public class ELType {
                         type.location = token.startLocation;
                         type.endLocation = token.endLocation;
                         if (!ot.subTokens.isEmpty()) {
-                            if (!(ot.subTokens.get(0) instanceof NumberToken))
+                            if (ot.subTokens.get(0) instanceof NumberToken nt) {
+                                type.arraySizeValue = ELValue.number(ELPrimitives.UINT32, nt);
+                                type.arraySize = -1;
+                            } else {
                                 throw ELAnalysisError.error("Expected number token, found "+ot.subTokens.get(0));
-                            type.arraySize = ELValue.number(ELPrimitives.UINT32, (NumberToken)ot.subTokens.get(0)).value;
+                            }
                         }
                         return true;
                     } else if (ot.type == OperatorToken.Type.BITWISE_AND) {
@@ -489,7 +497,7 @@ public class ELType {
         t.genericLocation = location;
         t.endLocation = location;
         t.clazz = clazz;
-        t.outVar = t.outVar;
+        t.outVar = outVar;
         return t;
     }
 
@@ -502,16 +510,38 @@ public class ELType {
             subType.addSymbol(unit);
             if (location == null)
                 return;
-            if(pointer || address)
-                unit.symbols.add(new ELTypeSymbol(this, true));
+            if(!(pointer || address))
+                return;
         } else {
             if (location == null)
                 return;
-            unit.symbols.add(new ELTypeSymbol(this, false));
+        }
+        unit.symbols.add(new ELTypeSymbol(this, pointer || address));
+        if(hasGenerics()) {
+            unit.addSymbol(ELSymbol.Type.KEYWORD, genericLocation.span(genericLocation));
+            unit.addSymbol(ELSymbol.Type.KEYWORD, endLocation.span(endLocation));
+            for(ELType type : genericTypes) {
+                type.addSymbol(unit);
+            }
+        }
+        if(array) {
+            switch(arraySizeValue) {
+                case ELValue.ELNumberValue nv -> {
+                    unit.addSymbol(ELSymbol.Type.NUMERIC_LITERAL, nv.span);
+                }
+                default -> {}
+            }
         }
     }
 
     public void analyze(ErrorSet errors, Namespace namespace, ProgramUnit unit) {
+        if(arraySize == -1 && arraySizeValue != null) {
+            if(arraySizeValue instanceof ELValue.ELNumberValue nv) {
+                arraySize = nv.value;
+            } else {
+                throw ELAnalysisError.error("Unknown type for array size", arraySizeValue.span);
+            }
+        }
         addSymbol(unit);
         if (clazz != null) {
             return;

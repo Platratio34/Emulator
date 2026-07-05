@@ -12,6 +12,7 @@ public class IdentifierToken extends Token {
     public String value;
     public SetToken index = null;
     public SetToken params = null;
+    public Location nameEnd = null;
     protected boolean indexClosed = false;
     protected final ProgramUnit unit;
 
@@ -68,6 +69,7 @@ public class IdentifierToken extends Token {
                 throw new TokenizerError("Unexpected character in identifier, expected `.`");
             value += c;
             endLocation = location;
+            nameEnd = location;
             return this;
         } else if (c == '.') {
             nextIsID = true;
@@ -151,6 +153,16 @@ public class IdentifierToken extends Token {
 
     public Span spanFirst() {
         return startLocation.span(startLocation.add(value.length() - 1));
+    }
+
+    public Span nameSpan() {
+        return startLocation.span(getNameEnd());
+    }
+    public Location getNameEnd() {
+        if(subTokens != null && !subTokens.isEmpty()) {
+            return ((IdentifierToken)subTokens.getFirst()).getNameEnd();
+        }
+        return nameEnd;
     }
 
     public boolean simple() {

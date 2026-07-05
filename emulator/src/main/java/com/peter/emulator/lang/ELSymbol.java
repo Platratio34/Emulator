@@ -171,7 +171,7 @@ public class ELSymbol {
             operator = false;
         }
         public ELTypeSymbol(ELType type, boolean operator) {
-            super(operator ? Type.OPERATOR : Type.CLASS_NAME, type.span());
+            super(operator ? Type.OPERATOR : Type.CLASS_NAME, type.baseRef().nameSpan);
             elType = type;
             this.operator = operator;
         }
