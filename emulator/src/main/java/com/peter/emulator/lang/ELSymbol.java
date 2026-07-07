@@ -178,6 +178,11 @@ public class ELSymbol {
         }
 
         @Override
+        public boolean hasText() {
+            return true;
+        }
+
+        @Override
         public String getText() {
             if (elType.isVoid())
                 return String.format("`void`");
@@ -213,7 +218,12 @@ public class ELSymbol {
             }
             if (namespace instanceof ELClass clazz) {
                 String t = clazz.getClassType();
-                return String.format("%s%s `%s`", Character.toUpperCase(t.charAt(0)), t.substring(1), namespace.getQualifiedName());
+                String out = String.format("%s%s `%s`", Character.toUpperCase(t.charAt(0)), t.substring(1),
+                        namespace.getQualifiedName());
+                if (clazz.parent != null) {
+                    out += String.format(" extends `%s`", clazz.parent.getQualifiedName());
+                }
+                return out;
             }
             return String.format("Namespace `%s`", namespace.getQualifiedName());
         }
@@ -246,6 +256,9 @@ public class ELSymbol {
             if (var.type.getELClass() != null) {
                 out += "\n\nBase Class: `" + var.type.getELClass().getQualifiedName() + "`";
                 out += "\n(`" + var.type.toString() + "`)";
+            }
+            if (var.varType == ELVariable.Type.MEMBER) {
+                out += "\n\nOffset: " + var.offset;
             }
             return out/* + "\n\n\n\n"+span.debugString()*/;
         }

@@ -248,6 +248,10 @@ public class ELType {
         return !genericTypes.isEmpty();
     }
 
+    public ArrayList<ELType> getGenerics() {
+        return genericTypes;
+    }
+
     public boolean isSimple() {
         return !pointer && genericTypes.isEmpty() && !array && !constant;
     }
@@ -475,8 +479,8 @@ public class ELType {
             type.constant = constant;
             type.outVar = outVar;
             ELType base = type.baseRef();
-            if (ELPrimitives.PRIMITIVE_TYPES != null && ELPrimitives.PRIMITIVE_TYPES.containsKey(base)) {
-                base.clazz = ELPrimitives.PRIMITIVE_TYPES.get(base);
+            if (ELPrimitives.PRIMITIVE_TYPES != null && ELPrimitives.isPrimitive(base)) {
+                base.clazz = ELPrimitives.getPrimitiveClass(base);
             }
             return type;
         }
@@ -495,6 +499,25 @@ public class ELType {
         t.subType = subType;
         t.location = location;
         t.genericLocation = location;
+        t.endLocation = location;
+        t.clazz = clazz;
+        t.outVar = outVar;
+        return t;
+    }
+    
+    public ELType generic() {
+        if (!constant)
+            return this;
+        ELType t = new ELType();
+        t.baseClass = baseClass;
+        t.genericTypes = new ArrayList<>();
+        t.array = array;
+        t.arraySize = arraySize;
+        t.pointer = pointer;
+        t.address = address;
+        t.subType = subType;
+        t.location = location;
+        t.genericLocation = null;
         t.endLocation = location;
         t.clazz = clazz;
         t.outVar = outVar;
@@ -551,8 +574,8 @@ public class ELType {
         for(ELType type : genericTypes)
             type.analyze(errors, namespace, unit);
         ELType base = baseRef();
-        if (ELPrimitives.PRIMITIVE_TYPES.containsKey(base)) {
-            base.clazz = ELPrimitives.PRIMITIVE_TYPES.get(base);
+        if (ELPrimitives.isPrimitive(base)) {
+            base.clazz = ELPrimitives.getPrimitiveClass(base);
             return;
         }
         ELClass testClazz = namespace.getType(base, namespace, unit);
@@ -705,5 +728,9 @@ public class ELType {
         if (!array)
             return -1;
         return arraySize;
+    }
+
+    public Identifier getBaseId() {
+        return baseClass;
     }
 }

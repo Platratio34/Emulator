@@ -28,7 +28,7 @@
 // TestD
 #define TestD.str "// Test" char*
 #var TestD.path "test.txt\0" char[9]
-#define TestD.TIMERS 0x0002_0200 uint32*
+#define TestD.TIMERS 0x0001_0200 uint32*
 #var TestD.v 0x0000 uint32
 #var TestD.testStr2 "Test2\n\0" char[7]
 #var TestD.testStr "Test\n" char[5]
@@ -256,7 +256,8 @@ INC r2 -12
 LOAD MEM r2 r2
 ADD r1 r1 r2
 INC r1 -4
-INC r1 -786432
+LOAD r2 786432
+SUB r1 r1 r2
 SET FORCE GT r1 r1
 GOTO EQ r1 :if_end_5
 // 0 41:18
@@ -680,27 +681,22 @@ COPY rStack r15
 #stackVar uint32 bufferSize -12
 // 0 52:10
 #line run\lang\TestD\console.el 52:10
-#breakpoint
-//  asm("#breakpoint");
-
-// 1 53:10
-#line run\lang\TestD\console.el 53:10
 LOAD r1 Console.CONSOLE_IN_COUNT
 :read_l0
 LOAD MEM BYTE r2 r1
 GOTO EQ r2 :read_l0
 //  asm("LOAD r1 Console.CONSOLE_IN_COUNT\n:read_l0\nLOAD MEM BYTE r2 r1\nGOTO EQ r2 :read_l0");
 
-// 2 54:10
-#line run\lang\TestD\console.el 54:10
+// 1 53:10
+#line run\lang\TestD\console.el 53:10
 LOAD r1 Console.CONSOLE_IN_COUNT
 LOAD MEM BYTE r1 r1
 #stackVar uint32 inCount
 STACK PUSH r1
 //  uint32 inCount =* CONSOLE_IN_COUNT;
 
-// 3 55:10
-#line run\lang\TestD\console.el 55:10
+// 2 54:10
+#line run\lang\TestD\console.el 54:10
 COPY r15 r1
 INC r1 -12
 LOAD MEM r1 r1
@@ -709,8 +705,8 @@ LOAD MEM r2 r2
 SUB r1 r1 r2
 SET FORCE LT r1 r1
 GOTO EQ r1 :if_end_11
-// 0 56:14
-#line run\lang\TestD\console.el 56:14
+// 0 55:14
+#line run\lang\TestD\console.el 55:14
 COPY r15 r1
 COPY r15 r2
 INC r2 -12
@@ -722,15 +718,15 @@ STORE r2 r1
 :if_end_11
 //  if(bufferSize < inCount) {inCount = bufferSize;}
 
-// 4 58:10
-#line run\lang\TestD\console.el 58:10
+// 3 57:10
+#line run\lang\TestD\console.el 57:10
 LOAD r1 0
 #stackVar uint32 i
 STACK PUSH r1
 //  uint32 i = 0;
 
-// 5 59:10
-#line run\lang\TestD\console.el 59:10
+// 4 58:10
+#line run\lang\TestD\console.el 58:10
 :while_condition_12
 COPY r15 r1
 INC r1 4
@@ -740,10 +736,11 @@ LOAD MEM r2 r2
 SUB r1 r1 r2
 SET FORCE LT r1 r1
 GOTO EQ r1 :while_end_12
-// 0 60:14
-#line run\lang\TestD\console.el 60:14
+// 0 59:14
+#line run\lang\TestD\console.el 59:14
 COPY r15 r1
 INC r1 -16
+LOAD MEM r1 r1
 COPY r15 r2
 INC r2 4
 LOAD MEM r2 r2
@@ -753,8 +750,8 @@ LOAD MEM BYTE r2 r2
 STORE BYTE r2 r1
 //  buffer[i] =* CONSOLE_IN;
 
-// 1 62:14
-#line run\lang\TestD\console.el 62:14
+// 1 61:14
+#line run\lang\TestD\console.el 61:14
 COPY r15 r1
 INC r1 4
 LOAD MEM r2 r1
@@ -767,8 +764,8 @@ GOTO :while_condition_12
 :while_end_12
 //  while(i < inCount) {buffer[i] =* CONSOLE_IN; i++;}
 
-// 6 64:10
-#line run\lang\TestD\console.el 64:10
+// 5 63:10
+#line run\lang\TestD\console.el 63:10
 COPY r15 r1
 INC r1 4
 LOAD MEM r1 r1
@@ -778,10 +775,11 @@ LOAD MEM r2 r2
 SUB r1 r1 r2
 SET FORCE LT r1 r1
 GOTO EQ r1 :if_end_13
-// 0 65:14
-#line run\lang\TestD\console.el 65:14
+// 0 64:14
+#line run\lang\TestD\console.el 64:14
 COPY r15 r1
 INC r1 -16
+LOAD MEM r1 r1
 COPY r15 r2
 INC r2 4
 LOAD MEM r2 r2
@@ -1211,26 +1209,26 @@ GOTO POP
 #function TestD.onInterrupt
 STACK PUSH r15
 COPY rStack r15
-// 0 97:10
-#line run\lang\TestD\testd.el 97:10
+// 0 96:10
+#line run\lang\TestD\testd.el 96:10
 COPY rIC r1
 #stackVar uint32 code
 STACK PUSH r1
 //  uint32 code = SysD.rIC;
 
-// 1 98:10
-#line run\lang\TestD\testd.el 98:10
+// 1 97:10
+#line run\lang\TestD\testd.el 97:10
 LOAD rIC 0
 //  asm("LOAD rIC 0");
 
-// 2 99:10
-#line run\lang\TestD\testd.el 99:10
+// 2 98:10
+#line run\lang\TestD\testd.el 98:10
 #stackVar char[9] str
 STACK INC 12
 //  char[9] str;
 
-// 3 100:10
-#line run\lang\TestD\testd.el 100:10
+// 3 99:10
+#line run\lang\TestD\testd.el 99:10
 COPY r15 r1
 INC r1 4
 INC r1 8
@@ -1238,38 +1236,50 @@ LOAD r2 '\0'
 STORE BYTE r2 r1
 //  str[8] = '\0';
 
-// 4 105:10
-#line run\lang\TestD\testd.el 105:10
+// 4 100:10
+#line run\lang\TestD\testd.el 100:10
 COPY r15 r1
 LOAD MEM r1 r1
 INC r1 -255
 SET FORCE EQ r1 r1
 GOTO EQ r1 :if_end_14
-// 0 106:14
-#line run\lang\TestD\testd.el 106:14
+// 0 101:14
+#line run\lang\TestD\testd.el 101:14
+#define exp_str_0 "\n\nHalting\0"
+LOAD r1 exp_str_0
+STACK PUSH r1
+LOAD r1 0
+STACK PUSH r1
+GOTO PUSH :Console.printStr_char*_uint32
+STACK DEC 8
+//  Console.printStr("\n\nHalting\0", 0);
+
+// 1 102:14
+#line run\lang\TestD\testd.el 102:14
 HALT
 //  asm("HALT");
 
 #lineend
 :if_end_14
-//  if(code == 0xff) {asm("HALT");}
+//  if(code == 0xff) {Console.printStr("\n\nHalting\0", 0); asm("HALT");}
 
-// 5 108:10
-#line run\lang\TestD\testd.el 108:10
+// 5 104:10
+#line run\lang\TestD\testd.el 104:10
 COPY r15 r1
 LOAD MEM r1 r1
-INC r1 -1
+LOAD r2 -2147483646
+SUB r1 r1 r2
 SET FORCE EQ r1 r1
 GOTO EQ r1 :if_end_15
-// 0 109:14
-#line run\lang\TestD\testd.el 109:14
+// 0 105:14
+#line run\lang\TestD\testd.el 105:14
 LOAD r1 1
 #stackVar uint32 i
 STACK PUSH r1
 //  uint32 i = 1;
 
-// 1 110:14
-#line run\lang\TestD\testd.el 110:14
+// 1 106:14
+#line run\lang\TestD\testd.el 106:14
 :while_condition_16
 COPY r15 r1
 INC r1 16
@@ -1277,8 +1287,8 @@ LOAD MEM r1 r1
 INC r1 -16
 SET FORCE LT r1 r1
 GOTO EQ r1 :while_end_16
-// 0 111:18
-#line run\lang\TestD\testd.el 111:18
+// 0 107:18
+#line run\lang\TestD\testd.el 107:18
 LOAD r1 TestD.TIMERS
 COPY r15 r2
 INC r2 16
@@ -1286,11 +1296,12 @@ LOAD MEM r2 r2
 LOAD r3 4
 MUL r2 r2 r3
 ADD r1 r1 r2
+LOAD MEM r1 r1
 INC r1 1
 SET FORCE EQ r1 r1
 GOTO EQ r1 :if_end_17
-// 0 112:22
-#line run\lang\TestD\testd.el 112:22
+// 0 108:22
+#line run\lang\TestD\testd.el 108:22
 LOAD r1 TestD.TIMERS
 COPY r15 r2
 INC r2 16
@@ -1306,8 +1317,8 @@ STORE r2 r1
 :if_end_17
 //  if(TIMERS[i] == 0xffff_ffff) {TIMERS[i] = 0x0;}
 
-// 1 114:18
-#line run\lang\TestD\testd.el 114:18
+// 1 110:18
+#line run\lang\TestD\testd.el 110:18
 COPY r15 r1
 INC r1 16
 LOAD MEM r2 r1
@@ -1320,12 +1331,70 @@ GOTO :while_condition_16
 :while_end_16
 //  while(i < 16) {if(TIMERS[i] == 0xffff_ffff) {TIMERS[i] = 0x0;} i++;}
 
+// 2 113:14
+#line run\lang\TestD\testd.el 113:14
+#define exp_str_1 "\nTimer\0"
+LOAD r1 exp_str_1
+STACK PUSH r1
+LOAD r1 0
+STACK PUSH r1
+GOTO PUSH :Console.printStr_char*_uint32
+STACK DEC 8
+//  Console.printStr("\nTimer\0", 0);
+
+// 3 114:14
+#line run\lang\TestD\testd.el 114:14
+GOTO :func_exit_TestD.onInterrupt
+//  return;
+
 #lineend
 STACK DEC 4
 // End of scope
 #stackVarClear i
 :if_end_15
-//  if(code == 0x01) {uint32 i = 1; while(i < 16) {if(TIMERS[i] == 0xffff_ffff) {TIMERS[i] = 0x0;} i++;}}
+//  if(code == 0x8000_0002) {uint32 i = 1; while(i < 16) {if(TIMERS[i] == 0xffff_ffff) {TIMERS[i] = 0x0;} i++;} Console.printStr("\nTimer\0", 0); return;}
+
+// 6 116:10
+#line run\lang\TestD\testd.el 116:10
+COPY r15 r1
+LOAD MEM r1 r1
+STACK PUSH r1
+COPY r15 r1
+INC r1 4
+STACK PUSH r1
+GOTO PUSH :Console.intToHex_uint32_char*
+STACK DEC 8
+//  Console.intToHex(code, & str);
+
+// 7 117:10
+#line run\lang\TestD\testd.el 117:10
+#define exp_str_2 "\nInterrupt: \0"
+LOAD r1 exp_str_2
+STACK PUSH r1
+LOAD r1 0
+STACK PUSH r1
+GOTO PUSH :Console.printStr_char*_uint32
+STACK DEC 8
+//  Console.printStr("\nInterrupt: \0", 0);
+
+// 8 118:10
+#line run\lang\TestD\testd.el 118:10
+COPY r15 r1
+INC r1 4
+STACK PUSH r1
+LOAD r1 8
+STACK PUSH r1
+GOTO PUSH :Console.printStr_char*_uint32
+STACK DEC 8
+//  Console.printStr(& str, 8);
+
+// 9 119:10
+#line run\lang\TestD\testd.el 119:10
+LOAD r1 '\n'
+STACK PUSH r1
+GOTO PUSH :Console.printChar_char
+STACK DEC 4
+//  Console.printChar('\n');
 
 #lineend
 :func_exit_TestD.onInterrupt
@@ -1341,16 +1410,16 @@ INTERRUPT RET
 STACK PUSH r15
 COPY rStack r15
 #stackVar uint32 time -12
-// 0 120:10
-#line run\lang\TestD\testd.el 120:10
+// 0 123:10
+#line run\lang\TestD\testd.el 123:10
 :while_condition_18
 COPY r15 r1
 INC r1 -12
 LOAD MEM r1 r1
 SET FORCE GT r1 r1
 GOTO EQ r1 :while_end_18
-// 0 121:14
-#line run\lang\TestD\testd.el 121:14
+// 0 124:14
+#line run\lang\TestD\testd.el 124:14
 COPY r15 r1
 INC r1 -12
 LOAD MEM r2 r1
@@ -1474,8 +1543,19 @@ GOTO PUSH :TestD.testA_StructA&
 STACK DEC 4
 //  testA(& sA);
 
-// 13 36:10
-#line run\lang\TestD\testd.el 36:10
+// 13 35:10
+#line run\lang\TestD\testd.el 35:10
+#define exp_str_3 "Starting EmulatorOS\n\n\0"
+LOAD r1 exp_str_3
+STACK PUSH r1
+LOAD r1 0
+STACK PUSH r1
+GOTO PUSH :Console.printStr_char*_uint32
+STACK DEC 8
+//  Console.printStr("Starting EmulatorOS\n\n\0", 0);
+
+// 14 37:10
+#line run\lang\TestD\testd.el 37:10
 LOAD r1 &TestD.testStr
 STACK PUSH r1
 LOAD r1 5
@@ -1484,8 +1564,8 @@ GOTO PUSH :Console.printStr_char*_uint32
 STACK DEC 8
 //  Console.printStr(& testStr, 5);
 
-// 14 37:10
-#line run\lang\TestD\testd.el 37:10
+// 15 38:10
+#line run\lang\TestD\testd.el 38:10
 LOAD r1 &TestD.testStr2
 STACK PUSH r1
 LOAD r1 0
@@ -1494,30 +1574,30 @@ GOTO PUSH :Console.printStr_char*_uint32
 STACK DEC 8
 //  Console.printStr(& testStr2, 0);
 
-// 15 38:10
-#line run\lang\TestD\testd.el 38:10
+// 16 39:10
+#line run\lang\TestD\testd.el 39:10
 LOAD r1 'a'
 STACK PUSH r1
 GOTO PUSH :Console.printChar_char
 STACK DEC 4
 //  Console.printChar('a');
 
-// 16 39:10
-#line run\lang\TestD\testd.el 39:10
+// 17 40:10
+#line run\lang\TestD\testd.el 40:10
 LOAD r1 '\n'
 STACK PUSH r1
 GOTO PUSH :Console.printChar_char
 STACK DEC 4
 //  Console.printChar('\n');
 
-// 17 41:10
-#line run\lang\TestD\testd.el 41:10
+// 18 42:10
+#line run\lang\TestD\testd.el 42:10
 #stackVar char[10] str2
 STACK INC 12
 //  char[10] str2;
 
-// 18 42:10
-#line run\lang\TestD\testd.el 42:10
+// 19 43:10
+#line run\lang\TestD\testd.el 43:10
 COPY r15 r1
 INC r1 20
 INC r1 8
@@ -1525,8 +1605,8 @@ LOAD r2 '\n'
 STORE BYTE r2 r1
 //  str2[8] = '\n';
 
-// 19 43:10
-#line run\lang\TestD\testd.el 43:10
+// 20 44:10
+#line run\lang\TestD\testd.el 44:10
 COPY r15 r1
 INC r1 20
 INC r1 9
@@ -1534,22 +1614,10 @@ LOAD r2 '\0'
 STORE BYTE r2 r1
 //  str2[9] = '\0';
 
-// 20 45:10
-#line run\lang\TestD\testd.el 45:10
-LOAD r1 8
-STACK INC 4
-STACK PUSH r1
-GOTO PUSH :Memory.malloc_uint32
-STACK INC -4
-STACK POP r1
-#stackVar StructA* pntr
-STACK PUSH r1
-//  StructA* pntr = new StructA();
-
 // 21 75:10
 #line run\lang\TestD\testd.el 75:10
-#define exp_str_0 "\n> \0"
-LOAD r1 exp_str_0
+#define exp_str_4 "\n> \0"
+LOAD r1 exp_str_4
 STACK PUSH r1
 LOAD r1 0
 STACK PUSH r1
@@ -1559,19 +1627,14 @@ STACK DEC 8
 
 // 22 76:10
 #line run\lang\TestD\testd.el 76:10
-#breakpoint
-//  asm("#breakpoint");
-
-// 23 77:10
-#line run\lang\TestD\testd.el 77:10
 #stackVar char[32] buff
 STACK INC 32
 //  char[32] buff;
 
-// 24 78:10
-#line run\lang\TestD\testd.el 78:10
+// 23 77:10
+#line run\lang\TestD\testd.el 77:10
 COPY r15 r1
-INC r1 36
+INC r1 32
 STACK PUSH r1
 LOAD r1 32
 STACK PUSH r1
@@ -1579,10 +1642,10 @@ GOTO PUSH :Console.read_char*_uint32
 STACK DEC 8
 //  Console.read(& buff, 32);
 
-// 25 79:10
-#line run\lang\TestD\testd.el 79:10
+// 24 78:10
+#line run\lang\TestD\testd.el 78:10
 COPY r15 r1
-INC r1 36
+INC r1 32
 STACK PUSH r1
 LOAD r1 0
 STACK PUSH r1
@@ -1590,16 +1653,16 @@ GOTO PUSH :Console.printStr_char*_uint32
 STACK DEC 8
 //  Console.printStr(& buff, 0);
 
-// 26 81:10
-#line run\lang\TestD\testd.el 81:10
+// 25 80:10
+#line run\lang\TestD\testd.el 80:10
 LOAD r1 TestD.TIMERS
 INC r1 4
-LOAD r2 600
+LOAD r2 2400
 STORE r2 r1
-//  TIMERS[1] = 120* 5;
+//  TIMERS[1] = 480* 5;
 
-// 27 83:10
-#line run\lang\TestD\testd.el 83:10
+// 26 82:10
+#line run\lang\TestD\testd.el 82:10
 LOAD r1 2000
 STACK PUSH r1
 GOTO PUSH :TestD.wait_uint32
@@ -1608,13 +1671,12 @@ STACK DEC 4
 
 #lineend
 :func_exit_TestD.main
-STACK DEC 68
+STACK DEC 64
 // End of scope
 #stackVarClear a
 #stackVarClear b
 #stackVarClear c
 #stackVarClear str2
-#stackVarClear pntr
 #stackVarClear buff
 #stackVarClear sA
 STACK POP r15
@@ -1625,8 +1687,8 @@ HALT
 STACK PUSH r15
 COPY rStack r15
 #stackVar uint32 a -12
-// 0 88:10
-#line run\lang\TestD\testd.el 88:10
+// 0 87:10
+#line run\lang\TestD\testd.el 87:10
 LOAD r1 &TestD.v
 COPY r15 r2
 INC r2 -12
@@ -1647,8 +1709,8 @@ STACK PUSH r15
 COPY rStack r15
 #stackVar uint32 a -16
 #stackVar uint32* b -12
-// 0 92:10
-#line run\lang\TestD\testd.el 92:10
+// 0 91:10
+#line run\lang\TestD\testd.el 91:10
 LOAD r1 &TestD.v
 COPY r15 r2
 INC r2 -16
@@ -1668,8 +1730,8 @@ GOTO POP
 STACK PUSH r15
 COPY rStack r15
 #stackVar StructA& str -12
-// 0 126:10
-#line run\lang\TestD\testd.el 126:10
+// 0 129:10
+#line run\lang\TestD\testd.el 129:10
 COPY r15 r1
 INC r1 -12
 LOAD MEM r1 r1
@@ -1677,8 +1739,8 @@ LOAD r2 32
 STORE r2 r1
 //  str.a = 32;
 
-// 1 127:10
-#line run\lang\TestD\testd.el 127:10
+// 1 130:10
+#line run\lang\TestD\testd.el 130:10
 COPY r15 r1
 INC r1 -12
 LOAD MEM r1 r1

@@ -8,6 +8,7 @@ public class TimerUnit implements MemoryMappedPeripheral {
     public final int startAddress;
     public final CPU cpu;
     protected final int[] addresses;
+    public static final int INTERRUPT = 0x8000_0002;
 
     protected int time;
 
@@ -32,7 +33,7 @@ public class TimerUnit implements MemoryMappedPeripheral {
             timers[i]--;
             if (timers[i] == 0) {
                 timers[i] = 0xffff_ffff;
-                cpu.interrupt(0x01);
+                cpu.interrupt(INTERRUPT);
             }
         }
     }

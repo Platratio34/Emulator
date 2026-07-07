@@ -319,6 +319,9 @@ public class ActionScope {
         if (stackVars.containsKey(id)) {
             return ResolveResult.of(stackVars.get(id));
         }
+        if (parent != null) {
+            return parent.resolveIdentifier(id);
+        }
         ResolveResult r = namespace.resolveIdentifier(id);
         if (r != null) {
             return r;

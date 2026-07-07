@@ -227,6 +227,7 @@ public class FunctionAction extends ComplexAction {
             }
         }
 
+        boolean isMethodType = false;
         ResolveResult rr = scope.resolveIdentifier(it.value);
         if (rr == null) {
             throw ELAnalysisError.errorF(it.spanFirst(), "Unable to resolve identifier `%s`", it.value);
@@ -254,10 +255,15 @@ public class FunctionAction extends ComplexAction {
                 throw ELAnalysisError.errorF(it2.spanFirst(), "Unable to resolve identifier `%s`", it2.value);
             }
         }
-        if (rr.function == null) {
+        ELFunction f = null;
+        if (rr.function != null) {
+            f = rr.function.getFunction(types);
+        } else if (rr.variable != null && rr.variable.type.getBaseId().equals("method")) {
+            isMethodType = true;
+            f = ELPrimitives.METHOD_CLASS.function(rr.variable.type);
+        } else {
             throw ELAnalysisError.errorF(it2.spanFirst(), "`%s` is not a function", it2.value);
         }
-        ELFunction f = rr.function.getFunction(types);
 
         // ELFunction f = scope.namespace.findFunction(id, types);
         // boolean includedFunction = f == null;
@@ -270,7 +276,11 @@ public class FunctionAction extends ComplexAction {
                     startOfParams.span(endOfParams));
         }
         
-        scope.unit.symbols.add(new ELSymbol.ELFuncCallSymbol(f, it2.spanFirst()));
+        if (isMethodType) {
+            scope.unit.symbols.add(new ELSymbol.ELVarSymbol(rr.variable, it2.spanFirst()));
+        } else {
+            scope.unit.symbols.add(new ELSymbol.ELFuncCallSymbol(f, it2.spanFirst()));
+        }
         if (f.type == FunctionType.INSTANCE)
             addDirect("STACK PUSH r0");
         if (f.ret != null)
@@ -282,7 +292,14 @@ public class FunctionAction extends ComplexAction {
             actions.add(rA);
             addDirect("COPY %s r0", r0T);
         }
-        actions.add(new DirectAction("GOTO PUSH :%s", f.getQualifiedName(true)));
+        if (isMethodType) {
+            Register fP = scope.firstFree();
+            ResolveAction rA = scope.loadVar(it, fP, false);
+            actions.add(rA);
+            addDirect("GOTO PUSH %s", fP);
+        } else {
+            actions.add(new DirectAction("GOTO PUSH :%s", f.getQualifiedName(true)));
+        }
         if (f.ret == null) {
             if (onStack && stackSize > 0)
                 actions.add(new DirectAction("STACK DEC %d", stackSize));

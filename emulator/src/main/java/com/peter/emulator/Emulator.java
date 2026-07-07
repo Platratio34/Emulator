@@ -13,7 +13,7 @@ public class Emulator {
 
     public final RAM ram = new RAM();
     public final MMU mmu = new MMU();
-    public float tickSpeed = 120;
+    public float tickSpeed = 480;
 
     public final CPU[] cores = new CPU[] {
         new CPU(0, ram, mmu)

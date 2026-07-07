@@ -11,7 +11,7 @@ namespace TestD {
     public static char[9] path = "test.txt\0";
     public static char tc;
 
-    public static const uint32* TIMERS = 0x0002_0200;
+    public static const uint32* TIMERS = 0x0001_0200;
 
     @Entrypoint(raw)
     public static void main() {
@@ -32,6 +32,7 @@ namespace TestD {
         testA(&sA);
 
         // Console.setupConsole();
+        Console.printStr("Starting EmulatorOS\n\n\0",0);
 
         Console.printStr(&testStr, 5);
         Console.printStr(&testStr2, 0);
@@ -42,7 +43,7 @@ namespace TestD {
         str2[8] = '\n';
         str2[9] = '\0';
 
-        StructA* pntr = new StructA();
+        // StructA* pntr = new StructA();
 
 
         // asm("#breakpoint");
@@ -72,12 +73,11 @@ namespace TestD {
         }*/
 
         Console.printStr("\n> \0",0);
-        asm("#breakpoint");
         char[32] buff;
         Console.read(&buff, 32);
         Console.printStr(&buff, 0);
 
-        TIMERS[1] = 120 * 5;
+        TIMERS[1] = 480 * 5;
 
         wait(2000);
         // funcC();
@@ -97,14 +97,11 @@ namespace TestD {
         asm("LOAD rIC 0");
         char[9] str;
         str[8] = '\0';
-        // Console.intToHex(code, &str);
-        // Console.printStr("\nInterrupt: \0", 0);
-        // Console.printStr(&str, 8);
-        // Console.printChar('\n');
         if(code == 0xff) {
+            Console.printStr("\n\nHalting\0",0);
             asm("HALT");
         }
-        if(code == 0x01) { // timer
+        if(code == 0x8000_0002) { // timer
             uint32 i = 1;
             while(i < 16) {
                 if(TIMERS[i] == 0xffff_ffff) {
@@ -112,7 +109,14 @@ namespace TestD {
                 }
                 i++;
             }
+            
+            Console.printStr("\nTimer\0", 0);
+            return;
         }
+        Console.intToHex(code, &str);
+        Console.printStr("\nInterrupt: \0", 0);
+        Console.printStr(&str, 8);
+        Console.printChar('\n');
     }
 
     public static void wait(uint32 time) {

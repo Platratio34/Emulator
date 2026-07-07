@@ -114,12 +114,23 @@ public class ExpressionAction extends ComplexAction {
                         if (_wasConst) {
                             _constValue = applyConstValue(_constValue, val, lastOp);
                         }
+                        boolean canInc = -32768 < val && val < 32767;
                         switch (lastOp) {
                             case ADD -> {
-                                actions.add(new DirectAction("INC %s %d", targetReg, val));
+                                if (canInc) {
+                                    addDirect("INC %s %d", targetReg, val);
+                                } else {
+                                    actions.add(new DirectAction("LOAD %s %d", tR, val));
+                                    addDirect("ADD %s %s %s", targetReg, targetReg, tR);
+                                }
                             }
                             case SUB -> {
-                                actions.add(new DirectAction("INC %s %d", targetReg, -val));
+                                if (canInc) {
+                                    addDirect("INC %s %d", targetReg, -val);
+                                } else {
+                                    actions.add(new DirectAction("LOAD %s %d", tR, val));
+                                    addDirect("SUB %s %s %s", targetReg, targetReg, tR);
+                                }
                             }
                             case POINTER -> {
                                 actions.add(new DirectAction("LOAD %s %d", tR, val));
@@ -140,41 +151,85 @@ public class ExpressionAction extends ComplexAction {
                             }
 
                             case LEFT_SHIFT -> {
+                                if (val < 1 || val > 255) {
+                                    throw ELAnalysisError.error(
+                                            "Invalid value for shift operation. Shift must be between 1 and 255 inclusive", nt);
+                                }
                                 actions.add(new DirectAction("LSH %s %s %d", targetReg, targetReg, val));
                             }
                             case RIGHT_SHIFT -> {
+                                if (val < 1 || val > 255) {
+                                    throw ELAnalysisError.error(
+                                            "Invalid value for shift operation. Shift must be between 1 and 255 inclusive", nt);
+                                }
                                 actions.add(new DirectAction("RSH %s %s %d", targetReg, targetReg, val));
                             }
 
                             case EQ2 -> {
-                                if (val != 0)
-                                    actions.add(new DirectAction("INC %s %d", targetReg, -val));
+                                if (val != 0) {
+                                    if(canInc)
+                                        actions.add(new DirectAction("INC %s %d", targetReg, -val));
+                                    else {
+                                        addDirect("LOAD %s %d", tR, val);
+                                        addDirect("SUB %s %s %s", targetReg, targetReg, tR);
+                                    }
+                                }
                                 actions.add(new DirectAction("SET FORCE EQ %s %s", targetReg, targetReg));
                             }
                             case NEQ -> {
-                                if (val != 0)
-                                    actions.add(new DirectAction("INC %s %d", targetReg, -val));
+                                if (val != 0) {
+                                    if(canInc)
+                                        actions.add(new DirectAction("INC %s %d", targetReg, -val));
+                                    else {
+                                        addDirect("LOAD %s %d", tR, val);
+                                        addDirect("SUB %s %s %s", targetReg, targetReg, tR);
+                                    }
+                                }
                                 actions.add(new DirectAction("SET FORCE NEQ %s %s", targetReg, targetReg));
                             }
                             case LEQ -> {
-                                if (val != 0)
-                                    actions.add(new DirectAction("INC %s %d", targetReg, -val));
+                                if (val != 0) {
+                                    if(canInc)
+                                        actions.add(new DirectAction("INC %s %d", targetReg, -val));
+                                    else {
+                                        addDirect("LOAD %s %d", tR, val);
+                                        addDirect("SUB %s %s %s", targetReg, targetReg, tR);
+                                    }
+                                }
                                 actions.add(new DirectAction("SET FORCE LEQ %s %s", targetReg, targetReg));
                             }
                             case ANGLE_RIGHT -> {
-                                if (val != 0)
-                                    actions.add(new DirectAction("INC %s %d", targetReg, -val));
+                                if (val != 0) {
+                                    if(canInc)
+                                        actions.add(new DirectAction("INC %s %d", targetReg, -val));
+                                    else {
+                                        addDirect("LOAD %s %d", tR, val);
+                                        addDirect("SUB %s %s %s", targetReg, targetReg, tR);
+                                    }
+                                }
                                 actions.add(new DirectAction("SET FORCE GT %s %s", targetReg, targetReg));
                             }
 
                             case GEQ -> {
-                                if (val != 0)
-                                    actions.add(new DirectAction("INC %s %d", targetReg, -val));
+                                if (val != 0) {
+                                    if(canInc)
+                                        actions.add(new DirectAction("INC %s %d", targetReg, -val));
+                                    else {
+                                        addDirect("LOAD %s %d", tR, val);
+                                        addDirect("SUB %s %s %s", targetReg, targetReg, tR);
+                                    }
+                                }
                                 actions.add(new DirectAction("SET FORCE GEQ %s %s", targetReg, targetReg));
                             }
                             case ANGLE_LEFT -> {
-                                if (val != 0)
-                                    actions.add(new DirectAction("INC %s %d", targetReg, -val));
+                                if (val != 0) {
+                                    if(canInc)
+                                        actions.add(new DirectAction("INC %s %d", targetReg, -val));
+                                    else {
+                                        addDirect("LOAD %s %d", tR, val);
+                                        addDirect("SUB %s %s %s", targetReg, targetReg, tR);
+                                    }
+                                }
                                 actions.add(new DirectAction("SET FORCE LT %s %s", targetReg, targetReg));
                             }
 

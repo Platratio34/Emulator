@@ -31,11 +31,6 @@ public class ELGenericClass extends ELClass {
     }
 
     @Override
-    public int getOffset(String member) {
-        return baseClass.getOffset(member);
-    }
-
-    @Override
     public String getQualifiedName() {
         return baseClass.getQualifiedName();
     }

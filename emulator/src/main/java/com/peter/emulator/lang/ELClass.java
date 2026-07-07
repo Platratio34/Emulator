@@ -35,6 +35,9 @@ public class ELClass extends Namespace {
 
     public boolean abstractClass = false;
 
+    protected int size = 4;
+    protected int lastOffset = 0;
+
     public ELClass(String name, Namespace namespace, ProgramUnit unit) {
         super(name, namespace);
         this.unit = unit;
@@ -59,86 +62,17 @@ public class ELClass extends Namespace {
     public void addMember(ELVariable var) {
         if (memberVariables.containsKey(var.name) || staticVariables.containsKey(var.name) || staticFunctions.containsKey(var.name) || memberFunctions.containsKey(var.name))
             throw ELAnalysisError.error("Duplicate member name: `"+var.name+"` in class "+cName, var.span());
-        int size = 0;
         if (parent != null && parent != ELPrimitives.OBJECT_CLASS)
             size = parent.getSize();
         memberVariables.put(var.name, var);
-        for (int i = 0; i < order.size(); i++) {
-            int vSize = memberVariables.get(order.get(i)).sizeof();
-            if (vSize == 1) {
-                size++;
-            } else if (vSize == 2) {
-                int o = size % 2;
-                size += o + vSize;
-            } else if (vSize >= 3) {
-                int o = size % 4;
-                size += o + vSize;
-            }
-        }
-        int vSize = var.sizeof();
-        if (vSize == 2) {
-            int o = size % 2;
-            size += o;
-        } else if (vSize >= 3) {
-            int o = size % 4;
-            size += o;
-        }
-        var.offset = size;
         order.add(var.name);
     }
 
     public int getSize() {
-        int size = 0;
-        if (parent != null && parent != ELPrimitives.OBJECT_CLASS)
-            size = parent.getSize();
-        // System.out.println(cName);
-        for (int i = 0; i < order.size(); i++) {
-            int vSize = memberVariables.get(order.get(i)).sizeof();
-            // System.out.println(vSize);
-            if (vSize == 1) {
-                size++;
-            } else if (vSize == 2) {
-                int o = size % 2;
-                size += o + vSize;
-            } else if (vSize >= 3) {
-                int o = size % 4;
-                size += o + vSize;
-            }
-            // System.out.println("- "+size);
+        if (size == 0) {
+            processOffset();
         }
-        return (size + 3) & 0xffff_fffc;
-        // size += 4 - (size % 4);
-        // return size;
-    }
-
-    public int getOffset(String member) {
-        if (!memberVariables.containsKey(member)) {
-            throw new NoSuchElementException("Struct " + cName + " does not contain member variable " + member);
-        }
-        int size = 0;
-        for (int i = 0; i < order.size(); i++) {
-            String n = order.get(i);
-            int vSize = memberVariables.get(n).sizeof();
-            if (n.equals(member)) {
-                if (vSize == 2) {
-                    size += size % 2;
-                } else if (vSize >= 3) {
-                    size += size % 4;
-                }
-                return size;
-            } else {
-                if (vSize == 1) {
-                    size++;
-                } else if (vSize == 2) {
-                    int o = size % 2;
-                    size += o + vSize;
-                } else if (vSize >= 3) {
-                    int o = size % 4;
-                    size += o + vSize;
-                }
-            }
-        }
-        return -1;
+        return size;
     }
 
     public ELFunction addFunction(ELFunction function) {
@@ -384,6 +318,32 @@ public class ELClass extends Namespace {
         for (ELVariable var : memberVariables.values()) {
             var.analyze(errors, this);
         }
+        processOffset();
+    }
+
+    protected int processOffset() {
+        if(lastOffset > 0)
+            return lastOffset;
+        
+        if(parent != null)
+            lastOffset = parent.processOffset();
+        for (int i = 0; i < order.size(); i++) {
+            String vName = order.get(i);
+            ELVariable v = memberVariables.get(vName);
+            int size = v.sizeof();
+            if (size == 2) {
+                lastOffset += lastOffset % 2;
+            } else if (lastOffset % 4 > 0) {
+                lastOffset += 4 - (lastOffset % 4);
+            }
+            v.offset = lastOffset;
+            lastOffset += size;
+        }
+        if (lastOffset % 4 == 0)
+            size = lastOffset;
+        else
+            size = lastOffset + (4 - (lastOffset % 4));
+        return lastOffset;
     }
     
     @Override

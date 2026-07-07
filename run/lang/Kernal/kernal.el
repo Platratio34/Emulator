@@ -57,14 +57,14 @@ namespace Kernal {
             SysD.rPM = false;
             // System.onInterrupt(code);
             // need to get interrupt handler for the current process here
-            // oldState.interruptHandler.call(code);
+            oldState.interruptHandler(code);
             SysD.interruptReturn();
             return; // only including this for clarity, it is technically unreachable
         } else {
             if(code == 0x8000_0001) { // privileged mode failure
                 SysD.halt(); // this is a breaking instruct, we just don't know it
             }
-            if(code == 0x1) { // Timer interrupt
+            if(code == 0x8000_0002) { // Timer interrupt
                 uint32 timerIndex = 1;
                 while(TIMER_UNIT[timerIndex] != 0xffff_ffff) {
                     timerIndex++;
@@ -136,10 +136,6 @@ namespace Kernal {
         return &processStates[nextPID];
     }
 
-    class Method<P1> {
-
-    }
-
     struct ProcessState {
         public uint32 pid;
         public uint32 pgmPtr;
@@ -149,7 +145,7 @@ namespace Kernal {
         public uint32[16] registers;
 
         public uint32 status;
-        public Method<uint32> interruptHandler;
+        public method<uint32> interruptHandler;
 
         public void update() {
             pgmPtr = SysD.rPgm;

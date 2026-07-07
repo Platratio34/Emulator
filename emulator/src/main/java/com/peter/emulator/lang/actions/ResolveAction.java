@@ -43,10 +43,12 @@ public class ResolveAction extends ComplexAction {
                 // it = id.sub(index - 1);
             }
         }
-
+        
+        boolean wasConst = false;
         switch (var.varType) {
             case CONST -> {
                 addDirect("LOAD %s %s", reg, var.getQualifiedName());
+                wasConst = true;
                 // switch (var.startingValue) {
                 //     case ELNumberValue nv -> {
                 //         addDirect("LOAD %s %d", reg, nv.value));
@@ -96,7 +98,9 @@ public class ResolveAction extends ComplexAction {
                     if (!v.type.isIndexable())
                         throw ELAnalysisError.error(v.type.typeString() + " is not indexable",
                                 it.index.subFirst().startLocation.span(it.index.subLast().endLocation));
-                    
+                    if (t.isPointer() && !wasConst) {
+                        addDirect("LOAD MEM %s %s", reg, reg);
+                    }
                     Register rIndex = scope.firstFree();
                     // addDirect("// index; %s", rIndex);
                     ExpressionAction indexExp = new ExpressionAction(scope, it.index.subTokens, rIndex);
@@ -118,6 +122,7 @@ public class ResolveAction extends ComplexAction {
                     }
                     rIndex.release();
                     t = resolvedType;
+                    wasConst = false;
                 }
                 
                 scope.addSymbol(new ELVarSymbol(v, it.spanFirst()));
@@ -135,6 +140,7 @@ public class ResolveAction extends ComplexAction {
                     addDirect("LOAD MEM %s %s", reg, reg);
                     t = t.resolve(it.span());
                 }
+                wasConst = false;
 
                 ELClass clazz = t.getELClass();
                 if (clazz == null) {
@@ -157,7 +163,7 @@ public class ResolveAction extends ComplexAction {
             case 1 -> " BYTE";
             default -> "";
         };
-        if (byValue && v.varType != ELVariable.Type.CONST)
+        if (byValue && !wasConst)
             addDirect("LOAD MEM%s %s %s", size, reg, reg);
         returnType = t;
         returnVar = v;

@@ -1,5 +1,7 @@
 package com.peter.emulator.lang.base;
 
+import java.util.ArrayList;
+
 import com.peter.emulator.lang.ELClass;
 import com.peter.emulator.lang.ELFunction;
 import com.peter.emulator.lang.ELProtectionLevel;
@@ -10,18 +12,18 @@ import com.peter.emulator.lang.ELFunction.FunctionType;
 
 public class Method extends ELClass {
 
-    public final ELFunction callFunction;
+    // public final ELFunction callFunction;
 
     public Method(String name, Namespace namespace, ProgramUnit unit, String... params) {
         super(name, namespace, unit);
-        callFunction = new ELFunction(ELProtectionLevel.PUBLIC, false, this, "call", FunctionType.INSTANCE, false, unit, ELPrimitives.INTERNAL_LOCATION);
-        for (String p : params) {
-            genericsOrder.add(p);
-            generics.put(p, ELPrimitives.OBJECT);
-            callFunction.addParameter(ELPrimitives.OBJECT, p);
-        }
+        // callFunction = new ELFunction(ELProtectionLevel.PUBLIC, false, this, "call", FunctionType.INSTANCE, false, unit, ELPrimitives.INTERNAL_LOCATION);
+        // for (String p : params) {
+        //     genericsOrder.add(p);
+        //     generics.put(p, ELPrimitives.OBJECT);
+        //     callFunction.addParameter(ELPrimitives.OBJECT, p);
+        // }
 
-        memberFunctions.put("call", callFunction);
+        // memberFunctions.put("call", callFunction);
     }
 
     @Override
@@ -33,5 +35,15 @@ public class Method extends ELClass {
     public int getSize() {
         return 4;
     };
+
+    public ELFunction function(ELType type) {
+        ELFunction f = new ELFunction(ELProtectionLevel.PUBLIC, true, this, "", ELFunction.FunctionType.STATIC, false, unit, ELPrimitives.INTERNAL_LOCATION);
+        f.paramOrder = genericsOrder;
+        ArrayList<ELType> generics = type.getGenerics();
+        for (int i = 0; i < genericsOrder.size(); i++) {
+            f.params.put(genericsOrder.get(i), generics.get(i));
+        }
+        return f;
+    }
 
 }

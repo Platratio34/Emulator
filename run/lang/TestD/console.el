@@ -49,7 +49,6 @@ namespace Console {
     }
 
     public static void read(char* buffer, uint32 bufferSize) {
-        asm("#breakpoint");
         asm("LOAD r1 Console.CONSOLE_IN_COUNT\n:read_l0\nLOAD MEM BYTE r2 r1\nGOTO EQ r2 :read_l0");
         uint32 inCount = *CONSOLE_IN_COUNT;
         if(bufferSize < inCount) {

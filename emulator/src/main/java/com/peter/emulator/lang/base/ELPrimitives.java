@@ -10,7 +10,7 @@ public class ELPrimitives {
     protected static final Location INTERNAL_LOCATION = new Location("<Base>", 0, 0);
     protected static final Namespace INTERNAL_NAMESPACE = new Namespace("<Base>");
 
-    public static final ELClass OBJECT_CLASS = new ELClass("Object", INTERNAL_NAMESPACE, INTERNAL_UNIT) {
+    public static final ELClass OBJECT_CLASS = new ELClass("object", INTERNAL_NAMESPACE, INTERNAL_UNIT) {
         
         public boolean canStaticCast(ELType target) {
             return true;
@@ -21,7 +21,7 @@ public class ELPrimitives {
             return 4;
         };
     };
-    public static final ELType OBJECT = new ELType("Object", OBJECT_CLASS, INTERNAL_LOCATION);
+    public static final ELType OBJECT = new ELType("object", OBJECT_CLASS, INTERNAL_LOCATION);
 
     // bool
     public static final ELClass BOOL_CLASS = new ELClass("bool", INTERNAL_NAMESPACE, INTERNAL_UNIT) {
@@ -93,7 +93,7 @@ public class ELPrimitives {
     // method
     // public static final ELType VOID_METHOD = new ELType("method", METHOD_CLASS, INTERNAL_LOCATION);
     // method<A>
-    public static final ELClass METHOD_CLASS = new Method("method", INTERNAL_NAMESPACE, INTERNAL_UNIT, "A");
+    public static final Method METHOD_CLASS = new Method("method", INTERNAL_NAMESPACE, INTERNAL_UNIT, "P1");
     public static final ELType METHOD = new ELType("method", METHOD_CLASS, INTERNAL_LOCATION);
     // provider<R(,A,B,C...)>
     // public static final ELType PROVIDER = new ELType("provider");
@@ -214,5 +214,25 @@ public class ELPrimitives {
         // PRIMITIVE_TYPES.put(STRING, null);
         PRIMITIVE_TYPES.put(OBJECT, OBJECT_CLASS);
         PRIMITIVE_TYPES.put(METHOD, METHOD_CLASS);
+    }
+
+    public static boolean isPrimitive(ELType type) {
+        if (PRIMITIVE_TYPES.containsKey(type))
+            return true;
+        if (type.getBaseId().equals("method")) {
+            if (type.getGenerics().size() == 1)
+                return true;
+        }
+        return false;
+    }
+
+    public static ELClass getPrimitiveClass(ELType type) {
+        if(PRIMITIVE_TYPES.containsKey(type))
+            return PRIMITIVE_TYPES.get(type);
+        if (type.getBaseId().equals("method")) {
+            if (type.getGenerics().size() == 1)
+                return METHOD_CLASS;
+        }
+        return null;
     }
 }
