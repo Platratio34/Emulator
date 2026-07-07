@@ -1,0 +1,30 @@
+{
+    "name": "EL Theme",
+    "tokenColors": [
+        {
+            "scope": "comment",
+            "settings": {
+                "foreground": "#dd0000",
+                "fontStyle": "italic"
+            }
+        }
+    ],
+    "semanticHighlighting": true,
+    "semanticTokenColors": {
+        "keyword:emulatorlang": "#c586c0",
+        "namespace:emulatorlang": "#4ec9b0",
+        "class:emulatorlang": "#4ec9b0",
+        "number:emulatorlang": "#b5cea8",
+        "function:emulatorlang": "#d2a8ff",
+        "variable:emulatorlang": "#42bff5",
+        "variable.readonly:emulatorlang": "#79C0FF",
+        "variable.readonly.defaultLibrary:emulatorlang": "#79C0FF",
+        "variable.defaultLibrary:emulatorlang": "#79C0FF",
+        "variable.static:emulatorlang": "#42bff5",
+        "parameter:emulatorlang": "#ffa657",
+        "decorator:emulatorlang": "#ffa657",
+        "comment:emulatorlang": "#8b949e",
+        "string:emulatorlang": "#a5d6ff",
+        "operator:emulatorlang": "#d4d4d"
+    }
+}

@@ -166,10 +166,13 @@ public class ActionScope {
      * @return the resolve action
      */
     public ResolveAction loadVar(IdentifierToken id, Register reg, boolean byValue) {
-        return loadVar(this, id, reg, byValue);
+        return loadVar(this, id, reg, byValue, false);
+    }
+    public ResolveAction loadVarF(IdentifierToken id, Register reg, boolean byValue) {
+        return loadVar(this, id, reg, byValue, true);
     }
 
-    protected ResolveAction loadVar(ActionScope scope, IdentifierToken id, Register reg, boolean byValue) {
+    protected ResolveAction loadVar(ActionScope scope, IdentifierToken id, Register reg, boolean byValue, boolean dropLast) {
         if (id.value.equals("this")) {
             Namespace ns = getNamespace();
             ELFunction func = getFunction();
@@ -186,15 +189,15 @@ public class ActionScope {
         }
         if(stackVars.containsKey(id.value)) {
             ELVariable v = stackVars.get(id.value);
-            return new ResolveAction(scope, reg, v, id, byValue);
+            return new ResolveAction(scope, reg, v, id, byValue, dropLast);
         }
         if(parent != null)
-            return parent.loadVar(scope, id, reg, byValue);
+            return parent.loadVar(scope, id, reg, byValue, dropLast);
         ELVariable v = namespace.getFirstVar(id, unit);
         if(v == null)
             return null;
         try {
-            return new ResolveAction(scope, reg, v, id, byValue);
+            return new ResolveAction(scope, reg, v, id, byValue, dropLast);
         } catch (RuntimeException e) {
             throw ELAnalysisError.errorF(id, "Exception encountered in Resolve Action: %s", e.toString());
         }
@@ -289,25 +292,37 @@ public class ActionScope {
         }
         return null;
     }
+
     public ELClass findClass(IdentifierToken it) {
-        if(!it.hasSub()) { // only 1 element
-            for(ELClass clazz : unit.classes) {
-                if(clazz.cName.equals(it.value)) {
+        if (!it.hasSub()) { // only 1 element
+            for (ELClass clazz : unit.classes) {
+                if (clazz.cName.equals(it.value)) {
                     return clazz;
                 }
             }
-            if(unit.hasInclude(it.value)) {
+            if (unit.hasInclude(it.value)) {
                 Namespace ns = unit.module.getNamespaceIncluded(unit.getInclude(it.value));
-                if(ns instanceof ELClass clazz) {
+                if (ns instanceof ELClass clazz) {
                     return clazz;
                 }
                 throw ELAnalysisError.errorF(it.spanFirst(), "Found class `%s`, but was not class or struct", it.value);
             }
         }
         ELClass clazz = namespace.findClass(it, 0);
-        if(clazz == null) {
+        if (clazz == null) {
 
         }
         return null;
+    }
+    
+    public ResolveResult resolveIdentifier(String id) {
+        if (stackVars.containsKey(id)) {
+            return ResolveResult.of(stackVars.get(id));
+        }
+        ResolveResult r = namespace.resolveIdentifier(id);
+        if (r != null) {
+            return r;
+        }
+        return unit.resolveIdentifier(id);
     }
 }

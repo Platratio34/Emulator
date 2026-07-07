@@ -9,7 +9,6 @@ import com.peter.emulator.lang.tokens.IdentifierToken;
 import com.peter.emulator.lang.tokens.OperatorToken;
 import com.peter.emulator.lang.tokens.SetToken;
 import com.peter.emulator.lang.tokens.Token;
-import com.peter.emulator.lang.ELSymbol.ELVarSymbol;
 import com.peter.emulator.lang.ELSymbol.Modifier;
 import com.peter.emulator.lang.actions.Action;
 import com.peter.emulator.lang.actions.ActionBlock;
@@ -28,6 +27,7 @@ public class ELFunction {
     public Location bodyLocation;
     public Location bodyEndLocation;
     public final ProgramUnit unit;
+    public ELFunction parent = null;
 
     public HashMap<String, ELType> params = new HashMap<>();
     public ArrayList<String> paramOrder = new ArrayList<>();
@@ -126,6 +126,9 @@ public class ELFunction {
             ELFunction o = ov.getFunction(paramTypes, true);
             if (o != null)
                 return o;
+        }
+        if (parent != null) {
+            return parent.getFunction(paramTypes, cast);
         }
         return null;
     }

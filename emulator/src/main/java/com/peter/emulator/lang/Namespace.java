@@ -41,13 +41,13 @@ public class Namespace {
     
     public <T extends ELFunction> T addStaticFunction(T function) {
         if (function.namespace != this) {
-            throw new ELCompileException("Function " + function.cName + " must be marked as in namespace " + cName + " (was marked as "+(function.namespace != null ? function.namespace.cName : "none")+")");
+            throw ELAnalysisError.error("Function " + function.cName + " must be marked as in namespace " + cName + " (was marked as "+(function.namespace != null ? function.namespace.cName : "none")+")", function.span());
         }
         if (staticFunctions.containsKey(function.cName)) {
             staticFunctions.get(function.cName).addOverload(function);
         } else {
             if (staticVariables.containsKey(function.cName) || namespaces.containsKey(function.cName))
-                throw new ELCompileException("Duplicate member name: `" + function.cName + "` in namespace " + cName);
+                throw ELAnalysisError.error("Duplicate member name: `" + function.cName + "` in namespace " + cName, function.span());
             staticFunctions.put(function.cName, function);
         }
         return function;
@@ -55,7 +55,7 @@ public class Namespace {
 
     public void addStaticVariable(ELVariable var) {
         if (staticVariables.containsKey(var.name) || namespaces.containsKey(var.name))
-            throw new ELCompileException("Duplicate member name: `" + var.name + "` in namespace " + cName);
+            throw ELAnalysisError.error("Duplicate member name: `" + var.name + "` in namespace " + cName, var.span());
         staticVariables.put(var.name, var);
     }
 
@@ -126,6 +126,26 @@ public class Namespace {
     protected ELFunction getFunction(String name) {
         if (staticFunctions.containsKey(name)) {
             return staticFunctions.get(name);
+        }
+        return null;
+    }
+
+    public ResolveResult resolveIdentifier(String id) {
+        return resolveIdentifier(id, true);
+    }
+
+    public ResolveResult resolveIdentifier(String id, boolean allowNamespace) {
+        if (id.equals(cName)) {
+            return ResolveResult.of(this);
+        }
+        if (staticVariables.containsKey(id)) {
+            return ResolveResult.of(staticVariables.get(id));
+        }
+        if (staticFunctions.containsKey(id)) {
+            return ResolveResult.of(staticFunctions.get(id));
+        }
+        if (allowNamespace && namespaces.containsKey(id)) {
+            return ResolveResult.of(namespaces.get(id));
         }
         return null;
     }

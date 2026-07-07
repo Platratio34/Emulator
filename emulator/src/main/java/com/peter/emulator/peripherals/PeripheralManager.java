@@ -78,7 +78,7 @@ public class PeripheralManager {
                 int[] out = new int[126];
                 int numDevices = 0;
                 for (byte i = start; i < nextId; i++) {
-                    if (peripherals.containsKey(i) && peripherals.get(i) instanceof DMAPeripheral mmp) {
+                    if (peripherals.containsKey((int)i) && peripherals.get((int)i) instanceof DMAPeripheral mmp) {
                         out[arrI++] = i;
                         out[arrI++] = mmp.getType();
                         numDevices++;

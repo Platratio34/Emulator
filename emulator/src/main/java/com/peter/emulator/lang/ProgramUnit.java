@@ -99,4 +99,14 @@ public class ProgramUnit {
         symbols.add(symbol);
         return symbol;
     }
+
+    public ResolveResult resolveIdentifier(String id) {
+        if (module.namespaces.containsKey(id)) {
+            return ResolveResult.of(module.namespaces.get(id));
+        }
+        if (imports.containsKey(id)) {
+            return ResolveResult.of(getNamespaceIncluded(id));
+        }
+        return null;
+    }
 }

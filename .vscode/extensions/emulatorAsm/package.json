@@ -43,15 +43,25 @@
             }
         ],
         "configurationDefaults": {
-            "emulatorlang": {
+            "[emulatorlang]": {
                 "editor.semanticHighlighting.enabled": true
             }
         },
         "semanticTokenScopes": [
             {
+                "language": "emulatorlang",
                 "scopes": {
-                    "variable.static": ["variable.other.static"]
+                    "variable": ["entity.name.variable"],
+                    "property": ["entity.name.variable"],
+                    "comment": ["comment.line"]
                 }
+            }
+        ],
+        "themes": [
+            {
+                "label": "Emulator Language Theme",
+                "uiTheme": "vs-dark",
+                "path": "./themes/el.theme.json"
             }
         ]
     },

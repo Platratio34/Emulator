@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.activate = activate;
 exports.deactivate = deactivate;
+const fs_1 = require("fs");
 const path = require("path");
 const vscode_1 = require("vscode");
 const node_1 = require("vscode-languageclient/node");
@@ -33,6 +34,12 @@ function activate(context) {
     // Start the client. This will also launch the server
     client.start();
     const elServerExecutable = context.asAbsolutePath('emulator-1.0-SNAPSHOT-jar-with-dependencies.jar');
+    const elServerExecutableNewPath = context.asAbsolutePath('emulator-1.0-SNAPSHOT-jar-with-dependencies.jar.new');
+    if ((0, fs_1.existsSync)(elServerExecutableNewPath)) {
+        (0, fs_1.rmSync)(elServerExecutable);
+        (0, fs_1.cpSync)(elServerExecutableNewPath, elServerExecutable);
+        (0, fs_1.rmSync)(elServerExecutableNewPath);
+    }
     const elServerOptions = {
         command: `java`,
         args: ["-jar", elServerExecutable, '-lsp'],

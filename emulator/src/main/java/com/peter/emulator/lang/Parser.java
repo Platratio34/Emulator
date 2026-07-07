@@ -361,7 +361,7 @@ public class Parser {
                                     break;
                                 }
                             }
-                            unit.symbols.add(new ELSymbol(ELSymbol.Type.NAMESPACE_NAME, it.span(), "### `%s`", namespace.getQualifiedName()));
+                            unit.addSymbol(new ELSymbol.ELNamespaceSymbol(namespace, it.span()));
                             if(err)
                                 continue;
                             namespaces.add(namespace);
@@ -402,7 +402,7 @@ public class Parser {
                             else
                                 clazz = new ELClass(it.value, currentNamespace, unit);
                             namespaces.add(clazz);
-                            unit.addSymbol(ELSymbol.Type.CLASS_NAME, it.span());
+                            unit.addSymbol(new ELSymbol.ELNamespaceSymbol(clazz, it.span()));
                         } else {
                             errors.error("Unknown token found (expected identifier)", tokens.get(workingI));
                             continue;
@@ -414,6 +414,7 @@ public class Parser {
                         if (tokens.get(workingI) instanceof OperatorToken ot
                                 && ot.type == OperatorToken.Type.ANGLE_LEFT) {
                             workingI++;
+                            unit.addSymbol(ELSymbol.Type.KEYWORD, ot.span());
                             ELType.Builder builder = null;
                             boolean r = true;
                             String tName = null;
@@ -424,6 +425,7 @@ public class Parser {
                                         tName = tit.value;
                                         clazz.genericsOrder.add(tName);
                                         clazz.generics.put(tName, null);
+                                        unit.addSymbol(ELSymbol.Type.CLASS_NAME, tit.span());
                                         workingI++;
                                     } else {
                                         errors.error("Unexpected token found in type (expected operator)", tkn);
@@ -432,13 +434,19 @@ public class Parser {
                                 } else if (builder != null) {
                                     if (!builder.ingest(tkn)) {
                                         if (tkn instanceof OperatorToken ot2 && ot2.type == OperatorToken.Type.COMMA) {
-                                            clazz.generics.put(tName, builder.build());
+                                            unit.addSymbol(ELSymbol.Type.KEYWORD, ot2.span());
+                                            ELType gt = builder.build();
+                                            gt.addSymbol(unit);
+                                            clazz.generics.put(tName, gt);
                                             builder = null;
                                             tName = null;
                                             workingI++;
                                         } else if (tkn instanceof OperatorToken ot2
                                                 && ot2.type == OperatorToken.Type.ANGLE_RIGHT) {
-                                            clazz.generics.put(tName, builder.build());
+                                            unit.addSymbol(ELSymbol.Type.KEYWORD, ot2.span());
+                                            ELType gt = builder.build();
+                                            gt.addSymbol(unit);
+                                            clazz.generics.put(tName, gt);
                                             r = false;
                                             workingI++;
                                         } else {
@@ -450,10 +458,12 @@ public class Parser {
                                     }
                                 } else {
                                     if (tkn instanceof OperatorToken ot2 && ot2.type == OperatorToken.Type.COMMA) {
+                                        unit.addSymbol(ELSymbol.Type.KEYWORD, ot2.span());
                                         tName = null;
                                         workingI++;
                                     } else if (tkn instanceof OperatorToken ot2
                                             && ot2.type == OperatorToken.Type.ANGLE_RIGHT) {
+                                        unit.addSymbol(ELSymbol.Type.KEYWORD, ot2.span());
                                         r = false;
                                         workingI++;
                                     } else {
@@ -464,13 +474,16 @@ public class Parser {
                             }
                         }
                         if (tokens.get(workingI) instanceof IdentifierToken tit) {
-                            if(tit.value.equals("extends")) {
+                            if (tit.value.equals("extends")) {
+                                unit.addSymbol(ELSymbol.Type.KEYWORD, tit.span());
                                 ELType.Builder builder = new ELType.Builder();
                                 workingI++;
                                 
                                 while(builder.ingest(tokens.get(workingI)))
                                     workingI++;
-                                clazz.setParentType(builder.build());
+                                ELType pt = builder.build();
+                                pt.addSymbol(unit);
+                                clazz.setParentType(pt);
                             }
                         }
                         if (tokens.get(workingI) instanceof BlockToken bt) {

@@ -505,7 +505,7 @@ public class ELType {
         return (subType != null) ? subType.baseRef() : this;
     }
 
-    private void addSymbol(ProgramUnit unit) {
+    protected void addSymbol(ProgramUnit unit) {
         if (subType != null) {
             subType.addSymbol(unit);
             if (location == null)

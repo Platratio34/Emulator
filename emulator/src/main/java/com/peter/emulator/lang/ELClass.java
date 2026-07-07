@@ -9,6 +9,7 @@ import com.peter.emulator.lang.annotations.ELAnnotation;
 import com.peter.emulator.lang.annotations.ELOperatorAnnotation;
 import com.peter.emulator.lang.annotations.ELOverrideAnnotation;
 import com.peter.emulator.lang.base.ELPrimitives;
+import com.peter.emulator.lang.tokens.IdentifierToken;
 import com.peter.emulator.lang.tokens.OperatorToken;
 
 public class ELClass extends Namespace {
@@ -57,7 +58,7 @@ public class ELClass extends Namespace {
 
     public void addMember(ELVariable var) {
         if (memberVariables.containsKey(var.name) || staticVariables.containsKey(var.name) || staticFunctions.containsKey(var.name) || memberFunctions.containsKey(var.name))
-            throw new ELCompileException("Duplicate member name: `"+var.name+"` in class "+cName);
+            throw ELAnalysisError.error("Duplicate member name: `"+var.name+"` in class "+cName, var.span());
         int size = 0;
         if (parent != null && parent != ELPrimitives.OBJECT_CLASS)
             size = parent.getSize();
@@ -142,16 +143,16 @@ public class ELClass extends Namespace {
 
     public ELFunction addFunction(ELFunction function) {
         if (function.namespace != this) {
-            throw new ELCompileException("Function " + function.cName + " must be marked as in class " + cName
+            throw ELAnalysisError.error("Function " + function.cName + " must be marked as in class " + cName
                     + " (was marked as " + (function.namespace != null ? function.namespace.getQualifiedName() : "none")
-                    + ")");
+                    + ")", function.span());
         }
         if (function.type == ELFunction.FunctionType.OPERATOR) {
             if (function.annotations == null)
-                throw new ELCompileException("Operator function must have an @Operator annotation");
+                throw ELAnalysisError.error("Operator function must have an @Operator annotation", function.span());
             ELOperatorAnnotation opAnnotation = function.getAnnotation(ELOperatorAnnotation.class);
             if (opAnnotation == null)
-                throw new ELCompileException("Operator function must have an @Operator annotation");
+                throw ELAnalysisError.error("Operator function must have an @Operator annotation", function.span());
             if (opAnnotation.cast) {
                 if(casters != null)
                     casters.addOverload(function);
@@ -172,7 +173,7 @@ public class ELClass extends Namespace {
         } else {
             if (memberVariables.containsKey(function.cName) || staticVariables.containsKey(function.cName)
                     || staticFunctions.containsKey(function.cName))
-                throw new ELCompileException("Duplicate member name: `" + function.cName + "` in class " + cName);
+                throw ELAnalysisError.error("Duplicate member name: `" + function.cName + "` in class " + cName, function.span());
             memberFunctions.put(function.cName, function);
         }
         return function;
@@ -325,6 +326,17 @@ public class ELClass extends Namespace {
     }
 
     @Override
+    public ResolveResult resolveIdentifier(String id, boolean allowNamespace) {
+        if (memberVariables.containsKey(id)) {
+            return ResolveResult.of(memberVariables.get(id));
+        }
+        if (memberFunctions.containsKey(id)) {
+            return ResolveResult.of(memberFunctions.get(id));
+        }
+        return super.resolveIdentifier(id, allowNamespace);
+    }
+
+    @Override
     public void analyze(ErrorSet errors) {
         super.analyze(errors);
         for (ELFunction func : memberFunctions.values()) {
@@ -458,8 +470,16 @@ public class ELClass extends Namespace {
         }
         if (!genericsOrder.isEmpty()) {
             out += ", generics=[";
+            boolean first = true;
             for (String t : genericsOrder) {
-                out += String.format("%s:%s", t, generics.get(t).toString());
+                if(!first)
+                    out += ",";
+                ELType gt = generics.get(t);
+                if(gt != null)
+                    out += String.format("%s:%s", t, gt.toString());
+                else
+                    out += String.format("%s", t);
+                first = false;
             }
         }
         if (abstractClass) {

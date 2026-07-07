@@ -170,6 +170,7 @@ public class ELSymbol {
             elType = type;
             operator = false;
         }
+
         public ELTypeSymbol(ELType type, boolean operator) {
             super(operator ? Type.OPERATOR : Type.CLASS_NAME, type.baseRef().nameSpan);
             elType = type;
@@ -181,6 +182,40 @@ public class ELSymbol {
             if (elType.isVoid())
                 return String.format("`void`");
             return String.format("`%s` (%d bytes)", elType.typeString(), elType.sizeof());
+        }
+    }
+    
+    public static class ELNamespaceSymbol extends ELSymbol {
+
+        public final Namespace namespace;
+        public final String nameOverride;
+
+        public ELNamespaceSymbol(Namespace namespace, Span span) {
+            super((namespace instanceof ELClass) ? Type.CLASS_NAME : Type.NAMESPACE_NAME, span);
+            this.namespace = namespace;
+            nameOverride = null;
+        }
+        public ELNamespaceSymbol(String nameOverride, Span span) {
+            super(Type.NAMESPACE_NAME, span);
+            this.nameOverride = nameOverride;
+            this.namespace = null;
+        }
+
+        @Override
+        public boolean hasText() {
+            return true;
+        }
+
+        @Override
+        public String getText() {
+            if (nameOverride != null) {
+                return String.format("Namespace `%s`", nameOverride);
+            }
+            if (namespace instanceof ELClass clazz) {
+                String t = clazz.getClassType();
+                return String.format("%s%s `%s`", Character.toUpperCase(t.charAt(0)), t.substring(1), namespace.getQualifiedName());
+            }
+            return String.format("Namespace `%s`", namespace.getQualifiedName());
         }
     }
 
@@ -273,7 +308,7 @@ public class ELSymbol {
                 if (!f)
                     out += ", ";
                 ELType param = func.params.get(pName);
-                out += String.format("%s %s", func.params.get(pName).typeString(), pName);
+                out += String.format("%s %s", param.typeString(), pName);
                 f = false;
             }
             out += ")`";

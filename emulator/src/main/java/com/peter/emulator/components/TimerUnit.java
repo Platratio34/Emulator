@@ -1,7 +1,6 @@
 package com.peter.emulator.components;
 
 import com.peter.emulator.CPU;
-import com.peter.emulator.components.MMU.MemoryException;
 import com.peter.emulator.peripherals.MemoryMappedPeripheral;
 
 public class TimerUnit implements MemoryMappedPeripheral {

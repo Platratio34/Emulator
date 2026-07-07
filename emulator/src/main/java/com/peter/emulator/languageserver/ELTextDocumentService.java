@@ -21,6 +21,7 @@ public class ELTextDocumentService implements TextDocumentService {
 
     public ELTextDocumentService(ELLanguageServer lspServer) {
         this.lspServer = lspServer;
+        
     }
 
     @Override

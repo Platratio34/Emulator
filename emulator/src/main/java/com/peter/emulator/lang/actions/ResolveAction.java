@@ -12,6 +12,10 @@ public class ResolveAction extends ComplexAction {
     public final ELVariable returnVar;
 
     public ResolveAction(ActionScope scope, Register reg, ELVariable var, IdentifierToken id, boolean byValue) {
+        this(scope, reg, var, id, byValue, false);
+    }
+
+    public ResolveAction(ActionScope scope, Register reg, ELVariable var, IdentifierToken id, boolean byValue, boolean dropLast) {
         super(scope);
         this.reg = reg;
 
@@ -26,9 +30,12 @@ public class ResolveAction extends ComplexAction {
                     scope.addSymbol(new ELSymbol(ELSymbol.Type.VARIABLE_FINAL, it.spanFirst(), "### `%s* this`", var.namespace.getQualifiedName()));
                 else
                     scope.addSymbol(new ELSymbol(ELSymbol.Type.NAMESPACE_NAME, it.spanFirst(), "### `%s`", it.value));
-                if (it.hasSub())
+                if (it.hasSub()) {
                     it = it.sub(0);
-                else
+                    if (dropLast && !it.hasSub()) {
+                        it = null;
+                    }
+                } else
                     throw ELAnalysisError.fatal("Could not find identifier for provided variable", it); 
                 // index++;
                 // if (index == id.subTokens.size() - 1)
@@ -115,9 +122,12 @@ public class ResolveAction extends ComplexAction {
                 
                 scope.addSymbol(new ELVarSymbol(v, it.spanFirst()));
                 
-                if(it.hasSub())
+                if (it.hasSub()) {
                     it = it.sub(0);
-                else
+                    if (dropLast && !it.hasSub()) {
+                        break;
+                    }
+                } else
                     break;
 
                 

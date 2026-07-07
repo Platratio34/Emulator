@@ -2,14 +2,20 @@ import SysD;
 
 namespace Kernal {
 
-    static const uint32 CMD_STATUS = 0x8001;
-    static const uint32 CMD_DEVICE = 0x8002;
-    static const uint32 CMD_SIZE = 0x8003;
-    static const uint32 CMD_0 = 0x8004;
-    static const uint32 CMD_1 = 0x8005;
-    static const uint32 CMD_2 = 0x8006;
-    static const uint32 CMD_3 = 0x8007;
-    static const uint32 CMD_4 = 0x8008;
+    static const uint32* CMD_ADDR = 0x1_0000;
+    static const uint8* CMD_STATUS = 0x1_0001;
+    static const uint16* CMD_DEVICE = 0x1_0002;
+    static const uint32* CMD_SIZE = 0x1_0004;
+    static const uint32* CMD_START = 0x1_0008;
+
+    // static const uint32 CMD_STATUS = 0x8001;
+    // static const uint32 CMD_DEVICE = 0x8002;
+    // static const uint32 CMD_SIZE = 0x8003;
+    // static const uint32 CMD_0 = 0x8004;
+    // static const uint32 CMD_1 = 0x8005;
+    // static const uint32 CMD_2 = 0x8006;
+    // static const uint32 CMD_3 = 0x8007;
+    // static const uint32 CMD_4 = 0x8008;
     static const uint32 CMD_WRITTEN = 0x0001;
 
     static final char* SYS_NAME = "EmulatorOS\0";
@@ -44,7 +50,7 @@ namespace Kernal {
         // stack -= 2; // now points to r15; stack: [...pgmPtr,rPM,r0...r15 [stack*],var(stack,+17) [HEAD]]
         ProcessState& oldState = &processStates[SysD.rPID];
         oldState.pid = 0;
-        ProcessState.updateInterrupt(oldState);
+        oldState.updateInterrupt();
 
         uint32 code = SysD.rIC;
         if((code & 0x8000_0000) == 0) { // system interrupt in the active process
@@ -87,13 +93,10 @@ namespace Kernal {
     }
 
     public static void peripheralCmd(uint32 deviceId, uint32 cmdSize, uint32* cmd) {
-        uint32 addr = CMD_DEVICE;
-        SysD.memSet(addr, deviceId);
-        addr++;
-        SysD.memSet(addr, cmdSize);
-        addr++;
-        SysD.memCopy(cmd, 0, cmdSize, /*(uint32*)*/addr, 0);
-        SysD.memSet(CMD_STATUS, CMD_WRITTEN);
+        *CMD_SIZE = cmdSize;
+        *CMD_DEVICE = deviceId;
+        SysD.memCopy(cmd, 0, cmdSize, CMD_START, 0);
+        *CMD_STATUS = 0x1;
     }
 
     // public static uint32 getPeripheral(uint32 type) {
@@ -146,69 +149,69 @@ namespace Kernal {
         public uint32[16] registers;
 
         public uint32 status;
-        public Method<uint32>* interruptHandler;
+        public Method<uint32> interruptHandler;
 
-        public static void update(ProcessState& state) {
-            state.pgmPtr = SysD.rPgm;
-            state.stackPtr = SysD.rStack;
-            state.memTablePtr = SysD.rMemTbl;
-            state.privileged = SysD.rPM;
+        public void update() {
+            pgmPtr = SysD.rPgm;
+            stackPtr = SysD.rStack;
+            memTablePtr = SysD.rMemTbl;
+            privileged = SysD.rPM;
         }
 
-        public static void updateInterrupt(ProcessState& state) {
-            state.stackPtr = SysD.rStackI;
-            state.privileged = SysD.rPMI;
-            state.pgmPtr = SysD.rPgmI;
-            state.memTablePtr = SysD.rMemTblI;
-            state.registers[0] = SysD.r0I;
-            state.registers[1] = SysD.r1I;
-            state.registers[2] = SysD.r2I;
-            state.registers[3] = SysD.r3I;
-            state.registers[4] = SysD.r4I;
-            state.registers[5] = SysD.r5I;
-            state.registers[6] = SysD.r6I;
-            state.registers[7] = SysD.r7I;
-            state.registers[8] = SysD.r8I;
-            state.registers[9] = SysD.r9I;
-            state.registers[10] = SysD.r10I;
-            state.registers[11] = SysD.r11I;
-            state.registers[12] = SysD.r12I;
-            state.registers[13] = SysD.r13I;
-            state.registers[14] = SysD.r14I;
-            state.registers[15] = SysD.r15I;
+        public void updateInterrupt() {
+            stackPtr = SysD.rStackI;
+            privileged = SysD.rPMI;
+            pgmPtr = SysD.rPgmI;
+            memTablePtr = SysD.rMemTblI;
+            registers[0] = SysD.r0I;
+            registers[1] = SysD.r1I;
+            registers[2] = SysD.r2I;
+            registers[3] = SysD.r3I;
+            registers[4] = SysD.r4I;
+            registers[5] = SysD.r5I;
+            registers[6] = SysD.r6I;
+            registers[7] = SysD.r7I;
+            registers[8] = SysD.r8I;
+            registers[9] = SysD.r9I;
+            registers[10] = SysD.r10I;
+            registers[11] = SysD.r11I;
+            registers[12] = SysD.r12I;
+            registers[13] = SysD.r13I;
+            registers[14] = SysD.r14I;
+            registers[15] = SysD.r15I;
         }
-        public void setInterrupt(ProcessState& state) {
-            SysD.rStackI = state.stackPtr;
-            SysD.rPMI = state.privileged;
-            SysD.rPgmI = state.pgmPtr;
-            SysD.rMemTblI = state.memTablePtr;
-            SysD.r0I = state.registers[0];
-            SysD.r1I = state.registers[1];
-            SysD.r2I = state.registers[2];
-            SysD.r3I = state.registers[3];
-            SysD.r4I = state.registers[4];
-            SysD.r5I = state.registers[5];
-            SysD.r6I = state.registers[6];
-            SysD.r7I = state.registers[7];
-            SysD.r8I = state.registers[8];
-            SysD.r9I = state.registers[9];
-            SysD.r10I = state.registers[10];
-            SysD.r11I = state.registers[11];
-            SysD.r12I = state.registers[12];
-            SysD.r13I = state.registers[13];
-            SysD.r14I = state.registers[14];
-            SysD.r15I = state.registers[15];
+        public void setInterrupt() {
+            SysD.rStackI = stackPtr;
+            SysD.rPMI = privileged;
+            SysD.rPgmI = pgmPtr;
+            SysD.rMemTblI = memTablePtr;
+            SysD.r0I = registers[0];
+            SysD.r1I = registers[1];
+            SysD.r2I = registers[2];
+            SysD.r3I = registers[3];
+            SysD.r4I = registers[4];
+            SysD.r5I = registers[5];
+            SysD.r6I = registers[6];
+            SysD.r7I = registers[7];
+            SysD.r8I = registers[8];
+            SysD.r9I = registers[9];
+            SysD.r10I = registers[10];
+            SysD.r11I = registers[11];
+            SysD.r12I = registers[12];
+            SysD.r13I = registers[13];
+            SysD.r14I = registers[14];
+            SysD.r15I = registers[15];
         }
 
-        public void applyNoPgm(ProcessState& state) {
-            SysD.rMemTbl = state.memTablePtr;
-            SysD.rStack = state.stackPtr;
-            SysD.rPM = state.privileged;
+        public void applyNoPgm() {
+            SysD.rMemTbl = memTablePtr;
+            SysD.rStack = stackPtr;
+            SysD.rPM = privileged;
         }
 
         public static ProcessState* create(ProcessState& state) {
             state.pid = SysD.rPID;
-            ProcessState.update(state);
+            state.update();
             status = 1;
             return state;
         }
