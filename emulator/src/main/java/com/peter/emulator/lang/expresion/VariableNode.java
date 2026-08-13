@@ -1,0 +1,82 @@
+package com.peter.emulator.lang.expresion;
+
+import com.peter.emulator.lang.*;
+import com.peter.emulator.lang.actions.ActionScope;
+import com.peter.emulator.lang.base.ELPrimitives;
+import com.peter.emulator.lang.tokens.IdentifierToken;
+
+public class VariableNode extends ExpresionNode {
+
+    public IdentifierToken token;
+    public ELVariable variable;
+
+    public VariableNode(ActionScope scope, IdentifierToken token) {
+        super(scope);
+        this.token = token;
+    }
+
+    @Override
+    public String printTree() {
+        return token.debugString();
+    }
+
+    @Override
+    public String printNode() {
+        return token.debugString();
+    }
+
+    @Override
+    public boolean isConstant() {
+        return variable != null && variable.varType == ELVariable.Type.CONST;
+    }
+
+    @Override
+    public int getConstant() {
+        if(variable == null) {
+            return 0;
+        }
+        return ((ELValue.ELNumberValue)variable.startingValue).value;
+    }
+
+    @Override
+
+    public boolean validate(ErrorSet errors) {
+        if(token.value.equals("SysD")) {
+            switch(token.next().value) {
+                case "rID", "rPID", "rIR", "rIC", "rStack" -> {return true;}
+                default -> {
+                    if(token.next().value.matches("r\\d\\d?I?")) {
+                        return true;
+                    }
+                }
+            }
+        }
+        if(variable == null) {
+            errors.error(String.format("Unable to resolve variable %s", token.debugString()), span());
+            return false;
+        }
+        return true;
+    }
+
+
+    @Override
+    public ELType getType() {
+        if(token.value.equals("SysD")) {
+            return ELPrimitives.UINT32;
+        }
+        return variable.type;
+    }
+
+    @Override
+    public Span span() {
+        return token.span();
+    }
+
+    @Override
+    public String toAssembly() {
+        if(token.value.equals("SysD")) {
+            return String.format("COPY %s %s", token.next().value, register);
+        }
+        return "";
+    }
+}
