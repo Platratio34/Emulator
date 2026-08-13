@@ -239,15 +239,6 @@ public class ActionScope {
         return r;
     }
 
-    public Register firstFree() {
-        if (parent != null)
-            return parent.firstFree();
-        for (int i = 1; i < 15; i++)
-            if (!reservedRegisters[i])
-                return makeHandle(i);
-        throw ELAnalysisError.error("No free registers");
-        // return null;
-    }
     public int firstFreeR() {
         if (parent != null)
             return parent.firstFreeR();

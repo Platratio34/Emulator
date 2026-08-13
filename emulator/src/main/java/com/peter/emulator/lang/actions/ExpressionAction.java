@@ -99,7 +99,9 @@ public class ExpressionAction extends ComplexAction {
                         throw ELAnalysisError.error("Invalid pointer operation", tkn);
                     if (not)
                         throw ELAnalysisError.error("Can't not a number literal", tkn);
-                    Register tR = (lastType == null) ? targetReg : scope.firstFree();
+                    Register tR = (lastType == null) ? targetReg : newRegister();
+                    if(tR != targetReg)
+                        addReserve(tR);
                     int val = nt.numValue;
                     if (lastType != null) {
                         if(lastType.isPointer()) {
@@ -238,16 +240,18 @@ public class ExpressionAction extends ComplexAction {
                                         .error("Unknown or unsupported operation: " + lastOp + " (num lit)", tkn);
                             }
                         }
+                        addRelease(tR);
                     } else {
                         _wasConst = true;
                         _constValue = val;
                         actions.add(new DirectAction("LOAD %s %d", tR, val));
-                        tR.reserve();
                     }
                     lastOp = null;
                 }
                 case IdentifierToken it -> {
-                    Register tR = (lastType == null) ? targetReg : scope.firstFree();
+                    Register tR = (lastType == null) ? targetReg : newRegister();
+                    if(tR != targetReg)
+                        addReserve(tR);
                     ELType t;
                     switch (it.value) {
                         case "true", "false" -> {
@@ -437,9 +441,7 @@ public class ExpressionAction extends ComplexAction {
                                         tkn);
                             }
                         }
-                        tR.release();
-                    } else {
-                        tR.reserve();
+                        addRelease(tR);
                     }
                     addressOf = false;
                     not = false;
@@ -449,7 +451,9 @@ public class ExpressionAction extends ComplexAction {
                     if (addressOf)
                         throw ELAnalysisError.error("Can not get address of an expression", tkn);
                     // but what if this is casting?
-                    Register tR = (lastType == null) ? targetReg : scope.firstFree();
+                    Register tR = (lastType == null) ? targetReg : newRegister();
+                    if(tR != targetReg)
+                        addReserve(tR);
                     if (st.subTokens.isEmpty())
                         throw ELAnalysisError.error("Empty expression", st);
                     ExpressionAction expA = new ExpressionAction(scope, st.subTokens, tR);
@@ -545,9 +549,7 @@ public class ExpressionAction extends ComplexAction {
                                         tkn);
                             }
                         }
-                        tR.release();
-                    } else {
-                        tR.reserve();
+                        addRelease(tR);
                     }
                     not = false;
                     lastOp = null;
@@ -568,8 +570,6 @@ public class ExpressionAction extends ComplexAction {
                         addDirect("LOAD %s %s", targetReg, id);
                         lastType = ELPrimitives.CHAR.pointerTo();
                     }
-
-                    // Register tR = (lastType == null) ? targetReg : scope.firstFree();
                 }
                 default -> {
                     throw ELAnalysisError.error("Unexpected token found in expression: " + tkn, tkn);

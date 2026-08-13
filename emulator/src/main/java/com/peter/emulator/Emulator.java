@@ -51,6 +51,7 @@ public class Emulator {
     public void run() {
         if (running)
             return;
+        gui.show();
         running = true;
         System.out.println("Starting emulator . . .");
         cores[0].running = true;

@@ -9,10 +9,9 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.peter.emulator.MachineCode.*;
-
 import com.peter.emulator.MachineCode.ConditionalOperator;
 import com.peter.emulator.MachineCode.MathOperator;
+import static com.peter.emulator.MachineCode.*;
 import com.peter.emulator.assembly.SymbolFile.FunctionSymbol;
 import com.peter.emulator.assembly.SymbolFile.ValueSymbol;
 import com.peter.emulator.assembly.SymbolFile.VariableSymbol;

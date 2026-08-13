@@ -264,6 +264,7 @@ public class Main {
         //     e.printStackTrace();
         // }
         // emulator.setProgram(pgm);
+
         emulator.run();
         
         while (emulator.isRunning()/* && emulator.cores[0].running */) {
@@ -275,6 +276,7 @@ public class Main {
             }
         }
 
+        
         System.out.println("\n\n+----------+\n| CPU DUMP |\n+----------+");
         System.out.println(emulator.cores[0].dump());
         
@@ -293,8 +295,10 @@ public class Main {
         System.out.println(emulator.ram.debugPrint(0x1_0000, 4));
         System.out.println("Heap");
         System.out.println(emulator.ram.debugPrint(0x9000, 8));
-        
+         
         emulator.stop();
+
+        // Expression.test();
         
     }
     

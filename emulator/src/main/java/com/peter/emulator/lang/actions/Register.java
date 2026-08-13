@@ -69,4 +69,11 @@ public class Register {
     public static Register of(ActionScope scope, String vN) {
         return new Register(scope, ActionBlock.getSysDReg(vN));
     }
+
+    public RegisterAction reserveAction() {
+        return new RegisterAction(scope, this, false);
+    }
+    public RegisterAction releaseAction() {
+        return new RegisterAction(scope, this, true);
+    }
 }

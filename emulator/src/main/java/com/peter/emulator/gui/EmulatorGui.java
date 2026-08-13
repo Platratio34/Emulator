@@ -28,6 +28,8 @@ public class EmulatorGui {
 
     protected ConsoleFrame consoleFrame;
 
+    private boolean setVisible = false;
+
     public static final Font monFont = new Font("Monospaced", Font.PLAIN, 12);
     
     public EmulatorGui(Emulator emulator) {
@@ -107,12 +109,24 @@ public class EmulatorGui {
 
             frame.setSize(1500, 800);
             
-            frame.setVisible(true);
 
             consoleFrame = new ConsoleFrame(emulator.console);
-            consoleFrame.setVisible(true);
 
+            if(setVisible) {
+                frame.setVisible(true);
+                consoleFrame.setVisible(true);
+                setVisible = false;
+            }
         });
+    }
+
+    public void show() {
+        if(frame == null) {
+            setVisible = true;
+            return;
+        }
+        frame.setVisible(true);
+        consoleFrame.setVisible(true);
     }
 
     boolean updating = false;

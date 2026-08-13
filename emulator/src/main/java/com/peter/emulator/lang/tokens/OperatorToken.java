@@ -82,38 +82,71 @@ public class OperatorToken extends Token {
     }
 
     public static enum Type {
+        /** <code>=</code> */
         ASSIGN("="),
+        /** <code>.</code> */
         DOT("."),
+        /** <code>*</code> */
         POINTER("*"),
+        /** <code>;</code> */
         SEMICOLON(";"),
+        /** <code>,</code> */
         COMMA(","),
+        /** <code>~</code> */
         DESTRUCTOR("~"),
+        /** <code>[</code> */
         INDEX("["),
+        /** <code>[]</code> */
         ARRAY("[]"),
+        /** <code>&lt;</code> */
         ANGLE_LEFT("<"),
+        /** <code>&gt;</code> */
         ANGLE_RIGHT(">"),
+        /** <code>!</code> */
         NOT("!"),
+        /** <code>&gt;=</code> */
         GEQ(">="),
+        /** <code>&lt;=</code> */
         LEQ("<="),
+        /** <code>==</code> */
         EQ2("=="),
+        /** <code>!=</code> */
         NEQ("!="),
+        /** <code>+</code> */
         ADD("+"),
+        /** <code>+=</code> */
         ADD_ASSIGN("+="),
+        /** <code>-</code> */
         SUB("-"),
+        /** <code>-=</code> */
         SUB_ASSIGN("-="),
+        /** <code>/</code> */
         DIV("/"),
+        /** <code>++</code> */
         INC("++"),
+        /** <code>--</code> */
         DEC("--"),
+        /** <code>&lt;&lt;</code> */
         LEFT_SHIFT("<<"),
+        /** <code>&gt;&gt;</code> */
         RIGHT_SHIFT(">>"),
+        /** <code>^</code> */
         BITWISE_NOR("^"),
+        /** <code>&amp;</code> */
         BITWISE_AND("&"),
+        /** <code>|</code> */
         BITWISE_OR("|"),
+        /** <code>&amp;&amp;</code> */
         AND("&&"),
+        /** <code>||</code> */
         OR("||"),
+        /** <code>?</code> */
         TERNARY("?"),
+        /** <code>:</code> */
         COLON(":"),
+        /** <code>//</code> */
         COMMENT("//"),
+        /** <code>/*</code> */
         COMMENT_MULTILINE("/*"),
         ;
 

@@ -18,4 +18,8 @@ public abstract class Action {
             
         };
     }
+
+    public Register newRegister() {
+        return new Register(scope);
+    }
 }

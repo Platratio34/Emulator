@@ -3,16 +3,8 @@ package com.peter.emulator.lang.actions;
 import java.util.ArrayList;
 
 import com.peter.emulator.MachineCode;
-import com.peter.emulator.lang.ELAnalysisError;
-import com.peter.emulator.lang.ELClass;
-import com.peter.emulator.lang.ELFunction;
 import com.peter.emulator.lang.ELFunction.FunctionType;
-import com.peter.emulator.lang.ELSymbol;
-import com.peter.emulator.lang.ELType;
-import com.peter.emulator.lang.Identifier;
-import com.peter.emulator.lang.Location;
-import com.peter.emulator.lang.ResolveResult;
-import com.peter.emulator.lang.Span;
+import com.peter.emulator.lang.*;
 import com.peter.emulator.lang.base.ELPrimitives;
 import com.peter.emulator.lang.tokens.IdentifierToken;
 import com.peter.emulator.lang.tokens.OperatorToken;
@@ -23,6 +15,10 @@ public class FunctionAction extends ComplexAction {
 
     public final Register targetReg;
     public ELType retType = null;
+
+    private Register r = null;
+    private boolean[] pushed = new boolean[16];
+    private boolean[] reserved = new boolean[16];
 
     public FunctionAction(ActionScope scope, Register targetReg, IdentifierToken it) {
         super(scope);
@@ -69,11 +65,10 @@ public class FunctionAction extends ComplexAction {
         // boolean vNext = true;
         // boolean addr = false;
         ArrayList<Token> exp = new ArrayList<>();
-        Register r = onStack ? scope.firstFree() : scope.makeHandle(1);
-        if (!onStack)
-            r.reserve();
-        boolean[] pushed = new boolean[16];
-        boolean[] reserved = new boolean[16];
+        r = onStack ? newRegister() : scope.makeHandle(1);
+        if (onStack) {
+            addReserve(r);
+        }
         ArrayList<Action> tempActions = new ArrayList<>();
         int stackSize = 0;
         if (params.hasSub()) {
@@ -83,21 +78,27 @@ public class FunctionAction extends ComplexAction {
                 if (t2 instanceof OperatorToken ot && ot.type == OperatorToken.Type.COMMA) {
                     if (exp.isEmpty())
                         throw ELAnalysisError.error("Empty expression", t2);
-                    if (!onStack && r.isReserved()) {
-                        tempActions.add(new DirectAction("STACK PUSH %s", r));
-                        pushed[r.reg] = true;
+                    
+                    if (!onStack) {
+                        tempActions.add(new CompilerAction(scope, s -> {
+                            if(r.isReserved()) {
+                                pushed[r.reg] = true;
+                                return "STACK PUSH "+r;
+                            }
+                            return null;
+                        }));
                     }
                     ExpressionAction expA = new ExpressionAction(scope, exp, r);
                     tempActions.add(expA);
                     types.add(expA.outType == null ? ELPrimitives.OBJECT : expA.outType);
                     if (onStack) {
                         tempActions.add(new DirectAction("STACK PUSH %s", r));
-                        r.release();
+                        // tempActions.add(r.releaseAction());
                         stackSize += 4;
                     } else {
                         // actions.add(new DirectAction("COPY %s %s", MachineCode.translateReg(r),
                         //         MachineCode.translateReg(r++)));
-                        r.reserve();
+                        tempActions.add(r.reserveAction());
                         // tempActions.add(new DirectAction("// reserving %s", r));
                         reserved[r.reg] = true;
                         r = r.next();
@@ -108,20 +109,25 @@ public class FunctionAction extends ComplexAction {
                 }
             }
             if (!exp.isEmpty()) {
-                if (!onStack && r.isReserved()) {
-                    tempActions.add(new DirectAction("STACK PUSH %s", r));
-                    pushed[r.reg] = true;
+                if (!onStack) {
+                    tempActions.add(new CompilerAction(scope, s -> {
+                        if(r.isReserved()) {
+                            pushed[r.reg] = true;
+                            return "STACK PUSH "+r;
+                        }
+                        return null;
+                    }));
                 }
                 ExpressionAction expA = new ExpressionAction(scope, exp, r);
                 tempActions.add(expA);
                 types.add(expA.outType == null ? ELPrimitives.OBJECT : expA.outType);
                 if (onStack) {
                     tempActions.add(new DirectAction("STACK PUSH %s", r));
-                    r.release();
+                    tempActions.add(r.releaseAction());
                     stackSize += 4;
                 } else {
                     // tempActions.add(new DirectAction("COPY %s %s", r, r));
-                    r.reserve();
+                    tempActions.add(r.reserveAction());
                     // tempActions.add(new DirectAction("// reserving %s", r));
                     reserved[r.reg] = true;
                 }
@@ -154,12 +160,7 @@ public class FunctionAction extends ComplexAction {
                     }
                     actions.add(new DirectAction("STORE r1 r2"));
 
-                    for (int i = r.reg; i > 0; i--) {
-                        if (pushed[i])
-                            actions.add(new DirectAction("STACK POP %s", MachineCode.translateReg(i)));
-                        else if (reserved[i])
-                            scope.release(i);
-                    }
+                    add(this::constRelease);
                     return;
                 }
                 case "memGet" -> {
@@ -174,12 +175,7 @@ public class FunctionAction extends ComplexAction {
                     }
                     actions.add(new DirectAction("LOAD r1 %s", targetReg));
 
-                    for (int i = r.reg; i > 0; i--) {
-                        if (pushed[i])
-                            actions.add(new DirectAction("STACK POP %s", MachineCode.translateReg(i)));
-                        else if (reserved[i])
-                            scope.release(i);
-                    }
+                    add(this::constRelease);
                     return;
                 }
                 case "memCopy" -> {
@@ -207,12 +203,7 @@ public class FunctionAction extends ComplexAction {
                             "ADD r1 r1 r2\nADD r4 r4 r5\nSUB r3 r3 r2\n:%s\nCOPY MEM r1 r4 INC_RS INC_RD\nINC r3 -1\nGOTO GT r3 :%s",
                             loopLabel, loopLabel));
 
-                    for (int i = r.reg; i > 0; i--) {
-                        if (pushed[i])
-                            actions.add(new DirectAction("STACK POP %s", MachineCode.translateReg(i)));
-                        else if (reserved[i])
-                            scope.release(i);
-                    }
+                    add(this::constRelease);
                     return;
                 }
                 case "halt" -> {
@@ -287,16 +278,20 @@ public class FunctionAction extends ComplexAction {
             addDirect("STACK INC %d", Math.ceilDiv(f.ret.sizeof(), 4) * 4);
         actions.addAll(tempActions);
         if (f.type == FunctionType.INSTANCE) {
-            Register r0T = scope.firstFree();
+            Register r0T = newRegister();
+            addReserve(r0T);
             ResolveAction rA = scope.loadVarF(it, r0T, false);
             actions.add(rA);
             addDirect("COPY %s r0", r0T);
+            addRelease(r0T);
         }
         if (isMethodType) {
-            Register fP = scope.firstFree();
+            Register fP = newRegister();
+            addReserve(fP);
             ResolveAction rA = scope.loadVar(it, fP, false);
             actions.add(rA);
             addDirect("GOTO PUSH %s", fP);
+            addRelease(fP);
         } else {
             actions.add(new DirectAction("GOTO PUSH :%s", f.getQualifiedName(true)));
         }
@@ -318,15 +313,21 @@ public class FunctionAction extends ComplexAction {
         if (f.type == FunctionType.INSTANCE)
             actions.add(new DirectAction("STACK POP r0"));
         if (!onStack) {
-            for (int i = r.reg; i > 0; i--) {
-                if (pushed[i])
-                    actions.add(new DirectAction("STACK POP %s", MachineCode.translateReg(i)));
-                else if (reserved[i])
-                    scope.release(i);
-            }
+            add(this::constRelease);
         } else {
-            r.release();
+            addRelease(r);
         }
     }
 
+    
+    private String constRelease(ActionScope s) {
+        String out = "";
+        for (int i = r.reg; i > 0; i--) {
+            if (pushed[i])
+                out += "STACK POP "+MachineCode.translateReg(i);
+            else if (reserved[i])
+                scope.release(i);
+        }
+        return out;
+    }
 }

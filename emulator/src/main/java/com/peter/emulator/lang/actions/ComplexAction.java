@@ -1,6 +1,7 @@
 package com.peter.emulator.lang.actions;
 
 import java.util.ArrayList;
+import java.util.function.Function;
 
 public class ComplexAction extends Action {
 
@@ -15,7 +16,10 @@ public class ComplexAction extends Action {
         String out = "";
         boolean f = true;
         for (Action action : actions) {
-            out += (f ? "" : "\n") + action.toAssembly();
+            String asm = action.toAssembly();
+            if(asm == null || asm.length() == 0)
+                continue;
+            out += (f ? "" : "\n") + asm;
             f = false;
         }
         return out;
@@ -26,6 +30,17 @@ public class ComplexAction extends Action {
     }
     public void addDirect(String asm) {
         actions.add(new DirectAction(asm));
+    }
+
+    public void addReserve(Register register) {
+        actions.add(new RegisterAction(scope, register, false));
+    }
+    public void addRelease(Register register) {
+        actions.add(new RegisterAction(scope, register, true));
+    }
+
+    public void add(Function<ActionScope, String> onCompile) {
+        actions.add(new CompilerAction(scope, onCompile));
     }
 
 }

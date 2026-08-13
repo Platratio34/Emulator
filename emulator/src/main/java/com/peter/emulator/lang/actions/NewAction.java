@@ -52,14 +52,15 @@ public class NewAction extends ComplexAction {
                 scope.unit.errors.warning("Parameterized constructors not currently supported", st);
             }
         } else if (it.indexed()) { // array
-            targetReg.reserve();
+            addReserve(targetReg);
             ExpressionAction eA = new ExpressionAction(scope, it.index.subTokens, targetReg);
             if(eA.wasConst) {
                 addDirect("LOAD %s %d", targetReg, classSize * eA.constValue);
             } else {
-                Register sr = scope.firstFree();
+                Register sr = newRegister();
+                addReserve(sr);
                 addDirect("LOAD %s %d\nMUL %s %s %s", sr, classSize, targetReg, targetReg, sr);
-                sr.release();
+                addRelease(sr);
             }
             // needs to be eqivelant to:
             // malloc(T.sizeof() * len); -> malloc(r[sr])

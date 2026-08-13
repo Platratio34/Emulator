@@ -89,7 +89,7 @@ public class ResolveAction extends ComplexAction {
         }
         // scope.addSymbol(new ELVarSymbol(var, it.spanFirst()));
         // scope.addSymbol(new ELSymbol(var.finalVal ? ELSymbol.Type.VARIABLE_FINAL : ELSymbol.Type.VARIABLE_NAME, it.spanFirst(), "### `%s %s`", var.typeString(), it.value));
-        reg.reserve();
+        addReserve(reg);
         ELVariable v = var;
         ELType t = v.type;
         // if(id.hasSub()) {
@@ -101,7 +101,8 @@ public class ResolveAction extends ComplexAction {
                     if (t.isPointer() && !wasConst) {
                         addDirect("LOAD MEM %s %s", reg, reg);
                     }
-                    Register rIndex = scope.firstFree();
+                    Register rIndex = newRegister();
+                    addReserve(rIndex);
                     // addDirect("// index; %s", rIndex);
                     ExpressionAction indexExp = new ExpressionAction(scope, it.index.subTokens, rIndex);
                     if (indexExp.outType != null && !indexExp.outType.equals(ELPrimitives.UINT32))
@@ -114,13 +115,14 @@ public class ResolveAction extends ComplexAction {
                     } else {
                         actions.add(indexExp);
                         if (size > 1) {
-                            Register rSize = scope.firstFree();
+                            Register rSize = newRegister();
+                            addReserve(rSize);
                             addDirect("LOAD %s %d\nMUL %s %s %s", rSize, size, rIndex, rIndex, rSize);
-                            rSize.release();
+                            addRelease(rSize);
                         }
                         addDirect("ADD %s %s %s", reg, reg, rIndex);
                     }
-                    rIndex.release();
+                    addRelease(rIndex);
                     t = resolvedType;
                     wasConst = false;
                 }

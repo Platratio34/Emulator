@@ -71,6 +71,9 @@ public class Tokenizer {
                 return Optional.of(e.reason + "; At line " + lineN + " col " + col);
             }
         }
+        if(workingToken != null) {
+            workingToken.ingest('\0', new Location(fName, lineN, col));
+        }
         if (slc != null || mlc != null) {
             System.out.println("End was in comment");
         }
