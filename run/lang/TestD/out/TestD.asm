@@ -1653,6 +1653,28 @@ STACK POP r15
 GOTO POP
 #endfunction void
 
+#function TestD.testRet
+STACK PUSH r15
+COPY rStack r15
+// 0 134:10
+#line run/lang/TestD/testd.el 134:10
+// Reserving r1
+LOAD r1 2000 // 2000
+// Reserving r2
+COPY r15 r2
+INC r2 -12
+STORE r1 r2
+GOTO :func_exit_TestD.testRet
+// Releasing r1
+// Releasing r2
+//  return 2000;
+
+#lineend
+:func_exit_TestD.testRet
+STACK POP r15
+GOTO POP
+#endfunction uint32
+
 :__start
 #function TestD.main
 STACK PUSH r15
@@ -1970,13 +1992,17 @@ STORE r1 r2
 // 26 82:10
 #line run/lang/TestD/testd.el 82:10
 // Reserving r1
-LOAD r1 2000 // 2000
+// Reserving r2
+STACK INC 4
+GOTO PUSH :TestD.testRet
+STACK POP r1
+// Releasing r2 // testRet()
 STACK PUSH r1
 // Releasing r1
 GOTO PUSH :TestD.wait_uint32
 STACK DEC 4
 // Releasing r1
-//  wait(2000);
+//  wait(testRet());
 
 #lineend
 :func_exit_TestD.main

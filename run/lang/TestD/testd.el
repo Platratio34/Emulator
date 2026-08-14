@@ -79,7 +79,7 @@ namespace TestD {
 
         TIMERS[1] = 480 * 5;
 
-        wait(2000);
+        wait(testRet());
         // funcC();
     }
 
@@ -128,6 +128,10 @@ namespace TestD {
     public static void testA(StructA& str) {
         str.a = 32;
         str.b = 0xffffffff;
+    }
+
+    public static uint32 testRet() {
+        return 2000;
     }
 
     struct StructA {

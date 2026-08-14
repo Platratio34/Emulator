@@ -18,12 +18,12 @@ public class Expression extends Action {
     public Expression(ActionScope scope) {
         super(scope);
     }
-    @SuppressWarnings("OverridableMethodCallInConstructor")
     public Expression(ActionScope scope, ArrayList<Token> tokens, Register register) {
         this(scope, tokens);
         if(this.head != null)
             this.head.register = register;
     }
+    @SuppressWarnings("OverridableMethodCallInConstructor")
     public Expression(ActionScope scope, ArrayList<Token> tokens) {
         super(scope);
         for(Token token : tokens) {
@@ -104,7 +104,7 @@ public class Expression extends Action {
                         case "nullptr" -> add(new LiteralNode(scope, 0, ELPrimitives.VOID_PTR, it));
                         default -> {
                             if(it.hasParamsSub()) {
-                                
+                                add(new FunctionNode(scope, it));
                             } else {
                                 add(new VariableNode(scope, it));
                             }
@@ -116,6 +116,9 @@ public class Expression extends Action {
                     throw ELAnalysisError.errorF(token, "Unexpected token in expression: `%s`", token.debugString());
                 }
             }
+        }
+        if(!validate(scope.unit.errors)) {
+            throw ELAnalysisError.error("Invalid expression", span());
         }
     }
 

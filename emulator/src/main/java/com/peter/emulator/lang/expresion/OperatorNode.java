@@ -2,7 +2,6 @@ package com.peter.emulator.lang.expresion;
 
 import com.peter.emulator.MachineCode;
 import com.peter.emulator.lang.ELType;
-import com.peter.emulator.lang.ELVariable;
 import com.peter.emulator.lang.ErrorSet;
 import com.peter.emulator.lang.Span;
 import com.peter.emulator.lang.actions.ActionScope;
@@ -633,7 +632,6 @@ public class OperatorNode extends ExpressionNode {
             case DEREF -> {
                 child1.register = register;
                 String str = child1.toAssembly() + "\n";
-                ELVariable var = ((VariableNode)child1).variable;
                 ELType t = getType();
                 if(t.sizeof() == 1)
                     return str + String.format("\nLOAD MEM BYTE %s %s", register, register);
