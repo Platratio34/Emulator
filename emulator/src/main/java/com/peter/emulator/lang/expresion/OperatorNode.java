@@ -105,6 +105,7 @@ public class OperatorNode extends ExpressionNode {
                 case DEREF -> v; // TODO
                 case NOT -> v == 0 ? 1 : 0;
                 case SUB -> -v;
+                case BIT_NOT -> ~v;
 
                 default -> v;
                 
@@ -126,7 +127,7 @@ public class OperatorNode extends ExpressionNode {
 
             case BIT_AND -> v1 & v2;
             case BIT_OR -> v1 | v2;
-            case BIT_NOR -> v1 ^ v2;
+            case BIT_XOR -> v1 ^ v2;
 
             case SHIFT_LEFT -> v1 << v2;
             case SHIFT_RIGHT -> v1 >> v2;
@@ -252,11 +253,6 @@ public class OperatorNode extends ExpressionNode {
             return String.format("LOAD %s %d", register, getConstant());
         }
         
-        if(type == OperatorType.SHIFT_LEFT || type == OperatorType.SHIFT_RIGHT) {
-            child1.register = register;
-            return child1.toAssembly() + String.format("\n%s %s %s %d", (type == OperatorType.SHIFT_LEFT) ? "LSH" : "RSH", register, register, child2.getConstant());
-        }
-
         ELType t1 = child1.getType();
         ELType t2 = child2 != null ? child2.getType() : null;
         switch(type) {
@@ -321,6 +317,14 @@ public class OperatorNode extends ExpressionNode {
                 return str;
             }
             case SUB -> {
+                if(single) {
+                    Register r2 = newRegister();
+                    r2.reserve();
+                    child1.register = register;
+                    String str = child1.toAssembly() + String.format("LOAD %s 0\nSUB %s %s %s", r2, register, r2, register);
+                    r2.release();
+                    return str;
+                }
                 if(t1.isPointer() && !t2.isPointer()) {
                     child1.register = register;
                     int stepSize = t1.stepSize();
@@ -410,6 +414,26 @@ public class OperatorNode extends ExpressionNode {
                 str += child2.toAssembly() + String.format("\nOR %s %s %s", register, register, r2);
                 r2.release();
                 return str;
+            }
+            case BIT_XOR -> {
+                child1.register = register;
+                String str = child1.toAssembly() + "\n";
+                Register r2 = new Register(scope);
+                r2.fistFree();
+                r2.reserve();
+                child2.register = r2;
+                str += child2.toAssembly() + String.format("\nXOR %s %s %s", register, register, r2);
+                r2.release();
+                return str;
+            }
+            case BIT_NOT -> {
+                child1.register = register;
+                return child1.toAssembly() + String.format("\nNOT %s %s", register, register);
+            }
+
+            case NOT -> {
+                child1.register = register;
+                return child1.toAssembly() + String.format("\nSET FORCE EQ %s %s", register, register);
             }
 
             case EQUALS -> {
@@ -663,8 +687,12 @@ public class OperatorNode extends ExpressionNode {
                 str += child2.toAssembly();
                 return str + "\n:"+earlyExitId;
             }
+            case SHIFT_LEFT, SHIFT_RIGHT -> {
+                child1.register = register;
+                return child1.toAssembly() + String.format("\n%s %s %s %d", (type == OperatorType.SHIFT_LEFT) ? "LSH" : "RSH", register, register, child2.getConstant());
+            }
             
-            default -> {}
+            // default -> {}
         }
 
         return "// Something went wrong: "+printNode();

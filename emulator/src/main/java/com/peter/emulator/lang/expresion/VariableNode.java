@@ -4,6 +4,7 @@ import com.peter.emulator.lang.*;
 import com.peter.emulator.lang.actions.ActionScope;
 import com.peter.emulator.lang.actions.ResolveAction;
 import com.peter.emulator.lang.base.ELPrimitives;
+import com.peter.emulator.lang.base.SysD;
 import com.peter.emulator.lang.tokens.IdentifierToken;
 
 public class VariableNode extends ExpressionNode {
@@ -71,7 +72,7 @@ public class VariableNode extends ExpressionNode {
     @Override
     public ELType getType() {
         if(token.value.equals("SysD")) {
-            return ELPrimitives.UINT32;
+            return SysD.getVarType(token.next());
         }
         if(rA == null) {
             return ELPrimitives.UINT32;

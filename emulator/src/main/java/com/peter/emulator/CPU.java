@@ -1,11 +1,10 @@
 package com.peter.emulator;
 
-import static com.peter.emulator.MachineCode.*;
-
 import java.util.ArrayDeque;
 
 import com.peter.emulator.MachineCode.ConditionalOperator;
 import com.peter.emulator.MachineCode.MathOperator;
+import static com.peter.emulator.MachineCode.*;
 import com.peter.emulator.components.MMU;
 import com.peter.emulator.components.RAM;
 import com.peter.emulator.debug.Debugger;
@@ -411,6 +410,9 @@ public class CPU {
                     }
                     case MUL -> {
                         setReg(rd, getReg(ra) * getReg(rb));
+                    }
+                    case DIV -> {
+                        setReg(rd, getReg(ra) / getReg(rb));
                     }
                     case INC -> {
                         int inc = op & MASK_MATH_INC;

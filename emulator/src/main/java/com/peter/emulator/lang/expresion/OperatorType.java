@@ -18,7 +18,8 @@ public enum OperatorType {
 
     BIT_AND(5,"&"),
     BIT_OR(5,"|"),
-    BIT_NOR(5,"^"),
+    BIT_XOR(5,"^"),
+    BIT_NOT(5,"~"),
 
     SHIFT_LEFT(5,"<<"),
     SHIFT_RIGHT(5,">>"),

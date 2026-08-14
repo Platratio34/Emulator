@@ -222,13 +222,14 @@ public class MachineCode {
                     case INC -> String.format("INC %s = %s + %d", rd, rd, inc);
                     case AND -> String.format("AND %s = %s & %s", rd, ra, rb);
                     case OR -> String.format("OR %s = %s | %s", rd, ra, rb);
-                    case NAND -> String.format("NAND %s = %s !& %s", rd, ra, rb);
-                    case NOR -> String.format("NOR %s = %s !| %s", rd, ra, rb);
+                    case NAND -> String.format("NAND %s = %s ~& %s", rd, ra, rb);
+                    case NOR -> String.format("NOR %s = %s ~| %s", rd, ra, rb);
                     case NOT -> String.format("NOT %s = ~%s", rd, ra);
                     case XOR -> String.format("XOR %s = %s ^ %s", rd, ra, rb);
                     case LSHIFT -> String.format("SHIFT %s = %s << %d", rd, ra, instruction & MASK_MATH_RB);
                     case RSHIFT -> String.format("SHIFT %s = %s >> %d", rd, ra, instruction & MASK_MATH_RB);
                     case MUL -> String.format("MUL %s = %s * %d", rd, ra, instruction & MASK_MATH_RB);
+                    case DIV -> String.format("MUL %s = %s / %d", rd, ra, instruction & MASK_MATH_RB);
                     
                     case UNKNOWN -> String.format("MATH (%x)", instruction);
                 };
@@ -447,6 +448,7 @@ public class MachineCode {
         LSHIFT(0xa0 << 16),
         RSHIFT(0xb0 << 16),
         MUL(0xc0 << 16),
+        DIV(0xd0 << 16),
         UNKNOWN(0xf0 << 16);
         
         public final int value;

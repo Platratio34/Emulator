@@ -131,7 +131,7 @@ public class OperatorToken extends Token {
         /** <code>&gt;&gt;</code> */
         RIGHT_SHIFT(">>"),
         /** <code>^</code> */
-        BITWISE_NOR("^"),
+        BITWISE_XOR("^"),
         /** <code>&amp;</code> */
         BITWISE_AND("&"),
         /** <code>|</code> */

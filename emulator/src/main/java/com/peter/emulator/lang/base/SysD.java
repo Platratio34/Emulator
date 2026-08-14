@@ -2,6 +2,7 @@ package com.peter.emulator.lang.base;
 
 import com.peter.emulator.lang.ELFunction.FunctionType;
 import com.peter.emulator.lang.*;
+import com.peter.emulator.lang.tokens.IdentifierToken;
 
 public class SysD extends Namespace {
 
@@ -109,4 +110,23 @@ public class SysD extends Namespace {
         PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.UINT32.builder().array(6).location(SYSD_LOCATION).build(), "data", true, this, unit, SYSD_LOCATION));
     }
 
+    public static ELType getVarType(IdentifierToken it) {
+        switch(it.value) {
+            case "rPgm", "rStack", "rMTbl", "rIH", "rStackI", "rMTblI" -> {
+                return ELPrimitives.VOID_PTR;
+            }
+            case "rPID", "rIC", "rID", "rPgmI", "rPIDI" -> {
+                return ELPrimitives.UINT32;
+            }
+            case "rPM", "rPMI" -> {
+                return ELPrimitives.BOOL;
+            }
+            default -> {
+                if(it.value.matches("r\\d\\d?I?")) {
+                    return ELPrimitives.UINT32;
+                }
+            }
+        }
+        return null;
+    }
 }

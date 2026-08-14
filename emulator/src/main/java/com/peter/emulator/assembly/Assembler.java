@@ -628,6 +628,17 @@ public class Assembler {
                         int rb = getReg(parts[3]);
                         data[addr++] = (Entry.Math(MathOperator.MUL, rd, ra, rb));
                     }
+                    case "DIV" -> {
+                        if (parts.length < 4) {
+                            errors.add(new AssemblerError("Invalid mul instruction: DIV [rd] [ra] [rb]", lineN,
+                                    line.length(), line, source));
+                            continue;
+                        }
+                        int rd = getReg(parts[1]);
+                        int ra = getReg(parts[2]);
+                        int rb = getReg(parts[3]);
+                        data[addr++] = (Entry.Math(MathOperator.DIV, rd, ra, rb));
+                    }
                     case "AND" -> {
                         if (parts.length < 4) {
                             errors.add(new AssemblerError("Invalid AND instruction: AND [rd] [ra] [rb]", lineN,

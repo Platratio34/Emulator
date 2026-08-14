@@ -37,7 +37,8 @@ public class Expression extends Action {
                         
                         case BITWISE_AND -> { add(new OperatorNode(scope, OperatorType.BIT_AND, ot)); }
                         case BITWISE_OR -> { add(new OperatorNode(scope, OperatorType.BIT_OR, ot)); }
-                        case BITWISE_NOR -> { add(new OperatorNode(scope, OperatorType.BIT_NOR, ot)); }
+                        case BITWISE_XOR -> { add(new OperatorNode(scope, OperatorType.BIT_XOR, ot)); }
+                        case DESTRUCTOR -> { add(new OperatorNode(scope, OperatorType.BIT_NOT, ot)); }
                         
                         case LEFT_SHIFT -> { add(new OperatorNode(scope, OperatorType.SHIFT_LEFT, ot)); }
                         case RIGHT_SHIFT -> { add(new OperatorNode(scope, OperatorType.SHIFT_RIGHT, ot)); }
@@ -130,12 +131,16 @@ public class Expression extends Action {
                         case OperatorType.MUL -> node = opNode.single(OperatorType.DEREF);
                         case OperatorType.BIT_AND -> node = opNode.single(OperatorType.ADDRESS);
                         case OperatorType.NOT -> node = opNode.single(OperatorType.NOT);
+                        case OperatorType.BIT_NOT -> node = opNode.single(OperatorType.BIT_NOT);
                         case OperatorType.SUB -> node = opNode.single(OperatorType.SUB);
                         default -> throw new RuntimeException("Found invalid node type for singe operator: `"+opNode.type.str+"`");
                     }
                 } else {
                     if(opNode.type == OperatorType.NOT) {
                         throw new RuntimeException("Found `!` but was not single operator");
+                    }
+                    if(opNode.type == OperatorType.BIT_NOT) {
+                        throw new RuntimeException("Found `~` but was not single operator");
                     }
                 }
             }
