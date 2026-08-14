@@ -3,6 +3,7 @@ package com.peter.emulator.lang.actions;
 import com.peter.emulator.lang.ELSymbol.ELVarSymbol;
 import com.peter.emulator.lang.*;
 import com.peter.emulator.lang.base.ELPrimitives;
+import com.peter.emulator.lang.expresion.Expression;
 import com.peter.emulator.lang.tokens.IdentifierToken;
 
 public class ResolveAction extends ComplexAction {
@@ -104,21 +105,20 @@ public class ResolveAction extends ComplexAction {
                     Register rIndex = newRegister();
                     addReserve(rIndex);
                     // addDirect("// index; %s", rIndex);
-                    ExpressionAction indexExp = new ExpressionAction(scope, it.index.subTokens, rIndex);
-                    if (indexExp.outType != null && !indexExp.outType.equals(ELPrimitives.UINT32))
+                    Expression indexExp = new Expression(scope, it.index.subTokens, rIndex);
+                    if (indexExp.getType() != null && !indexExp.getType().equals(ELPrimitives.UINT32))
                         throw ELAnalysisError.error("Index must resolve to a uint32",
                                 it.index.subFirst().startLocation.span(it.index.subLast().endLocation));
                     ELType resolvedType = t.resolve(it.span());
                     int size = resolvedType.sizeof();
-                    if (indexExp.wasConst) {
-                        addDirect("INC %s %d", reg, indexExp.constValue * size);
+                    if (indexExp.isConstant()) {
+                        addDirect("INC %s %d", reg, indexExp.getConstant() * size);
                     } else {
                         actions.add(indexExp);
                         if (size > 1) {
                             Register rSize = newRegister();
-                            addReserve(rSize);
+                            addFind(rSize);
                             addDirect("LOAD %s %d\nMUL %s %s %s", rSize, size, rIndex, rIndex, rSize);
-                            addRelease(rSize);
                         }
                         addDirect("ADD %s %s %s", reg, reg, rIndex);
                     }

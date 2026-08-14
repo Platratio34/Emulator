@@ -2,13 +2,16 @@ package com.peter.emulator.lang.expresion;
 
 import com.peter.emulator.lang.*;
 import com.peter.emulator.lang.actions.ActionScope;
+import com.peter.emulator.lang.actions.ResolveAction;
 import com.peter.emulator.lang.base.ELPrimitives;
 import com.peter.emulator.lang.tokens.IdentifierToken;
 
-public class VariableNode extends ExpresionNode {
+public class VariableNode extends ExpressionNode {
 
     public IdentifierToken token;
     public ELVariable variable;
+    public boolean addressOf = false;
+    protected ResolveAction rA = null;
 
     public VariableNode(ActionScope scope, IdentifierToken token) {
         super(scope);
@@ -43,13 +46,19 @@ public class VariableNode extends ExpresionNode {
     public boolean validate(ErrorSet errors) {
         if(token.value.equals("SysD")) {
             switch(token.next().value) {
-                case "rID", "rPID", "rIR", "rIC", "rStack" -> {return true;}
+                case "rPgm", "rStack", "rPID", "rMTbl", "rPM", "rIC", "rIH", "rID", "rPgmI", "rStackI", "rPIDI", "rMTblI", "rPMI" -> {return true;}
                 default -> {
                     if(token.next().value.matches("r\\d\\d?I?")) {
                         return true;
                     }
                 }
             }
+            errors.error(String.format("Unable to resolve variable %s", token.debugString()), span());
+            return false;
+        }
+        rA = scope.loadVar(token, register, true);
+        if(rA != null) {
+            variable = rA.returnVar;
         }
         if(variable == null) {
             errors.error(String.format("Unable to resolve variable %s", token.debugString()), span());
@@ -64,7 +73,10 @@ public class VariableNode extends ExpresionNode {
         if(token.value.equals("SysD")) {
             return ELPrimitives.UINT32;
         }
-        return variable.type;
+        if(rA == null) {
+            return ELPrimitives.UINT32;
+        }
+        return rA.returnType;
     }
 
     @Override
@@ -77,6 +89,6 @@ public class VariableNode extends ExpresionNode {
         if(token.value.equals("SysD")) {
             return String.format("COPY %s %s", token.next().value, register);
         }
-        return "";
+        return scope.loadVar(token, register, !addressOf).toAssembly();
     }
 }

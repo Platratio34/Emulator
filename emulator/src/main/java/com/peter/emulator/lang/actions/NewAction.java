@@ -5,6 +5,7 @@ import com.peter.emulator.lang.ELClass;
 import com.peter.emulator.lang.ELSymbol;
 import com.peter.emulator.lang.ELType;
 import com.peter.emulator.lang.base.ELPrimitives;
+import com.peter.emulator.lang.expresion.Expression;
 import com.peter.emulator.lang.tokens.IdentifierToken;
 import com.peter.emulator.lang.tokens.SetToken;
 
@@ -53,9 +54,9 @@ public class NewAction extends ComplexAction {
             }
         } else if (it.indexed()) { // array
             addReserve(targetReg);
-            ExpressionAction eA = new ExpressionAction(scope, it.index.subTokens, targetReg);
-            if(eA.wasConst) {
-                addDirect("LOAD %s %d", targetReg, classSize * eA.constValue);
+            Expression eA = new Expression(scope, it.index.subTokens, targetReg);
+            if(eA.isConstant()) {
+                addDirect("LOAD %s %d", targetReg, classSize * eA.getConstant());
             } else {
                 Register sr = newRegister();
                 addReserve(sr);

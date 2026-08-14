@@ -7,14 +7,14 @@ import com.peter.emulator.lang.actions.Action;
 import com.peter.emulator.lang.actions.ActionScope;
 import com.peter.emulator.lang.actions.Register;
 
-public abstract class ExpresionNode extends Action {
+public abstract class ExpressionNode extends Action {
 
-    public ExpresionNode(ActionScope scope) {
+    public ExpressionNode(ActionScope scope) {
         super(scope);
     }
 
-    public ExpresionNode child1 = null;
-    public ExpresionNode child2 = null;
+    public ExpressionNode child1 = null;
+    public ExpressionNode child2 = null;
     public boolean single = false;
     public Register register = null;
 

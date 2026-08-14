@@ -39,29 +39,40 @@ public class DebuggerPanel extends JPanel {
     }
 
     public void update() {
-        if (debugger != cpu.debugger) {
+        boolean changed = debugger != cpu.debugger;
+        if (changed) {
             debugger = cpu.debugger;
+        }
+        if(debugger == null) {
             for (VarDisplay vd : varDisplays.values()) {
                 varPanel.remove(vd);
             }
-            for (String v : debugger.getVars()) {
-                VarDisplay vd = new VarDisplay(v);
-                varPanel.add(vd);
-                varDisplays.put(v, vd);
+        }
+        final Debugger dbg = debugger;
+        synchronized(dbg) {
+            if(changed) {
+                for (VarDisplay vd : varDisplays.values()) {
+                    varPanel.remove(vd);
+                }
+                for (String v : debugger.getVars()) {
+                    VarDisplay vd = new VarDisplay(v);
+                    varPanel.add(vd);
+                    varDisplays.put(v, vd);
+                }
             }
-        }
-        // String str = debugger.printStack()
-        // lineLbl.setText();
-        funcLbl.setText(String.format("<html>%s<br/>%s</html>", debugger.getLine(cpu, ""), debugger.printStack().replace("\n","<br>")));
-        for (VarDisplay vd : varDisplays.values()) {
-            vd.update();
-        }
+            // String str = debugger.printStack()
+            // lineLbl.setText();
+            funcLbl.setText(String.format("<html>%s<br/>%s</html>", debugger.getLine(cpu, ""), debugger.printStack().replace("\n","<br>")));
+            for (VarDisplay vd : varDisplays.values()) {
+                vd.update();
+            }
 
-        sVarPanel.removeAll();
-        for (StackVarSymbol sv : debugger.activeStackVars) {
-            JLabel lbl = new JLabel();
-            lbl.setText(String.format("%s: %s", sv.name, debugger.readVar(cpu, sv)));
-            sVarPanel.add(lbl);
+            sVarPanel.removeAll();
+            for (StackVarSymbol sv : debugger.activeStackVars) {
+                JLabel lbl = new JLabel();
+                lbl.setText(String.format("%s: %s", sv.name, debugger.readVar(cpu, sv)));
+                sVarPanel.add(lbl);
+            }
         }
     }
 

@@ -21,18 +21,22 @@ namespace Memory {
         if(blockFreeList == nullptr) {
             return nullptr;
         }
+        uint32 wordSize = size >> 2;
+        if(size & 0x3 != 0) {
+            wordSize++;
+        }
         MemoryBlock* block = allocatedBlocks;
         if(block == nullptr) {
             MemoryBlock* next = blockFreeList;
             blockFreeList = blockFreeList.next;
             next.start = block.end + 1;
-            next.end = next.start + size - 1;
+            next.end = next.start + wordSize - 1;
             next.next = nullptr;
             allocatedBlocks = next;
             return heapStart;
         }
         void* lastEnd = heapStart;
-        while((block.next != nullptr) & ((block.start - lastEnd) >= size)) {
+        while((block.next != nullptr) && ((block.start - lastEnd) >= size)) {
             lastEnd = block.end;
             block = block.next;
         }
@@ -43,7 +47,7 @@ namespace Memory {
             MemoryBlock* next = blockFreeList;
             blockFreeList = blockFreeList.next;
             next.start = block.end + 1;
-            next.end = next.start + size - 1;
+            next.end = next.start + wordSize - 1;
             next.next = nullptr;
             block.next = next;
             return next.start;
@@ -51,7 +55,7 @@ namespace Memory {
         MemoryBlock* next = blockFreeList;
         blockFreeList = blockFreeList.next;
         next.start = block.end + 1;
-        next.end = next.start + size - 1;
+        next.end = next.start + wordSize - 1;
         next.next = block.next;
         block.next = next;
         return next.start;

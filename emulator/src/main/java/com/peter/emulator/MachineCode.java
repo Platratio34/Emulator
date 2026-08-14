@@ -470,4 +470,8 @@ public class MachineCode {
             return UNKNOWN;
         }
     }
+
+    public static boolean inIncRange(int value) {
+        return 0x8000 > value && value > -0x7ffff && value != 0;
+    }
 }

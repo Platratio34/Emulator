@@ -7,6 +7,7 @@ import com.peter.emulator.lang.ELSymbol.ELVarSymbol;
 import com.peter.emulator.lang.ELValue.ELStringValue;
 import com.peter.emulator.lang.*;
 import com.peter.emulator.lang.base.ELPrimitives;
+import com.peter.emulator.lang.expresion.Expression;
 import com.peter.emulator.lang.tokens.OperatorToken.Type;
 import com.peter.emulator.lang.tokens.*;
 
@@ -55,6 +56,19 @@ public class ActionBlock extends ComplexAction {
                 if (withDebug) {
                     addDirect("#line %s %d:%d", tkn.startLocation.file(), tkn.startLocation.line(), tkn.startLocation.col());
                 }
+                add(s -> {
+                    String str = "";
+                    for(int i = 0; i < 16; i++) {
+                        if(s.reservedRegisters[i]) {
+                            if(str.length() > 0)
+                                str += ", ";
+                            str += "r" + i; 
+                        }
+                    }
+                    if(str.length() == 0)
+                        return null;
+                    return "// Still reserved: " + str;
+                });
                 boolean dma = false;
                 if (tkn instanceof OperatorToken ot && ot.type == OperatorToken.Type.POINTER) {
                     dma = true;
@@ -88,7 +102,7 @@ public class ActionBlock extends ComplexAction {
 
                                 Register r = newRegister();
                                 addReserve(r);
-                                actions.add(new ExpressionAction(scope, it.params.subTokens, r));
+                                actions.add(new Expression(scope, it.params.subTokens, r));
                                 // actions.add(new ConditionalAction(scope, ":while_body_"+index, ":while_end_"+index, it.params.subTokens));
                                 // actions.add(new DirectAction(":while_body_%d",index));
                                 if(elsePresent)
@@ -142,7 +156,7 @@ public class ActionBlock extends ComplexAction {
                                 actions.add(new DirectAction(":while_condition_%d", index));
                                 Register r = newRegister();
                                 addReserve(r);
-                                actions.add(new ExpressionAction(scope, it.params.subTokens, r));
+                                actions.add(new Expression(scope, it.params.subTokens, r));
                                 // actions.add(new ConditionalAction(scope, ":while_body_"+index, ":while_end_"+index, it.params.subTokens));
                                 // actions.add(new DirectAction(":while_body_%d",index));
                                 actions.add(new DirectAction("GOTO EQ %s :while_end_%d", r, index));
@@ -264,9 +278,9 @@ public class ActionBlock extends ComplexAction {
                             }
                             Register r = newRegister();
                             addReserve(r);
-                            ExpressionAction eA = new ExpressionAction(scope, exp, r);
-                            if (!eA.outType.canCastTo(funcRet)) {
-                                throw ELAnalysisError.error(String.format("Invalid return type. Can not cast %s to %s", eA.outType.typeString(), funcRet.typeString()), it);
+                            Expression eA = new Expression(scope, exp, r);
+                            if (!eA.getType().canCastTo(funcRet)) {
+                                throw ELAnalysisError.error(String.format("Invalid return type. Can not cast %s to %s", eA.getType().typeString(), funcRet.typeString()), it);
                             }
                             actions.add(eA);
                             Register r2 = newRegister();
@@ -346,7 +360,7 @@ public class ActionBlock extends ComplexAction {
                                                     throw ELAnalysisError.error("Empty expression", t);
                                                 Register r = newRegister();
                                                 addReserve(r);
-                                                actions.add(new ExpressionAction(scope, expTkns, r));
+                                                actions.add(new Expression(scope, expTkns, r));
                                                 addDirect(String.format("#stackVar %s %s", type.typeString(), var.name));
                                                 actions.add(new DirectAction("STACK PUSH %s", r));
                                                 addRelease(r);
@@ -360,7 +374,7 @@ public class ActionBlock extends ComplexAction {
                                             throw ELAnalysisError.error("Empty expression", bt);
                                         Register r = newRegister();
                                         addReserve(r);
-                                        actions.add(new ExpressionAction(scope, expTkns, r));
+                                        actions.add(new Expression(scope, expTkns, r));
                                         addDirect(String.format("#stackVar %s %s", type.typeString(), var.name));
                                         actions.add(new DirectAction("STACK PUSH %s", r));
                                         addRelease(r);
@@ -383,7 +397,7 @@ public class ActionBlock extends ComplexAction {
                                             throw ELAnalysisError.error("Empty expression", tkn);
                                         Register r = newRegister();
                                         addReserve(r);
-                                        actions.add(new ExpressionAction(scope, exp, r));
+                                        actions.add(new Expression(scope, exp, r));
                                         actions.add(new StackAllocAction(scope, var, r));
                                         addRelease(r);
                                     }
@@ -510,20 +524,18 @@ public class ActionBlock extends ComplexAction {
                                     actions.add(new DirectAction("INC %s -%d", rT, incSize));
                                 } else {
                                     Register r2 = newRegister();
-                                    addReserve(r2);
+                                    addFind(r2);
                                     actions.add(new DirectAction("COPY %s %s", rT, r2));
                                     actions.add(new DirectAction("INC %s -%d", r2, incSize));
                                     actions.add(new DirectAction("COPY %s %s", r2, rT));
-                                    addRelease(r2);
 
                                 }
                             } else {
                                 Register r2 = newRegister();
-                                addReserve(r2);
+                                addFind(r2);
                                 actions.add(new DirectAction("LOAD MEM%s %s %s", size, r2, rT));
                                 actions.add(new DirectAction("INC %s -%d", r2, incSize));
                                 actions.add(new DirectAction("STORE%s %s %s", size, r2, rT));
-                                addRelease(rT);
                             }
                             addRelease(rT);
                             wI++;
@@ -554,28 +566,27 @@ public class ActionBlock extends ComplexAction {
                         if(exp.isEmpty())
                             throw ELAnalysisError.error("Empty expression", tkn);
                         
-                        ExpressionAction expA = new ExpressionAction(scope, exp, r);
+                        Expression expA = new Expression(scope, exp, r);
                         actions.add(expA);
 
-                        if (expA.outType != null && !expA.outType.canCastTo(t)) {
+                        ELType expType = expA.getType();
+                        if (expType != null && !expType.canCastTo(t)) {
                             addRelease(r);
                             addRelease(rT);
-                            throw ELAnalysisError.error("Invalid assign, can not cast " + expA.outType.typeString()
+                            throw ELAnalysisError.error("Invalid assign, can not cast " + expType.typeString()
                                     + " to " + t.typeString(), it.startLocation.span(actionSpan.end()));
                         }
                         
                         if (ot.type == OperatorToken.Type.ADD_ASSIGN) {
                             Register r2 = newRegister();
-                            addReserve(r2);
+                            addFind(r2);
                             actions.add(new DirectAction("LOAD MEM%s %s %s", size, r2, rT));
                             actions.add(new DirectAction("ADD %s %s %s", r, r2, r));
-                            addRelease(r2);
                         } else if (ot.type == OperatorToken.Type.SUB_ASSIGN) {
                             Register r2 = newRegister();
-                            addReserve(r2);
+                            addFind(r2);
                             actions.add(new DirectAction("LOAD MEM%s %s %s", size, r2, rT));
                             actions.add(new DirectAction("SUB %s %s %s", r, r2, r));
-                            addRelease(r2);
                         }
                         actions.add(assignAction);
                         // actions.add(new DirectAction("STORE %s %s", r, rT));
@@ -618,6 +629,19 @@ public class ActionBlock extends ComplexAction {
         addDirect("// %s\n", line);
         if (withDebug)
             addDirect("#lineend");
+        add(s -> {
+            String str = "";
+            for(int i = 0; i < 16; i++) {
+                if(s.reservedRegisters[i]) {
+                    if(str.length() > 0)
+                        str += ", ";
+                    str += "r" + i; 
+                }
+            }
+            if(str.length() == 0)
+                return null;
+            return "// Reserved: " + str;
+        });
         if(scope.function != null) 
             addDirect(":func_exit_" + scope.function.getQualifiedName(true));
         

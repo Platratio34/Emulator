@@ -403,9 +403,17 @@ public class Assembler {
         for (int lineN = 0; lineN < lines.length; lineN++) {
             try {
                 String line = lines[lineN].trim();
-                String[] parts = line.split("\s+");
                 if (line.isBlank() || line.startsWith("//"))
                     continue;
+                String[] parts = line.split("\s+");
+                for(int i = 0; i < parts.length; i++) {
+                    if(parts[i].startsWith("//")) {
+                        String[] temp = new String[i];
+                        System.arraycopy(parts, 0, temp, 0, i);
+                        parts = temp;
+                        break;
+                    }
+                }
                 if (line.startsWith("#") || line.startsWith(":")) { // compiler instruction
                     if (line.startsWith("#breakpoint")) {
                         symbols.addBreakpoint(getAddress(addr-1));
@@ -790,7 +798,7 @@ public class Assembler {
                         boolean forced = false;
                         if (parts.length == 5) {
                             if(!parts[1].equals("FORCE")) {
-                                errors.add(new AssemblerError("Invalid set instruction: SET (FORCED) <EQ|LEQ|GEQ|NEQ|LT|GEQ> [rg] [rd]", lineN, 0, line, source));
+                                errors.add(new AssemblerError("Invalid set instruction: SET (FORCE) <EQ|LEQ|GEQ|NEQ|LT|GEQ> [rg] [rd]", lineN, 0, line, source));
                                 continue;
                             }
                             forced = true;
@@ -897,8 +905,8 @@ public class Assembler {
                     }
                 }
             } catch (Exception e) {
-                System.err.println(e);
-                e.printStackTrace();
+                // System.err.println(e);
+                // e.printStackTrace();
                 System.err.println("Error parsing assembly at line " + (lineN + 1) + " in file " + source);
                 throw e;
             }
@@ -992,7 +1000,11 @@ public class Assembler {
                     else
                         r = Integer.parseInt(reg.substring(1));
                 } else {
-                    r = Integer.parseInt(reg);
+                    try {
+                        r = Integer.parseInt(reg);
+                    } catch(NumberFormatException e) {
+                        throw new RuntimeException("Expected register identifier, but found `"+reg+"` instead");
+                    }
                 }
             }
         }

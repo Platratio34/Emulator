@@ -4,7 +4,7 @@ import com.peter.emulator.lang.ELType;
 import com.peter.emulator.lang.ErrorSet;
 import com.peter.emulator.lang.Span;
 
-public class SubNode extends ExpresionNode {
+public class SubNode extends ExpressionNode {
 
     public Expression expresion;
 

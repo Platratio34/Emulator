@@ -6,6 +6,7 @@ import com.peter.emulator.MachineCode;
 import com.peter.emulator.lang.ELFunction.FunctionType;
 import com.peter.emulator.lang.*;
 import com.peter.emulator.lang.base.ELPrimitives;
+import com.peter.emulator.lang.expresion.Expression;
 import com.peter.emulator.lang.tokens.IdentifierToken;
 import com.peter.emulator.lang.tokens.OperatorToken;
 import com.peter.emulator.lang.tokens.SetToken;
@@ -88,9 +89,9 @@ public class FunctionAction extends ComplexAction {
                             return null;
                         }));
                     }
-                    ExpressionAction expA = new ExpressionAction(scope, exp, r);
+                    Expression expA = new Expression(scope, exp, r);
                     tempActions.add(expA);
-                    types.add(expA.outType == null ? ELPrimitives.OBJECT : expA.outType);
+                    types.add(expA.getType() == null ? ELPrimitives.OBJECT : expA.getType());
                     if (onStack) {
                         tempActions.add(new DirectAction("STACK PUSH %s", r));
                         // tempActions.add(r.releaseAction());
@@ -118,9 +119,9 @@ public class FunctionAction extends ComplexAction {
                         return null;
                     }));
                 }
-                ExpressionAction expA = new ExpressionAction(scope, exp, r);
+                Expression expA = new Expression(scope, exp, r);
                 tempActions.add(expA);
-                types.add(expA.outType == null ? ELPrimitives.OBJECT : expA.outType);
+                types.add(expA.getType() == null ? ELPrimitives.OBJECT : expA.getType());
                 if (onStack) {
                     tempActions.add(new DirectAction("STACK PUSH %s", r));
                     tempActions.add(r.releaseAction());

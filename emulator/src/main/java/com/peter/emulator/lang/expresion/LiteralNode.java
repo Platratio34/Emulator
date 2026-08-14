@@ -5,17 +5,18 @@ import com.peter.emulator.lang.ErrorSet;
 import com.peter.emulator.lang.Span;
 import com.peter.emulator.lang.actions.ActionScope;
 import com.peter.emulator.lang.base.ELPrimitives;
+import com.peter.emulator.lang.tokens.NumberToken;
 import com.peter.emulator.lang.tokens.Token;
 
-public class LiteralNode extends ExpresionNode {
+public class LiteralNode extends ExpressionNode {
     public int value;
     public ELType type = ELPrimitives.UINT32;
 
     public Token token;
 
-    public LiteralNode(ActionScope scope, int value, Token token) {
+    public LiteralNode(ActionScope scope, NumberToken token) {
         super(scope);
-        this.value = value;
+        this.value = token.numValue;
         this.token = token;
     }
     public LiteralNode(ActionScope scope, boolean value, Token token) {
@@ -33,12 +34,12 @@ public class LiteralNode extends ExpresionNode {
 
     @Override
     public String printTree() {
-        return Integer.toString(value);
+        return token.debugString();
     }
 
     @Override
     public String printNode() {
-        return Integer.toString(value);
+        return token.debugString();
     }
 
     @Override

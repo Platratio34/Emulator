@@ -50,65 +50,67 @@ public class Debugger {
     }
 
     public void update(CPU cpu) {
-        int addr = cpu.pgmPtr;
-        if (cpu.privilegeMode) { // in kernal
-            for (FunctionSymbol symbol : kernalSymbols.functions.values()) {
-                if (symbol.start == addr) {
-                    // System.out.println("Entering " + symbol);
-                    stack.add(symbol);
-                }
-                if (symbol.end == addr + 4) {
-                    // System.out.println("Exiting " + symbol);
-                    stack.remove(stack.size() - 1);
-                }
-            }
-            if (kernalSymbols.breakpoints.contains(cpu.pgmPtr)) {
-                emulator.setWait(true);
-            }
-            // activeStackVars.clear();
-            for (StackVarSymbol sv : kernalSymbols.stackVarSymbols) {
-                if (sv.start == addr) {
-                    activeStackVars.add(sv.activate(cpu.stackPtr));
-                }
-            }
-            ArrayList<StackVarSymbol> toRemove = new ArrayList<>();
-            for (StackVarSymbol sv : activeStackVars) {
-                if (sv.end == addr) {
-                    toRemove.add(sv);
-                }
-            }
-            for (StackVarSymbol sv : toRemove) {
-                activeStackVars.remove(sv);
-            }
-        } else {
-            for (FunctionSymbol symbol : symbols.functions.values()) {
-                if (symbol.in(addr)) {
+        synchronized (this) {
+            int addr = cpu.pgmPtr;
+            if (cpu.privilegeMode) { // in kernal
+                for (FunctionSymbol symbol : kernalSymbols.functions.values()) {
                     if (symbol.start == addr) {
-                        // System.out.println("Entering "+ symbol);
+                        // System.out.println("Entering " + symbol);
                         stack.add(symbol);
                     }
                     if (symbol.end == addr + 4) {
-                        // System.out.println("Exiting "+ symbol);
-                        stack.remove(stack.size()-1);
+                        // System.out.println("Exiting " + symbol);
+                        stack.remove(stack.size() - 1);
                     }
                 }
-            }
-            if (symbols.breakpoints.contains(cpu.pgmPtr)) {
-                emulator.setWait(true);
-            }
-            for (StackVarSymbol sv : symbols.stackVarSymbols) {
-                if (sv.start == addr) {
-                    activeStackVars.add(sv.activate(cpu.stackPtr));
+                if (kernalSymbols.breakpoints.contains(cpu.pgmPtr)) {
+                    emulator.setWait(true);
                 }
-            }
-            ArrayList<StackVarSymbol> toRemove = new ArrayList<>();
-            for (StackVarSymbol sv : activeStackVars) {
-                if (sv.end == addr) {
-                    toRemove.add(sv);
+                // activeStackVars.clear();
+                for (StackVarSymbol sv : kernalSymbols.stackVarSymbols) {
+                    if (sv.start == addr) {
+                        activeStackVars.add(sv.activate(cpu.stackPtr));
+                    }
                 }
-            }
-            for (StackVarSymbol sv : toRemove) {
-                activeStackVars.remove(sv);
+                ArrayList<StackVarSymbol> toRemove = new ArrayList<>();
+                for (StackVarSymbol sv : activeStackVars) {
+                    if (sv.end == addr) {
+                        toRemove.add(sv);
+                    }
+                }
+                for (StackVarSymbol sv : toRemove) {
+                    activeStackVars.remove(sv);
+                }
+            } else {
+                for (FunctionSymbol symbol : symbols.functions.values()) {
+                    if (symbol.in(addr)) {
+                        if (symbol.start == addr) {
+                            // System.out.println("Entering "+ symbol);
+                            stack.add(symbol);
+                        }
+                        if (symbol.end == addr + 4) {
+                            // System.out.println("Exiting "+ symbol);
+                            stack.remove(stack.size()-1);
+                        }
+                    }
+                }
+                if (symbols.breakpoints.contains(cpu.pgmPtr)) {
+                    emulator.setWait(true);
+                }
+                for (StackVarSymbol sv : symbols.stackVarSymbols) {
+                    if (sv.start == addr) {
+                        activeStackVars.add(sv.activate(cpu.stackPtr));
+                    }
+                }
+                ArrayList<StackVarSymbol> toRemove = new ArrayList<>();
+                for (StackVarSymbol sv : activeStackVars) {
+                    if (sv.end == addr) {
+                        toRemove.add(sv);
+                    }
+                }
+                for (StackVarSymbol sv : toRemove) {
+                    activeStackVars.remove(sv);
+                }
             }
         }
     }

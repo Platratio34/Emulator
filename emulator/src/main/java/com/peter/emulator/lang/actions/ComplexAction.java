@@ -25,6 +25,10 @@ public class ComplexAction extends Action {
         return out;
     }
 
+    public void add(Action action) {
+        actions.add(action);
+    }
+
     public void addDirect(String asm, Object... args) {
         actions.add(new DirectAction(asm, args));
     }
@@ -34,6 +38,9 @@ public class ComplexAction extends Action {
 
     public void addReserve(Register register) {
         actions.add(new RegisterAction(scope, register, false));
+    }
+    public void addFind(Register register) {
+        actions.add(new RegisterAction(scope, register, false, true));
     }
     public void addRelease(Register register) {
         actions.add(new RegisterAction(scope, register, true));

@@ -11,14 +11,19 @@ import com.peter.emulator.lang.tokens.*;
 
 public class Expression extends Action {
 
-    protected ExpresionNode head = null;
-    protected ArrayList<ExpresionNode> nodes = new ArrayList<>();
+    protected ExpressionNode head = null;
+    protected ArrayList<ExpressionNode> nodes = new ArrayList<>();
     protected boolean lastWasOperator = true;
 
     public Expression(ActionScope scope) {
         super(scope);
     }
     @SuppressWarnings("OverridableMethodCallInConstructor")
+    public Expression(ActionScope scope, ArrayList<Token> tokens, Register register) {
+        this(scope, tokens);
+        if(this.head != null)
+            this.head.register = register;
+    }
     public Expression(ActionScope scope, ArrayList<Token> tokens) {
         super(scope);
         for(Token token : tokens) {
@@ -90,7 +95,8 @@ public class Expression extends Action {
                         
                     }
                 }
-                case NumberToken nt -> add(new LiteralNode(scope, nt.numValue, nt));
+                case NumberToken nt -> add(new LiteralNode(scope, nt));
+                case StringToken st -> add(new StringNode(scope, st));
                 case IdentifierToken it -> {
                     switch (it.value) {
                         case "true" -> add(new LiteralNode(scope, true, it));
@@ -107,12 +113,13 @@ public class Expression extends Action {
                 }
                 case SetToken st -> add(new SubNode(new Expression(scope, st.subTokens)));
                 default -> {
+                    throw ELAnalysisError.errorF(token, "Unexpected token in expression: `%s`", token.debugString());
                 }
             }
         }
     }
 
-    protected void add(ExpresionNode node) {
+    protected void add(ExpressionNode node) {
         if(node instanceof OperatorNode opNode) {
             if(!opNode.single) {
                 if(lastWasOperator) {
@@ -137,13 +144,13 @@ public class Expression extends Action {
         // System.out.println("- "+node.printTree());
         if(head == null) {
             head = node;
-            System.out.println("\t"+printTree());
+            // System.out.println("\t"+printTree());
             return;
         }
         if(!(head instanceof OperatorNode)) {
             node.child1 = head;
             head = node;
-            System.out.println("\t"+printTree());
+            // System.out.println("\t"+printTree());
             return;
         }
         OperatorNode headOp = (OperatorNode)head;
@@ -152,12 +159,12 @@ public class Expression extends Action {
             if(lvlOff >= 0) { // if we have a lower presidence than the current head, so swap the new node into the head
                 opNode.child1 = head;
                 head = opNode;
-                System.out.println("\t"+printTree());
+                // System.out.println("\t"+printTree());
                 return;
             }
             if(!opNode.single) {
-                ExpresionNode cNode = head;
-                ExpresionNode parent = head;
+                ExpressionNode cNode = head;
+                ExpressionNode parent = head;
                 while(cNode instanceof OperatorNode opNode2 && opNode.single == opNode2.single && (opNode2.type.level - opNode.type.level) < 0) {
                     parent = cNode;
                     if(cNode.child2 != null)
@@ -176,11 +183,11 @@ public class Expression extends Action {
                 } else {
                     parent.child2 = node;
                 }
-                System.out.println("\t"+printTree());
+                // System.out.println("\t"+printTree());
                 return;
             }
         }
-        ExpresionNode cNode = head;
+        ExpressionNode cNode = head;
         while(cNode.child1 != null && (cNode.single || cNode.child2 != null)) {
             cNode = cNode.child2 != null ? cNode.child2 : cNode.child1;
         }
@@ -189,12 +196,12 @@ public class Expression extends Action {
         } else if(cNode.child2 == null) {
             cNode.child2 = node;
         }
-        System.out.println("\t"+printTree());
+        // System.out.println("\t"+printTree());
     }
 
     public String printNodes() {
         String out = "";
-        for(ExpresionNode node : nodes) {
+        for(ExpressionNode node : nodes) {
             out += node.printNode();
         }
         return out;
@@ -221,6 +228,10 @@ public class Expression extends Action {
     }
 
     public boolean validate(ErrorSet errors) {
+        if(head == null) {
+            errors.error("Expresion was empty");
+            return false;
+        }
         return head.validate(errors);
     }
 
@@ -237,7 +248,7 @@ public class Expression extends Action {
         if(head == null) {
             return "";
         }
-        return head.toAssembly();
+        return head.toAssembly() + " // "+printNodes();
     }
 
     public void setRegister(Register register) {
