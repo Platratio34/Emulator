@@ -713,7 +713,7 @@ public class Assembler {
                         int rd = getReg(parts[1]);
                         int ra = getReg(parts[2]);
                         int amt = getVal(parts[3]);
-                        data[addr++] = (Entry.Math(MathOperator.LSHIFT, rd, ra, amt));
+                        data[addr++] = (Entry.Math(MathOperator.LSHIFT, rd, ra, amt & 0x7f));
                     }
                     case "RSH" -> {
                         if (parts.length < 4) {
@@ -724,7 +724,29 @@ public class Assembler {
                         int rd = getReg(parts[1]);
                         int ra = getReg(parts[2]);
                         int amt = getVal(parts[3]);
-                        data[addr++] = (Entry.Math(MathOperator.RSHIFT, rd, ra, amt));
+                        data[addr++] = (Entry.Math(MathOperator.RSHIFT, rd, ra, amt & 0x7f));
+                    }
+                    case "LRT" -> {
+                        if (parts.length < 4) {
+                            errors.add(new AssemblerError("Invalid mul instruction: LRT [rd] [ra] [amt]", lineN,
+                                    line.length(), line, source));
+                            continue;
+                        }
+                        int rd = getReg(parts[1]);
+                        int ra = getReg(parts[2]);
+                        int amt = getVal(parts[3]);
+                        data[addr++] = (Entry.Math(MathOperator.LSHIFT, rd, ra, amt | 0x80));
+                    }
+                    case "RRT" -> {
+                        if (parts.length < 4) {
+                            errors.add(new AssemblerError("Invalid mul instruction: RRT [rd] [ra] [amt]", lineN,
+                                    line.length(), line, source));
+                            continue;
+                        }
+                        int rd = getReg(parts[1]);
+                        int ra = getReg(parts[2]);
+                        int amt = getVal(parts[3]);
+                        data[addr++] = (Entry.Math(MathOperator.RSHIFT, rd, ra, amt | 0x80));
                     }
                     case "GOTO" -> {
                         if (parts.length < 2) {
@@ -981,6 +1003,9 @@ public class Assembler {
             case "rStack" -> {
                 r = REG_STACK_PNTR;
             }
+            case "rAF" -> {
+                r = REG_ARITHMATIC_FLAG;
+            }
 
             case "rPID" -> {
                 r = REG_PID;
@@ -1002,6 +1027,27 @@ public class Assembler {
             
             case "rID" -> {
                 r = REG_CPU_ID;
+            }
+
+            case "rPgmI" -> {
+                r = REG_PGM_PNTR_I;
+            }
+            case "rStackI" -> {
+                r = REG_STACK_PNTR_I;
+            }
+            case "rAFI" -> {
+                r = REG_ARITHMATIC_FLAG_I;
+            }
+
+            case "rPIDI" -> {
+                r = REG_PID_I;
+            }
+            case "rMTblI" -> {
+                r = REG_MEM_TABLE_I;
+            }
+            
+            case "rPMI" -> {
+                r = REG_PRIVILEGED_MODE_I;
             }
         
             default -> {

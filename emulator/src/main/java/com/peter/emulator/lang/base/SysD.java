@@ -105,17 +105,17 @@ public class SysD extends Namespace {
         ELStruct PeripheralDescriptor = new ELStruct("PeripheralDescriptor", this, unit);
         PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.UINT32, "id", true, this, unit, SYSD_LOCATION));
         PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.UINT32, "type", true, this, unit, SYSD_LOCATION));
-        PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.UINT32.builder().array(4).location(SYSD_LOCATION).build(), "manufacturer", true, this, unit, SYSD_LOCATION));
-        PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.UINT32.builder().array(4).location(SYSD_LOCATION).build(), "serial", true, this, unit, SYSD_LOCATION));
+        PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.CHAR.builder().array(16).location(SYSD_LOCATION).build(), "manufacturer", true, this, unit, SYSD_LOCATION));
+        PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.CHAR.builder().array(16).location(SYSD_LOCATION).build(), "serial", true, this, unit, SYSD_LOCATION));
         PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.UINT32.builder().array(6).location(SYSD_LOCATION).build(), "data", true, this, unit, SYSD_LOCATION));
     }
 
     public static ELType getVarType(IdentifierToken it) {
         switch(it.value) {
-            case "rPgm", "rStack", "rMTbl", "rIH", "rStackI", "rMTblI" -> {
+            case "rPgm", "rStack", "rMTbl", "rIH", "rPgmI", "rStackI", "rMTblI" -> {
                 return ELPrimitives.VOID_PTR;
             }
-            case "rPID", "rIC", "rID", "rPgmI", "rPIDI" -> {
+            case "rAF", "rPID", "rIC", "rID", "rAFI", "rPIDI" -> {
                 return ELPrimitives.UINT32;
             }
             case "rPM", "rPMI" -> {

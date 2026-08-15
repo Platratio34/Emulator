@@ -27,6 +27,7 @@ public class EmulatorGui {
     protected JTextArea interruptCode;
 
     protected ConsoleFrame consoleFrame;
+    protected CharacterDisplayFrame charDisplayFrame;
 
     private boolean setVisible = false;
 
@@ -112,9 +113,12 @@ public class EmulatorGui {
 
             consoleFrame = new ConsoleFrame(emulator.console);
 
+            charDisplayFrame = new CharacterDisplayFrame(emulator.charDisplay);
+
             if(setVisible) {
                 frame.setVisible(true);
                 consoleFrame.setVisible(true);
+                charDisplayFrame.setVisible(true);
                 setVisible = false;
             }
         });
@@ -127,6 +131,7 @@ public class EmulatorGui {
         }
         frame.setVisible(true);
         consoleFrame.setVisible(true);
+        charDisplayFrame.setVisible(true);
     }
 
     boolean updating = false;

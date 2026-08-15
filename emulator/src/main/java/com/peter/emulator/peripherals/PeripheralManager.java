@@ -78,9 +78,9 @@ public class PeripheralManager {
                 int[] out = new int[126];
                 int numDevices = 0;
                 for (byte i = start; i < nextId; i++) {
-                    if (peripherals.containsKey((int)i) && peripherals.get((int)i) instanceof DMAPeripheral mmp) {
+                    if (peripherals.containsKey((int)i) && peripherals.get((int)i) instanceof DMAPeripheral peripheral) {
                         out[arrI++] = i;
-                        out[arrI++] = mmp.getType();
+                        out[arrI++] = peripheral.getType();
                         numDevices++;
                         if (arrI >= 124) {
                             out[arrI++] = (i != nextId - 1) ? 0x1 : 0x0;
@@ -91,6 +91,16 @@ public class PeripheralManager {
                 out[0] = numDevices;
                 ram.copyWords(out, PERIPHERAL_RSP_DATA, arrI);
                 ram.writeWord(PERIPHERAL_RSP_STATUS, 0x0100_0000);
+            }
+            case 0x2 -> { // DESCRIPTOR ID
+                if(peripherals.containsKey(msg[1]) && peripherals.get(msg[1]) instanceof DMAPeripheral peripheral) {
+                    int[] desc = peripheral.getDescriptor();
+                    ram.copyWords(desc, PERIPHERAL_RSP_DATA);
+                    ram.writeWord(PERIPHERAL_RSP_STATUS, 0x0100_0000 | msg[1]);
+                    return;
+                }
+                ram.writeWord(PERIPHERAL_RSP_DATA, 0xff);
+                ram.writeWord(PERIPHERAL_RSP_STATUS, 0x0f00_0000 | msg[1]);
             }
         }
     }

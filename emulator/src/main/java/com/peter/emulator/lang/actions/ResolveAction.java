@@ -154,7 +154,7 @@ public class ResolveAction extends ComplexAction {
                 if (clazz == null)
                     throw ELAnalysisError.fatal("Type was missing class (type was `" + t.typeString()+"`; "+t.toString()+")", it);
                 if (!clazz.memberVariables.containsKey(it.value))
-                    throw ELAnalysisError.fatal("Unknown member " + it.value + "in type" + clazz.getQualifiedName(), it);
+                    throw ELAnalysisError.fatal("Unknown member " + it.value + " in type" + clazz.getQualifiedName(), it);
                 v = clazz.memberVariables.get(it.value);
                 t = v.type;
             }

@@ -30,6 +30,10 @@ public class CPU {
     public int stackPtr = 0x8000;
     // rStackI
     public int stackPtrI = 0x8000;
+    // rPgm
+    public int arithmaticFlag = 0;
+    // rPgmI
+    public int arithmaticFlagI = 0;
     // rPID
     public int pid = 0;
     // rPIDI
@@ -67,6 +71,7 @@ public class CPU {
         return switch(reg) {
             case REG_PGM_PNTR -> true;
             case REG_STACK_PNTR -> true;
+            case REG_ARITHMATIC_FLAG -> true;
 
             case REG_PID -> true;
             case REG_MEM_TABLE -> true;
@@ -79,6 +84,7 @@ public class CPU {
             
             case REG_PGM_PNTR_I -> true;
             case REG_STACK_PNTR_I -> true;
+            case REG_ARITHMATIC_FLAG_I -> true;
 
             case REG_PID_I -> true;
             case REG_MEM_TABLE_I -> true;
@@ -98,6 +104,7 @@ public class CPU {
         return switch (reg) {
             case REG_PGM_PNTR -> pgmPtr;
             case REG_STACK_PNTR -> stackPtr;
+            case REG_ARITHMATIC_FLAG -> arithmaticFlag;
 
             case REG_PID -> pid;
             case REG_MEM_TABLE -> memTablePtr;
@@ -110,6 +117,7 @@ public class CPU {
             
             case REG_PGM_PNTR_I -> pgmPtrI;
             case REG_STACK_PNTR_I -> stackPtrI;
+            case REG_ARITHMATIC_FLAG_I -> arithmaticFlagI;
 
             case REG_PID_I -> pidI;
             case REG_MEM_TABLE_I -> memTablePtrI;
@@ -142,6 +150,9 @@ public class CPU {
             }
             case REG_STACK_PNTR -> {
                 stackPtr = val;
+            }
+            case REG_ARITHMATIC_FLAG -> {
+                arithmaticFlag = val;
             }
             case REG_PID -> {
                 if (!privilegeMode) {
@@ -196,6 +207,9 @@ public class CPU {
                     return;
                 }
                 stackPtrI = val;
+            }
+            case REG_ARITHMATIC_FLAG_I -> {
+                arithmaticFlagI = val;
             }
             case REG_PID_I -> {
                 if (!privilegeMode) {
@@ -398,15 +412,34 @@ public class CPU {
                 // }
             }
             case MATH -> {
+                arithmaticFlag = 0;
                 int rd = (op & MASK_MATH_RD) >> 16;
                 int ra = (op & MASK_MATH_RA) >> 8;
                 int rb = (op & MASK_MATH_RB);
                 switch (MathOperator.fromMachineCode(op)) {
                     case ADD -> {
-                        setReg(rd, getReg(ra) + getReg(rb));
+                        int out;
+                        ra = getReg(ra);
+                        rb = getReg(rb);
+                        try {
+                            out = Math.addExact(ra, rb);
+                        } catch (ArithmeticException e) {
+                            out = ra + rb;
+                            arithmaticFlag = 1;
+                        }
+                        setReg(rd, out);
                     }
                     case SUB -> {
-                        setReg(rd, getReg(ra) - getReg(rb));
+                        int out;
+                        ra = getReg(ra);
+                        rb = getReg(rb);
+                        try {
+                            out = Math.subtractExact(ra, rb);
+                        } catch (ArithmeticException e) {
+                            out = ra - rb;
+                            arithmaticFlag = 1;
+                        }
+                        setReg(rd, out);
                     }
                     case MUL -> {
                         setReg(rd, getReg(ra) * getReg(rb));
@@ -441,10 +474,20 @@ public class CPU {
                         setReg(rd, getReg(ra) ^ getReg(rb));
                     }
                     case LSHIFT -> {
-                        setReg(rd, getReg(ra) << rb);
+                        ra = getReg(ra);
+                        if((rb & 0x80) == 0) {
+                            setReg(rd, ra << rb);
+                        } else {
+                            setReg(rd, Integer.rotateLeft(ra, rb & 0x7f));
+                        }
                     }
                     case RSHIFT -> {
-                        setReg(rd, getReg(ra) >> rb);
+                        ra = getReg(ra);
+                        if((rb & 0x80) == 0) {
+                            setReg(rd, ra >>> rb);
+                        } else {
+                            setReg(rd, Integer.rotateRight(ra, rb & 0x7f));
+                        }
                     }
                     case UNKNOWN -> {
                     }

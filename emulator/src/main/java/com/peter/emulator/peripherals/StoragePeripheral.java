@@ -169,7 +169,7 @@ public class StoragePeripheral implements DMAPeripheral {
     @Override
     public int[] getDescriptor() {
         return new int[] {
-            0x00,
+            deviceId,
             DEVICE_TYPE,
             MANUFACTURE[0],
             MANUFACTURE[1],

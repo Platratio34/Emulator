@@ -203,25 +203,36 @@ public class OperatorNode extends ExpressionNode {
         }
         ELType t1 = child1.getType();
         ELType t2 = child2.getType();
-        if(type == OperatorType.SHIFT_LEFT || type == OperatorType.SHIFT_RIGHT) {
-            boolean bad = false;
-            if(!t1.canCastTo(ELPrimitives.UINT32)) {
-                errors.error("Right side of shift must be a integer value", token);
-                bad = true;
-            }
-            if(!child2.isConstant()) {
-                errors.error("Right side of shift must constant", token);
-                bad = true;
-            }
-            return !bad;
-        } else if(type == OperatorType.ADD || type == OperatorType.SUB) {
-            if(t1.isPointer()) {
-                if(!(t2.equals(ELPrimitives.UINT32) || t2.equals(t1))) {
-                    errors.error("Right side of pointer addition must be an integer or same type", token);
-                    return false;
+        switch(type) {
+            case SHIFT_LEFT, SHIFT_RIGHT -> {
+                boolean bad = false;
+                if(!t1.canCastTo(ELPrimitives.UINT32)) {
+                    errors.error("Right side of shift must be a integer value", token);
+                    bad = true;
                 }
-                return true;
+                if(!child2.isConstant()) {
+                    errors.error("Right side of shift must constant", token);
+                    bad = true;
+                }
+                return !bad;
             }
+            case ADD, SUB -> {
+                if(t1.isPointer()) {
+                    if(!(t2.equals(ELPrimitives.UINT32) || t2.equals(t1))) {
+                        errors.error("Right side of pointer addition must be an integer or same type", token);
+                        return false;
+                    }
+                    return true;
+                }
+            }
+            case EQUALS, NEQ, LT, LEQ, GT, GEQ -> {
+                if(t1.isPointer() && t2.canCastTo(ELPrimitives.UINT32)) {
+                    return true;
+                }
+                if(t2.isPointer() && t1.canCastTo(ELPrimitives.UINT32)) {
+                    return true;
+                }
+            }   
         }
         if(!t2.canCastTo(t1)) {
             errors.error(String.format("Can not cast %s to %s", t2.typeString(), t1.typeString()), token);
@@ -313,7 +324,7 @@ public class OperatorNode extends ExpressionNode {
                 child2.register = r2;
                 str += child2.toAssembly() + String.format("\nADD %s %s %s", register, register, r2);
                 r2.release();
-                str += " // Releasing "+r2;
+                str += "  // Releasing "+r2;
                 return str;
             }
             case SUB -> {
@@ -378,7 +389,7 @@ public class OperatorNode extends ExpressionNode {
                 child2.register = r2;
                 str += child2.toAssembly() + String.format("\nMUL %s %s %s", register, register, r2);
                 r2.release();
-                str += "// Releasing "+r2;
+                str += " // Releasing "+r2;
                 return str;
             }
             case DIV -> {

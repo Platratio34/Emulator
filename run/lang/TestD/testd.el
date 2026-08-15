@@ -16,6 +16,7 @@ namespace TestD {
     @Entrypoint(raw)
     public static void main() {
         asm("LOAD rIH &:TestD.onInterrupt");
+        CharacterDisplay.setup();
         uint32 b;
         uint32 a = SysD.rPgm;
         v = a;

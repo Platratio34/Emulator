@@ -5,6 +5,7 @@ import com.peter.emulator.components.MMU;
 import com.peter.emulator.components.RAM;
 import com.peter.emulator.components.TimerUnit;
 import com.peter.emulator.gui.EmulatorGui;
+import com.peter.emulator.peripherals.CharacterDisplay;
 import com.peter.emulator.peripherals.ConsolePeripheral;
 import com.peter.emulator.peripherals.PeripheralManager;
 import com.peter.emulator.peripherals.StoragePeripheral;
@@ -23,11 +24,13 @@ public class Emulator {
     public final TimerUnit timerUnit = new TimerUnit(MachineCode.PERIPHERAL_START + 0x200, cores[0]);
     public final ConsolePeripheral console = new ConsolePeripheral(MachineCode.PERIPHERAL_START + 0x100);
     public final StoragePeripheral vd0 = new StoragePeripheral(Main.ROOT_PATH.resolve("devices/vd0"));
+    public final CharacterDisplay charDisplay = new CharacterDisplay(40, 24);
 
     public Emulator() {
         peripheralManager.addPeripheral(timerUnit);
         peripheralManager.addPeripheral(console);
         peripheralManager.addPeripheral(vd0);
+        peripheralManager.addPeripheral(charDisplay);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             stop();
         }));
