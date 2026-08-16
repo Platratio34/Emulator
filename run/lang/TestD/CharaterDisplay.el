@@ -2,7 +2,7 @@ import SysD;
 
 namespace CharacterDisplay {
     
-    public static uint8 deviceId = 0;
+    public static uint32 deviceId = 0;
 
     protected static char* charBuffer = 0;
     protected static char* charColorBuffer = 0;
@@ -19,6 +19,8 @@ namespace CharacterDisplay {
     public static const uint32* RSP_DATA = 0x1_0084;
     public static const uint32* RSP_DATA_2 = 0x1_0088;
     public static const uint32* RSP_DATA_3 = 0x1_008c;
+
+    public static const uint32* PERIPHERAL_TABLE = 0x1_0100;
 
     protected static void peripheralCommand(uint32 deviceId, uint32 cmdSize, uint32* cmd) {
         *CMD_SIZE = cmdSize;
@@ -39,19 +41,27 @@ namespace CharacterDisplay {
 
     public static void setup() {
         uint32[1] msg = {0x01};
-        peripheralCommand(0, 1, &msg);
-        if(*RSP_STATUS != 0x01) {
-            return;
-        }
-        ListEntry* entry = 0x1_0084;
-        while(entry.id != 0 && entry < 0x1_0100) {
-            if(entry.type == 0x0100_0011) {
-                deviceId = entry.id;
+        // peripheralCommand(0, 1, &msg);
+        // if(*RSP_STATUS != 0x01) {
+        //     return;
+        // }
+        // ListEntry* entry = 0x1_0084;
+        // while(entry.id != 0 && entry < 0x1_0100) {
+        //     if(entry.type == 0x0100_0011) {
+        //         deviceId = entry.id;
+        //         break;
+        //     }
+        //     entry++;
+        // }
+        deviceId = 1;
+        while(deviceId < 64) {
+            if(PERIPHERAL_TABLE[deviceId] == 0x0100_0011) {
                 break;
             }
-            entry++;
+            deviceId++;
         }
-        if(deviceId == 0) {
+        if(deviceId == 64) {
+            deviceId = 0;
             return;
         }
         uint32[2] msg2 = {0x02, deviceId};

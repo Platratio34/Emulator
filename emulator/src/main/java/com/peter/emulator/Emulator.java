@@ -22,7 +22,7 @@ public class Emulator {
     public PeripheralManager peripheralManager = new PeripheralManager(ram, cores[0]);
     public final EmulatorGui gui;
     public final TimerUnit timerUnit = new TimerUnit(MachineCode.PERIPHERAL_START + 0x200, cores[0]);
-    public final ConsolePeripheral console = new ConsolePeripheral(MachineCode.PERIPHERAL_START + 0x100);
+    public final ConsolePeripheral console = new ConsolePeripheral(MachineCode.PERIPHERAL_START + 0x300);
     public final StoragePeripheral vd0 = new StoragePeripheral(Main.ROOT_PATH.resolve("devices/vd0"));
     public final CharacterDisplay charDisplay = new CharacterDisplay(40, 24);
 

@@ -12,6 +12,7 @@ public class CharacterDisplayFrame extends JFrame {
     protected JTextArea textArea;
 
     public CharacterDisplayFrame(CharacterDisplay peripheral) {
+        super("Emulator - Character Display");
         this.peripheral = peripheral;
         peripheral.frame = this;
 

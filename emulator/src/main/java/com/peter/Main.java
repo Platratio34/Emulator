@@ -292,7 +292,7 @@ public class Main {
         // System.out.println("Console");
         // System.out.println(emulator.ram.debugPrint(0x1_0100, 3));
         System.out.println("Peripheral Manager");
-        System.out.println(emulator.ram.debugPrint(0x1_0000, 4));
+        System.out.println(emulator.ram.debugPrint(0x1_0000, 8));
         System.out.println("Heap");
         System.out.println(emulator.ram.debugPrint(0x9000, 8));
          

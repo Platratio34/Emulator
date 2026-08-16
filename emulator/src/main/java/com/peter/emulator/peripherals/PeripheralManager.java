@@ -1,16 +1,17 @@
 package com.peter.emulator.peripherals;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 
 import com.peter.emulator.CPU;
+import com.peter.emulator.components.MMU;
 import com.peter.emulator.components.RAM;
 
-public class PeripheralManager {
+public class PeripheralManager implements MemoryMappedPeripheral {
 
     private final RAM ram;
     private final CPU cpu;
-    private final HashMap<Integer, Peripheral> peripherals = new HashMap<>();
-    private int nextId = 1;
+    private final DMAPeripheral[] peripherals = new DMAPeripheral[64];
+    private final ArrayList<MemoryMappedPeripheral> mmps = new ArrayList<>();
 
     public static final int PERIPHERAL_START = 0x1_0000;
     public static final int PERIPHERAL_CMD_SIZE = 0x1_0004;
@@ -19,11 +20,15 @@ public class PeripheralManager {
     public static final int PERIPHERAL_RSP_STATUS = 0x1_0080;
     public static final int PERIPHERAL_RSP_DATA = 0x1_0084;
 
+    public static final int PERIPHERAL_TABLE = 0x1_0100;
+
     public PeripheralManager(RAM ram, CPU cpu) {
         this.ram = ram;
         this.cpu = cpu;
+        ram.addMMP(this);
     }
 
+    @Override
     public void tick() {
         ram.writeByte(PERIPHERAL_START, (byte)0x01);
         int w = ram.readWord(PERIPHERAL_START);
@@ -36,8 +41,8 @@ public class PeripheralManager {
                 } else {
                     int size = ram.readWord(PERIPHERAL_CMD_SIZE);
                     int[] msg = ram.readWords(PERIPHERAL_CMD_MSG, size);
-                    if (peripherals.containsKey(d) && peripherals.get(d) instanceof DMAPeripheral mmp) {
-                        mmp.message(msg);
+                    if (peripherals[d] != null) {
+                        peripherals[d].message(msg);
                     } else {
                         ram.writeWord(PERIPHERAL_RSP_DATA, 0xff);
                         ram.writeWord(PERIPHERAL_RSP_STATUS, 0x0f00_0000 | d);
@@ -50,20 +55,36 @@ public class PeripheralManager {
             }
             ram.writeByte(PERIPHERAL_START + 1, (byte)0x2);
         }
-        for (Peripheral peripheral : peripherals.values()) {
-            peripheral.tick();
+        for (Peripheral peripheral : peripherals) {
+            if (peripheral != null) {
+                peripheral.tick();
+            }
+        }
+        for(MemoryMappedPeripheral mmp : mmps) {
+            mmp.tick();
         }
     }
 
     public int addPeripheral(Peripheral peripheral) {
-        int deviceId = nextId++;
-        peripherals.put(deviceId, peripheral);
         switch (peripheral) {
-            case DMAPeripheral dmap -> dmap.link(ram, cpu, deviceId);
-            case MemoryMappedPeripheral mmp -> ram.addMMP(mmp);
+            case DMAPeripheral dmap -> {
+                for(int i = 0; i < peripherals.length; i++) {
+                    if(peripherals[i] == null) {
+                        peripherals[i] = dmap;
+                        dmap.link(ram, cpu, i);
+                        return i;
+                    }
+                }
+                return -1;
+            }
+            case MemoryMappedPeripheral mmp -> {
+                ram.addMMP(mmp);
+                mmps.add(mmp);
+                return 0;
+            }
             default -> {}
         }
-        return deviceId;
+        return -1;
     }
 
     private void onMessage() {
@@ -72,36 +93,52 @@ public class PeripheralManager {
         switch (msg[0]) {
             case 0x0 -> {
             }
-            case 0x1 -> { // LIST START_ID
-                byte start = (byte)msg[1];
-                int arrI = 1;
-                int[] out = new int[126];
-                int numDevices = 0;
-                for (byte i = start; i < nextId; i++) {
-                    if (peripherals.containsKey((int)i) && peripherals.get((int)i) instanceof DMAPeripheral peripheral) {
-                        out[arrI++] = i;
-                        out[arrI++] = peripheral.getType();
-                        numDevices++;
-                        if (arrI >= 124) {
-                            out[arrI++] = (i != nextId - 1) ? 0x1 : 0x0;
-                            break;
-                        }
-                    }
-                }
-                out[0] = numDevices;
-                ram.copyWords(out, PERIPHERAL_RSP_DATA, arrI);
-                ram.writeWord(PERIPHERAL_RSP_STATUS, 0x0100_0000);
-            }
-            case 0x2 -> { // DESCRIPTOR ID
-                if(peripherals.containsKey(msg[1]) && peripherals.get(msg[1]) instanceof DMAPeripheral peripheral) {
-                    int[] desc = peripheral.getDescriptor();
-                    ram.copyWords(desc, PERIPHERAL_RSP_DATA);
-                    ram.writeWord(PERIPHERAL_RSP_STATUS, 0x0100_0000 | msg[1]);
+            case 0x1 -> { // DESCRIPTOR ID
+                int id = msg[1];
+                if(peripherals[id] != null) {
+                    ram.copyWords(peripherals[id].getDescriptor(), PERIPHERAL_RSP_DATA);
+                    ram.writeWord(PERIPHERAL_RSP_STATUS, 0x0100_0000 | id);
                     return;
                 }
                 ram.writeWord(PERIPHERAL_RSP_DATA, 0xff);
-                ram.writeWord(PERIPHERAL_RSP_STATUS, 0x0f00_0000 | msg[1]);
+                ram.writeWord(PERIPHERAL_RSP_STATUS, 0x0f00_0000 | id);
             }
         }
+    }
+
+    private static final int[] addresses = new int[64 * 4];
+    static {
+        for(int i = 0; i < 256; i++) {
+            addresses[i] = PERIPHERAL_TABLE + i;
+        }
+    }
+
+    @Override
+    public int[] getAddresses() {
+        return addresses;
+    }
+
+    @Override
+    public void onUpdate(int address, byte value) {
+        throw new MMU.MemoryException(address);
+    }
+
+    @Override
+    public byte get(int address) {
+        int i = (address - PERIPHERAL_TABLE) / 4;
+        int o = address % 4;
+        if(i == 0) {
+            return (byte)((o == 3) ? 1 : 0);
+        } else if(peripherals[i] == null) {
+            return 0;
+        }
+        int type = peripherals[i].getType();
+        return switch(o) {
+            case 0 -> (byte)(type >> 24);
+            case 1 -> (byte)(type >> 16);
+            case 2 -> (byte)(type >> 8);
+            case 3 -> (byte)type;
+            default -> 0;
+        };
     }
 }

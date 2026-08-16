@@ -8,6 +8,8 @@ import static com.peter.emulator.MachineCode.*;
 import com.peter.emulator.components.MMU;
 import com.peter.emulator.components.RAM;
 import com.peter.emulator.debug.Debugger;
+import com.peter.emulator.machinecode.Instruction;
+import com.peter.emulator.machinecode.Syscall;
 
 public class CPU {
 
@@ -330,6 +332,7 @@ public class CPU {
             String instrStr = translate(op, next);
             System.out.println(String.format("CPU Tick: [%x] %s", mmu.translate(this, pgmPtr - 4), instrStr));
         }
+        Instruction cInstruction = Instruction.fromBytecode(op, next);
         switch (instruction) {
             case HALT -> {
                 if (!privilegeMode)
@@ -593,9 +596,9 @@ public class CPU {
                 }
             }
             case SYSCALL -> {
-                int option = op & MASK_SYSCALL_OPTION;
+                Syscall.Operation option = Syscall.Operation.fromBytecode(op);
                 switch (option) {
-                    case SYSCALL_RETURN -> {
+                    case RETURN -> {
                         // SYSRETURN
                         if (!privilegeMode) {
                             return;
@@ -604,7 +607,7 @@ public class CPU {
                         pgmPtr = ptr;
                         privilegeMode = false;
                     }
-                    case SYSCALL_GOTO -> {
+                    case GOTO -> {
                         // SYSGOTO
                         if (!privilegeMode) {
                             return;
@@ -612,7 +615,7 @@ public class CPU {
                         pgmPtr = getReg(op & MASK_SYSCALL_RG);
                         privilegeMode = false;
                     }
-                    case SYSCALL_INTERRUPT -> {
+                    case INTERRUPT -> {
                         int iOp = op & MASK_SYSCALL_INTERRUPT_OP;
                         if (iOp == SYSCALL_INTERRUPT_RET) {
                             if (!privilegeMode)
