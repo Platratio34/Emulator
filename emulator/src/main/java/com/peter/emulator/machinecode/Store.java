@@ -3,7 +3,6 @@ package com.peter.emulator.machinecode;
 import java.util.HashMap;
 
 import com.peter.emulator.MachineCode;
-import com.peter.emulator.machinecode.Store.Size;
 
 public class Store extends Instruction {
 
@@ -16,12 +15,34 @@ public class Store extends Instruction {
     public boolean incRG = false;
     public boolean incRA = false;
 
+    public static final int INC_RG_FLAG = 0b1000_0000 << 8;
+    public static final int INC_RA_FLAG = 0b0100_0000 << 8;
+
     protected Store(Size size, Source source, int rg, int ra) {
         super(Operator.STORE);
         this.size = size;
         this.source = source;
-        this.rg = rg & 0xff;
+        if (source == Source.VAL) {
+            data = rg;
+            this.rg = 0;
+        } else {
+            this.rg = rg & 0xff;
+        }
         this.ra = ra & 0xff;
+    }
+    protected Store(Size size, Source source, int rg, int ra, boolean incRG, boolean incRA) {
+        super(Operator.STORE);
+        this.size = size;
+        this.source = source;
+        if (source == Source.VAL) {
+            data = rg;
+            this.rg = 0;
+        } else {
+            this.rg = rg & 0xff;
+        }
+        this.ra = ra & 0xff;
+        this.incRG = incRG;
+        this.incRA = incRA;
     }
 
     public Store withIncRG() {
@@ -36,8 +57,8 @@ public class Store extends Instruction {
     public static Store StoreReg(Size size, int rg, int ra) {
         return new Store(size, Source.REG, rg, ra);
     }
-    public static Store StoreVal(Size size, int rg, int val) {
-        return new Store(size, Source.VAL, rg, val);
+    public static Store StoreVal(Size size, int val, int ra) {
+        return new Store(size, Source.VAL, val, ra);
     }
 
     public static Store CopyReg(Size size, int rs, int rd) {
@@ -66,12 +87,26 @@ public class Store extends Instruction {
         }
         Size size = Size.fromBytecode(bytecode);
         Source source = Source.fromBytecode(bytecode);
-        return new Store(size, source, (bytecode >> 16) & 0xff, bytecode & 0xff);
+        boolean incRG = (bytecode & INC_RG_FLAG) != 0;
+        boolean incRA = (bytecode & INC_RA_FLAG) != 0;
+        if (source == Source.VAL) {
+            return new Store(size, source, next, bytecode, incRG, incRA);
+        }
+        return new Store(size, source, bytecode >> 16, bytecode, incRG, incRA);
     }
 
     @Override
     public int getBytecode() {
-        return op.id | (rg << 16) | source.id | size.id | ra;
+        return op.id | (rg << 16) | (incRG ? INC_RG_FLAG : 0) | (incRA ? INC_RA_FLAG : 0) | source.id | size.id | ra;
+    }
+
+    @Override
+    public boolean hasSecond() {
+        return source == Source.VAL;
+    }
+    @Override
+    public int getSecondBytecode() {
+        return data;
     }
 
     @Override
@@ -84,10 +119,10 @@ public class Store extends Instruction {
         String out =  switch(source) {
             case REG -> String.format("STORE%s %s -> mem[%s]", sizeStr, MachineCode.translateReg(rg), MachineCode.translateReg(ra));
             case MEM -> String.format("COPY%s mem[%s] -> mem[%s]", sizeStr, MachineCode.translateReg(rg), MachineCode.translateReg(ra));
-            case VAL -> String.format("STORE%s %s -> mem[%s]", sizeStr, MachineCode.toHex(rg), MachineCode.translateReg(ra));
+            case VAL -> String.format("STORE%s 0x%s -> mem[%s]", sizeStr, toHex(data), MachineCode.translateReg(ra));
             case REG_REG -> String.format("COPY%s %s -> %s", sizeStr, MachineCode.translateReg(rg), MachineCode.translateReg(ra));
 
-            default -> String.format("STORE UNKNOWN (0x%08x)", getBytecode());
+            default -> String.format("STORE UNKNOWN (0x%s)", toHex(getBytecode()));
         };
         if(incRG) {
             out += " INC_RG";
@@ -99,19 +134,19 @@ public class Store extends Instruction {
     }
 
     public enum Size {
-        WORD(0b00<<8),
-        SHORT(0b01<<8),
-        BYTE(0b10<<8)
+        WORD(0b00),
+        SHORT(0b01),
+        BYTE(0b10)
         ;
 
         public final int id;
 
         private Size(int id) {
-            this.id = id;
+            this.id = id << 8;
             setup();
         }
 
-        protected static HashMap<Integer, Size> byId = null;
+        protected static HashMap<Integer, Size> byId;
 
         private void setup() {
             if(byId == null)
@@ -125,20 +160,20 @@ public class Store extends Instruction {
     }
 
     public enum Source {
-        REG(0b00<<10),
-        VAL(0b01<<10),
-        MEM(0b10<<10),
-        REG_REG(0b11<<10)
+        REG(0b00),
+        VAL(0b01),
+        MEM(0b10),
+        REG_REG(0b11)
         ;
 
         public final int id;
 
         private Source(int id) {
-            this.id = id;
+            this.id = id << 10;
             setup();
         }
 
-        protected static HashMap<Integer, Source> byId = null;
+        protected static HashMap<Integer, Source> byId;
 
         private void setup() {
             if(byId == null)

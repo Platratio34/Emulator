@@ -47,6 +47,7 @@ public class DebuggerPanel extends JPanel {
             for (VarDisplay vd : varDisplays.values()) {
                 varPanel.remove(vd);
             }
+            return;
         }
         final Debugger dbg = debugger;
         synchronized(dbg) {

@@ -8,8 +8,12 @@ import static com.peter.emulator.MachineCode.*;
 import com.peter.emulator.components.MMU;
 import com.peter.emulator.components.RAM;
 import com.peter.emulator.debug.Debugger;
+import com.peter.emulator.machinecode.Goto;
 import com.peter.emulator.machinecode.Instruction;
+import com.peter.emulator.machinecode.Load;
+import com.peter.emulator.machinecode.Stack;
 import com.peter.emulator.machinecode.Syscall;
+import com.peter.emulator.machinecode.Goto.Mode;
 
 public class CPU {
 
@@ -58,6 +62,8 @@ public class CPU {
 
     public Debugger debugger = null;
     public boolean printInstr = false;
+
+    public Instruction lastInstruction;
 
     public CPU(int cpuId, RAM ram, MMU mmu) {
         this.cpuId = cpuId;
@@ -327,37 +333,36 @@ public class CPU {
         instr = op;
         int next = readMem(pgmPtr);
         instrb = next;
-        int instruction = op & MASK_INSTRUCTION;
+        lastInstruction = Instruction.fromBytecode(op, next);
         if (printInstr) {
             String instrStr = translate(op, next);
-            System.out.println(String.format("CPU Tick: [%x] %s", mmu.translate(this, pgmPtr - 4), instrStr));
+            System.out.println(String.format("CPU Tick: [%04x] %s", mmu.translate(this, pgmPtr - 4), instrStr));
+        } else {
+            System.out.println(String.format("CPU Tick: [%04x] %s", mmu.translate(this, pgmPtr - 4), lastInstruction.toString()));
         }
-        Instruction cInstruction = Instruction.fromBytecode(op, next);
-        switch (instruction) {
+        switch (lastInstruction.op) {
+            case NO_OP, UNKNOWN -> {}
             case HALT -> {
                 if (!privilegeMode)
                     return;
                 running = false;
             }
             case LOAD -> {
-                int rg = (op & MASK_LOAD_RG) >> 16;
-                int mode = op & MASK_LOAD_MODE;
-                int ra = (op & MASK_LOAD_RA);
+                Load loadInstr = (Load) lastInstruction;
                 int val;
-                if (mode != 0) {
-                    switch(mode) {
-                        case LOAD_MEM -> {val = readMem(getReg(ra));}
-                        case LOAD_MEM_SHORT -> {val = readMemShort(getReg(ra));}
-                        case LOAD_MEM_BYTE -> {val = readMemByte(getReg(ra));}
-                        default -> {
-                            throw new RuntimeException(String.format("Unknown load mode: %20x", mode >> 8));
-                        }
+                switch (loadInstr.mode) {
+                    case LITERAL -> {
+                        val = loadInstr.data;
+                        pgmPtr += 4;
                     }
-                } else {
-                    val = next;
-                    pgmPtr += 4;
+                    case MEM_WORD -> {val = readMem(getReg(loadInstr.ra));}
+                    case MEM_SHORT -> {val = readMemShort(getReg(loadInstr.ra));}
+                    case MEM_BYTE -> {val = readMemByte(getReg(loadInstr.ra));}
+                    default -> {
+                        throw new RuntimeException(String.format("Unknown load mode: %20x", (op & MASK_LOAD_MODE) >> 8));
+                    }
                 }
-                setReg(rg, val);
+                setReg(loadInstr.rg, val);
             }
             case STORE -> {
                 int rg = (op & MASK_STORE_RG) >> 16;
@@ -497,33 +502,29 @@ public class CPU {
                 }
             }
             case GOTO -> {
-                boolean rel = (op & MASK_GOTO_REL) != 0;
-                boolean push = (op & MASK_GOTO_PUSH) != 0;
-                boolean pop = (op & MASK_GOTO_POP) != 0;
-                int ra = (op & MASK_GOTO_RA) >> 8;
-                int rg = op & MASK_GOTO_RG;
-                boolean condVal = switch(ConditionalOperator.fromMachineCode(op)) {
+                Goto gotoInstruction = (Goto) lastInstruction;
+                boolean condVal = switch(gotoInstruction.condition) {
                     case UNCONDITIONAL -> true;
-                    case EQ_ZERO -> getReg(rg) == 0;
-                    case LEQ_ZERO -> getReg(rg) <= 0;
-                    case GT_ZERO -> getReg(rg) > 0;
-                    case NEQ_ZERO -> getReg(rg) != 0;
-                    case LT_ZERO -> getReg(rg) < 0;
-                    case GEQ_ZERO -> getReg(rg) >= 0;
+                    case EQ_ZERO -> getReg(gotoInstruction.rg) == 0;
+                    case LEQ_ZERO -> getReg(gotoInstruction.rg) <= 0;
+                    case GT_ZERO -> getReg(gotoInstruction.rg) > 0;
+                    case NEQ_ZERO -> getReg(gotoInstruction.rg) != 0;
+                    case LT_ZERO -> getReg(gotoInstruction.rg) < 0;
+                    case GEQ_ZERO -> getReg(gotoInstruction.rg) >= 0;
                     case UNKNOWN -> true;
                 };
-                if (rel)
+                if (gotoInstruction.rel)
                     pgmPtr += 4;
                 if (condVal) {
-                    if (pop) {
+                    if (gotoInstruction.mode == Mode.POP) {
                         pgmPtr = stackPop();
                     } else {
-                        if (push)
+                        if (gotoInstruction.mode == Mode.PUSH)
                             stackPush(pgmPtr);
-                        if (rel)
+                        if (gotoInstruction.rel)
                             pgmPtr += next;
                         else
-                            pgmPtr = getReg(ra);
+                            pgmPtr = getReg(gotoInstruction.ra);
                     }
                 }
             }
@@ -579,19 +580,22 @@ public class CPU {
                 }
             }
             case STACK -> {
-                int rg = (op & MASK_STACK_RG) >> 16;
-                switch(op & MASK_STACK_OP) {
-                    case (STACK_PUSH) -> {
-                        stackPush(getReg(rg));
+                Stack stackInstr = (Stack) lastInstruction;
+                switch(stackInstr.operation) {
+                    case PUSH -> {
+                        stackPush(getReg(stackInstr.rg));
                     }
-                    case (STACK_POP) -> {
-                        setReg(rg, stackPop());
+                    case POP -> {
+                        setReg(stackInstr.rg, stackPop());
                     }
-                    case (STACK_INC) -> {
-                        stackPtr += 1 + op & MASK_STACK_VAL;
+                    case INC -> {
+                        stackPtr += stackInstr.getInc();
                     }
-                    case (STACK_DEC) -> {
-                        stackPtr -= 1 + op & MASK_STACK_VAL;
+                    case DEC -> {
+                        stackPtr -= stackInstr.getInc();
+                    }
+                    case UNKNOWN -> {
+
                     }
                 }
             }

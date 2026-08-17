@@ -58,13 +58,13 @@ public class MachineCode {
     public static final int SET_FORCED = 0x0010_0000;
 
     public static final int STACK = 0x10 << 24;
-    public static final int MASK_STACK_RG = 0x00ff_0000;
-    public static final int MASK_STACK_OP = 0x0000_ff00;
-    public static final int MASK_STACK_VAL = 0x0000_00ff;
+    public static final int MASK_STACK_RG = 0x0000_00ff;
+    public static final int MASK_STACK_OP = 0x00ff_0000;
+    public static final int MASK_STACK_VAL = 0x0000_ffff;
     public static final int STACK_PUSH = 0x0000_0000;
-    public static final int STACK_POP = 0x0000_0100;
-    public static final int STACK_INC = 0x0000_0200;
-    public static final int STACK_DEC = 0x0000_0300;
+    public static final int STACK_POP = 0x0001_0000;
+    public static final int STACK_INC = 0x0002_0000;
+    public static final int STACK_DEC = 0x0003_0000;
 
     public static final int SYSCALL = 0x11 << 24;
     public static final int MASK_SYSCALL_FUNCTION = 0x0000_ffff;

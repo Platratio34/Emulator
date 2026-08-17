@@ -8,6 +8,7 @@ import javax.swing.JPanel;
 
 import com.peter.emulator.CPU;
 import com.peter.emulator.MachineCode;
+import com.peter.emulator.machinecode.Instruction;
 
 public class CPUPanel extends JPanel {
 
@@ -188,8 +189,13 @@ public class CPUPanel extends JPanel {
 
         pmLbl_I.setText(EmulatorGui.toHex(cpu.privilegeModeI ? 1 : 0));
 
-        instrLbl.setText(MachineCode.translate(cpu.instr, cpu.instrb) + "  (" + EmulatorGui.toHex(cpu.instr) + " "
-                + EmulatorGui.toHex(cpu.instrb) + ")");
+        if (cpu.lastInstruction != null) {
+            instrLbl.setText(cpu.lastInstruction + "  (" + EmulatorGui.toHex(cpu.instr) + " "
+                    + EmulatorGui.toHex(cpu.instrb) + ")");
+        } else {
+            instrLbl.setText(Instruction.fromBytecode(cpu.instr, cpu.instrb) + "  (" + EmulatorGui.toHex(cpu.instr) + " "
+                    + EmulatorGui.toHex(cpu.instrb) + ")");
+        }
         
         debuggerPanel.update();
     }

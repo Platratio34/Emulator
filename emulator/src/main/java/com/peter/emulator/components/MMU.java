@@ -1,6 +1,7 @@
 package com.peter.emulator.components;
 
 import com.peter.emulator.CPU;
+import com.peter.emulator.MachineCode;
 
 public class MMU {
 
@@ -83,18 +84,5 @@ public class MMU {
         PRIVILEGED,
         NEVER_PRIVILEGED,
         DEVICE;
-    }
-
-    public static class MemoryException extends RuntimeException {
-        public int address = 0;
-
-        public MemoryException(int address) {
-            this.address = address;
-        }
-
-        @Override
-        public String toString() {
-            return String.format("Emulator Memory Exception: 0x%x", address);
-        }
     }
 }

@@ -3,7 +3,7 @@ package com.peter.emulator.peripherals;
 import java.util.ArrayList;
 
 import com.peter.emulator.CPU;
-import com.peter.emulator.components.MMU;
+import com.peter.emulator.components.MemoryException;
 import com.peter.emulator.components.RAM;
 
 public class PeripheralManager implements MemoryMappedPeripheral {
@@ -68,10 +68,11 @@ public class PeripheralManager implements MemoryMappedPeripheral {
     public int addPeripheral(Peripheral peripheral) {
         switch (peripheral) {
             case DMAPeripheral dmap -> {
-                for(int i = 0; i < peripherals.length; i++) {
+                for(int i = 1; i < peripherals.length; i++) {
                     if(peripherals[i] == null) {
                         peripherals[i] = dmap;
                         dmap.link(ram, cpu, i);
+                        System.out.println(String.format("Adding DMA peripheral #%d: %s", i, peripheral));
                         return i;
                     }
                 }
@@ -120,7 +121,7 @@ public class PeripheralManager implements MemoryMappedPeripheral {
 
     @Override
     public void onUpdate(int address, byte value) {
-        throw new MMU.MemoryException(address);
+        throw MemoryException.Write(address);
     }
 
     @Override

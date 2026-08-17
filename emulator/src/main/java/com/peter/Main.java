@@ -12,6 +12,7 @@ import org.json.JSONException;
 
 import com.peter.emulator.Emulator;
 import com.peter.emulator.assembly.Assembler;
+import com.peter.emulator.assembly.AssemblerError;
 import com.peter.emulator.debug.Debugger;
 import com.peter.emulator.lang.ELAnalysisError;
 import com.peter.emulator.lang.ELAnalysisError.Severity;
@@ -224,22 +225,22 @@ public class Main {
             e.printStackTrace();
         }
 
-        // Assembler bootAssembler = new Assembler();
-        // try {
-        //     bootAssembler.setSource(ROOT_PATH.resolve("boot.asm"));
-        //     if (!bootAssembler.assemble()) {
-        //         for (AssemblerError err : bootAssembler.errors) {
-        //             System.err.println(err);
-        //         }
-        //         return;
-        //     }
+        Assembler bootAssembler = new Assembler();
+        try {
+            bootAssembler.setSource(ROOT_PATH.resolve("boot.asm"));
+            if (!bootAssembler.assemble()) {
+                for (AssemblerError err : bootAssembler.errors) {
+                    System.err.println(err);
+                }
+                return;
+            }
 
-        //     Files.write(ROOT_PATH.resolve("boot.bin"), Assembler.toBytes(bootAssembler.build()), StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        // } catch (IOException e) {
-        //     e.printStackTrace();
-        //     return;
-        // }
-        // emulator.ram.copyWords(bootAssembler.build());
+            Files.write(ROOT_PATH.resolve("boot.bin"), Assembler.toBytes(bootAssembler.build()), StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+        emulator.ram.copyWords(bootAssembler.build());
         try {
             emulator.ram.copy(Files.readAllBytes(ROOT_PATH.resolve("boot.bin")));
         } catch (IOException e) {

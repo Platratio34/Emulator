@@ -40,10 +40,10 @@ public class Load extends Instruction {
             return null;
         }
         return switch(Mode.fromBytecode(bytecode)) {
-            case LITERAL -> Literal((bytecode >> 16) & 0xff, next);
-            case MEM_WORD -> MemWord((bytecode >> 16) & 0xff, bytecode & 0xff);
-            case MEM_SHORT -> MemShort((bytecode >> 16) & 0xff, bytecode & 0xff);
-            case MEM_BYTE -> MemByte((bytecode >> 16) & 0xff, bytecode & 0xff);
+            case LITERAL -> Literal(bytecode >> 16, next);
+            case MEM_WORD, UNKNOWN -> MemWord(bytecode >> 16, bytecode);
+            case MEM_SHORT -> MemShort(bytecode >> 16, bytecode);
+            case MEM_BYTE -> MemByte(bytecode >> 16, bytecode);
         };
     }
 
@@ -65,29 +65,31 @@ public class Load extends Instruction {
     @Override
     public String toString() {
         return switch(mode) {
-            case LITERAL -> String.format("LOAD %s 0x%08x", MachineCode.translateReg(rg), data);
-            case MEM_WORD -> String.format("LOAD MEM WORD %s %s", MachineCode.translateReg(rg), MachineCode.translateReg(ra));
-            case MEM_SHORT -> String.format("LOAD MEM SHORT %s %s", MachineCode.translateReg(rg), MachineCode.translateReg(ra));
-            case MEM_BYTE -> String.format("LOAD MEM BYTE %s %s", MachineCode.translateReg(rg), MachineCode.translateReg(ra));
-            default -> String.format("LOAD UNKNOWN (0x%08x)", getBytecode());
+            case LITERAL -> String.format("LOAD %s <- 0x%s", MachineCode.translateReg(rg), toHex(data));
+            case MEM_WORD -> String.format("LOAD MEM WORD %s <- mem[%s]", MachineCode.translateReg(rg), MachineCode.translateReg(ra));
+            case MEM_SHORT -> String.format("LOAD MEM SHORT %s <- mem[%s]", MachineCode.translateReg(rg), MachineCode.translateReg(ra));
+            case MEM_BYTE -> String.format("LOAD MEM BYTE %s <- mem[%s]", MachineCode.translateReg(rg), MachineCode.translateReg(ra));
+            default -> String.format("LOAD UNKNOWN (0x%s)", toHex(getBytecode()));
         };
     }
 
     public enum Mode {
-        LITERAL(0x00<<8),
-        MEM_WORD(0x01<<8),
-        MEM_SHORT(0x02<<8),
-        MEM_BYTE(0x03<<8)
+        UNKNOWN(0x00),
+                
+        LITERAL(0x00),
+        MEM_WORD(0x01),
+        MEM_SHORT(0x02),
+        MEM_BYTE(0x03)
         ;
 
         public final int id;
 
         private Mode(int id) {
-            this.id = id;
+            this.id = id << 8;
             setup();
         }
 
-        protected static HashMap<Integer, Mode> byId = null;
+        protected static HashMap<Integer, Mode> byId;
 
         private void setup() {
             if(byId == null)
@@ -96,7 +98,7 @@ public class Load extends Instruction {
         }
 
         public static Mode fromBytecode(int bytecode) {
-            return byId.getOrDefault(bytecode & 0x00ff_0000, LITERAL);
+            return byId.getOrDefault(bytecode & 0x0000_0300, UNKNOWN);
         }
     }
 }

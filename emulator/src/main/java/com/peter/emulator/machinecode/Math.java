@@ -97,14 +97,14 @@ public class Math extends Instruction {
         }
         Operation operation = Operation.fromBytecode(bytecode);
         return switch(operation) {
-            case INC -> new Math(operation, (bytecode >> 24) & 0x0f, bytecode & 0xffff);
-            default -> new Math(operation, (bytecode >> 24) & 0x0f, (bytecode >> 16) & 0xff, bytecode & 0xff);
+            case INC -> new Math(operation, (bytecode >> 16) & 0x0f, bytecode & 0xffff);
+            default -> new Math(operation, (bytecode >> 16) & 0x0f, (bytecode >> 8) & 0xff, bytecode & 0xff);
         };
     }
 
     @Override
     public int getBytecode() {
-        return op.id | operation.id | (rd << 24) | (ra << 8) | rb;
+        return op.id | operation.id | (rd << 16) | (ra << 8) | rb;
     }
 
     public int getInc() {
@@ -130,30 +130,30 @@ public class Math extends Instruction {
     }
 
     public enum Operation {
-        ADD(0x10 << 16),
-        SUB(0x20 << 16),
-        INC(0x30 << 16),
-        AND(0x40 << 16),
-        OR(0x50 << 16),
-        NAND(0x60 << 16),
-        NOR(0x70 << 16),
-        NOT(0x80 << 16),
-        XOR(0x90 << 16),
-        LSHIFT(0xa0 << 16),
-        RSHIFT(0xb0 << 16),
-        MUL(0xc0 << 16),
-        DIV(0xd0 << 16),
-        UNKNOWN(0xf0 << 16);
+        ADD(0x1),
+        SUB(0x2),
+        INC(0x3),
+        AND(0x4),
+        OR(0x5),
+        NAND(0x6),
+        NOR(0x7),
+        NOT(0x8),
+        XOR(0x9),
+        LSHIFT(0xa),
+        RSHIFT(0xb),
+        MUL(0xc),
+        DIV(0xd),
+        UNKNOWN(0xf);
         ;
 
         public final int id;
 
         private Operation(int id) {
-            this.id = id;
+            this.id = id << 20;
             setup();
         }
 
-        protected static HashMap<Integer, Operation> byId = null;
+        protected static HashMap<Integer, Operation> byId;
 
         private void setup() {
             if(byId == null)
@@ -162,7 +162,7 @@ public class Math extends Instruction {
         }
 
         public static Operation fromBytecode(int bytecode) {
-            return byId.getOrDefault(bytecode & 0x00ff_0000, UNKNOWN);
+            return byId.getOrDefault(bytecode & 0x00f0_0000, UNKNOWN);
         }
     }
 }

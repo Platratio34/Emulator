@@ -73,7 +73,7 @@ public class Syscall extends Instruction {
                 };
             }
         }
-        return String.format("SYSCALL UNKNOWN (0x%08x)", getBytecode());
+        return String.format("SYSCALL UNKNOWN (0x%s)", toHex(getBytecode()));
     }
 
     public enum Operation {
@@ -90,7 +90,7 @@ public class Syscall extends Instruction {
             setup();
         }
 
-        protected static HashMap<Integer, Operation> byId = null;
+        protected static HashMap<Integer, Operation> byId;
 
         private void setup() {
             if(byId == null)
@@ -116,7 +116,7 @@ public class Syscall extends Instruction {
             setup();
         }
 
-        protected static HashMap<Integer, InterruptOption> byId = null;
+        protected static HashMap<Integer, InterruptOption> byId;
 
         private void setup() {
             if(byId == null)

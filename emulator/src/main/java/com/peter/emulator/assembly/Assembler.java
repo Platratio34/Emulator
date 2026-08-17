@@ -533,7 +533,7 @@ public class Assembler {
                     }
                     case "STORE" -> {
                         if (parts.length < 2) {
-                            errors.add(new AssemblerError("Invalid copy instruction: STORE <SHORT|BYTE> VAL [ra] [val] <INC_RA> or STORE <SHORT|BYTE> [val|rg] [ra] <INC_RA>", lineN,
+                            errors.add(new AssemblerError("Invalid store instruction: STORE <SHORT|BYTE> VAL [ra] [val] <INC_RA> or STORE <SHORT|BYTE> [val|rg] [ra] <INC_RA>", lineN,
                                     line.length(), line, source));
                             continue;
                         }
@@ -546,7 +546,7 @@ public class Assembler {
                         StoreEntry entry;
                         if (parts[next].equals("VAL")) {
                             if (parts.length < next+3) {
-                                errors.add(new AssemblerError("Invalid copy instruction: STORE <SHORT|BYTE> VAL [ra] [val] <INC_RA>", lineN,
+                                errors.add(new AssemblerError("Invalid store instruction: STORE <SHORT|BYTE> VAL [ra] [val] <INC_RA>", lineN,
                                         line.length(), line, source));
                                 continue;
                             }
@@ -558,18 +558,18 @@ public class Assembler {
                             data[addr++] = (Entry.Literal(val));
                         } else if (!parts[next].startsWith("r")) {
                             if (parts.length < next+2) {
-                                errors.add(new AssemblerError("Invalid copy instruction: STORE <SHORT|BYTE> [rg|val] [ra] <INC_RA>", lineN,
+                                errors.add(new AssemblerError("Invalid store instruction: STORE <SHORT|BYTE> [rg|val] [ra] <INC_RA>", lineN,
                                         line.length(), line, source));
                                 continue;
                             }
-                            int ra = getReg(parts[next++]);
                             int val = getVal(parts[next++]);
+                            int ra = getReg(parts[next++]);
                             entry = new StoreEntry(0, size, STORE_SOURCE_VAL, ra);
                             data[addr++] = entry;
                             data[addr++] = (Entry.Literal(val));
                         } else {
                             if (parts.length < next+2) {
-                                errors.add(new AssemblerError("Invalid copy instruction: STORE <SHORT|BYTE> [rg|val] [ra] <INC_RA>", lineN,
+                                errors.add(new AssemblerError("Invalid store instruction: STORE <SHORT|BYTE> [rg|val] [ra] <INC_RA>", lineN,
                                         line.length(), line, source));
                                 continue;
                             }
@@ -579,7 +579,7 @@ public class Assembler {
                             data[addr++] = entry;
                         }
                         if(parts.length > next && parts[next].equals("INC_RA")) {
-                            entry.incRG();
+                            entry.incRA();
                         }
                     }
                     case "ADD" -> {
@@ -1213,7 +1213,7 @@ public class Assembler {
         }
         
         public static Entry Stack(boolean push, int rg) {
-            return new Entry(STACK | (rg << 16) | (push ? 0x0 : STACK_POP));
+            return new Entry(STACK | (push ? 0x0 : STACK_POP) | rg);
         }
 
         public static Entry StackInc(int v) {

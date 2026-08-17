@@ -11,6 +11,7 @@ public class ResolveAction extends ComplexAction {
     public final Register reg;
     public final ELType returnType;
     public final ELVariable returnVar;
+    public boolean wasConst = false;
 
     public ResolveAction(ActionScope scope, Register reg, ELVariable var, IdentifierToken id, boolean byValue) {
         this(scope, reg, var, id, byValue, false);
@@ -45,7 +46,7 @@ public class ResolveAction extends ComplexAction {
             }
         }
         
-        boolean wasConst = false;
+        wasConst = false;
         switch (var.varType) {
             case CONST -> {
                 addDirect("LOAD %s %s", reg, var.getQualifiedName());

@@ -43,7 +43,7 @@ public class Instruction {
 
         @Override
         public String toString() {
-            return String.format("0x%02x 0x%06x", data >> 24, data & 0xff_ffff);
+            return String.format("0x%02x %02x %02x %02x", data >> 24, (data >> 16) & 0xff, (data >> 8) & 0xff, data & 0xff);
         }
     }
 
@@ -59,34 +59,34 @@ public class Instruction {
 
         @Override
         public String toString() {
-            return String.format("%s 0x%06x", op, data & 0xff_ffff);
+            return String.format("%s 0x%s", op, toHex(data & 0xff_ffff, 6));
         }
     }
 
-    public enum Operator {
+    public static enum Operator {
         NO_OP(0x00, Generic::fromBytecode),
         LOAD(0x01, Load::fromBytecode),
         STORE(0x02, Store::fromBytecode),
-        
+
         MATH(0x04, Math::fromBytecode),
-        GOTO(0x05, null),
-        SET(0x06, null),
-        
-        STACK(0x10, null),
+        GOTO(0x05, Goto::fromBytecode),
+        SET(0x06, Set::fromBytecode),
+
+        STACK(0x10, Stack::fromBytecode),
         SYSCALL(0x11, Syscall::fromBytecode),
-        
+
         HALT(0xff, Generic::fromBytecode),
 
-        UNKNOWN(-1, null)
-        ;
+        UNKNOWN(-1, null);
 
         public final int id;
         public final BiFunction<Integer, Integer, Instruction> supplier;
 
         private Operator(int id, BiFunction<Integer, Integer, Instruction> supplier) {
-            if(id == -1) {
-                this.id = 0;
+            if (id == -1) {
+                this.id = 0xffff_ffff;
                 this.supplier = Unknown::fromBytecode;
+                setup();
                 return;
             }
             this.id = id << 24;
@@ -95,16 +95,43 @@ public class Instruction {
             setup();
         }
 
-        protected static HashMap<Integer, Operator> byId = null;
+        protected static HashMap<Integer, Operator> byId;
 
         private void setup() {
-            if(byId == null)
+            if (byId == null) {
                 byId = new HashMap<>();
+            }
             byId.put(id, this);
         }
 
         public static Operator fromBytecode(int bytecode) {
+            // System.out.println(toHexLead(bytecode & 0xff00_0000));
             return byId.getOrDefault(bytecode & 0xff00_0000, UNKNOWN);
         }
+    }
+    
+    public static String toHex(int num) {
+        String str = String.format("%08x", num);
+        return str.substring(0, 4) + "_" + str.substring(4);
+    }
+
+    public static String toHex(int num, int digits) {
+        String str = String.format("%0" + digits + "x", num);
+        if (str.length() <= 4)
+            return str;
+        int bI = str.length() - 4;
+        return str.substring(0, bI) + "_" + str.substring(bI);
+    }
+
+    public static String toHexLead(int num) {
+        String str = String.format("%08x", num);
+        return "0x" + str.substring(0, 4) + "_" + str.substring(4);
+    }
+    public static String toHexLead(int num, int digits) {
+        String str = String.format("%0" + digits + "x", num);
+        if (str.length() <= 4)
+            return "0x" + str;
+        int bI = str.length() - 4;
+        return "0x" + str.substring(0, bI) + "_" + str.substring(bI);
     }
 }

@@ -15,6 +15,7 @@ namespace TestD {
 
     @Entrypoint(raw)
     public static void main() {
+        asm("STORE BYTE 'T' r7\nSTORE BYTE 'e' r7\nSTORE BYTE 's' r7\nSTORE BYTE 't' r7\nSTORE BYTE 'D' r7\nSTORE BYTE '\\n' r7");
         asm("LOAD rIH &:TestD.onInterrupt");
         CharacterDisplay.setup();
         uint32 b;

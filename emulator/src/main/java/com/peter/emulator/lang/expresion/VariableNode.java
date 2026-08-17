@@ -31,7 +31,7 @@ public class VariableNode extends ExpressionNode {
 
     @Override
     public boolean isConstant() {
-        return variable != null && variable.varType == ELVariable.Type.CONST;
+        return variable != null && rA.wasConst;
     }
 
     @Override

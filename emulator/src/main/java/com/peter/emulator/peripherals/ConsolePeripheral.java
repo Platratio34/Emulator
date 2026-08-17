@@ -3,6 +3,7 @@ package com.peter.emulator.peripherals;
 import java.util.function.Consumer;
 
 import com.peter.emulator.Packer;
+import com.peter.emulator.components.MemoryException;
 
 public class ConsolePeripheral implements MemoryMappedPeripheral {
 
@@ -37,11 +38,13 @@ public class ConsolePeripheral implements MemoryMappedPeripheral {
     private byte lastChar;
     @Override
     public void onUpdate(int address, byte value) {
-        if(address == startAddress) {
+        if (address == startAddress) {
             System.out.print((char) value);
             lastChar = value;
-            if(outConsumer != null)
-                outConsumer.accept((char)value);
+            if (outConsumer != null)
+                outConsumer.accept((char) value);
+        } else if (address == inAddress) {
+            throw MemoryException.Write(address);
         }
     }
 

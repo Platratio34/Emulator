@@ -5,6 +5,7 @@ import com.peter.emulator.components.MMU;
 import com.peter.emulator.components.RAM;
 import com.peter.emulator.components.TimerUnit;
 import com.peter.emulator.gui.EmulatorGui;
+import com.peter.emulator.machinecode.Instruction;
 import com.peter.emulator.peripherals.CharacterDisplay;
 import com.peter.emulator.peripherals.ConsolePeripheral;
 import com.peter.emulator.peripherals.PeripheralManager;
@@ -81,7 +82,7 @@ public class Emulator {
                 } catch (Exception e) {
                     System.err.println("\n");
                     System.err.println("Exception in execution");
-                    System.err.println(MachineCode.translate(cores[0].instr, cores[0].instrb));
+                    System.err.println(cores[0].lastInstruction);
                     if (cores[0].debugger != null) {
                         System.err.println(cores[0].debugger.printStack());
                     }
