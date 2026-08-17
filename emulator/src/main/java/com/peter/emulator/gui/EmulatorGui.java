@@ -100,7 +100,8 @@ public class EmulatorGui {
             stackPanel.stack = true;
             p.add(stackPanel);
 
-            kernalPanel = new MemoryPanel(emulator.cores[0], 0x1000, 32);
+            kernalPanel = new MemoryPanel(emulator.cores[0], 0x0000, 32);
+            kernalPanel.trackPgm = true;
             p.add(kernalPanel);
             
             peripheralMemoryPanel = new MemoryPanel(emulator.cores[0], 0x1_0000, 8);

@@ -4,26 +4,39 @@ import java.util.HashMap;
 
 import com.peter.emulator.MachineCode;
 
-public class Math extends Instruction {
+public class MathInstruction extends Instruction {
 
     public final Operation operation;
     public final int rd;
     public final int ra;
     public final int rb;
+    public final boolean rotate;
 
-    protected Math(Operation operation, int rd, int ra, int rb) {
+    public static final int ROTATE_FLAG = 0x80;
+
+    protected MathInstruction(Operation operation, int rd, int ra, int rb) {
         super(Operator.MATH);
         this.operation = operation;
         this.rd = rd & 0x0f;
         this.ra = ra & 0xff;
         this.rb = rb & 0xff;
+        rotate = false;
     }
-    protected Math(Operation operation, int rd, int val) {
+    protected MathInstruction(Operation operation, int rd, int ra, int rb, boolean rotate) {
+        super(Operator.MATH);
+        this.operation = operation;
+        this.rd = rd & 0x0f;
+        this.ra = ra & 0xff;
+        this.rb = rb & 0xff;
+        this.rotate = false;
+    }
+    protected MathInstruction(Operation operation, int rd, int val) {
         super(Operator.MATH);
         this.operation = operation;
         this.rd = rd & 0x0f;
         this.ra = 0;
         rb = val & 0xffff;
+        rotate = false;
     }
 
     // public static Math Literal(int rg, int value) {
@@ -38,73 +51,83 @@ public class Math extends Instruction {
     // public static Math MemByte(int rg, int ra) {
     //     return new Math(Operation.MEM_BYTE, rg, ra);
     // }
-    public static Math Add(int rd, int ra, int rb) {
-        return new Math(Operation.ADD, rd, ra, rb);
+    public static MathInstruction Add(int rd, int ra, int rb) {
+        return new MathInstruction(Operation.ADD, rd, ra, rb);
     }
-    public static Math Sub(int rd, int ra, int rb) {
-        return new Math(Operation.SUB, rd, ra, rb);
+    public static MathInstruction Sub(int rd, int ra, int rb) {
+        return new MathInstruction(Operation.SUB, rd, ra, rb);
     }
 
-    public static Math Inc(int rd, int amt) {
+    public static MathInstruction Inc(int rd, int amt) {
         if (amt < 0) {
-            amt = (-amt & 0x7fff) | 0x8000;
+            amt = ((-amt) & 0x7fff) | 0x8000;
         } else {
             amt = (amt - 1) & 0x7fff;
         }
-        return new Math(Operation.INC, rd, amt);
+        return new MathInstruction(Operation.INC, rd, amt);
     }
 
-    public static Math And(int rd, int ra, int rb) {
-        return new Math(Operation.AND, rd, ra, rb);
+    public static MathInstruction And(int rd, int ra, int rb) {
+        return new MathInstruction(Operation.AND, rd, ra, rb);
     }
-    public static Math Or(int rd, int ra, int rb) {
-        return new Math(Operation.OR, rd, ra, rb);
+    public static MathInstruction Or(int rd, int ra, int rb) {
+        return new MathInstruction(Operation.OR, rd, ra, rb);
     }
-    public static Math Nand(int rd, int ra, int rb) {
-        return new Math(Operation.NAND, rd, ra, rb);
+    public static MathInstruction Nand(int rd, int ra, int rb) {
+        return new MathInstruction(Operation.NAND, rd, ra, rb);
     }
-    public static Math Nor(int rd, int ra, int rb) {
-        return new Math(Operation.NOR, rd, ra, rb);
+    public static MathInstruction Nor(int rd, int ra, int rb) {
+        return new MathInstruction(Operation.NOR, rd, ra, rb);
     }
-    public static Math Not(int rd, int ra) {
-        return new Math(Operation.NOT, rd, ra, 0);
+    public static MathInstruction Not(int rd, int ra) {
+        return new MathInstruction(Operation.NOT, rd, ra, 0);
     }
-    public static Math Xor(int rd, int ra, int rb) {
-        return new Math(Operation.XOR, rd, ra, rb);
-    }
-
-    public static Math LShift(int rd, int rg, int amt) {
-        return new Math(Operation.LSHIFT, rd, rg, amt);
-    }
-    public static Math RShift(int rd, int rg, int amt) {
-        return new Math(Operation.RSHIFT, rd, rg, amt);
+    public static MathInstruction Xor(int rd, int ra, int rb) {
+        return new MathInstruction(Operation.XOR, rd, ra, rb);
     }
 
-    public static Math Mul(int rd, int ra, int rb) {
-        return new Math(Operation.MUL, rd, ra, rb);
+    public static MathInstruction LShift(int rd, int rg, int amt) {
+        return new MathInstruction(Operation.LSHIFT, rd, rg, amt & 0x7f);
     }
-    public static Math Div(int rd, int ra, int rb) {
-        return new Math(Operation.DIV, rd, ra, rb);
+
+    public static MathInstruction RShift(int rd, int rg, int amt) {
+        return new MathInstruction(Operation.RSHIFT, rd, rg, amt & 0x7f);
+    }
+
+    public static MathInstruction LRotate(int rd, int rg, int amt) {
+        return new MathInstruction(Operation.LSHIFT, rd, rg, amt, true);
+    }
+
+    public static MathInstruction RRotate(int rd, int rg, int amt) {
+        return new MathInstruction(Operation.RSHIFT, rd, rg, amt, true);
+    }
+
+    public static MathInstruction Mul(int rd, int ra, int rb) {
+        return new MathInstruction(Operation.MUL, rd, ra, rb);
+    }
+    public static MathInstruction Div(int rd, int ra, int rb) {
+        return new MathInstruction(Operation.DIV, rd, ra, rb);
     }
 
     public static boolean inIncRange(int value) {
         return 0x8000 > value && value > -0x7ffff && value != 0;
     }
 
-    public static Math fromBytecode(int bytecode, int next) {
+    public static MathInstruction fromBytecode(int bytecode, int next) {
         if((bytecode & 0xff00_0000) != Operator.MATH.id) {
             return null;
         }
         Operation operation = Operation.fromBytecode(bytecode);
         return switch(operation) {
-            case INC -> new Math(operation, (bytecode >> 16) & 0x0f, bytecode & 0xffff);
-            default -> new Math(operation, (bytecode >> 16) & 0x0f, (bytecode >> 8) & 0xff, bytecode & 0xff);
+            case INC -> new MathInstruction(operation, (bytecode >> 16), bytecode);
+            case LSHIFT, RSHIFT -> new MathInstruction(operation, (bytecode >> 16), (bytecode >> 8), bytecode & 0x7f, (bytecode & ROTATE_FLAG) != 0);
+            default -> new MathInstruction(operation, (bytecode >> 16), (bytecode >> 8), bytecode);
         };
     }
 
     @Override
     public int getBytecode() {
-        return op.id | operation.id | (rd << 16) | (ra << 8) | rb;
+        return op.id | operation.id | (rd << 16) | (ra << 8) | (rotate ? ROTATE_FLAG : 0) | rb;
     }
 
     public int getInc() {

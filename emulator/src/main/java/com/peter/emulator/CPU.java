@@ -1,19 +1,15 @@
 package com.peter.emulator;
 
+import static com.peter.emulator.MachineCode.*;
+
 import java.util.ArrayDeque;
 
-import com.peter.emulator.MachineCode.ConditionalOperator;
-import com.peter.emulator.MachineCode.MathOperator;
-import static com.peter.emulator.MachineCode.*;
 import com.peter.emulator.components.MMU;
 import com.peter.emulator.components.RAM;
 import com.peter.emulator.debug.Debugger;
-import com.peter.emulator.machinecode.Goto;
-import com.peter.emulator.machinecode.Instruction;
-import com.peter.emulator.machinecode.Load;
-import com.peter.emulator.machinecode.Stack;
-import com.peter.emulator.machinecode.Syscall;
+import com.peter.emulator.machinecode.*;
 import com.peter.emulator.machinecode.Goto.Mode;
+import com.peter.emulator.machinecode.Store.Source;
 
 public class CPU {
 
@@ -61,7 +57,7 @@ public class CPU {
     protected ArrayDeque<Integer> interruptQueue = new ArrayDeque<>();
 
     public Debugger debugger = null;
-    public boolean printInstr = false;
+    public boolean printInstr = true;
 
     public Instruction lastInstruction;
 
@@ -335,6 +331,9 @@ public class CPU {
         if (printInstr) {
             System.out.println(String.format("CPU Tick: [%04x] %s", mmu.translate(this, pgmPtr - 4), lastInstruction.toString()));
         }
+        if (lastInstruction.hasSecond()) {
+            pgmPtr += 4;
+        }
         switch (lastInstruction.op) {
             case NO_OP, UNKNOWN -> {}
             case HALT -> {
@@ -348,148 +347,115 @@ public class CPU {
                 switch (loadInstr.mode) {
                     case LITERAL -> {
                         val = loadInstr.data;
-                        pgmPtr += 4;
                     }
                     case MEM_WORD -> {val = readMem(getReg(loadInstr.ra));}
                     case MEM_SHORT -> {val = readMemShort(getReg(loadInstr.ra));}
                     case MEM_BYTE -> {val = readMemByte(getReg(loadInstr.ra));}
                     default -> {
-                        throw new RuntimeException(String.format("Unknown load mode: %20x", (op & MASK_LOAD_MODE) >> 8));
+                        throw new RuntimeException(String.format("Unknown load mode: %20x", (op & 0xff) >> 8));
                     }
                 }
                 setReg(loadInstr.rg, val);
             }
             case STORE -> {
-                int rg = (op & MASK_STORE_RG) >> 16;
-                int size = op & MASK_STORE_SIZE;
-                int source = op & MASK_STORE_SOURCE;
-                boolean incRG = (op & MASK_STORE_FLAG_INC_RG) != 0;
-                boolean incRA = (op & MASK_STORE_FLAG_INC_RA) != 0;
-                int ra = op & MASK_STORE_RA;
-
-                int val = switch(source) {
-                    case STORE_SOURCE_REG, STORE_SOURCE_REG_REG -> getReg(rg);
-                    case STORE_SOURCE_MEM -> switch(size) {
-                        case STORE_SIZE_WORD -> readMem(getReg(rg));
-                        case STORE_SIZE_SHORT -> readMemShort(getReg(rg));
-                        case STORE_SIZE_BYTE -> readMemByte(getReg(rg));
-                        default -> 0;
+                Store storeI = (Store) lastInstruction;
+                int val = switch(storeI.source) {
+                    case REG, REG_REG -> getReg(storeI.rg);
+                    case MEM -> switch(storeI.size) {
+                        case WORD -> readMem(getReg(storeI.rg));
+                        case SHORT -> readMemShort(getReg(storeI.rg));
+                        case BYTE -> readMemByte(getReg(storeI.rg));
                     };
-                    case STORE_SOURCE_VAL -> next;
-                    default -> 0;
+                    case VAL -> next;
                 };
-                if(source == STORE_SOURCE_VAL)
-                    pgmPtr += 4;
-                if(source == STORE_SOURCE_REG_REG) {
-                    setReg(ra, val);
+                if(storeI.source == Source.REG_REG) {
+                    setReg(storeI.ra, val);
                 } else {
-                    switch(size) {
-                        case STORE_SIZE_WORD -> writeMem(getReg(ra), val);
-                        case STORE_SIZE_SHORT -> writeMemShort(getReg(ra), val);
-                        case STORE_SIZE_BYTE -> writeMemByte(getReg(ra), (byte) val);
+                    switch(storeI.size) {
+                        case WORD -> writeMem(getReg(storeI.ra), val);
+                        case SHORT -> writeMemShort(getReg(storeI.ra), val);
+                        case BYTE -> writeMemByte(getReg(storeI.ra), (byte) val);
                     }
                 }
-                int incSize = switch(size) {
-                    case STORE_SIZE_WORD -> 4;
-                    case STORE_SIZE_SHORT -> 2;
+                int incSize = switch(storeI.size) {
+                    case WORD -> 4;
+                    case SHORT -> 2;
                     default -> 1;
                 };
-                if(incRG)
-                    setReg(rg, getReg(rg) + incSize);
-                if(incRA)
-                    setReg(ra, getReg(ra) + incSize);
-
-                // int rg = (op & MASK_STORE_RG) >> 16;
-                // int sOp = op & MASK_STORE_OP;
-                // int ra = (op & MASK_STORE_RA);
-                // switch (sOp) {
-                //     case STORE_MEM -> writeMem(getReg(ra), getReg(rg));
-                //     case STORE_MEM_SHORT -> writeMemShort(getReg(ra), getReg(rg) & 0xffff);
-                //     case STORE_MEM_BYTE -> writeMemByte(getReg(ra), (byte)(getReg(rg) & 0xff));
-                //     case STORE_MEM_COPY -> writeMem(getReg(ra), readMem(getReg(rg)));
-                //     case STORE_VAL-> {
-                //         pgmPtr += 4;
-                //         writeMem(getReg(ra), next);
-                //     }
-                //     default -> setReg(ra, getReg(rg));
-                // }
+                if(storeI.incRG)
+                    setReg(storeI.rg, getReg(storeI.rg) + incSize);
+                if(storeI.incRA)
+                    setReg(storeI.ra, getReg(storeI.ra) + incSize);
             }
             case MATH -> {
+                MathInstruction mathI = (MathInstruction) lastInstruction;
                 arithmeticFlag = 0;
-                int rd = (op & MASK_MATH_RD) >> 16;
-                int ra = (op & MASK_MATH_RA) >> 8;
-                int rb = (op & MASK_MATH_RB);
-                switch (MathOperator.fromMachineCode(op)) {
+                switch (mathI.operation) {
                     case ADD -> {
                         int out;
-                        ra = getReg(ra);
-                        rb = getReg(rb);
+                        int ra = getReg(mathI.ra);
+                        int rb = getReg(mathI.rb);
                         try {
                             out = Math.addExact(ra, rb);
                         } catch (ArithmeticException e) {
                             out = ra + rb;
                             arithmeticFlag = 1;
                         }
-                        setReg(rd, out);
+                        setReg(mathI.rd, out);
                     }
                     case SUB -> {
                         int out;
-                        ra = getReg(ra);
-                        rb = getReg(rb);
+                        int ra = getReg(mathI.ra);
+                        int rb = getReg(mathI.rb);
                         try {
                             out = Math.subtractExact(ra, rb);
                         } catch (ArithmeticException e) {
                             out = ra - rb;
                             arithmeticFlag = 1;
                         }
-                        setReg(rd, out);
+                        setReg(mathI.rd, out);
                     }
                     case MUL -> {
-                        setReg(rd, getReg(ra) * getReg(rb));
+                        setReg(mathI.rd, getReg(mathI.ra) * getReg(mathI.rb));
                     }
                     case DIV -> {
-                        setReg(rd, getReg(ra) / getReg(rb));
+                        setReg(mathI.rd, getReg(mathI.ra) / getReg(mathI.rb));
                     }
                     case INC -> {
-                        int inc = op & MASK_MATH_INC;
-                        if ((inc & 0x8000) != 0) {
-                            setReg(rd, getReg(rd) - (inc & 0x7fff));
-                        } else {
-                            setReg(rd, getReg(rd) + inc + 1);
-                        }
+                        setReg(mathI.rd, getReg(mathI.rd) + mathI.getInc());
                     }
                     case AND -> {
-                        setReg(rd, getReg(ra) & getReg(rb));
+                        setReg(mathI.rd, getReg(mathI.ra) & getReg(mathI.rb));
                     }
                     case OR -> {
-                        setReg(rd, getReg(ra) | getReg(rb));
+                        setReg(mathI.rd, getReg(mathI.ra) | getReg(mathI.rb));
                     }
                     case NAND -> {
-                        setReg(rd, ~(getReg(ra) & getReg(rb)));
+                        setReg(mathI.rd, ~(getReg(mathI.ra) & getReg(mathI.rb)));
                     }
                     case NOR -> {
-                        setReg(rd, ~(getReg(ra) | getReg(rb)));
+                        setReg(mathI.rd, ~(getReg(mathI.ra) | getReg(mathI.rb)));
                     }
                     case NOT -> {
-                        setReg(rd, ~getReg(ra));
+                        setReg(mathI.rd, ~getReg(mathI.ra));
                     }
                     case XOR -> {
-                        setReg(rd, getReg(ra) ^ getReg(rb));
+                        setReg(mathI.rd, getReg(mathI.ra) ^ getReg(mathI.rb));
                     }
                     case LSHIFT -> {
-                        ra = getReg(ra);
-                        if((rb & 0x80) == 0) {
-                            setReg(rd, ra << rb);
+                        int ra = getReg(mathI.ra);
+                        if(mathI.rotate) {
+                            setReg(mathI.rd, Integer.rotateLeft(ra, mathI.rb & 0x7f));
                         } else {
-                            setReg(rd, Integer.rotateLeft(ra, rb & 0x7f));
+                            setReg(mathI.rd, ra << mathI.rb);
                         }
                     }
                     case RSHIFT -> {
-                        ra = getReg(ra);
-                        if((rb & 0x80) == 0) {
-                            setReg(rd, ra >>> rb);
+                        int ra = getReg(mathI.ra);
+                        if(mathI.rotate) {
+                            setReg(mathI.rd, Integer.rotateRight(ra, mathI.rb & 0x7f));
                         } else {
-                            setReg(rd, Integer.rotateRight(ra, rb & 0x7f));
+                            setReg(mathI.rd, ra >>> mathI.rb);
                         }
                     }
                     case UNKNOWN -> {
@@ -508,8 +474,6 @@ public class CPU {
                     case GEQ_ZERO -> getReg(gotoInstruction.rg) >= 0;
                     case UNKNOWN -> true;
                 };
-                if (gotoInstruction.rel)
-                    pgmPtr += 4;
                 if (condVal) {
                     if (gotoInstruction.mode == Mode.POP) {
                         pgmPtr = stackPop();
@@ -524,50 +488,48 @@ public class CPU {
                 }
             }
             case SET -> {
-                boolean forced = (op & SET_FORCED) != 0;
-                int rd = (op & MASK_SET_RD) >> 8;
-                int rg = op & MASK_SET_RG;
-                switch (ConditionalOperator.fromMachineCode(op)) {
+                Set setI = (Set) lastInstruction;
+                switch (setI.condition) {
                     case EQ_ZERO -> {
-                        if (getReg(rg) == 0) {
-                            setReg(rd, 1);
-                        } else if (forced) {
-                            setReg(rd, 0);
+                        if (getReg(setI.rg) == 0) {
+                            setReg(setI.rd, 1);
+                        } else if (setI.forced) {
+                            setReg(setI.rd, 0);
                         }
                     }
                     case LEQ_ZERO -> {
-                        if (getReg(rg) <= 0) {
-                            setReg(rd, 1);
-                        } else if (forced) {
-                            setReg(rd, 0);
+                        if (getReg(setI.rg) <= 0) {
+                            setReg(setI.rd, 1);
+                        } else if (setI.forced) {
+                            setReg(setI.rd, 0);
                         }
                     }
                     case GT_ZERO -> {
-                        if (getReg(rg) > 0) {
-                            setReg(rd, 1);
-                        } else if (forced) {
-                            setReg(rd, 0);
+                        if (getReg(setI.rg) > 0) {
+                            setReg(setI.rd, 1);
+                        } else if (setI.forced) {
+                            setReg(setI.rd, 0);
                         }
                     }
                     case NEQ_ZERO -> {
-                        if (getReg(rg) != 0) {
-                            setReg(rd, 1);
-                        } else if (forced) {
-                            setReg(rd, 0);
+                        if (getReg(setI.rg) != 0) {
+                            setReg(setI.rd, 1);
+                        } else if (setI.forced) {
+                            setReg(setI.rd, 0);
                         }
                     }
                     case LT_ZERO -> {
-                        if (getReg(rg) < 0) {
-                            setReg(rd, 1);
-                        } else if (forced) {
-                            setReg(rd, 0);
+                        if (getReg(setI.rg) < 0) {
+                            setReg(setI.rd, 1);
+                        } else if (setI.forced) {
+                            setReg(setI.rd, 0);
                         }
                     }
                     case GEQ_ZERO -> {
-                        if (getReg(rg) >= 0) {
-                            setReg(rd, 1);
-                        } else if (forced) {
-                            setReg(rd, 0);
+                        if (getReg(setI.rg) >= 0) {
+                            setReg(setI.rd, 1);
+                        } else if (setI.forced) {
+                            setReg(setI.rd, 0);
                         }
                     }
                     case UNCONDITIONAL, UNKNOWN -> {
@@ -595,8 +557,8 @@ public class CPU {
                 }
             }
             case SYSCALL -> {
-                Syscall.Operation option = Syscall.Operation.fromBytecode(op);
-                switch (option) {
+                Syscall syscallI = (Syscall) lastInstruction;
+                switch (syscallI.operation) {
                     case RETURN -> {
                         // SYSRETURN
                         if (!privilegeMode) {
@@ -611,37 +573,42 @@ public class CPU {
                         if (!privilegeMode) {
                             return;
                         }
-                        pgmPtr = getReg(op & MASK_SYSCALL_RG);
+                        pgmPtr = getReg(syscallI.data);
                         privilegeMode = false;
                     }
                     case INTERRUPT -> {
-                        int iOp = op & MASK_SYSCALL_INTERRUPT_OP;
-                        if (iOp == SYSCALL_INTERRUPT_RET) {
-                            if (!privilegeMode)
-                                return;
-                            for (int i = 0; i <= 0xf; i++) {
-                                registers[i] = registersI[i];
+                        // int iOp = op & MASK_SYSCALL_INTERRUPT_OP;
+                        switch (syscallI.interruptOption) {
+                            case RETURN -> {
+                                if (!privilegeMode)
+                                    return;
+                                for (int i = 0; i <= 0xf; i++) {
+                                    registers[i] = registersI[i];
+                                }
+                                stackPtr = stackPtrI;
+                                memTablePtr = memTablePtrI;
+                                pid = pidI;
+                                privilegeMode = privilegeModeI;
+                                pgmPtr = pgmPtrI;
+
+                                inInterrupt = false;
+                                System.out.println("Interrupt ret to " + pgmPtr);
                             }
-                            stackPtr = stackPtrI;
-                            memTablePtr = memTablePtrI;
-                            pid = pidI;
-                            privilegeMode = privilegeModeI;
-                            pgmPtr = pgmPtrI;
-                            
-                            inInterrupt = false;
-                            System.out.println("Interrupt ret to "+pgmPtr);
-                            return;
+                            case VALUE -> {
+                                interrupt(syscallI.data);
+                            }
+                            case REGISTER -> {
+                                interrupt(getReg(syscallI.data));
+                            }
                         }
-                        interrupt(iOp == SYSCALL_INTERRUPT_VAL ? next : getReg(op & MASK_SYSCALL_RG));
                     }
-                    default -> {
+                    case FUNCTION -> {
                         privilegeMode = true;
-                        int function = op & MASK_SYSCALL_FUNCTION;
-                        int ptr = readMem((function<<2) + SYSCALL_TABLE_START);
+                        int ptr = readMem((syscallI.data<<2) + SYSCALL_TABLE_START);
                         if (ptr == 0xffff_ffff) {
                             running = false;
                             // TODO: interrupt?
-                            throw new RuntimeException(String.format("Unknown syscall: 0x%x", function));
+                            throw new RuntimeException(String.format("Unknown syscall: 0x%x", syscallI.data));
                         }
                         writeMem(SYSCALL_TABLE_START, pgmPtr);
                         pgmPtr = ptr;

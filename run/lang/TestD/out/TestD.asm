@@ -1017,6 +1017,11 @@ STACK PUSH r15
 COPY rStack r15
 // 0 14:10
 #line run\lang\TestD\CharaterDisplay.el 14:10
+#breakpoint
+//  asm("#breakpoint");
+
+// 1 15:10
+#line run\lang\TestD\CharaterDisplay.el 15:10
 // Reserving r1
 // Reserving r2
 LOAD r2 &CharacterDisplay.deviceId
@@ -1028,8 +1033,8 @@ STORE r1 r2
 // Releasing r1
 //  deviceId = 1;
 
-// 1 15:10
-#line run\lang\TestD\CharaterDisplay.el 15:10
+// 2 16:10
+#line run\lang\TestD\CharaterDisplay.el 16:10
 :while_condition_12
 // Reserving r1
 LOAD r1 &CharacterDisplay.deviceId
@@ -1056,8 +1061,8 @@ SET FORCE NEQ r1 r1 // SysD.Peripheral.TABLE[deviceId] != SysD.Peripheral.TYPE_D
 :exp_ee_1 // ( deviceId < 64 ) && ( SysD.Peripheral.TABLE[deviceId] != SysD.Peripheral.TYPE_DISPLAY_CHARACTER )
 GOTO EQ r1 :while_end_12
 // Releasing r1
-// 0 16:14
-#line run\lang\TestD\CharaterDisplay.el 16:14
+// 0 17:14
+#line run\lang\TestD\CharaterDisplay.el 17:14
 // Reserving r1
 // Reserving r2
 LOAD r2 &CharacterDisplay.deviceId
@@ -1074,8 +1079,8 @@ GOTO :while_condition_12
 :while_end_12
 //  while((deviceId < 64) && (SysD.Peripheral.TABLE[deviceId] != SysD.Peripheral.TYPE_DISPLAY_CHARACTER)) {deviceId++;}
 
-// 2 18:10
-#line run\lang\TestD\CharaterDisplay.el 18:10
+// 3 19:10
+#line run\lang\TestD\CharaterDisplay.el 19:10
 // Reserving r1
 LOAD r1 &CharacterDisplay.deviceId
 // Reserving r1
@@ -1084,8 +1089,8 @@ INC r1 -64
 SET FORCE EQ r1 r1 // deviceId == 64
 GOTO EQ r1 :if_end_13
 // Releasing r1
-// 0 19:14
-#line run\lang\TestD\CharaterDisplay.el 19:14
+// 0 20:14
+#line run\lang\TestD\CharaterDisplay.el 20:14
 // Reserving r1
 // Reserving r2
 LOAD r2 &CharacterDisplay.deviceId
@@ -1097,8 +1102,8 @@ STORE r1 r2
 // Releasing r1
 //  deviceId = 0;
 
-// 1 20:14
-#line run\lang\TestD\CharaterDisplay.el 20:14
+// 1 21:14
+#line run\lang\TestD\CharaterDisplay.el 21:14
 GOTO :func_exit_CharacterDisplay.setup
 //  return;
 
@@ -1106,8 +1111,8 @@ GOTO :func_exit_CharacterDisplay.setup
 :if_end_13
 //  if(deviceId == 64) {deviceId = 0; return;}
 
-// 3 22:10
-#line run\lang\TestD\CharaterDisplay.el 22:10
+// 4 23:10
+#line run\lang\TestD\CharaterDisplay.el 23:10
 // Reserving r1
 LOAD r1 1 // 0x01
 #stackVar uint32[2] msg2
@@ -1122,8 +1127,8 @@ STACK PUSH r1
 // Releasing r1
 //  uint32[2] msg2 = {0x01, deviceId};
 
-// 4 23:10
-#line run\lang\TestD\CharaterDisplay.el 23:10
+// 5 24:10
+#line run\lang\TestD\CharaterDisplay.el 24:10
 // Reserving r1
 LOAD r1 0 // 0
 STACK PUSH r1
@@ -1138,8 +1143,8 @@ STACK DEC 12
 // Releasing r1
 //  SysD.Peripheral.command(0, 2, & msg2);
 
-// 5 24:10
-#line run\lang\TestD\CharaterDisplay.el 24:10
+// 6 25:10
+#line run\lang\TestD\CharaterDisplay.el 25:10
 // Reserving r1
 LOAD r1 SysD.Peripheral.RSP_STATUS
 // Reserving r1
@@ -1149,8 +1154,8 @@ INC r1 -1
 SET FORCE NEQ r1 r1 // *SysD.Peripheral.RSP_STATUS != 0x01
 GOTO EQ r1 :if_end_14
 // Releasing r1
-// 0 25:14
-#line run\lang\TestD\CharaterDisplay.el 25:14
+// 0 26:14
+#line run\lang\TestD\CharaterDisplay.el 26:14
 GOTO :func_exit_CharacterDisplay.setup
 //  return;
 
@@ -1158,8 +1163,8 @@ GOTO :func_exit_CharacterDisplay.setup
 :if_end_14
 //  if(* SysD.Peripheral.RSP_STATUS != 0x01) {return;}
 
-// 6 27:10
-#line run\lang\TestD\CharaterDisplay.el 27:10
+// 7 28:10
+#line run\lang\TestD\CharaterDisplay.el 28:10
 // Reserving r1
 // Reserving r2
 LOAD r2 &CharacterDisplay.width
@@ -1176,8 +1181,8 @@ STORE r1 r2
 // Releasing r1
 //  width = SysD.Peripheral.RSP_DATA[10];
 
-// 7 28:10
-#line run\lang\TestD\CharaterDisplay.el 28:10
+// 8 29:10
+#line run\lang\TestD\CharaterDisplay.el 29:10
 // Reserving r1
 // Reserving r2
 LOAD r2 &CharacterDisplay.height
@@ -1194,8 +1199,8 @@ STORE r1 r2
 // Releasing r1
 //  height = SysD.Peripheral.RSP_DATA[11];
 
-// 8 29:10
-#line run\lang\TestD\CharaterDisplay.el 29:10
+// 9 30:10
+#line run\lang\TestD\CharaterDisplay.el 30:10
 // Reserving r1
 LOAD r1 1 // 0x01
 #stackVar uint32[2] msg3
@@ -1209,8 +1214,8 @@ STACK PUSH r1
 // Releasing r1
 //  uint32[2] msg3 = {0x01, & charBuffer};
 
-// 9 30:10
-#line run\lang\TestD\CharaterDisplay.el 30:10
+// 10 31:10
+#line run\lang\TestD\CharaterDisplay.el 31:10
 // Reserving r1
 LOAD r1 &CharacterDisplay.deviceId
 // Reserving r1
@@ -1243,8 +1248,8 @@ STACK PUSH r15
 COPY rStack r15
 #stackVar char data -9
 #stackVar uint32 index -16
-// 0 34:10
-#line run\lang\TestD\CharaterDisplay.el 34:10
+// 0 35:10
+#line run\lang\TestD\CharaterDisplay.el 35:10
 // Reserving r1
 // Reserving r2
 LOAD r2 &CharacterDisplay.charBuffer
@@ -1278,8 +1283,8 @@ COPY rStack r15
 #stackVar char data -9
 #stackVar uint32 x -20
 #stackVar uint32 y -16
-// 0 38:10
-#line run\lang\TestD\CharaterDisplay.el 38:10
+// 0 39:10
+#line run\lang\TestD\CharaterDisplay.el 39:10
 // Reserving r1
 // Reserving r2
 LOAD r2 &CharacterDisplay.charBuffer
@@ -1324,8 +1329,8 @@ COPY rStack r15
 #stackVar char* str -12
 #stackVar uint32 x -20
 #stackVar uint32 y -16
-// 0 41:10
-#line run\lang\TestD\CharaterDisplay.el 41:10
+// 0 42:10
+#line run\lang\TestD\CharaterDisplay.el 42:10
 // Reserving r1
 LOAD r1 0 // 0
 #stackVar uint32 i
@@ -1333,8 +1338,8 @@ STACK PUSH r1
 // Releasing r1
 //  uint32 i = 0;
 
-// 1 42:10
-#line run\lang\TestD\CharaterDisplay.el 42:10
+// 1 43:10
+#line run\lang\TestD\CharaterDisplay.el 43:10
 :while_condition_15
 // Reserving r1
 COPY r15 r1
@@ -1362,8 +1367,8 @@ SET FORCE LT r1 r1
 :exp_ee_2 // str[i] != \0 && x < width
 GOTO EQ r1 :while_end_15
 // Releasing r1
-// 0 43:14
-#line run\lang\TestD\CharaterDisplay.el 43:14
+// 0 44:14
+#line run\lang\TestD\CharaterDisplay.el 44:14
 // Reserving r1
 // Reserving r2
 LOAD r2 &CharacterDisplay.charBuffer
@@ -1403,8 +1408,8 @@ STORE BYTE r1 r2
 // Releasing r1
 //  charBuffer[x + (y* width)] = str[i];
 
-// 1 44:14
-#line run\lang\TestD\CharaterDisplay.el 44:14
+// 1 45:14
+#line run\lang\TestD\CharaterDisplay.el 45:14
 // Reserving r1
 // Reserving r2
 COPY r15 r2
@@ -1417,8 +1422,8 @@ STORE r1 r2
 // Releasing r2
 //  x++;
 
-// 2 45:14
-#line run\lang\TestD\CharaterDisplay.el 45:14
+// 2 46:14
+#line run\lang\TestD\CharaterDisplay.el 46:14
 // Reserving r1
 // Reserving r2
 COPY r15 r2

@@ -11,6 +11,7 @@ namespace CharacterDisplay {
     public static uint32 height;
 
     public static void setup() {
+        asm("#breakpoint");
         deviceId = 1;
         while((deviceId < 64) && (SysD.Peripheral.TABLE[deviceId] != SysD.Peripheral.TYPE_DISPLAY_CHARACTER)) {
             deviceId++;

@@ -12,7 +12,10 @@ public class MemoryPanel extends JPanel {
 
     protected final CPU cpu;
     public boolean stack = false;
-    protected final int start;
+    protected int start;
+    public boolean trackPgm = false;
+
+    protected final int rows;
 
     protected final JPanel panel;
     protected final JPanel panelOuter;
@@ -22,6 +25,7 @@ public class MemoryPanel extends JPanel {
     public MemoryPanel(CPU cpu, int start, int rows) {
         this.cpu = cpu;
         this.start = start;
+        this.rows = rows;
 
         panelOuter = new JPanel();
         add(panelOuter);
@@ -52,7 +56,14 @@ public class MemoryPanel extends JPanel {
     }
 
     public void update() {
+        if (trackPgm) {
+            start = cpu.pgmPtr & 0xffff_fc00;
+        }
         for(int i = 0; i < labels.length; i++) {
+            if (i % 8 == 0 && trackPgm) {
+                int rI = i / 8;
+                rowLabels[rI].setText(EmulatorGui.toHex((i * 4) + start));
+            }
             labels[i].setText(EmulatorGui.toHex(cpu.readMem((i*4)+start)));
             if(stack) {
                 labels[i].setForeground(cpu.stackPtr == ((i*4)+start) ? Color.red : Color.black);

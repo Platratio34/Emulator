@@ -68,7 +68,7 @@ public class Instruction {
         LOAD(0x01, Load::fromBytecode),
         STORE(0x02, Store::fromBytecode),
 
-        MATH(0x04, Math::fromBytecode),
+        MATH(0x04, MathInstruction::fromBytecode),
         GOTO(0x05, Goto::fromBytecode),
         SET(0x06, Set::fromBytecode),
 
