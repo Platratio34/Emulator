@@ -75,11 +75,13 @@ namespace TestD {
         }*/
 
         Console.printStr("\n> \0",0);
-        char[32] buff;
-        Console.read(&buff, 32);
-        Console.printStr(&buff, 0);
+        // char[32] buff;
+        // Console.read(&buff, 32);
+        // Console.printStr(&buff, 0);
 
         TIMERS[1] = 480 * 5;
+
+        CharacterDisplay.write(0,0,"EmulatorOS\0");
 
         wait(testRet());
         // funcC();

@@ -27,7 +27,7 @@ public class ProgramModule {
     protected ELFunction entrypoint;
 
     public final String name;
-    private final LanguageServer languageServer;
+    public final LanguageServer languageServer;
 
     public ProgramModule(String name, LanguageServer languageServer) {
         this.name = name;

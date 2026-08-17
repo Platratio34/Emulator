@@ -4,10 +4,10 @@ import com.peter.emulator.CPU;
 import com.peter.emulator.Packer;
 import com.peter.emulator.components.RAM;
 import com.peter.emulator.gui.CharacterDisplayFrame;
+import com.peter.emulator.lang.base.Peripheral;
 
 public class CharacterDisplay implements DMAPeripheral {
 
-    public static final int DEVICE_TYPE = 0x0100_0011;
     public static final int[] MANUFACTURE = Packer.packChar("Virtual", 16);
     private static int nextSerial = 0;
     public final int[] serial = Packer.packChar((nextSerial++) + "", 16);
@@ -32,28 +32,38 @@ public class CharacterDisplay implements DMAPeripheral {
 
     @Override
     public void tick() {
-        if(charBufferStart == 0) {
-            out = "";
-            return;
-        }
-        for(int y = 0; y < height; y++) {
-            for(int x = 0; x < width; x++) {
-                char c = (char)ram.readByte(charBufferStart + x + (y*width));
-                if(Character.isISOControl(c)) {
-                    out += " ";
-                } else {
-                    out += c;
-                }
+        synchronized (out) {
+            if (charBufferStart == 0) {
+                out = "[NO BUFFER]";
+                return;
             }
-            out += "\n";
-        }
-        if(frame != null) {
-            frame.updateDisplay();
+            out = "";
+            String delim = "";
+            for (int i = 0; i < width; i++) {
+                delim += "-";
+            }
+            out += delim + "\n";
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    char c = (char) ram.readByte(charBufferStart + x + (y * width));
+                    if (c == 0) {
+                        out += " ";
+                    } else if (Character.isISOControl(c)) {
+                        out += "@";
+                    } else {
+                        out += c;
+                    }
+                }
+                out += "\n";
+            }
+            out += delim;
         }
     }
 
     public String getOut() {
-        return out;
+        synchronized (out) {
+            return out;
+        }
     }
 
     @Override
@@ -63,6 +73,7 @@ public class CharacterDisplay implements DMAPeripheral {
 
     @Override
     public void message(int[] msg) {
+        System.out.println(msg[0] + " "+msg[1]);
         if(msg[0] == 0x0000_0001) {
             int addr = msg[1];
             if(addr == 0) {
@@ -92,7 +103,7 @@ public class CharacterDisplay implements DMAPeripheral {
     public int[] getDescriptor() {
         return new int[] {
             deviceId,
-            DEVICE_TYPE,
+            Peripheral.TYPE_DISPLAY_CHARACTER,
             MANUFACTURE[0],
             MANUFACTURE[1],
             MANUFACTURE[2],
@@ -112,7 +123,7 @@ public class CharacterDisplay implements DMAPeripheral {
 
     @Override
     public int getType() {
-        return DEVICE_TYPE;
+        return Peripheral.TYPE_DISPLAY_CHARACTER;
     }
 
 }

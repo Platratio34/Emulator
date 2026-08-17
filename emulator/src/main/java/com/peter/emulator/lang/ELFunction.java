@@ -275,7 +275,7 @@ public class ELFunction {
             if (ret.sizeof() > 4)
                 errors.error("Function returns must be 1 word", ret.span());
         }
-        if (body == null && !(extern || abstractFunction)) {
+        if ((body == null && actions.isEmpty()) && !(extern || abstractFunction)) {
             errors.error("Non-abstract or external functions must have a body", startLocation.span());
         } else if (body != null && (extern || abstractFunction)) {
             errors.error((extern ? "External" : "Abstract") + " functions must not have a body", bodySpan());
@@ -284,7 +284,7 @@ public class ELFunction {
             overload.analyze(errors);
         }
 
-        if (body != null) {
+        if (body != null && actions.isEmpty()) {
             ActionBlock bodyBlock = new ActionBlock(new ActionScope(namespace, unit, this));
             // int l = paramOrder.size();
             // ArrayList<ELType> paramList = new ArrayList<>();

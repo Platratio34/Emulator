@@ -40,8 +40,13 @@ public class ActionScope {
                     unit.errors.warning("Duplicate variable name `" + name + "`");
                     continue;
                 }
-                o -= Math.ceilDiv(type.sizeof(), 4) * 4;
-                var.offset = o;
+                int pSize = type.sizeof();
+                o -= Math.ceilDiv(pSize, 4) * 4;
+                if (pSize % 4 != 0) {
+                    var.offset = (4 - (pSize % 4)) + o;
+                } else {
+                    var.offset = o;
+                }
                 stackVars.put(name, var);
             }
             if (function.ret != null) {
@@ -185,6 +190,8 @@ public class ActionScope {
                 } else {
                     throw ELAnalysisError.error("Can not use this outside of class instance function", id);
                 }
+            } else {
+                throw ELAnalysisError.error("Can not use this outside of class instance function", id);
             }
         }
         if(stackVars.containsKey(id.value)) {

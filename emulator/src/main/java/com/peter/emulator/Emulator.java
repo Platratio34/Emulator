@@ -5,7 +5,6 @@ import com.peter.emulator.components.MMU;
 import com.peter.emulator.components.RAM;
 import com.peter.emulator.components.TimerUnit;
 import com.peter.emulator.gui.EmulatorGui;
-import com.peter.emulator.machinecode.Instruction;
 import com.peter.emulator.peripherals.CharacterDisplay;
 import com.peter.emulator.peripherals.ConsolePeripheral;
 import com.peter.emulator.peripherals.PeripheralManager;

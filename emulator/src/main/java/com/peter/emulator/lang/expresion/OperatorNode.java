@@ -385,7 +385,7 @@ public class OperatorNode extends ExpressionNode {
                 Register r2 = new Register(scope);
                 r2.fistFree();
                 r2.reserve();
-                str += "// Reserving "+r2;
+                str += "// Reserving "+r2+"\n";
                 child2.register = r2;
                 str += child2.toAssembly() + String.format("\nMUL %s %s %s", register, register, r2);
                 r2.release();

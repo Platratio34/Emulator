@@ -145,6 +145,7 @@ public class EmulatorGui {
             kernalPanel.update();
             peripheralMemoryPanel.update();
             timerMemoryPanel.update();
+            charDisplayFrame.updateDisplay();
             updating = false;
         });
     }

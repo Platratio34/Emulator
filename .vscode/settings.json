@@ -4,12 +4,17 @@
         "constexpr",
         "endfunction",
         "kernal",
+        "LSHIFT",
         "malloc",
+        "NAND",
         "nullptr",
+        "PIDI",
         "Pntr",
+        "RSHIFT",
         "syscall",
         "Syscalls",
         "SYSD",
+        "SYSGOTO",
         "SYSRETURN"
     ],
     "java.configuration.updateBuildConfiguration": "automatic"

@@ -241,12 +241,12 @@ public class Main {
             return;
         }
         emulator.ram.copyWords(bootAssembler.build());
-        try {
-            emulator.ram.copy(Files.readAllBytes(ROOT_PATH.resolve("boot.bin")));
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
+        // try {
+        //     emulator.ram.copy(Files.readAllBytes(ROOT_PATH.resolve("boot.bin")));
+        // } catch (IOException e) {
+        //     e.printStackTrace();
+        //     return;
+        // }
 
         emulator.cores[0].debugger = new Debugger(assembler.symbols, assembler.symbols, emulator);
         

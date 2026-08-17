@@ -144,10 +144,10 @@ public class FunctionAction extends ComplexAction {
         tStr += ")";
 
         if (id.starts("SysD")) {
-            actions.addAll(tempActions);
-            scope.addSymbol(new ELSymbol.ELNamespaceSymbol("SysD", it.spanFirst()));
             switch (id.parts[1]) {
                 case "memSet" -> {
+                    actions.addAll(tempActions);
+                    scope.addSymbol(new ELSymbol.ELNamespaceSymbol("SysD", it.spanFirst()));
                     scope.addSymbol(new ELSymbol(ELSymbol.Type.FUNCTION_NAME, it.next().spanFirst(),
                             "`constexp void SysD.memSet(void* addr, uint32 value)`\n\nSets the memory at `addr` to `value`"));
                     // void SysD.memSet(uint32 addr, uint32 value);
@@ -165,6 +165,8 @@ public class FunctionAction extends ComplexAction {
                     return;
                 }
                 case "memGet" -> {
+                    actions.addAll(tempActions);
+                    scope.addSymbol(new ELSymbol.ELNamespaceSymbol("SysD", it.spanFirst()));
                     scope.addSymbol(new ELSymbol(ELSymbol.Type.FUNCTION_NAME, it.next().spanFirst(),
                             "`constexp uint32 SysD.memGet(void* addr)`\n\nGets the memory at `addr`"));
                     // uint32 SysD.memGet(uint32 addr);
@@ -180,6 +182,8 @@ public class FunctionAction extends ComplexAction {
                     return;
                 }
                 case "memCopy" -> {
+                    actions.addAll(tempActions);
+                    scope.addSymbol(new ELSymbol.ELNamespaceSymbol("SysD", it.spanFirst()));
                     scope.addSymbol(new ELSymbol(ELSymbol.Type.FUNCTION_NAME, it.next().spanFirst(),
                             "`constexp void SysD.memCopy(void* src, uint32 start, uint32 end, void* dest, uint32 destStart)`\n\nCopies the memory from `src + start` through `src + end` to memory starting at `dest + destStart`"));
                     // errors.warning("SysD.copy is not currently implemented", it);
@@ -208,14 +212,15 @@ public class FunctionAction extends ComplexAction {
                     return;
                 }
                 case "halt" -> {
+                    scope.addSymbol(new ELSymbol.ELNamespaceSymbol("SysD", it.spanFirst()));
                     scope.addSymbol(new ELSymbol(ELSymbol.Type.FUNCTION_NAME, it.next().spanFirst(),
                             "`constexp void SysD.halt()`\n\nHalts execution of the CPU. **MUST BE IN PRIVILEGED MODE TO WORK**"));
                     actions.add(new DirectAction("HALT"));
                     return;
                 }
-                default -> {
-                    throw ELAnalysisError.error("Unknown SysD function: `" + id.parts[1] + "`", nameSpan);
-                }
+                // default -> {
+                //     throw ELAnalysisError.error("Unknown SysD function: `" + id.parts[1] + "`", nameSpan);
+                // }
             }
         }
 

@@ -9,10 +9,10 @@ import java.util.HashMap;
 import com.peter.emulator.CPU;
 import com.peter.emulator.Packer;
 import com.peter.emulator.components.RAM;
+import com.peter.emulator.lang.base.Peripheral;
 
 public class StoragePeripheral implements DMAPeripheral {
 
-    public static final int DEVICE_TYPE = 0x0100_0001;
     public static final int[] MANUFACTURE = Packer.packChar("Virtual", 16);
     private static int nextSerial = 0;
     public final int[] serial = Packer.packChar((nextSerial++) + "", 16);
@@ -170,7 +170,7 @@ public class StoragePeripheral implements DMAPeripheral {
     public int[] getDescriptor() {
         return new int[] {
             deviceId,
-            DEVICE_TYPE,
+            Peripheral.TYPE_STORAGE_VIRTUAL,
             MANUFACTURE[0],
             MANUFACTURE[1],
             MANUFACTURE[2],
@@ -190,6 +190,6 @@ public class StoragePeripheral implements DMAPeripheral {
 
     @Override
     public int getType() {
-        return DEVICE_TYPE;
+        return Peripheral.TYPE_STORAGE_VIRTUAL;
     }
 }

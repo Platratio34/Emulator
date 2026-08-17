@@ -380,21 +380,23 @@ public class Namespace {
             if (id.value.equals(cName))
                 index++;
         }
-        if (index > 0 && (id.subTokens == null || index > id.subTokens.size()))
+        if (index > 0 && (id.subTokens == null || index > id.numSub())) {
             return null;
+        }
         if (index > 0) {
-            if (id.index != null)
-                return null;
-            it = id.sub(index - 1);
-            if (index > 1)
-                if (id.sub(index - 2) != null)
+            for (int i = 0; i < index; i++) {
+                if (it.index != null) {
                     return null;
+                }
+                it = it.next();
+            }
         }
         ELVariable v = getVariable(it.value);
         if (v != null)
             return v;
-        if (namespaces.containsKey(it.value))
+        if (namespaces.containsKey(it.value)) {
             return namespaces.get(it.value).getFirstVar(id, index + 1, null);
+        }
         if (index == 0 && unit != null) {
             // we only check parent/includes on the first step, and only if we couldn't find it in this namespace or a child namespace, and if we are not already searching an include
             if (unit.hasInclude(it.value)) {

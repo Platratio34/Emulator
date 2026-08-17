@@ -152,6 +152,13 @@ public class IdentifierToken extends Token {
         return (IdentifierToken) subTokens.getFirst();
     }
 
+    public int numSub() {
+        if (subTokens == null || subTokens.isEmpty()) {
+            return 0;
+        }
+        return ((IdentifierToken) subTokens.getFirst()).numSub() + 1;
+    }
+
     public Span spanFirst() {
         return startLocation.span(startLocation.add(value.length() - 1));
     }

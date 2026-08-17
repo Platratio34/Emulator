@@ -16,7 +16,7 @@ public class CharacterDisplayFrame extends JFrame {
         this.peripheral = peripheral;
         peripheral.frame = this;
 
-        textArea = new JTextArea();
+        textArea = new JTextArea(peripheral.height, peripheral.width);
         add(textArea);
         textArea.setFont(EmulatorGui.monFont);
 

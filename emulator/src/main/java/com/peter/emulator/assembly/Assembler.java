@@ -1004,7 +1004,7 @@ public class Assembler {
                 r = REG_STACK_PNTR;
             }
             case "rAF" -> {
-                r = REG_ARITHMATIC_FLAG;
+                r = REG_ARITHMETIC_FLAG;
             }
 
             case "rPID" -> {
@@ -1036,7 +1036,7 @@ public class Assembler {
                 r = REG_STACK_PNTR_I;
             }
             case "rAFI" -> {
-                r = REG_ARITHMATIC_FLAG_I;
+                r = REG_ARITHMETIC_FLAG_I;
             }
 
             case "rPIDI" -> {

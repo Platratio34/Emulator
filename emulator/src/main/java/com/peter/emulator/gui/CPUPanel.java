@@ -191,10 +191,10 @@ public class CPUPanel extends JPanel {
 
         if (cpu.lastInstruction != null) {
             instrLbl.setText(cpu.lastInstruction + "  (" + EmulatorGui.toHex(cpu.instr) + " "
-                    + EmulatorGui.toHex(cpu.instrb) + ")");
+                    + EmulatorGui.toHex(cpu.instrB) + ")");
         } else {
-            instrLbl.setText(Instruction.fromBytecode(cpu.instr, cpu.instrb) + "  (" + EmulatorGui.toHex(cpu.instr) + " "
-                    + EmulatorGui.toHex(cpu.instrb) + ")");
+            instrLbl.setText(Instruction.fromBytecode(cpu.instr, cpu.instrB) + "  (" + EmulatorGui.toHex(cpu.instr) + " "
+                    + EmulatorGui.toHex(cpu.instrB) + ")");
         }
         
         debuggerPanel.update();

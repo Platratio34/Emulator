@@ -7,7 +7,6 @@ import com.peter.emulator.components.MemoryException;
 
 public class ConsolePeripheral implements MemoryMappedPeripheral {
 
-    public static final int DEVICE_TYPE = 0xff00_0001;
     public static final int[] MANUFACTURE = Packer.packChar("Virtual", 16);
     private static int nextSerial = 0;
     public final int[] serial = Packer.packChar((nextSerial++)+"", 16);

@@ -37,9 +37,9 @@ public class CPU {
     // rStackI
     public int stackPtrI = 0x8000;
     // rPgm
-    public int arithmaticFlag = 0;
+    public int arithmeticFlag = 0;
     // rPgmI
-    public int arithmaticFlagI = 0;
+    public int arithmeticFlagI = 0;
     // rPID
     public int pid = 0;
     // rPIDI
@@ -79,7 +79,7 @@ public class CPU {
         return switch(reg) {
             case REG_PGM_PNTR -> true;
             case REG_STACK_PNTR -> true;
-            case REG_ARITHMATIC_FLAG -> true;
+            case REG_ARITHMETIC_FLAG -> true;
 
             case REG_PID -> true;
             case REG_MEM_TABLE -> true;
@@ -92,7 +92,7 @@ public class CPU {
             
             case REG_PGM_PNTR_I -> true;
             case REG_STACK_PNTR_I -> true;
-            case REG_ARITHMATIC_FLAG_I -> true;
+            case REG_ARITHMETIC_FLAG_I -> true;
 
             case REG_PID_I -> true;
             case REG_MEM_TABLE_I -> true;
@@ -112,7 +112,7 @@ public class CPU {
         return switch (reg) {
             case REG_PGM_PNTR -> pgmPtr;
             case REG_STACK_PNTR -> stackPtr;
-            case REG_ARITHMATIC_FLAG -> arithmaticFlag;
+            case REG_ARITHMETIC_FLAG -> arithmeticFlag;
 
             case REG_PID -> pid;
             case REG_MEM_TABLE -> memTablePtr;
@@ -125,7 +125,7 @@ public class CPU {
             
             case REG_PGM_PNTR_I -> pgmPtrI;
             case REG_STACK_PNTR_I -> stackPtrI;
-            case REG_ARITHMATIC_FLAG_I -> arithmaticFlagI;
+            case REG_ARITHMETIC_FLAG_I -> arithmeticFlagI;
 
             case REG_PID_I -> pidI;
             case REG_MEM_TABLE_I -> memTablePtrI;
@@ -159,8 +159,8 @@ public class CPU {
             case REG_STACK_PNTR -> {
                 stackPtr = val;
             }
-            case REG_ARITHMATIC_FLAG -> {
-                arithmaticFlag = val;
+            case REG_ARITHMETIC_FLAG -> {
+                arithmeticFlag = val;
             }
             case REG_PID -> {
                 if (!privilegeMode) {
@@ -216,8 +216,8 @@ public class CPU {
                 }
                 stackPtrI = val;
             }
-            case REG_ARITHMATIC_FLAG_I -> {
-                arithmaticFlagI = val;
+            case REG_ARITHMETIC_FLAG_I -> {
+                arithmeticFlagI = val;
             }
             case REG_PID_I -> {
                 if (!privilegeMode) {
@@ -295,7 +295,7 @@ public class CPU {
     }
 
     public int instr;
-    public int instrb;
+    public int instrB;
     public boolean inInterrupt = false;
     public void tick() {
         if (!running)
@@ -323,21 +323,16 @@ public class CPU {
             return;
         }
 
-        String dbg = "";
         if (debugger != null) {
             debugger.update(this);
-            dbg = debugger.getSymbol(this);
         }
         int op = readMem(pgmPtr);
         pgmPtr += 4;
         instr = op;
         int next = readMem(pgmPtr);
-        instrb = next;
+        instrB = next;
         lastInstruction = Instruction.fromBytecode(op, next);
         if (printInstr) {
-            String instrStr = translate(op, next);
-            System.out.println(String.format("CPU Tick: [%04x] %s", mmu.translate(this, pgmPtr - 4), instrStr));
-        } else {
             System.out.println(String.format("CPU Tick: [%04x] %s", mmu.translate(this, pgmPtr - 4), lastInstruction.toString()));
         }
         switch (lastInstruction.op) {
@@ -420,7 +415,7 @@ public class CPU {
                 // }
             }
             case MATH -> {
-                arithmaticFlag = 0;
+                arithmeticFlag = 0;
                 int rd = (op & MASK_MATH_RD) >> 16;
                 int ra = (op & MASK_MATH_RA) >> 8;
                 int rb = (op & MASK_MATH_RB);
@@ -433,7 +428,7 @@ public class CPU {
                             out = Math.addExact(ra, rb);
                         } catch (ArithmeticException e) {
                             out = ra + rb;
-                            arithmaticFlag = 1;
+                            arithmeticFlag = 1;
                         }
                         setReg(rd, out);
                     }
@@ -445,7 +440,7 @@ public class CPU {
                             out = Math.subtractExact(ra, rb);
                         } catch (ArithmeticException e) {
                             out = ra - rb;
-                            arithmaticFlag = 1;
+                            arithmeticFlag = 1;
                         }
                         setReg(rd, out);
                     }
@@ -721,7 +716,7 @@ public class CPU {
         pid = 0;
         pidI = 0;
         instr = 0;
-        instrb = 0;
+        instrB = 0;
         for (int i = 0; i < registers.length; i++) {
             registers[i] = 0;
             registersI[i] = 0;

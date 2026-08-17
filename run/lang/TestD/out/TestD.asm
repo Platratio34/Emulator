@@ -5,40 +5,23 @@
 #var Memory.blockFreeList 0x0002_2000 MemoryBlock*
 #define Memory.ALLOCATED_BLOCK_LIST 0x0002_2000 uint32
 // CharacterDisplay
-#define CharacterDisplay.CMD_WRITTEN 0x0001 uint32
-#define CharacterDisplay.RSP_DATA_2 0x0001_0088 uint32*
-#define CharacterDisplay.PERIPHERAL_TABLE 0x0001_0100 uint32*
-#define CharacterDisplay.RSP_DATA_3 0x0001_008c uint32*
-#define CharacterDisplay.CMD_ADDR 0x0001_0000 uint32*
-#define CharacterDisplay.RSP_STATUS 0x0001_0080 uint32*
-#define CharacterDisplay.RSP_DATA 0x0001_0084 uint32*
-#var CharacterDisplay.charBuffer 0x0000 char*
+#var CharacterDisplay.width 0x00 uint32
+#var CharacterDisplay.charBuffer (960) char[960]
 #var CharacterDisplay.deviceId 0x0000 uint32
-#var CharacterDisplay.charColorBuffer 0x0000 char*
+#var CharacterDisplay.charColorBuffer (960) char[960]
+#var CharacterDisplay.height 0x00 uint32
 // Console
 #define Console.CMD_DEVICE 0x0001_0002 uint32*
 #define Console.CONSOLE_OUT 0x0001_0300 char*
 #define Console.CMD_WRITTEN 0x0001 uint32
 #define Console.CMD_ADDR 0x2710 uint32*
 #define Console.CMD_STATUS 0x0001_0001 uint32*
-#define Console.CONSOLE_IN 0x0001_0101 char*
-#define Console.CONSOLE_IN_COUNT 0x0001_0102 uint8*
+#define Console.CONSOLE_IN 0x0001_0301 char*
+#define Console.CONSOLE_IN_COUNT 0x0001_0302 uint8*
 #define Console.CMD_START 0x0001_0008 uint32*
 #define Console.CMD_SIZE 0x0001_0004 uint32*
 // FS
-#define FS.RSP_DATA_2 0x0001_0088 uint32*
-#define FS.PERIPHERAL_TABLE 0x0001_0100 uint32*
-#define FS.RSP_DATA_3 0x0001_008c uint32*
-#define FS.CMD_ADDR 0x0001_0000 uint32*
-#define FS.RSP_STATUS 0x0001_0080 uint32*
-#define FS.STORAGE_DEVICE_TYPE 0x0100_0001 uint32
 #var FS.deviceId 0x0000 uint32
-#define FS.CMD_DEVICE 0x0001_0002 uint32*
-#define FS.CMD_WRITTEN 0x0001 uint32
-#define FS.CMD_STATUS 0x0001_0001 uint32*
-#define FS.RSP_DATA 0x0001_0084 uint32*
-#define FS.CMD_START 0x0001_0008 uint32*
-#define FS.CMD_SIZE 0x0001_0004 uint32*
 // TestD
 #define TestD.str "// Test" char*
 #var TestD.path "test.txt\0" char[9]
@@ -47,6 +30,28 @@
 #var TestD.testStr2 "Test2\n\0" char[7]
 #var TestD.testStr "Test\n" char[5]
 #var TestD.tc 0x00 char
+
+// Ref static data
+// SysD
+#var SysD.REG_MEM_TABLE 0x00f9 uint32
+#var SysD.REG_STACK_PNTR 0x00f1 uint32
+#var SysD.REG_PID 0x00f8 uint32
+#var SysD.MEMORY_DEVICE_START 0x0001_0000 uint32
+#var SysD.MEMORY_PROCESS_START 0x0002_0000 uint32
+#var SysD.MEMORY_BLOCK_SIZE 0x8000 uint32
+#var SysD.REG_PGM_PNTR 0x00f0 uint32
+#var SysD.REG_PRIVILEGED_MODE 0x00ff uint32
+// SysD.Peripheral
+#define SysD.Peripheral.TABLE 0x0001_0100 uint32*
+#define SysD.Peripheral.TYPE_STORAGE_BLOCK 0x0100_0002 uint32*
+#define SysD.Peripheral.RSP_DEVICE 0x0001_0083 uint8*
+#define SysD.Peripheral.TYPE_DISPLAY_CHARACTER 0x0100_0011 uint32*
+#define SysD.Peripheral.CMD_ADDR 0x0001_0000 uint32*
+#define SysD.Peripheral.RSP_STATUS 0x0001_0080 uint8*
+#define SysD.Peripheral.RSP_DATA 0x0001_0084 uint32*
+#define SysD.Peripheral.CMD_DATA 0x0001_0008 uint32*
+#define SysD.Peripheral.TYPE_STORAGE_VIRTUAL 0x0100_0001 uint32*
+#define SysD.Peripheral.CMD_SIZE 0x0001_0004 uint32*
 
 //--------
 // text
@@ -1010,17 +1015,8 @@ GOTO POP
 #function CharacterDisplay.setup
 STACK PUSH r15
 COPY rStack r15
-// 0 38:10
-#line run\lang\TestD\CharaterDisplay.el 38:10
-// Reserving r1
-LOAD r1 1 // 0x01
-#stackVar uint32[1] msg
-STACK PUSH r1
-// Releasing r1
-//  uint32[1] msg = {0x01};
-
-// 1 51:10
-#line run\lang\TestD\CharaterDisplay.el 51:10
+// 0 14:10
+#line run\lang\TestD\CharaterDisplay.el 14:10
 // Reserving r1
 // Reserving r2
 LOAD r2 &CharacterDisplay.deviceId
@@ -1032,8 +1028,8 @@ STORE r1 r2
 // Releasing r1
 //  deviceId = 1;
 
-// 2 52:10
-#line run\lang\TestD\CharaterDisplay.el 52:10
+// 1 15:10
+#line run\lang\TestD\CharaterDisplay.el 15:10
 :while_condition_12
 // Reserving r1
 LOAD r1 &CharacterDisplay.deviceId
@@ -1042,7 +1038,7 @@ LOAD MEM r1 r1
 INC r1 -64
 SET FORCE LT r1 r1 // deviceId < 64
 GOTO EQ r1 :exp_ee_1
-LOAD r1 CharacterDisplay.PERIPHERAL_TABLE
+LOAD r1 SysD.Peripheral.TABLE
 // Reserving r1
 // Reserving r2
 LOAD r2 &CharacterDisplay.deviceId
@@ -1056,12 +1052,12 @@ ADD r1 r1 r2
 LOAD MEM r1 r1
 LOAD r2 16777233
 SUB r1 r1 r2
-SET FORCE NEQ r1 r1 // PERIPHERAL_TABLE[deviceId] != 0x0100_0011
-:exp_ee_1 // ( deviceId < 64 ) && ( PERIPHERAL_TABLE[deviceId] != 0x0100_0011 )
+SET FORCE NEQ r1 r1 // SysD.Peripheral.TABLE[deviceId] != SysD.Peripheral.TYPE_DISPLAY_CHARACTER
+:exp_ee_1 // ( deviceId < 64 ) && ( SysD.Peripheral.TABLE[deviceId] != SysD.Peripheral.TYPE_DISPLAY_CHARACTER )
 GOTO EQ r1 :while_end_12
 // Releasing r1
-// 0 53:14
-#line run\lang\TestD\CharaterDisplay.el 53:14
+// 0 16:14
+#line run\lang\TestD\CharaterDisplay.el 16:14
 // Reserving r1
 // Reserving r2
 LOAD r2 &CharacterDisplay.deviceId
@@ -1076,10 +1072,10 @@ STORE r1 r2
 #lineend
 GOTO :while_condition_12
 :while_end_12
-//  while((deviceId < 64) && (PERIPHERAL_TABLE[deviceId] != 0x0100_0011)) {deviceId++;}
+//  while((deviceId < 64) && (SysD.Peripheral.TABLE[deviceId] != SysD.Peripheral.TYPE_DISPLAY_CHARACTER)) {deviceId++;}
 
-// 3 55:10
-#line run\lang\TestD\CharaterDisplay.el 55:10
+// 2 18:10
+#line run\lang\TestD\CharaterDisplay.el 18:10
 // Reserving r1
 LOAD r1 &CharacterDisplay.deviceId
 // Reserving r1
@@ -1088,8 +1084,8 @@ INC r1 -64
 SET FORCE EQ r1 r1 // deviceId == 64
 GOTO EQ r1 :if_end_13
 // Releasing r1
-// 0 56:14
-#line run\lang\TestD\CharaterDisplay.el 56:14
+// 0 19:14
+#line run\lang\TestD\CharaterDisplay.el 19:14
 // Reserving r1
 // Reserving r2
 LOAD r2 &CharacterDisplay.deviceId
@@ -1101,8 +1097,8 @@ STORE r1 r2
 // Releasing r1
 //  deviceId = 0;
 
-// 1 57:14
-#line run\lang\TestD\CharaterDisplay.el 57:14
+// 1 20:14
+#line run\lang\TestD\CharaterDisplay.el 20:14
 GOTO :func_exit_CharacterDisplay.setup
 //  return;
 
@@ -1110,8 +1106,8 @@ GOTO :func_exit_CharacterDisplay.setup
 :if_end_13
 //  if(deviceId == 64) {deviceId = 0; return;}
 
-// 4 59:10
-#line run\lang\TestD\CharaterDisplay.el 59:10
+// 3 22:10
+#line run\lang\TestD\CharaterDisplay.el 22:10
 // Reserving r1
 LOAD r1 1 // 0x01
 #stackVar uint32[2] msg2
@@ -1126,114 +1122,80 @@ STACK PUSH r1
 // Releasing r1
 //  uint32[2] msg2 = {0x01, deviceId};
 
-// 5 60:10
-#line run\lang\TestD\CharaterDisplay.el 60:10
+// 4 23:10
+#line run\lang\TestD\CharaterDisplay.el 23:10
 // Reserving r1
 LOAD r1 0 // 0
 STACK PUSH r1
 LOAD r1 2 // 2
 STACK PUSH r1
 COPY r15 r1
-INC r1 4
 // Reserving r1 // &msg2
 STACK PUSH r1
 // Releasing r1
-GOTO PUSH :CharacterDisplay.peripheralCommand_uint32_uint32_uint32*
+GOTO PUSH :SysD.Peripheral.command_uint32_uint32_uint32*
 STACK DEC 12
 // Releasing r1
-//  peripheralCommand(0, 2, & msg2);
+//  SysD.Peripheral.command(0, 2, & msg2);
 
-// 6 61:10
-#line run\lang\TestD\CharaterDisplay.el 61:10
+// 5 24:10
+#line run\lang\TestD\CharaterDisplay.el 24:10
 // Reserving r1
-LOAD r1 CharacterDisplay.RSP_STATUS
+LOAD r1 SysD.Peripheral.RSP_STATUS
 // Reserving r1
 
-LOAD MEM r1 r1
+LOAD MEM BYTE r1 r1
 INC r1 -1
-SET FORCE NEQ r1 r1 // *RSP_STATUS != 0x01
+SET FORCE NEQ r1 r1 // *SysD.Peripheral.RSP_STATUS != 0x01
 GOTO EQ r1 :if_end_14
 // Releasing r1
-// 0 62:14
-#line run\lang\TestD\CharaterDisplay.el 62:14
+// 0 25:14
+#line run\lang\TestD\CharaterDisplay.el 25:14
 GOTO :func_exit_CharacterDisplay.setup
 //  return;
 
 #lineend
 :if_end_14
-//  if(* RSP_STATUS != 0x01) {return;}
+//  if(* SysD.Peripheral.RSP_STATUS != 0x01) {return;}
 
-// 7 64:10
-#line run\lang\TestD\CharaterDisplay.el 64:10
-// Reserving r1
-LOAD r1 65668 // 0x1_0084
-#stackVar DeviceDescriptor* desc
-STACK PUSH r1
-// Releasing r1
-//  DeviceDescriptor* desc = 0x1_0084;
-
-// 8 66:10
-#line run\lang\TestD\CharaterDisplay.el 66:10
-// Reserving r1
-COPY r15 r1
-INC r1 12
-// Reserving r1
-LOAD MEM r1 r1
-LOAD MEM r1 r1
-// Reserving r2COPY r15 r2
-INC r2 12
-// Reserving r2
-LOAD MEM r2 r2
-LOAD MEM r2 r2
-MUL r1 r1 r2 // Releasing r2 // desc.width * desc.height
-#stackVar uint32 size
-STACK PUSH r1
-// Releasing r1
-//  uint32 size = desc.width* desc.height;
-
-// 9 67:10
-#line run\lang\TestD\CharaterDisplay.el 67:10
+// 6 27:10
+#line run\lang\TestD\CharaterDisplay.el 27:10
 // Reserving r1
 // Reserving r2
-LOAD r2 &CharacterDisplay.charBuffer
+LOAD r2 &CharacterDisplay.width
 // Reserving r2
 // Releasing r1
+LOAD r1 SysD.Peripheral.RSP_DATA
 // Reserving r1
-STACK INC 4
-COPY r15 r1
-INC r1 16
-// Reserving r1
-LOAD MEM r1 r1 // size
-STACK PUSH r1
-// Releasing r1
-GOTO PUSH :Memory.malloc_uint32
-STACK POP r1
-// Releasing r1 // Memory.malloc(size)
+// Reserving r3
+INC r1 40
+// Releasing r3
+LOAD MEM r1 r1 // SysD.Peripheral.RSP_DATA[10]
 STORE r1 r2
 // Releasing r2
 // Releasing r1
-//  charBuffer = Memory.malloc(size);
+//  width = SysD.Peripheral.RSP_DATA[10];
 
-// 10 68:10
-#line run\lang\TestD\CharaterDisplay.el 68:10
+// 7 28:10
+#line run\lang\TestD\CharaterDisplay.el 28:10
 // Reserving r1
-LOAD r1 &CharacterDisplay.charBuffer
-// Reserving r1
-LOAD MEM r1 r1
-SET FORCE EQ r1 r1 // charBuffer == 0
-GOTO EQ r1 :if_end_15
+// Reserving r2
+LOAD r2 &CharacterDisplay.height
+// Reserving r2
 // Releasing r1
-// 0 69:14
-#line run\lang\TestD\CharaterDisplay.el 69:14
-GOTO :func_exit_CharacterDisplay.setup
-//  return;
+LOAD r1 SysD.Peripheral.RSP_DATA
+// Reserving r1
+// Reserving r3
+INC r1 44
+// Releasing r3
+LOAD MEM r1 r1 // SysD.Peripheral.RSP_DATA[11]
+STORE r1 r2
+// Releasing r2
+// Releasing r1
+//  height = SysD.Peripheral.RSP_DATA[11];
 
-#lineend
-:if_end_15
-//  if(charBuffer == 0) {return;}
-
-// 11 75:10
-#line run\lang\TestD\CharaterDisplay.el 75:10
+// 8 29:10
+#line run\lang\TestD\CharaterDisplay.el 29:10
 // Reserving r1
 LOAD r1 1 // 0x01
 #stackVar uint32[2] msg3
@@ -1241,15 +1203,14 @@ STACK PUSH r1
 // Releasing r1
 // Reserving r1
 LOAD r1 &CharacterDisplay.charBuffer
-// Reserving r1
-LOAD MEM r1 r1 // charBuffer
+// Reserving r1 // &charBuffer
 #stackVar uint32[2] msg3
 STACK PUSH r1
 // Releasing r1
-//  uint32[2] msg3 = {0x01, charBuffer};
+//  uint32[2] msg3 = {0x01, & charBuffer};
 
-// 12 76:10
-#line run\lang\TestD\CharaterDisplay.el 76:10
+// 9 30:10
+#line run\lang\TestD\CharaterDisplay.el 30:10
 // Reserving r1
 LOAD r1 &CharacterDisplay.deviceId
 // Reserving r1
@@ -1258,95 +1219,21 @@ STACK PUSH r1
 LOAD r1 2 // 2
 STACK PUSH r1
 COPY r15 r1
-INC r1 20
+INC r1 8
 // Reserving r1 // &msg3
 STACK PUSH r1
 // Releasing r1
-GOTO PUSH :CharacterDisplay.peripheralCommand_uint32_uint32_uint32*
+GOTO PUSH :SysD.Peripheral.command_uint32_uint32_uint32*
 STACK DEC 12
 // Releasing r1
-//  peripheralCommand(deviceId, 2, & msg3);
+//  SysD.Peripheral.command(deviceId, 2, & msg3);
 
 #lineend
 :func_exit_CharacterDisplay.setup
-STACK DEC 28
+STACK DEC 16
 // End of scope
-#stackVarClear msg
 #stackVarClear msg3
 #stackVarClear msg2
-#stackVarClear size
-#stackVarClear desc
-STACK POP r15
-GOTO POP
-#endfunction void
-
-#function CharacterDisplay.peripheralCommand_uint32_uint32_uint32* deviceId uint32, cmdSize uint32, cmd uint32*
-STACK PUSH r15
-COPY rStack r15
-#stackVar uint32 cmdSize -16
-#stackVar uint32* cmd -12
-#stackVar uint32 deviceId -20
-// 0 21:10
-#line run\lang\TestD\CharaterDisplay.el 21:10
-LOAD r1 Console.CMD_SIZE
-COPY r15 r2
-INC r2 -16
-LOAD MEM r2 r2
-//  asm("LOAD r1 Console.CMD_SIZE\nCOPY r15 r2\nINC r2 -16\nLOAD MEM r2 r2");
-
-// 1 22:10
-#line run\lang\TestD\CharaterDisplay.el 22:10
-STORE r2 r1
-//  asm("STORE r2 r1");
-
-// 2 24:10
-#line run\lang\TestD\CharaterDisplay.el 24:10
-LOAD r1 Console.CMD_START
-//  asm("LOAD r1 Console.CMD_START");
-
-// 3 26:10
-#line run\lang\TestD\CharaterDisplay.el 26:10
-COPY r15 r3
-INC r3 -12
-LOAD MEM r3 r3
-//  asm("COPY r15 r3\nINC r3 -12\nLOAD MEM r3 r3");
-
-// 4 28:10
-#line run\lang\TestD\CharaterDisplay.el 28:10
-:peripheralCommand_l0
-//  asm(":peripheralCommand_l0");
-
-// 5 30:10
-#line run\lang\TestD\CharaterDisplay.el 30:10
-COPY MEM r3 r1 INC_RS INC_RD
-INC r2 -1
-//  asm("COPY MEM r3 r1 INC_RS INC_RD\nINC r2 -1");
-
-// 6 32:10
-#line run\lang\TestD\CharaterDisplay.el 32:10
-GOTO GT r2 :peripheralCommand_l0
-//  asm("GOTO GT r2 :peripheralCommand_l0");
-
-// 7 34:10
-#line run\lang\TestD\CharaterDisplay.el 34:10
-// Reserving r1
-// Reserving r2
-LOAD r2 CharacterDisplay.CMD_ADDR
-// Reserving r2
-// Releasing r1
-LOAD r1 16842752
-COPY r15 r1
-INC r1 -20
-// Reserving r1
-LOAD MEM r1 r1
-OR r1 r1 r1 // 0x0101_0000 | deviceId
-STORE r1 r2
-// Releasing r2
-// Releasing r1
-// * CMD_ADDR = 0x0101_0000 | deviceId;
-
-#lineend
-:func_exit_CharacterDisplay.peripheralCommand_uint32_uint32_uint32*
 STACK POP r15
 GOTO POP
 #endfunction void
@@ -1354,15 +1241,14 @@ GOTO POP
 #function CharacterDisplay.write_uint32_char index uint32, data char
 STACK PUSH r15
 COPY rStack r15
-#stackVar char data -12
+#stackVar char data -9
 #stackVar uint32 index -16
-// 0 80:10
-#line run\lang\TestD\CharaterDisplay.el 80:10
+// 0 34:10
+#line run\lang\TestD\CharaterDisplay.el 34:10
 // Reserving r1
 // Reserving r2
 LOAD r2 &CharacterDisplay.charBuffer
 // Reserving r2
-LOAD MEM r2 r2
 // Reserving r3
 COPY r15 r3
 INC r3 -16
@@ -1372,7 +1258,7 @@ ADD r2 r2 r3
 // Releasing r3
 // Releasing r1
 COPY r15 r1
-INC r1 -12
+INC r1 -9
 // Reserving r1
 LOAD MEM BYTE r1 r1 // data
 STORE BYTE r1 r2
@@ -1382,6 +1268,181 @@ STORE BYTE r1 r2
 
 #lineend
 :func_exit_CharacterDisplay.write_uint32_char
+STACK POP r15
+GOTO POP
+#endfunction void
+
+#function CharacterDisplay.write_uint32_uint32_char x uint32, y uint32, data char
+STACK PUSH r15
+COPY rStack r15
+#stackVar char data -9
+#stackVar uint32 x -20
+#stackVar uint32 y -16
+// 0 38:10
+#line run\lang\TestD\CharaterDisplay.el 38:10
+// Reserving r1
+// Reserving r2
+LOAD r2 &CharacterDisplay.charBuffer
+// Reserving r2
+// Reserving r3
+COPY r15 r3
+INC r3 -20
+// Reserving r3
+LOAD MEM r3 r3
+ // Reserving r4
+COPY r15 r4
+INC r4 -16
+// Reserving r4
+LOAD MEM r4 r4
+// Reserving r5
+LOAD r5 &CharacterDisplay.width
+// Reserving r5
+LOAD MEM r5 r5
+MUL r4 r4 r5 // Releasing r5 // y * width
+ADD r3 r3 r4  // Releasing r4 // x + ( y * width )
+ADD r2 r2 r3
+// Releasing r3
+// Releasing r1
+COPY r15 r1
+INC r1 -9
+// Reserving r1
+LOAD MEM BYTE r1 r1 // data
+STORE BYTE r1 r2
+// Releasing r2
+// Releasing r1
+//  charBuffer[x + (y* width)] = data;
+
+#lineend
+:func_exit_CharacterDisplay.write_uint32_uint32_char
+STACK POP r15
+GOTO POP
+#endfunction void
+
+#function CharacterDisplay.write_uint32_uint32_char* x uint32, y uint32, str char*
+STACK PUSH r15
+COPY rStack r15
+#stackVar char* str -12
+#stackVar uint32 x -20
+#stackVar uint32 y -16
+// 0 41:10
+#line run\lang\TestD\CharaterDisplay.el 41:10
+// Reserving r1
+LOAD r1 0 // 0
+#stackVar uint32 i
+STACK PUSH r1
+// Releasing r1
+//  uint32 i = 0;
+
+// 1 42:10
+#line run\lang\TestD\CharaterDisplay.el 42:10
+:while_condition_15
+// Reserving r1
+COPY r15 r1
+INC r1 -12
+// Reserving r1
+LOAD MEM r1 r1
+// Reserving r2
+COPY r15 r2
+// Reserving r2
+LOAD MEM r2 r2 // i
+ADD r1 r1 r2
+// Releasing r2
+LOAD MEM BYTE r1 r1
+SET FORCE NEQ r1 r1
+GOTO EQ r1 :exp_ee_2
+COPY r15 r1
+INC r1 -20
+// Reserving r1
+LOAD MEM r1 r1
+LOAD r2 &CharacterDisplay.width
+// Reserving r2
+LOAD MEM r2 r2
+SUB r1 r1 r2
+SET FORCE LT r1 r1
+:exp_ee_2 // str[i] != \0 && x < width
+GOTO EQ r1 :while_end_15
+// Releasing r1
+// 0 43:14
+#line run\lang\TestD\CharaterDisplay.el 43:14
+// Reserving r1
+// Reserving r2
+LOAD r2 &CharacterDisplay.charBuffer
+// Reserving r2
+// Reserving r3
+COPY r15 r3
+INC r3 -20
+// Reserving r3
+LOAD MEM r3 r3
+ // Reserving r4
+COPY r15 r4
+INC r4 -16
+// Reserving r4
+LOAD MEM r4 r4
+// Reserving r5
+LOAD r5 &CharacterDisplay.width
+// Reserving r5
+LOAD MEM r5 r5
+MUL r4 r4 r5 // Releasing r5 // y * width
+ADD r3 r3 r4  // Releasing r4 // x + ( y * width )
+ADD r2 r2 r3
+// Releasing r3
+// Releasing r1
+COPY r15 r1
+INC r1 -12
+// Reserving r1
+LOAD MEM r1 r1
+// Reserving r3
+COPY r15 r3
+// Reserving r3
+LOAD MEM r3 r3 // i
+ADD r1 r1 r3
+// Releasing r3
+LOAD MEM BYTE r1 r1 // str[i]
+STORE BYTE r1 r2
+// Releasing r2
+// Releasing r1
+//  charBuffer[x + (y* width)] = str[i];
+
+// 1 44:14
+#line run\lang\TestD\CharaterDisplay.el 44:14
+// Reserving r1
+// Reserving r2
+COPY r15 r2
+INC r2 -20
+// Reserving r2
+// Releasing r1
+LOAD MEM r1 r2
+INC r1 1
+STORE r1 r2
+// Releasing r2
+//  x++;
+
+// 2 45:14
+#line run\lang\TestD\CharaterDisplay.el 45:14
+// Reserving r1
+// Reserving r2
+COPY r15 r2
+// Reserving r2
+// Releasing r1
+LOAD MEM r1 r2
+INC r1 1
+STORE r1 r2
+// Releasing r2
+//  i++;
+
+#lineend
+GOTO :while_condition_15
+:while_end_15
+//  while(str[i] != '\0' && x < width) {charBuffer[x + (y* width)] = str[i]; x++; i++;}
+
+#lineend
+:func_exit_CharacterDisplay.write_uint32_uint32_char*
+STACK DEC 4
+// End of scope
+#stackVarClear str
+#stackVarClear x
+#stackVarClear y
+#stackVarClear i
 STACK POP r15
 GOTO POP
 #endfunction void
@@ -1655,7 +1716,7 @@ GOTO POP
 #function Console.printChar_char c char
 STACK PUSH r15
 COPY rStack r15
-#stackVar char c -12
+#stackVar char c -9
 // 0 17:10
 #line run\lang\TestD\console.el 17:10
 LOAD r1 Console.CONSOLE_OUT
@@ -1767,8 +1828,8 @@ COPY rStack r15
 #stackVar char* path -20
 #stackVar out uint32& handle -12
 #stackVar out uint32& status -16
-// 0 54:10
-#line run\lang\TestD\fs.el 54:10
+// 0 20:10
+#line run\lang\TestD\fs.el 20:10
 // Reserving r1
 LOAD r1 &FS.deviceId
 // Reserving r1
@@ -1776,16 +1837,16 @@ LOAD MEM r1 r1
 SET FORCE EQ r1 r1 // deviceId == 0
 GOTO EQ r1 :if_end_19
 // Releasing r1
-// 0 55:14
-#line run\lang\TestD\fs.el 55:14
+// 0 21:14
+#line run\lang\TestD\fs.el 21:14
 // Reserving r1
 STACK INC 4
 GOTO PUSH :FS.setup
 // Releasing r1
 //  setup();
 
-// 1 56:14
-#line run\lang\TestD\fs.el 56:14
+// 1 22:14
+#line run\lang\TestD\fs.el 22:14
 // Reserving r1
 LOAD r1 &FS.deviceId
 // Reserving r1
@@ -1793,8 +1854,8 @@ LOAD MEM r1 r1
 SET FORCE EQ r1 r1 // deviceId == 0
 GOTO EQ r1 :if_end_20
 // Releasing r1
-// 0 57:18
-#line run\lang\TestD\fs.el 57:18
+// 0 23:18
+#line run\lang\TestD\fs.el 23:18
 // Reserving r1
 // Reserving r2
 COPY r15 r2
@@ -1816,8 +1877,8 @@ STORE r1 r2
 :if_end_19
 //  if(deviceId == 0) {setup(); if(deviceId == 0) {status = 0xff;}}
 
-// 1 60:10
-#line run\lang\TestD\fs.el 60:10
+// 1 26:10
+#line run\lang\TestD\fs.el 26:10
 // Reserving r1
 LOAD r1 16 // 0x10
 #stackVar uint32[2] msg
@@ -1833,8 +1894,8 @@ STACK PUSH r1
 // Releasing r1
 //  uint32[2] msg = {0x10, path};
 
-// 2 61:10
-#line run\lang\TestD\fs.el 61:10
+// 2 27:10
+#line run\lang\TestD\fs.el 27:10
 // Reserving r1
 LOAD r1 &FS.deviceId
 // Reserving r1
@@ -1846,13 +1907,13 @@ COPY r15 r1
 // Reserving r1 // &msg
 STACK PUSH r1
 // Releasing r1
-GOTO PUSH :FS.peripheralCommand_uint32_uint32_uint32*
+GOTO PUSH :SysD.Peripheral.command_uint32_uint32_uint32*
 STACK DEC 12
 // Releasing r1
-//  peripheralCommand(deviceId, 2, & msg);
+//  SysD.Peripheral.command(deviceId, 2, & msg);
 
-// 3 62:10
-#line run\lang\TestD\fs.el 62:10
+// 3 28:10
+#line run\lang\TestD\fs.el 28:10
 // Reserving r1
 // Reserving r2
 COPY r15 r2
@@ -1860,17 +1921,17 @@ INC r2 -16
 // Reserving r2
 // Releasing r1
 LOAD MEM r2 r2
-LOAD r1 FS.RSP_STATUS
+LOAD r1 SysD.Peripheral.RSP_STATUS
 // Reserving r1
 
-LOAD MEM r1 r1 // *RSP_STATUS
+LOAD MEM BYTE r1 r1 // *SysD.Peripheral.RSP_STATUS
 STORE r1 r2
 // Releasing r2
 // Releasing r1
-//  status =* RSP_STATUS;
+//  status =* SysD.Peripheral.RSP_STATUS;
 
-// 4 63:10
-#line run\lang\TestD\fs.el 63:10
+// 4 29:10
+#line run\lang\TestD\fs.el 29:10
 // Reserving r1
 // Reserving r2
 COPY r15 r2
@@ -1878,14 +1939,16 @@ INC r2 -12
 // Reserving r2
 // Releasing r1
 LOAD MEM r2 r2
-LOAD r1 FS.RSP_DATA_2
+LOAD r1 SysD.Peripheral.RSP_DATA
 // Reserving r1
-
-LOAD MEM r1 r1 // *RSP_DATA_2
+// Reserving r3
+INC r1 4
+// Releasing r3
+LOAD MEM r1 r1 // SysD.Peripheral.RSP_DATA[1]
 STORE r1 r2
 // Releasing r2
 // Releasing r1
-//  handle =* RSP_DATA_2;
+//  handle = SysD.Peripheral.RSP_DATA[1];
 
 #lineend
 :func_exit_FS.openFile_char*_out_uint32&_out_uint32&
@@ -1908,8 +1971,8 @@ COPY rStack r15
 #stackVar uint32 handle -32
 #stackVar out uint32& state -12
 #stackVar void* buffer -28
-// 0 67:10
-#line run\lang\TestD\fs.el 67:10
+// 0 33:10
+#line run\lang\TestD\fs.el 33:10
 // Reserving r1
 LOAD r1 &FS.deviceId
 // Reserving r1
@@ -1917,16 +1980,16 @@ LOAD MEM r1 r1
 SET FORCE EQ r1 r1 // deviceId == 0
 GOTO EQ r1 :if_end_21
 // Releasing r1
-// 0 68:14
-#line run\lang\TestD\fs.el 68:14
+// 0 34:14
+#line run\lang\TestD\fs.el 34:14
 // Reserving r1
 STACK INC 4
 GOTO PUSH :FS.setup
 // Releasing r1
 //  setup();
 
-// 1 69:14
-#line run\lang\TestD\fs.el 69:14
+// 1 35:14
+#line run\lang\TestD\fs.el 35:14
 // Reserving r1
 LOAD r1 &FS.deviceId
 // Reserving r1
@@ -1934,8 +1997,8 @@ LOAD MEM r1 r1
 SET FORCE EQ r1 r1 // deviceId == 0
 GOTO EQ r1 :if_end_22
 // Releasing r1
-// 0 70:18
-#line run\lang\TestD\fs.el 70:18
+// 0 36:18
+#line run\lang\TestD\fs.el 36:18
 // Reserving r1
 // Reserving r2
 COPY r15 r2
@@ -1957,8 +2020,8 @@ STORE r1 r2
 :if_end_21
 //  if(deviceId == 0) {setup(); if(deviceId == 0) {state = 0xff;}}
 
-// 1 73:10
-#line run\lang\TestD\fs.el 73:10
+// 1 39:10
+#line run\lang\TestD\fs.el 39:10
 // Reserving r1
 LOAD r1 17 // 0x11
 #stackVar uint32[5] msg
@@ -1998,8 +2061,8 @@ STACK PUSH r1
 // Releasing r1
 //  uint32[5] msg = {0x11, handle, buffer, size, offset};
 
-// 2 74:10
-#line run\lang\TestD\fs.el 74:10
+// 2 40:10
+#line run\lang\TestD\fs.el 40:10
 // Reserving r1
 LOAD r1 &FS.deviceId
 // Reserving r1
@@ -2011,13 +2074,13 @@ COPY r15 r1
 // Reserving r1 // &msg
 STACK PUSH r1
 // Releasing r1
-GOTO PUSH :FS.peripheralCommand_uint32_uint32_uint32*
+GOTO PUSH :SysD.Peripheral.command_uint32_uint32_uint32*
 STACK DEC 12
 // Releasing r1
-//  peripheralCommand(deviceId, 5, & msg);
+//  SysD.Peripheral.command(deviceId, 5, & msg);
 
-// 3 75:10
-#line run\lang\TestD\fs.el 75:10
+// 3 41:10
+#line run\lang\TestD\fs.el 41:10
 // Reserving r1
 // Reserving r2
 COPY r15 r2
@@ -2025,17 +2088,17 @@ INC r2 -12
 // Reserving r2
 // Releasing r1
 LOAD MEM r2 r2
-LOAD r1 FS.RSP_DATA
+LOAD r1 SysD.Peripheral.RSP_DATA
 // Reserving r1
 
-LOAD MEM r1 r1 // *RSP_DATA
+LOAD MEM r1 r1 // *SysD.Peripheral.RSP_DATA
 STORE r1 r2
 // Releasing r2
 // Releasing r1
-//  state =* RSP_DATA;
+//  state =* SysD.Peripheral.RSP_DATA;
 
-// 4 76:10
-#line run\lang\TestD\fs.el 76:10
+// 4 42:10
+#line run\lang\TestD\fs.el 42:10
 // Reserving r1
 // Reserving r2
 COPY r15 r2
@@ -2043,14 +2106,16 @@ INC r2 -16
 // Reserving r2
 // Releasing r1
 LOAD MEM r2 r2
-LOAD r1 FS.RSP_DATA_3
+LOAD r1 SysD.Peripheral.RSP_DATA
 // Reserving r1
-
-LOAD MEM r1 r1 // *RSP_DATA_3
+// Reserving r3
+INC r1 8
+// Releasing r3
+LOAD MEM r1 r1 // SysD.Peripheral.RSP_DATA[2]
 STORE r1 r2
 // Releasing r2
 // Releasing r1
-//  read =* RSP_DATA_3;
+//  read = SysD.Peripheral.RSP_DATA[2];
 
 #lineend
 :func_exit_FS.readFile_uint32_void*_uint32_uint32_out_uint32&_out_uint32&
@@ -2070,8 +2135,8 @@ GOTO POP
 #function FS.setup
 STACK PUSH r15
 COPY rStack r15
-// 0 42:10
-#line run\lang\TestD\fs.el 42:10
+// 0 8:10
+#line run\lang\TestD\fs.el 8:10
 // Reserving r1
 // Reserving r2
 LOAD r2 &FS.deviceId
@@ -2083,8 +2148,8 @@ STORE r1 r2
 // Releasing r1
 //  deviceId = 1;
 
-// 1 43:10
-#line run\lang\TestD\fs.el 43:10
+// 1 9:10
+#line run\lang\TestD\fs.el 9:10
 :while_condition_23
 // Reserving r1
 LOAD r1 &FS.deviceId
@@ -2092,8 +2157,8 @@ LOAD r1 &FS.deviceId
 LOAD MEM r1 r1
 INC r1 -64
 SET FORCE LT r1 r1 // deviceId < 64
-GOTO EQ r1 :exp_ee_2
-LOAD r1 FS.PERIPHERAL_TABLE
+GOTO EQ r1 :exp_ee_3
+LOAD r1 SysD.Peripheral.TABLE
 // Reserving r1
 // Reserving r2
 LOAD r2 &FS.deviceId
@@ -2107,12 +2172,12 @@ ADD r1 r1 r2
 LOAD MEM r1 r1
 LOAD r2 16777217
 SUB r1 r1 r2
-SET FORCE NEQ r1 r1 // PERIPHERAL_TABLE[deviceId] != STORAGE_DEVICE_TYPE
-:exp_ee_2 // ( deviceId < 64 ) && ( PERIPHERAL_TABLE[deviceId] != STORAGE_DEVICE_TYPE )
+SET FORCE NEQ r1 r1 // SysD.Peripheral.TABLE[deviceId] != SysD.Peripheral.TYPE_STORAGE_VIRTUAL
+:exp_ee_3 // ( deviceId < 64 ) && ( SysD.Peripheral.TABLE[deviceId] != SysD.Peripheral.TYPE_STORAGE_VIRTUAL )
 GOTO EQ r1 :while_end_23
 // Releasing r1
-// 0 44:14
-#line run\lang\TestD\fs.el 44:14
+// 0 10:14
+#line run\lang\TestD\fs.el 10:14
 // Reserving r1
 // Reserving r2
 LOAD r2 &FS.deviceId
@@ -2127,10 +2192,10 @@ STORE r1 r2
 #lineend
 GOTO :while_condition_23
 :while_end_23
-//  while((deviceId < 64) && (PERIPHERAL_TABLE[deviceId] != STORAGE_DEVICE_TYPE)) {deviceId++;}
+//  while((deviceId < 64) && (SysD.Peripheral.TABLE[deviceId] != SysD.Peripheral.TYPE_STORAGE_VIRTUAL)) {deviceId++;}
 
-// 2 46:10
-#line run\lang\TestD\fs.el 46:10
+// 2 12:10
+#line run\lang\TestD\fs.el 12:10
 // Reserving r1
 LOAD r1 &FS.deviceId
 // Reserving r1
@@ -2139,8 +2204,8 @@ INC r1 -64
 SET FORCE EQ r1 r1 // deviceId == 64
 GOTO EQ r1 :if_end_24
 // Releasing r1
-// 0 47:14
-#line run\lang\TestD\fs.el 47:14
+// 0 13:14
+#line run\lang\TestD\fs.el 13:14
 // Reserving r1
 // Reserving r2
 LOAD r2 &FS.deviceId
@@ -2152,8 +2217,8 @@ STORE r1 r2
 // Releasing r1
 //  deviceId = 0;
 
-// 1 48:14
-#line run\lang\TestD\fs.el 48:14
+// 1 14:14
+#line run\lang\TestD\fs.el 14:14
 // Reserving r1
 LOAD r1 0 // false
 // Reserving r2
@@ -2169,8 +2234,8 @@ GOTO :func_exit_FS.setup
 :if_end_24
 //  if(deviceId == 64) {deviceId = 0; return false;}
 
-// 3 50:10
-#line run\lang\TestD\fs.el 50:10
+// 3 16:10
+#line run\lang\TestD\fs.el 16:10
 // Reserving r1
 LOAD r1 1 // true
 // Reserving r2
@@ -2188,84 +2253,13 @@ STACK POP r15
 GOTO POP
 #endfunction bool
 
-#function FS.peripheralCommand_uint32_uint32_uint32* deviceId uint32, cmdSize uint32, cmd uint32*
-STACK PUSH r15
-COPY rStack r15
-#stackVar uint32 cmdSize -16
-#stackVar uint32* cmd -12
-#stackVar uint32 deviceId -20
-// 0 25:10
-#line run\lang\TestD\fs.el 25:10
-LOAD r1 Console.CMD_SIZE
-COPY r15 r2
-INC r2 -16
-LOAD MEM r2 r2
-//  asm("LOAD r1 Console.CMD_SIZE\nCOPY r15 r2\nINC r2 -16\nLOAD MEM r2 r2");
-
-// 1 26:10
-#line run\lang\TestD\fs.el 26:10
-STORE r2 r1
-//  asm("STORE r2 r1");
-
-// 2 28:10
-#line run\lang\TestD\fs.el 28:10
-LOAD r1 Console.CMD_START
-//  asm("LOAD r1 Console.CMD_START");
-
-// 3 30:10
-#line run\lang\TestD\fs.el 30:10
-COPY r15 r3
-INC r3 -12
-LOAD MEM r3 r3
-//  asm("COPY r15 r3\nINC r3 -12\nLOAD MEM r3 r3");
-
-// 4 32:10
-#line run\lang\TestD\fs.el 32:10
-:peripheralCommand_l0
-//  asm(":peripheralCommand_l0");
-
-// 5 34:10
-#line run\lang\TestD\fs.el 34:10
-COPY MEM r3 r1 INC_RS INC_RD
-INC r2 -1
-//  asm("COPY MEM r3 r1 INC_RS INC_RD\nINC r2 -1");
-
-// 6 36:10
-#line run\lang\TestD\fs.el 36:10
-GOTO GT r2 :peripheralCommand_l0
-//  asm("GOTO GT r2 :peripheralCommand_l0");
-
-// 7 38:10
-#line run\lang\TestD\fs.el 38:10
-// Reserving r1
-// Reserving r2
-LOAD r2 FS.CMD_ADDR
-// Reserving r2
-// Releasing r1
-LOAD r1 16842752
-COPY r15 r1
-INC r1 -20
-// Reserving r1
-LOAD MEM r1 r1
-OR r1 r1 r1 // 0x0101_0000 | deviceId
-STORE r1 r2
-// Releasing r2
-// Releasing r1
-// * CMD_ADDR = 0x0101_0000 | deviceId;
-
-#lineend
-:func_exit_FS.peripheralCommand_uint32_uint32_uint32*
-STACK POP r15
-GOTO POP
-#endfunction void
-
 // TestD
 
 #function TestD.onInterrupt
 STACK PUSH r15
 COPY rStack r15
-// 0 98:10
-#line run\lang\TestD\testd.el 98:10
+// 0 100:10
+#line run\lang\TestD\testd.el 100:10
 // Reserving r1
 COPY rIC r1 // SysD.rIC
 #stackVar uint32 code
@@ -2273,19 +2267,19 @@ STACK PUSH r1
 // Releasing r1
 //  uint32 code = SysD.rIC;
 
-// 1 99:10
-#line run\lang\TestD\testd.el 99:10
+// 1 101:10
+#line run\lang\TestD\testd.el 101:10
 LOAD rIC 0
 //  asm("LOAD rIC 0");
 
-// 2 100:10
-#line run\lang\TestD\testd.el 100:10
+// 2 102:10
+#line run\lang\TestD\testd.el 102:10
 #stackVar char[9] str
 STACK INC 12
 //  char[9] str;
 
-// 3 101:10
-#line run\lang\TestD\testd.el 101:10
+// 3 103:10
+#line run\lang\TestD\testd.el 103:10
 // Reserving r1
 // Reserving r2
 COPY r15 r2
@@ -2301,8 +2295,8 @@ STORE BYTE r1 r2
 // Releasing r1
 //  str[8] = '\0';
 
-// 4 102:10
-#line run\lang\TestD\testd.el 102:10
+// 4 104:10
+#line run\lang\TestD\testd.el 104:10
 // Reserving r1
 COPY r15 r1
 // Reserving r1
@@ -2311,8 +2305,8 @@ INC r1 -255
 SET FORCE EQ r1 r1 // code == 0xff
 GOTO EQ r1 :if_end_25
 // Releasing r1
-// 0 103:14
-#line run\lang\TestD\testd.el 103:14
+// 0 105:14
+#line run\lang\TestD\testd.el 105:14
 // Reserving r1
 #define exp_str_inline_0 "\n\nHalting\0"
 LOAD r1 exp_str_inline_0 // \n\nHalting\0
@@ -2325,8 +2319,8 @@ STACK DEC 8
 // Releasing r1
 //  Console.printStr("\n\nHalting\0", 0);
 
-// 1 104:14
-#line run\lang\TestD\testd.el 104:14
+// 1 106:14
+#line run\lang\TestD\testd.el 106:14
 HALT
 //  asm("HALT");
 
@@ -2334,8 +2328,8 @@ HALT
 :if_end_25
 //  if(code == 0xff) {Console.printStr("\n\nHalting\0", 0); asm("HALT");}
 
-// 5 106:10
-#line run\lang\TestD\testd.el 106:10
+// 5 108:10
+#line run\lang\TestD\testd.el 108:10
 // Reserving r1
 COPY r15 r1
 // Reserving r1
@@ -2345,8 +2339,8 @@ SUB r1 r1 r2
 SET FORCE EQ r1 r1 // code == 0x8000_0002
 GOTO EQ r1 :if_end_26
 // Releasing r1
-// 0 107:14
-#line run\lang\TestD\testd.el 107:14
+// 0 109:14
+#line run\lang\TestD\testd.el 109:14
 // Reserving r1
 LOAD r1 1 // 1
 #stackVar uint32 i
@@ -2354,8 +2348,8 @@ STACK PUSH r1
 // Releasing r1
 //  uint32 i = 1;
 
-// 1 108:14
-#line run\lang\TestD\testd.el 108:14
+// 1 110:14
+#line run\lang\TestD\testd.el 110:14
 :while_condition_27
 // Reserving r1
 COPY r15 r1
@@ -2366,8 +2360,8 @@ INC r1 -16
 SET FORCE LT r1 r1 // i < 16
 GOTO EQ r1 :while_end_27
 // Releasing r1
-// 0 109:18
-#line run\lang\TestD\testd.el 109:18
+// 0 111:18
+#line run\lang\TestD\testd.el 111:18
 // Reserving r1
 LOAD r1 TestD.TIMERS
 // Reserving r1
@@ -2386,8 +2380,8 @@ INC r1 1
 SET FORCE EQ r1 r1 // TIMERS[i] == 0xffff_ffff
 GOTO EQ r1 :if_end_28
 // Releasing r1
-// 0 110:22
-#line run\lang\TestD\testd.el 110:22
+// 0 112:22
+#line run\lang\TestD\testd.el 112:22
 // Reserving r1
 // Reserving r2
 LOAD r2 TestD.TIMERS
@@ -2413,8 +2407,8 @@ STORE r1 r2
 :if_end_28
 //  if(TIMERS[i] == 0xffff_ffff) {TIMERS[i] = 0x0;}
 
-// 1 112:18
-#line run\lang\TestD\testd.el 112:18
+// 1 114:18
+#line run\lang\TestD\testd.el 114:18
 // Reserving r1
 // Reserving r2
 COPY r15 r2
@@ -2432,8 +2426,8 @@ GOTO :while_condition_27
 :while_end_27
 //  while(i < 16) {if(TIMERS[i] == 0xffff_ffff) {TIMERS[i] = 0x0;} i++;}
 
-// 2 115:14
-#line run\lang\TestD\testd.el 115:14
+// 2 117:14
+#line run\lang\TestD\testd.el 117:14
 // Reserving r1
 #define exp_str_inline_1 "\nTimer\0"
 LOAD r1 exp_str_inline_1 // \nTimer\0
@@ -2446,8 +2440,8 @@ STACK DEC 8
 // Releasing r1
 //  Console.printStr("\nTimer\0", 0);
 
-// 3 116:14
-#line run\lang\TestD\testd.el 116:14
+// 3 118:14
+#line run\lang\TestD\testd.el 118:14
 GOTO :func_exit_TestD.onInterrupt
 //  return;
 
@@ -2458,8 +2452,8 @@ STACK DEC 4
 :if_end_26
 //  if(code == 0x8000_0002) {uint32 i = 1; while(i < 16) {if(TIMERS[i] == 0xffff_ffff) {TIMERS[i] = 0x0;} i++;} Console.printStr("\nTimer\0", 0); return;}
 
-// 6 118:10
-#line run\lang\TestD\testd.el 118:10
+// 6 120:10
+#line run\lang\TestD\testd.el 120:10
 // Reserving r1
 COPY r15 r1
 // Reserving r1
@@ -2475,8 +2469,8 @@ STACK DEC 8
 // Releasing r1
 //  Console.intToHex(code, & str);
 
-// 7 119:10
-#line run\lang\TestD\testd.el 119:10
+// 7 121:10
+#line run\lang\TestD\testd.el 121:10
 // Reserving r1
 #define exp_str_inline_2 "\nInterrupt: \0"
 LOAD r1 exp_str_inline_2 // \nInterrupt: \0
@@ -2489,8 +2483,8 @@ STACK DEC 8
 // Releasing r1
 //  Console.printStr("\nInterrupt: \0", 0);
 
-// 8 120:10
-#line run\lang\TestD\testd.el 120:10
+// 8 122:10
+#line run\lang\TestD\testd.el 122:10
 // Reserving r1
 COPY r15 r1
 INC r1 4
@@ -2504,8 +2498,8 @@ STACK DEC 8
 // Releasing r1
 //  Console.printStr(& str, 8);
 
-// 9 121:10
-#line run\lang\TestD\testd.el 121:10
+// 9 123:10
+#line run\lang\TestD\testd.el 123:10
 // Reserving r1
 LOAD r1 '\n' // \n
 STACK PUSH r1
@@ -2529,8 +2523,8 @@ INTERRUPT RET
 STACK PUSH r15
 COPY rStack r15
 #stackVar uint32 time -12
-// 0 125:10
-#line run\lang\TestD\testd.el 125:10
+// 0 127:10
+#line run\lang\TestD\testd.el 127:10
 :while_condition_29
 // Reserving r1
 COPY r15 r1
@@ -2540,8 +2534,8 @@ LOAD MEM r1 r1
 SET FORCE GT r1 r1 // time > 0
 GOTO EQ r1 :while_end_29
 // Releasing r1
-// 0 126:14
-#line run\lang\TestD\testd.el 126:14
+// 0 128:14
+#line run\lang\TestD\testd.el 128:14
 // Reserving r1
 // Reserving r2
 COPY r15 r2
@@ -2569,8 +2563,8 @@ GOTO POP
 #function TestD.testRet
 STACK PUSH r15
 COPY rStack r15
-// 0 136:10
-#line run\lang\TestD\testd.el 136:10
+// 0 138:10
+#line run\lang\TestD\testd.el 138:10
 // Reserving r1
 LOAD r1 2000 // 2000
 // Reserving r2
@@ -2867,43 +2861,7 @@ STACK DEC 8
 // Releasing r1
 //  Console.printStr("\n> \0", 0);
 
-// 24 78:10
-#line run\lang\TestD\testd.el 78:10
-#stackVar char[32] buff
-STACK INC 32
-//  char[32] buff;
-
-// 25 79:10
-#line run\lang\TestD\testd.el 79:10
-// Reserving r1
-COPY r15 r1
-INC r1 32
-// Reserving r1 // &buff
-STACK PUSH r1
-LOAD r1 32 // 32
-STACK PUSH r1
-// Releasing r1
-GOTO PUSH :Console.read_char*_uint32
-STACK DEC 8
-// Releasing r1
-//  Console.read(& buff, 32);
-
-// 26 80:10
-#line run\lang\TestD\testd.el 80:10
-// Reserving r1
-COPY r15 r1
-INC r1 32
-// Reserving r1 // &buff
-STACK PUSH r1
-LOAD r1 0 // 0
-STACK PUSH r1
-// Releasing r1
-GOTO PUSH :Console.printStr_char*_uint32
-STACK DEC 8
-// Releasing r1
-//  Console.printStr(& buff, 0);
-
-// 27 82:10
+// 24 82:10
 #line run\lang\TestD\testd.el 82:10
 // Reserving r1
 // Reserving r2
@@ -2919,8 +2877,24 @@ STORE r1 r2
 // Releasing r1
 //  TIMERS[1] = 480* 5;
 
-// 28 84:10
+// 25 84:10
 #line run\lang\TestD\testd.el 84:10
+// Reserving r1
+LOAD r1 0 // 0
+STACK PUSH r1
+LOAD r1 0 // 0
+STACK PUSH r1
+#define exp_str_inline_5 "EmulatorOS\0"
+LOAD r1 exp_str_inline_5 // EmulatorOS\0
+STACK PUSH r1
+// Releasing r1
+GOTO PUSH :CharacterDisplay.write_uint32_uint32_char*
+STACK DEC 12
+// Releasing r1
+//  CharacterDisplay.write(0, 0, "EmulatorOS\0");
+
+// 26 86:10
+#line run\lang\TestD\testd.el 86:10
 // Reserving r1
 // Reserving r2
 STACK INC 4
@@ -2936,13 +2910,12 @@ STACK DEC 4
 
 #lineend
 :func_exit_TestD.main
-STACK DEC 64
+STACK DEC 32
 // End of scope
 #stackVarClear a
 #stackVarClear b
 #stackVarClear c
 #stackVarClear str2
-#stackVarClear buff
 #stackVarClear sA
 STACK POP r15
 HALT
@@ -2952,8 +2925,8 @@ HALT
 STACK PUSH r15
 COPY rStack r15
 #stackVar uint32 a -12
-// 0 89:10
-#line run\lang\TestD\testd.el 89:10
+// 0 91:10
+#line run\lang\TestD\testd.el 91:10
 // Reserving r1
 // Reserving r2
 LOAD r2 &TestD.v
@@ -2982,8 +2955,8 @@ STACK PUSH r15
 COPY rStack r15
 #stackVar uint32 a -16
 #stackVar uint32* b -12
-// 0 93:10
-#line run\lang\TestD\testd.el 93:10
+// 0 95:10
+#line run\lang\TestD\testd.el 95:10
 // Reserving r1
 // Reserving r2
 LOAD r2 &TestD.v
@@ -3011,8 +2984,8 @@ GOTO POP
 STACK PUSH r15
 COPY rStack r15
 #stackVar StructA& str -12
-// 0 131:10
-#line run\lang\TestD\testd.el 131:10
+// 0 133:10
+#line run\lang\TestD\testd.el 133:10
 // Reserving r1
 // Reserving r2
 COPY r15 r2
@@ -3026,8 +2999,8 @@ STORE r1 r2
 // Releasing r1
 //  str.a = 32;
 
-// 1 132:10
-#line run\lang\TestD\testd.el 132:10
+// 1 134:10
+#line run\lang\TestD\testd.el 134:10
 // Reserving r1
 // Reserving r2
 COPY r15 r2
@@ -3048,5 +3021,52 @@ GOTO POP
 #endfunction void
 
 // TestD.StructA
+
+// Ref text
+
+// SysD
+
+// SysD.AddressSpace
+
+// SysD.Peripheral
+
+#function SysD.Peripheral.command_uint32_uint32_uint32* deviceId uint32, cmdSize uint32, cmd uint32*
+#line <SysD.Peripheral> 1:1
+STACK PUSH r15
+COPY rStack r15
+#stackVar uint32 deviceId -20
+#stackVar uint32 cmdSize -16
+#stackVar uint32* cmd -12
+LOAD r1 SysD.Peripheral.CMD_SIZE
+COPY r15 r2
+INC r2 -16
+LOAD MEM r2 r2
+STORE r2 r1
+LOAD r1 SysD.Peripheral.CMD_DATA
+COPY r15 r3
+INC r3 -12
+LOAD MEM r3 r3
+:SysD.Peripheral.command_loop
+COPY MEM r3 r1 INC_RS INC_RD
+INC r2 -1
+GOTO GT r2 :SysD.Peripheral.command_loop
+COPY r15 r1
+INC r1 -20
+LOAD MEM r1 r1
+LOAD r2 0x0101_0000
+OR r1 r1 r2
+LOAD r2 SysD.Peripheral.CMD_ADDR
+STORE r1 r2
+#stackVarClear deviceId
+#stackVarClear cmdSize
+#stackVarClear cmd
+STACK POP r15
+#lineend
+GOTO POP
+#endfunction void
+
+// SysD.Peripheral.PeripheralDescriptor
+
+// SysD.PeripheralDescriptorShort
 
 HALT

@@ -54,8 +54,8 @@ public class VariableNode extends ExpressionNode {
                     }
                 }
             }
-            errors.error(String.format("Unable to resolve variable %s", token.debugString()), span());
-            return false;
+            // errors.error(String.format("Unable to resolve variable %s", token.debugString()), span());
+            // return false;
         }
         rA = scope.loadVar(token, register, true);
         if(rA != null) {
@@ -71,7 +71,7 @@ public class VariableNode extends ExpressionNode {
 
     @Override
     public ELType getType() {
-        if(token.value.equals("SysD")) {
+        if(token.value.equals("SysD") && rA == null) {
             return SysD.getVarType(token.next());
         }
         if(rA == null) {
@@ -87,7 +87,7 @@ public class VariableNode extends ExpressionNode {
 
     @Override
     public String toAssembly() {
-        if(token.value.equals("SysD")) {
+        if(token.value.equals("SysD") && rA == null) {
             return String.format("COPY %s %s", token.next().value, register);
         }
         return scope.loadVar(token, register, !addressOf).toAssembly();

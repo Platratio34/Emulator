@@ -18,6 +18,7 @@ public class PeripheralManager implements MemoryMappedPeripheral {
     public static final int PERIPHERAL_CMD_MSG = 0x1_0008;
     
     public static final int PERIPHERAL_RSP_STATUS = 0x1_0080;
+    public static final int PERIPHERAL_RSP_DEVICE = 0x1_0083;
     public static final int PERIPHERAL_RSP_DATA = 0x1_0084;
 
     public static final int PERIPHERAL_TABLE = 0x1_0100;
@@ -90,7 +91,7 @@ public class PeripheralManager implements MemoryMappedPeripheral {
 
     private void onMessage() {
         int size = ram.readWord(PERIPHERAL_CMD_SIZE);
-        int[] msg = ram.readWords(PERIPHERAL_CMD_MSG, Math.ceilDiv(size, 4));
+        int[] msg = ram.readWords(PERIPHERAL_CMD_MSG, size);
         switch (msg[0]) {
             case 0x0 -> {
             }

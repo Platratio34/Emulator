@@ -82,7 +82,7 @@ public class MachineCode {
 
     public static final int REG_PGM_PNTR = 0xf0;
     public static final int REG_STACK_PNTR = 0xf1;
-    public static final int REG_ARITHMATIC_FLAG = 0xf2;
+    public static final int REG_ARITHMETIC_FLAG = 0xf2;
     
     public static final int REG_PID = 0xf8;
     public static final int REG_MEM_TABLE = 0xf9;
@@ -95,7 +95,7 @@ public class MachineCode {
     
     public static final int REG_PGM_PNTR_I = 0xe0;
     public static final int REG_STACK_PNTR_I = 0xe1;
-    public static final int REG_ARITHMATIC_FLAG_I = 0xe2;
+    public static final int REG_ARITHMETIC_FLAG_I = 0xe2;
     
     public static final int REG_PID_I = 0xe8;
     public static final int REG_MEM_TABLE_I = 0xe9;
@@ -112,7 +112,7 @@ public class MachineCode {
         return switch (reg) {
             case REG_PGM_PNTR -> "rPgm";
             case REG_STACK_PNTR -> "rStack";
-            case REG_ARITHMATIC_FLAG -> "rAF";
+            case REG_ARITHMETIC_FLAG -> "rAF";
             
             case REG_PID -> "rPID";
             case REG_MEM_TABLE -> "rMTbl";
@@ -126,7 +126,7 @@ public class MachineCode {
             
             case REG_PGM_PNTR_I -> "rPgmI";
             case REG_STACK_PNTR_I -> "rStackI";
-            case REG_ARITHMATIC_FLAG_I -> "rAFI";
+            case REG_ARITHMETIC_FLAG_I -> "rAFI";
             
             case REG_PID_I -> "rPIDI";
             case REG_MEM_TABLE_I -> "rMTblI";

@@ -10,8 +10,8 @@ namespace Console {
     public static const uint32 CMD_WRITTEN = 0x0001;
     
     public static const char* CONSOLE_OUT = 0x1_0300;
-    public static const char* CONSOLE_IN = 0x1_0101;
-    public static const uint8* CONSOLE_IN_COUNT = 0x1_0102;
+    public static const char* CONSOLE_IN = 0x1_0301;
+    public static const uint8* CONSOLE_IN_COUNT = 0x1_0302;
 
     public static void printChar(char c) {
         asm("LOAD r1 Console.CONSOLE_OUT");

@@ -6,9 +6,11 @@ import com.peter.emulator.lang.tokens.IdentifierToken;
 
 public class SysD extends Namespace {
 
-    private static final Location SYSD_LOCATION = new Location("<SysD>", 1, 1);
+    protected static final Location SYSD_LOCATION = new Location("<SysD>", 1, 1);
 
-    private final ProgramUnit unit;
+    protected final ProgramUnit unit;
+
+    public final Peripheral ns_Peripheral;
 
     public SysD(ProgramModule module) {
         super("SysD");
@@ -102,12 +104,8 @@ public class SysD extends Namespace {
             const uint32[6] data;
         }
          */
-        ELStruct PeripheralDescriptor = new ELStruct("PeripheralDescriptor", this, unit);
-        PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.UINT32, "id", true, this, unit, SYSD_LOCATION));
-        PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.UINT32, "type", true, this, unit, SYSD_LOCATION));
-        PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.CHAR.builder().array(16).location(SYSD_LOCATION).build(), "manufacturer", true, this, unit, SYSD_LOCATION));
-        PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.CHAR.builder().array(16).location(SYSD_LOCATION).build(), "serial", true, this, unit, SYSD_LOCATION));
-        PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.UINT32.builder().array(6).location(SYSD_LOCATION).build(), "data", true, this, unit, SYSD_LOCATION));
+
+        ns_Peripheral = new Peripheral(this);
     }
 
     public static ELType getVarType(IdentifierToken it) {

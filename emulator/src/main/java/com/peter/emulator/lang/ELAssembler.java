@@ -1,5 +1,7 @@
 package com.peter.emulator.lang;
 
+import java.util.ArrayList;
+
 import com.peter.emulator.lang.ELVariable.Type;
 import com.peter.emulator.lang.actions.Action;
 import com.peter.emulator.lang.annotations.ELInterruptHandlerAnnotation;
@@ -69,6 +71,8 @@ public class ELAssembler {
     private String assembleFunctions(Namespace ns) {
         String out = "\n\n// " + ns.getQualifiedName();
         for (ELFunction f : ns.staticFunctions.values()) {
+            if (f.extern || f.constexpr)
+                continue;
             out += assembleFunction(f);
         }
         if (ns instanceof ELClass c) {
@@ -77,6 +81,8 @@ public class ELAssembler {
             if (c.destructor != null)
                 out += assembleFunction(c.destructor);
             for (ELFunction f : c.memberFunctions.values()) {
+                if (f.extern || f.constexpr)
+                    continue;
                 out += assembleFunction(f);
             }
         }
@@ -87,10 +93,19 @@ public class ELAssembler {
     }
     
     public String assemble() {
+        ArrayList<ProgramModule> refModules = new ArrayList<>();
         String out = "";
         out += "// static data\n";
-        for(Namespace ns : module.namespaces.values()) {
+        for (Namespace ns : module.namespaces.values()) {
             out += assembleStatics(ns);
+        }
+        out += "\n// Ref static data\n";
+        for (String mName : module.refModules) {
+            ProgramModule pm = module.languageServer.modules.getOrDefault(mName, null);
+            refModules.add(pm);
+            for (Namespace ns : pm.namespaces.values()) {
+                out += assembleStatics(ns);
+            }
         }
         ELFunction ent = module.entrypoint;
         if(ent == null)
@@ -101,6 +116,12 @@ public class ELAssembler {
         // out += "\n#endfunction void";
         for(Namespace ns : module.namespaces.values()) {
             out += assembleFunctions(ns);
+        }
+        out += "\n\n// Ref text";
+        for (ProgramModule pm : refModules) {
+            for (Namespace ns : pm.namespaces.values()) {
+                out += assembleFunctions(ns);
+            }
         }
         out += "\n\nHALT";
         return out;
