@@ -3,13 +3,11 @@ package com.peter.emulator.lang;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
-import java.util.NoSuchElementException;
 
 import com.peter.emulator.lang.annotations.ELAnnotation;
 import com.peter.emulator.lang.annotations.ELOperatorAnnotation;
 import com.peter.emulator.lang.annotations.ELOverrideAnnotation;
 import com.peter.emulator.lang.base.ELPrimitives;
-import com.peter.emulator.lang.tokens.IdentifierToken;
 import com.peter.emulator.lang.tokens.OperatorToken;
 
 public class ELClass extends Namespace {

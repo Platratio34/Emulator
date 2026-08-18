@@ -1,4 +1,4 @@
-import SysD;
+import Peripheral;
 
 namespace CharacterDisplay {
     
@@ -11,9 +11,8 @@ namespace CharacterDisplay {
     public static uint32 height;
 
     public static void setup() {
-        asm("#breakpoint");
         deviceId = 1;
-        while((deviceId < 64) && (SysD.Peripheral.TABLE[deviceId] != SysD.Peripheral.TYPE_DISPLAY_CHARACTER)) {
+        while((deviceId < 64) && (Peripheral.TABLE[deviceId] != Peripheral.TYPE_DISPLAY_CHARACTER)) {
             deviceId++;
         }
         if(deviceId == 64) {
@@ -21,14 +20,14 @@ namespace CharacterDisplay {
             return;
         }
         uint32[2] msg2 = {0x01, deviceId};
-        SysD.Peripheral.command(0, 2, &msg2);
-        if(*SysD.Peripheral.RSP_STATUS != 0x01) {
+        Peripheral.command(0, 2, &msg2);
+        if(*Peripheral.RSP_STATUS != 0x01) {
             return;
         }
-        width = SysD.Peripheral.RSP_DATA[10];
-        height = SysD.Peripheral.RSP_DATA[11];
+        width = Peripheral.RSP_DATA[10];
+        height = Peripheral.RSP_DATA[11];
         uint32[2] msg3 = {0x01, &charBuffer};
-        SysD.Peripheral.command(deviceId, 2, &msg3);
+        Peripheral.command(deviceId, 2, &msg3);
     }
 
     public static void write(uint32 index, char data) {

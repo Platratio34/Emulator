@@ -1,4 +1,4 @@
-import SysD;
+import Peripheral;
 
 namespace FS {
 
@@ -6,7 +6,7 @@ namespace FS {
 
     protected static bool setup() {
         deviceId = 1;
-        while((deviceId < 64) && (SysD.Peripheral.TABLE[deviceId] != SysD.Peripheral.TYPE_STORAGE_VIRTUAL)) {
+        while((deviceId < 64) && (Peripheral.TABLE[deviceId] != Peripheral.TYPE_STORAGE_VIRTUAL)) {
             deviceId++;
         }
         if(deviceId == 64) {
@@ -24,9 +24,9 @@ namespace FS {
             }
         }
         uint32[2] msg = {0x10, path};
-        SysD.Peripheral.command(deviceId, 2, &msg);
-        status = *SysD.Peripheral.RSP_STATUS;
-        handle = SysD.Peripheral.RSP_DATA[1];
+        Peripheral.command(deviceId, 2, &msg);
+        status = *Peripheral.RSP_STATUS;
+        handle = Peripheral.RSP_DATA[1];
     }
 
     public static void readFile(uint32 handle, void* buffer, uint32 size, uint32 offset, out uint32& read, out uint32& state) {
@@ -37,8 +37,8 @@ namespace FS {
             }
         }
         uint32[5] msg = {0x11, handle, buffer, size, offset};
-        SysD.Peripheral.command(deviceId, 5, &msg);
-        state = *SysD.Peripheral.RSP_DATA;
-        read = SysD.Peripheral.RSP_DATA[2];
+        Peripheral.command(deviceId, 5, &msg);
+        state = *Peripheral.RSP_DATA;
+        read = Peripheral.RSP_DATA[2];
     }
 }

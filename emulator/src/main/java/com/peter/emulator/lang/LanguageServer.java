@@ -15,8 +15,7 @@ public class LanguageServer {
     protected boolean err = false;
 
     public LanguageServer() {
-        ProgramModule sysD = addModule("SysD");
-        sysD.namespaces.put("SysD", new SysD(sysD));
+        modules.put("SysD", SysD.newSysD(this));
     }
 
     @Deprecated

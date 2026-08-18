@@ -1,6 +1,5 @@
 import SysD;
-import Console;
-import FS;
+import Peripheral;
 
 namespace TestD {
 
@@ -79,7 +78,7 @@ namespace TestD {
         // Console.read(&buff, 32);
         // Console.printStr(&buff, 0);
 
-        TIMERS[1] = 480 * 5;
+        Peripheral.TIMERS[1] = 480 * 5;
 
         CharacterDisplay.write(0,0,"EmulatorOS\0");
 
@@ -108,13 +107,14 @@ namespace TestD {
         if(code == 0x8000_0002) { // timer
             uint32 i = 1;
             while(i < 16) {
-                if(TIMERS[i] == 0xffff_ffff) {
-                    TIMERS[i] = 0x0;
+                if(Peripheral.TIMERS[i] == 0xffff_ffff) {
+                    Peripheral.TIMERS[i] = 0x0;
                 }
                 i++;
             }
             
             Console.printStr("\nTimer\0", 0);
+            CharacterDisplay.write(0,23,"Timer\0");
             return;
         }
         Console.intToHex(code, &str);

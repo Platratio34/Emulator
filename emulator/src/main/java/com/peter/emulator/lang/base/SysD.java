@@ -10,8 +10,6 @@ public class SysD extends Namespace {
 
     protected final ProgramUnit unit;
 
-    public final Peripheral ns_Peripheral;
-
     public SysD(ProgramModule module) {
         super("SysD");
         unit = new ProgramUnit(module, "<SysD>");
@@ -104,12 +102,10 @@ public class SysD extends Namespace {
             const uint32[6] data;
         }
          */
-
-        ns_Peripheral = new Peripheral(this);
     }
 
     public static ELType getVarType(IdentifierToken it) {
-        switch(it.value) {
+        switch (it.value) {
             case "rPgm", "rStack", "rMTbl", "rIH", "rPgmI", "rStackI", "rMTblI" -> {
                 return ELPrimitives.VOID_PTR;
             }
@@ -120,11 +116,18 @@ public class SysD extends Namespace {
                 return ELPrimitives.BOOL;
             }
             default -> {
-                if(it.value.matches("r\\d\\d?I?")) {
+                if (it.value.matches("r\\d\\d?I?")) {
                     return ELPrimitives.UINT32;
                 }
             }
         }
         return null;
+    }
+    
+    public static ProgramModule newSysD(LanguageServer languageServer) {
+        ProgramModule module = new ProgramModule("SysD", languageServer);
+        module.addNamespace(new SysD(module));
+        module.addNamespace(new Peripheral(module));
+        return module;
     }
 }

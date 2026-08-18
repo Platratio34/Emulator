@@ -13,6 +13,7 @@ import org.eclipse.lsp4j.services.WorkspaceService;
 import org.json.JSONException;
 
 import com.peter.emulator.lang.LanguageServer;
+import com.peter.emulator.lang.ProgramModule;
 import com.peter.emulator.lang.ProgramUnit;
 
 public class ELWorkspaceService implements WorkspaceService {
@@ -72,7 +73,10 @@ public class ELWorkspaceService implements WorkspaceService {
                 continue;
             }
             try {
-                ls.addModule(f);
+                ProgramModule module = ls.addModule(f);
+                for (String modName : module.getRefs()) {
+                    lspServer.logDebug("- - References %s", modName);
+                }
             } catch (JSONException | IOException e) {
                 lspServer.logError("Error adding module at %s", f.getAbsolutePath());
             }

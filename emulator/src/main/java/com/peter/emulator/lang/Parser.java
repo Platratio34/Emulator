@@ -62,9 +62,11 @@ public class Parser {
                         unit.symbols.add(new ELSymbol(ELSymbol.Type.KEYWORD, idt.span()));
                         String imp;
                         String name;
+                        IdentifierToken nameToken = null;
                         if (tokens.get(workingI) instanceof IdentifierToken idt2) {
                             imp = idt2.value;
                             name = imp;
+                            nameToken = idt2;
                             unit.symbols.add(new ELSymbol(ELSymbol.Type.NAMESPACE_NAME, idt2.spanFirst()));
                             while (idt2.hasSub()) {
                                 idt2 = (IdentifierToken) idt2.subTokens.get(0);
@@ -88,7 +90,7 @@ public class Parser {
                                     continue;
                                 }
                                 unit.symbols.add(new ELSymbol(ELSymbol.Type.NAMESPACE_NAME, idt2.span(), "`%s` as `%s`", name, imp));
-                                unit.addImport(name, imp);
+                                unit.addImport(name, imp, nameToken);
                             } else {
                                 errors.error("Unexpected token found in import (expected alias)", tokens.get(workingI).span());
                                 continue;
@@ -107,7 +109,7 @@ public class Parser {
                                 continue;
                             }
                             unit.symbols.add(new ELSymbol(ELSymbol.Type.NAMESPACE_NAME, idt2.span(), "`%s`", name));
-                            unit.addImport(name, imp);
+                            unit.addImport(name, imp, nameToken);
                         } else {
                             errors.error("Unexpected token found in import (expected `as` or `;`)", tokens.get(workingI).span());
                             continue;

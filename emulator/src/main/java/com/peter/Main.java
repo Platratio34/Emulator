@@ -75,7 +75,6 @@ public class Main {
         ProgramModule testD = null;
         try {
             testD = ls.addModule(ROOT_PATH.resolve("lang/TestD").toFile());
-            testD.addRefModule("SysD");
         } catch (JSONException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

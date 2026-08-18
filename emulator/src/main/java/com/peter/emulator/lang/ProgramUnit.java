@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 
 import com.peter.emulator.lang.ELSymbol.Type;
+import com.peter.emulator.lang.tokens.IdentifierToken;
 
 public class ProgramUnit {
 
@@ -12,6 +13,7 @@ public class ProgramUnit {
     public final String uri;
 
     protected final HashMap<String, String> imports = new HashMap<>();
+    protected final HashMap<String, IdentifierToken> importTokens = new HashMap<>();
 
     public final ArrayList<ELVariable> variables = new ArrayList<>();
     public final ArrayList<ELFunction> functions = new ArrayList<>();
@@ -26,13 +28,9 @@ public class ProgramUnit {
         this.uri = uri;
     }
 
-    public void addImport(String importNS, String alias) {
+    public void addImport(String importNS, String alias, IdentifierToken it) {
         imports.put(alias, importNS);
-    }
-
-    public void addImports(HashMap<String, String> importNSs) {
-        for (Entry<String, String> entry : importNSs.entrySet())
-            imports.put(entry.getKey(), entry.getValue());
+        importTokens.put(importNS, it);
     }
 
     public boolean hasInclude(String alias) {
@@ -46,6 +44,7 @@ public class ProgramUnit {
     public void resolve(ErrorSet errors) {
         this.errors = errors;
         for (String ns : imports.values()) {
+            final IdentifierToken it = importTokens.get(ns);
             if(module.getNamespaceIncluded(ns) == null) {
                 String[] p = ns.split("\\.");
                 String found = null;
@@ -60,9 +59,9 @@ public class ProgramUnit {
                     }
                 }
                 if(found != null)
-                    errors.warning(String.format("Could not find imported namespace %s (but did find parent %s)", ns, found));
+                    errors.warning(String.format("Could not find imported namespace %s (but did find parent %s)", ns, found), it);
                 else
-                    errors.warning(String.format("Could not find imported namespace %s", ns));
+                    errors.warning(String.format("Could not find imported namespace %s", ns), it);
             }
         }
     }

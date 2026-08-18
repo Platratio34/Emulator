@@ -57,7 +57,7 @@ public class CPU {
     protected ArrayDeque<Integer> interruptQueue = new ArrayDeque<>();
 
     public Debugger debugger = null;
-    public boolean printInstr = true;
+    public boolean printInstr = false;
 
     public Instruction lastInstruction;
 

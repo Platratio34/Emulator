@@ -10,6 +10,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Optional;
 
+import javax.management.openmbean.KeyAlreadyExistsException;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -39,13 +41,18 @@ public class ProgramModule {
         this.languageServer = languageServer;
         this.root = root;
         JSONObject json;
-        json = new JSONObject(Files.readString(root.toPath().resolve("module-info.json")));
+        Path moduleInfoPath = root.toPath().resolve("module-info.json");
+        if (!moduleInfoPath.toFile().exists()) {
+            System.err.println("Missing module info file");
+        }
+        json = new JSONObject(Files.readString(moduleInfoPath));
         if(!json.has("name"))
             throw new IOException("Illegal module info file");
         name = json.getString("name");
         if (json.has("ref")) {
             JSONArray jsonRef = json.getJSONArray("ref");
             for (int i = 0; i < jsonRef.length(); i++) {
+                System.out.println("Adding ref module: "+jsonRef.getString(i));
                 addRefModule(jsonRef.getString(i));
             }
         }
@@ -82,7 +89,7 @@ public class ProgramModule {
         refModules.add(module);
     }
 
-    private void addNamespace(Namespace namespace) {
+    public Namespace addNamespace(Namespace namespace) {
         String name = namespace.getQualifiedName();
         if (namespaces.containsKey(name)) {
             if (namespaces.get(name) != namespace) {
@@ -96,6 +103,7 @@ public class ProgramModule {
             // System.out.println("Adding namespace "+name+" ("+namespace.cName+")");
             namespaces.put(name, namespace);
         }
+        return namespaces.get(name);
     }
 
     protected void parse(ErrorSet errors, File dir) {
@@ -175,6 +183,7 @@ public class ProgramModule {
         }
         for (ProgramUnit unit : units.values()) {
             unit.errors = errors;
+            unit.resolve(errors);
         }
         for (Namespace ns : namespaces.values()) {
             ns.resolve(errors);
@@ -228,7 +237,7 @@ public class ProgramModule {
     public Namespace getNamespaceIncluded(String fullName) {
         Namespace namespace = getNamespace(fullName);
         if (namespace != null)
-            return namespaces.get(fullName);
+            return namespace;
         // System.out.println("= Looking for included namespace "+fullName);
         for (String ref : refModules) {
             // System.out.println("= = checking referenced module "+ref);
@@ -367,5 +376,9 @@ public class ProgramModule {
 
     public void onRecompile() {
         namespaces.clear();
+    }
+
+    public ArrayList<String> getRefs() {
+        return refModules;
     }
 }
