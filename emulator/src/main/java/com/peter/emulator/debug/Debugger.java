@@ -167,13 +167,13 @@ public class Debugger {
             // System.out.println(type);
             Matcher m = CHAR_ARRAY_PATTERN.matcher(type);
             if (!m.matches()) {
-                return "\"" + cpu.ram.readString(cpu.translateAddress(start), end - start) + "\"";
+                return "\"" + cpu.bus.readString(cpu.translateAddress(start), end - start) + "\"";
             }
             int len = Integer.parseInt(m.group(1));
-            return "\"" + cpu.ram.readString(cpu.translateAddress(start), len) + "\"";
+            return "\"" + cpu.bus.readString(cpu.translateAddress(start), len) + "\"";
         }
         return switch (type) {
-            case "char*" -> "\"" + cpu.ram.readString(cpu.translateAddress(start), end - start) + "\"";
+            case "char*" -> "\"" + cpu.bus.readString(cpu.translateAddress(start), end - start) + "\"";
             case "char" -> "'" + (char) cpu.readMemByte(address) + "'";
             case "uint8" -> Integer.toString(cpu.readMemByte(address));
             case "boolean" -> cpu.readMemByte(address) != 0 ? "true" : "false";

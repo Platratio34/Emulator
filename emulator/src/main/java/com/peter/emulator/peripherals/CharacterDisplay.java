@@ -2,7 +2,7 @@ package com.peter.emulator.peripherals;
 
 import com.peter.emulator.CPU;
 import com.peter.emulator.Packer;
-import com.peter.emulator.components.RAM;
+import com.peter.emulator.components.ComponentBus;
 import com.peter.emulator.gui.CharacterDisplayFrame;
 import com.peter.emulator.lang.base.Peripheral;
 
@@ -12,7 +12,7 @@ public class CharacterDisplay implements DMAPeripheral {
     private static int nextSerial = 0;
     public final int[] serial = Packer.packChar((nextSerial++) + "", 16);
 
-    private RAM ram;
+    private PeripheralManager manager;
     private CPU cpu;
     private int deviceId;
 
@@ -45,7 +45,7 @@ public class CharacterDisplay implements DMAPeripheral {
             out += delim + "\n";
             for (int y = 0; y < height; y++) {
                 for (int x = 0; x < width; x++) {
-                    char c = (char) ram.readByte(charBufferStart + x + (y * width));
+                    char c = (char) manager.componentBus.readByte(charBufferStart + x + (y * width));
                     if (c == 0) {
                         out += " ";
                     } else if (Character.isISOControl(c)) {
@@ -81,6 +81,7 @@ public class CharacterDisplay implements DMAPeripheral {
             } else {
                 charBufferStart = cpu.translateAddress(msg[1]);
             }
+            manager.writeRspWords(0x01, deviceId, 0x01);
         } else if(msg[0] == 0x0000_0002) {
             int addr = msg[1];
             if(addr == 0) {
@@ -88,13 +89,16 @@ public class CharacterDisplay implements DMAPeripheral {
             } else {
                 colorBufferStart = cpu.translateAddress(msg[1]);
             }
+            manager.writeRspWords(0x01, deviceId, 0x01);
+        } else {
+            manager.writeRspWords(0x01, deviceId, 0x0f);
         }
 
     }
 
     @Override
-    public void link(RAM ram, CPU cpu, int deviceId) {
-        this.ram = ram;
+    public void link(PeripheralManager manager, CPU cpu, int deviceId) {
+        this.manager = manager;
         this.cpu = cpu;
         this.deviceId = deviceId;
     }

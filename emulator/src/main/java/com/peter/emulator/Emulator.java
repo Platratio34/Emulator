@@ -1,34 +1,46 @@
 package com.peter.emulator;
 
 import com.peter.Main;
+import com.peter.emulator.components.ComponentBus;
 import com.peter.emulator.components.MMU;
 import com.peter.emulator.components.RAM;
 import com.peter.emulator.components.TimerUnit;
 import com.peter.emulator.gui.EmulatorGui;
 import com.peter.emulator.peripherals.CharacterDisplay;
 import com.peter.emulator.peripherals.ConsolePeripheral;
+import com.peter.emulator.peripherals.KeyboardPeripheral;
 import com.peter.emulator.peripherals.PeripheralManager;
 import com.peter.emulator.peripherals.StoragePeripheral;
 
 public class Emulator {
 
-    public final RAM ram = new RAM();
+    public final ComponentBus componentBus = new ComponentBus();
+
+    public final RAM kernalRam = new RAM(0, 1);
+
+    public final RAM mainRam = new RAM(0x2_0000, 0x7e);
     public final MMU mmu = new MMU();
     public float tickSpeed = 480;
 
     public final CPU[] cores = new CPU[] {
-        new CPU(0, ram, mmu)
+        new CPU(0, componentBus, mmu)
     };
-    public PeripheralManager peripheralManager = new PeripheralManager(ram, cores[0]);
+    public final PeripheralManager peripheralManager = new PeripheralManager(componentBus, cores[0]);
     public final EmulatorGui gui;
     public final TimerUnit timerUnit = new TimerUnit(PeripheralManager.PERIPHERAL_START + 0x200, cores[0]);
     public final ConsolePeripheral console = new ConsolePeripheral(PeripheralManager.PERIPHERAL_START + 0x300);
+    public final KeyboardPeripheral keyboard = new KeyboardPeripheral(PeripheralManager.PERIPHERAL_START + 0x304);
     public final StoragePeripheral vd0 = new StoragePeripheral(Main.ROOT_PATH.resolve("devices/vd0"));
     public final CharacterDisplay charDisplay = new CharacterDisplay(40, 24);
 
     public Emulator() {
+        componentBus.addComponent(kernalRam);
+        componentBus.addComponent(peripheralManager);
+        componentBus.addComponent(mainRam);
+
         peripheralManager.addPeripheral(timerUnit);
         peripheralManager.addPeripheral(console);
+        peripheralManager.addPeripheral(keyboard);
         peripheralManager.addPeripheral(vd0);
         peripheralManager.addPeripheral(charDisplay);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -104,16 +116,6 @@ public class Emulator {
         thread.interrupt();
         thread = null;
         System.out.println("Stopping emulator . . .");
-    }
-
-    public void setProgram(int[] data) {
-        setProgram(data, 0);
-    }
-
-    public void setProgram(int[] data, int position) {
-        ram.copyWords(data, position);
-        cores[0].setPtr(position);
-        cores[0].running = true;
     }
 
     public boolean isRunning() {

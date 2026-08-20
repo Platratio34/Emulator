@@ -4,6 +4,7 @@ import static com.peter.emulator.MachineCode.*;
 
 import java.util.ArrayDeque;
 
+import com.peter.emulator.components.ComponentBus;
 import com.peter.emulator.components.MMU;
 import com.peter.emulator.components.RAM;
 import com.peter.emulator.debug.Debugger;
@@ -15,7 +16,7 @@ public class CPU {
 
     public final int cpuId;
 
-    public final RAM ram;
+    public final ComponentBus bus;
     public final MMU mmu;
     
     public boolean running = false;
@@ -61,9 +62,9 @@ public class CPU {
 
     public Instruction lastInstruction;
 
-    public CPU(int cpuId, RAM ram, MMU mmu) {
+    public CPU(int cpuId, ComponentBus bus, MMU mmu) {
         this.cpuId = cpuId;
-        this.ram = ram;
+        this.bus = bus;
         this.mmu = mmu;
     }
 
@@ -245,24 +246,24 @@ public class CPU {
     }
 
     public void writeMem(int addr, int val) {
-        ram.writeWord(mmu.translate(this, addr), val);
+        bus.writeWord(mmu.translate(this, addr), val);
     }
     public void writeMemShort(int addr, int val) {
-        ram.writeShort(mmu.translate(this, addr), val);
+        bus.writeShort(mmu.translate(this, addr), val);
     }
     public void writeMemByte(int addr, byte val) {
-        ram.writeByte(mmu.translate(this, addr), val);
+        bus.writeByte(mmu.translate(this, addr), val);
     }
 
     public int readMem(int addr) {
-        return ram.readWord(mmu.translate(this, addr));
+        return bus.readWord(mmu.translate(this, addr));
     }
     public int readMemShort(int addr) {
-        return ram.readShort(mmu.translate(this, addr));
+        return bus.readShort(mmu.translate(this, addr));
     }
 
     public byte readMemByte(int addr) {
-        return ram.readByte(mmu.translate(this, addr));
+        return bus.readByte(mmu.translate(this, addr));
     }
     
     public int translateAddress(int addr) {

@@ -239,7 +239,8 @@ public class Main {
             e.printStackTrace();
             return;
         }
-        emulator.ram.copyWords(bootAssembler.build());
+        // emulator.mainRam.copyWords(bootAssembler.build());
+        emulator.kernalRam.fill(bootAssembler.build());
         // try {
         //     emulator.ram.copy(Files.readAllBytes(ROOT_PATH.resolve("boot.bin")));
         // } catch (IOException e) {
@@ -284,17 +285,17 @@ public class Main {
         // System.out.println("Kernal");
         // System.out.println(emulator.ram.debugPrint(0x0000, 8));
         System.out.println(String.format("Stack (Pointer: 0x%x)", emulator.cores[0].stackPtr));
-        System.out.println(emulator.ram.debugPrint(0x8000, 8));
+        System.out.println(emulator.kernalRam.debugPrint(0x8000, 8));
         System.out.println("Syscall table");
-        System.out.println(emulator.ram.debugPrint(0xf000, 4));
+        System.out.println(emulator.kernalRam.debugPrint(0xf000, 4));
         System.out.println();
         
         // System.out.println("Console");
         // System.out.println(emulator.ram.debugPrint(0x1_0100, 3));
-        System.out.println("Peripheral Manager");
-        System.out.println(emulator.ram.debugPrint(0x1_0000, 8));
+        // System.out.println("Peripheral Manager");
+        // System.out.println(emulator.mainRam.debugPrint(0x1_0000, 8));
         System.out.println("Heap");
-        System.out.println(emulator.ram.debugPrint(0x9000, 8));
+        System.out.println(emulator.kernalRam.debugPrint(0x9000, 8));
          
         emulator.stop();
 

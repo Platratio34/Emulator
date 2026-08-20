@@ -2,61 +2,57 @@ package com.peter.emulator.components;
 
 import java.util.HashMap;
 
+import com.peter.emulator.machinecode.Instruction;
 import com.peter.emulator.peripherals.MemoryMappedPeripheral;
 
-public class RAM {
+public class RAM implements BusComponent {
 
-    public final int size;
-    private final byte[] mem;
-    private final HashMap<Integer,MemoryMappedPeripheral> peripherals = new HashMap<>();
+    public final int start;
+    public final int numBlocks;
+    private final byte[][] blocks;
 
     public RAM() {
-        this(0x80_0000);
+        this(0, 0x80);
     }
 
-    public RAM(int size) {
-        this.size = size;
-        mem = new byte[size];
+    public RAM(int start, int numBlocks) {
+        this.start = start;
+        this.numBlocks = numBlocks;
+        blocks = new byte[numBlocks][];
     }
 
-    public void writeWord(int address, int value) {
-        if (address < 0 || address >= size)
-            throw new ArrayIndexOutOfBoundsException(address);
-        writeByte(address, (byte) (value >> 24));
-        writeByte(address + 1, (byte) ((value >> 16) & 0xff));
-        writeByte(address + 2, (byte) ((value >> 8) & 0xff));
-        writeByte(address + 3, (byte) (value & 0xff));
-    }
-    
-    public void writeShort(int address, int value) {
-        writeByte(address, (byte)(value >> 8));
-        writeByte(address+1, (byte)(value & 0xff));
-    }
-    
-    public void writeByte(int address, byte value) {
-        if(peripherals.containsKey(address)) {
-            peripherals.get(address).onUpdate(address, value);
-            return;
-        }
-        if (address < 0 || address >= size)
-            throw new ArrayIndexOutOfBoundsException(address);
-        mem[address] = value;
-    }
-    
-    public int readWord(int address) {
-        return ((readByte(address) & 0xff) << 24) | ((readByte(address+1) & 0xff) << 16) | ((readByte(address+2) & 0xff) << 8) | (readByte(address+3) & 0xff);
+    @Override
+    public int getStart() {
+        return start;
     }
 
-    public int readShort(int address) {
-        return ( ((int)readByte(address)) << 8 ) | ( (int)readByte(address+1) );
+    @Override
+    public int getNumBlocks() {
+        return numBlocks;
     }
 
+    @Override
     public byte readByte(int address) {
-        if(peripherals.containsKey(address))
-            return peripherals.get(address).get(address);
-        if (address < 0 || address >= size)
-            throw new ArrayIndexOutOfBoundsException(address);
-        return mem[address];
+        address -= start;
+        int block = address >> 16;
+        if (blocks[block] == null) {
+            return 0;
+        }
+        return blocks[block][address & 0xffff];
+    }
+    
+    @Override
+    public void writeByte(int address, byte value) {
+        address -= start;
+        int block = address >> 16;
+        if (blocks[block] == null) {
+            blocks[block] = new byte[0x1_0000];
+        }
+        blocks[block][address & 0xffff] = value;
+    }
+    
+    private int readWord(int address) {
+        return ((readByte(address) & 0xff) << 24) | ((readByte(address+1) & 0xff) << 16) | ((readByte(address+2) & 0xff) << 8) | (readByte(address+3) & 0xff);
     }
     
     public byte[] read(int address, int size) {
@@ -74,63 +70,74 @@ public class RAM {
         }
         return out;
     }
-    
-    public String readString(int startAddress, int length) {
-        String str = "";
-        for (int i = 0; i < length; i++) {
-            str += (char) readByte(startAddress++);
-        }
-        return str;
-    }
 
-    public String readStringNT(int startAddress) {
-        char c = (char) readByte(startAddress++);
-        String str = "";
-        while (c != 0x0) {
-            str += c;
-            c = (char) readByte(startAddress++);
-        }
-        return str;
-    }
-    
-    public void writeString(int startAddress, String str) {
-        for (int i = 0; i < str.length(); i++) {
-            writeByte(startAddress++, (byte)str.charAt(i));
-        }
-    }
+    // public void copy(byte[] data) {
+    //     copy(data, 0, data.length);
+    // }
 
-    public void copy(byte[] data) {
-        copy(data, 0, data.length);
-    }
+    // public void copy(byte[] data, int start) {
+    //     copy(data, start, data.length);
+    // }
 
-    public void copy(byte[] data, int start) {
-        copy(data, start, data.length);
-    }
+    // public void copy(byte[] data, int start, int length) {
+    //     if (length > data.length) {
+    //         throw new RuntimeException(
+    //                 "Length argument must be less than or equal to data length; Data length: " + data.length + "; Got "
+    //                         + length);
+    //     }
+    //     // System.arraycopy(data, 0, mem, start, length);
+    //     int bI = start >> 16;
+    //     int sourceStart = 0;
+    //     while (bI < numBlocks && length > 0) {
+    //         if (blocks[bI] == null) {
+    //             blocks[bI] = new byte[0x1_0000];
+    //         }
+    //         int blockStart = start - (bI << 16);
+    //         int bLength = Math.min(0x1_0000 - blockStart, length);
+    //         System.arraycopy(data, sourceStart, blocks[bI], blockStart, bLength);
+    //         length -= bLength;
+    //         sourceStart += bLength;
+    //         start = (bI + 1) << 16;
+    //         bI = start >> 16;
+    //     }
+    // }
 
-    public void copy(byte[] data, int start, int length) {
-        if (length > data.length) {
-            throw new RuntimeException(
-                    "Length argument must be less than or equal to data length; Data length: " + data.length + "; Got "
-                            + length);
+    public void fill(byte[] bytes) {
+        int bI = 0;
+        int start = 0;
+        while (start < bytes.length) {
+            if (blocks[bI] == null) {
+                blocks[bI] = new byte[0x1_0000];
+            }
+            int len = Math.min(0x1_0000 - start, 0x1_0000);
+            if (len > bytes.length) {
+                len = bytes.length;
+            }
+            System.arraycopy(bytes, start, blocks[bI], 0, len);
+            start += 0x1_0000;
+            bI++;
         }
-        System.arraycopy(data, 0, mem, start, length);
     }
-    
-    
-    public void copyWords(int[] data) {
-        copyWords(data, 0, data.length);
-    }
-    public void copyWords(int[] data, int start) {
-        copyWords(data, start, data.length);
-    }
-    public void copyWords(int[] data, int start, int length) {
-        if (length > data.length) {
-            throw new RuntimeException(
-                    "Length argument must be less than or equal to data length; Data length: " + data.length + "; Got "
-                            + length);
-        }
-        for (int i = 0; i < length; i++) {
-            writeWord(start + (i * 4), data[i]);
+    public void fill(int[] words) {
+        int bI = 0;
+        int start = 0;
+        while (start < words.length) {
+            if (blocks[bI] == null) {
+                blocks[bI] = new byte[0x1_0000];
+            }
+            for(int i = 0; i < 0x1_0000; i += 4) {
+                int wordI = (i / 4) + start;
+                if (wordI >= words.length) {
+                    break;
+                }
+                // System.out.println(Instruction.toHexLead(i, 4) + " " + Instruction.toHexLead(words[wordI]));
+                blocks[bI][i] = (byte) (words[wordI] >>> 24);
+                blocks[bI][i + 1] = (byte) (words[wordI] >>> 16);
+                blocks[bI][i + 2] = (byte) (words[wordI] >>> 8);
+                blocks[bI][i + 3] = (byte) words[wordI];
+            }
+            start += 0x4000;
+            bI++;
         }
     }
 
@@ -165,11 +172,5 @@ public class RAM {
         }
 
         return str;
-    }
-
-    public void addMMP(MemoryMappedPeripheral peripheral) {
-        for(int addr : peripheral.getAddresses()) {
-            peripherals.put(addr, peripheral);
-        }
     }
 }
