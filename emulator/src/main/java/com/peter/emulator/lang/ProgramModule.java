@@ -10,8 +10,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Optional;
 
-import javax.management.openmbean.KeyAlreadyExistsException;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;

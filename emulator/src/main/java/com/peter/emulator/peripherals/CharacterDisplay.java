@@ -2,7 +2,6 @@ package com.peter.emulator.peripherals;
 
 import com.peter.emulator.CPU;
 import com.peter.emulator.Packer;
-import com.peter.emulator.components.ComponentBus;
 import com.peter.emulator.gui.CharacterDisplayFrame;
 import com.peter.emulator.lang.base.Peripheral;
 
@@ -22,7 +21,7 @@ public class CharacterDisplay implements DMAPeripheral {
     protected int charBufferStart = 0;
     protected int colorBufferStart = 0;
 
-    private String out = "";
+    private String out = "[NO BUFFER]";
     public CharacterDisplayFrame frame;
 
     public CharacterDisplay(int width, int height) {
@@ -38,12 +37,9 @@ public class CharacterDisplay implements DMAPeripheral {
                 return;
             }
             out = "";
-            String delim = "";
-            for (int i = 0; i < width; i++) {
-                delim += "-";
-            }
-            out += delim + "\n";
             for (int y = 0; y < height; y++) {
+                if (y > 0)
+                    out += "\n";
                 for (int x = 0; x < width; x++) {
                     char c = (char) manager.componentBus.readByte(charBufferStart + x + (y * width));
                     if (c == 0) {
@@ -54,9 +50,7 @@ public class CharacterDisplay implements DMAPeripheral {
                         out += c;
                     }
                 }
-                out += "\n";
             }
-            out += delim;
         }
     }
 

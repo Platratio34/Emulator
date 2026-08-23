@@ -11,6 +11,10 @@ public class Instruction {
     public Instruction(Operator op) {
         this.op = op;
     }
+    public Instruction(Operator op, int data) {
+        this.op = op;
+        this.data = data;
+    }
 
     public int getBytecode() {
         return op.id | (data & 0xff_ffff);
@@ -61,6 +65,13 @@ public class Instruction {
         public String toString() {
             return String.format("%s 0x%s", op, toHex(data & 0xff_ffff, 6));
         }
+    }
+
+    public static Instruction Halt() {
+        return new Instruction(Operator.HALT, 0xff_ffff);
+    }
+    public static Instruction NoOp() {
+        return new Instruction(Operator.NO_OP, 0x0);
     }
 
     public static enum Operator {

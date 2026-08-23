@@ -100,34 +100,34 @@ public class CPU {
         };
     }
 
-    public int getReg(int reg) {
-        if (reg < 0x10) {
-            return registers[reg];
-        } else if (reg < 0x20) {
-            return registersI[reg & 0xf];
+    public int getReg(Reg reg) {
+        if (reg.code < 0x10) {
+            return registers[reg.code];
+        } else if (reg.code < 0x20) {
+            return registersI[reg.code & 0xf];
         }
         return switch (reg) {
-            case REG_PGM_PNTR -> pgmPtr;
-            case REG_STACK_PNTR -> stackPtr;
-            case REG_ARITHMETIC_FLAG -> arithmeticFlag;
+            case PGM -> pgmPtr;
+            case STACK -> stackPtr;
+            case AF -> arithmeticFlag;
 
-            case REG_PID -> pid;
-            case REG_MEM_TABLE -> memTablePtr;
+            case PID -> pid;
+            case MEM_TABLE -> memTablePtr;
 
-            case REG_INTERRUPT -> interruptCode;
-            case REG_INTR_HANDLER -> interruptHandler;
+            case INTERRUPT_CODE -> interruptCode;
+            case INTERRUPT_HANDLER -> interruptHandler;
             
-            case REG_CPU_ID -> cpuId;
-            case REG_PRIVILEGED_MODE -> privilegeMode ? 1 : 0;
+            case CPU_ID -> cpuId;
+            case PRIVILEGE -> privilegeMode ? 1 : 0;
             
-            case REG_PGM_PNTR_I -> pgmPtrI;
-            case REG_STACK_PNTR_I -> stackPtrI;
-            case REG_ARITHMETIC_FLAG_I -> arithmeticFlagI;
+            case PGM_I -> pgmPtrI;
+            case STACK_I -> stackPtrI;
+            case AF_I -> arithmeticFlagI;
 
-            case REG_PID_I -> pidI;
-            case REG_MEM_TABLE_I -> memTablePtrI;
+            case PID_I -> pidI;
+            case MEM_TABLE_I -> memTablePtrI;
 
-            case REG_PRIVILEGED_MODE_I -> privilegeModeI ? 1 : 0;
+            case PRIVILEGE_I -> privilegeModeI ? 1 : 0;
         
             default -> {
                 throw new RuntimeException("Invalid special register");
@@ -135,59 +135,59 @@ public class CPU {
         };
     }
 
-    public void setReg(int reg, int val) {
+    public void setReg(Reg reg, int val) {
         // System.out.println(String.format("Setting register %x to %x", reg, val));
-        if (reg < 0x10) {
-            registers[reg] = val;
+        if (reg.code < 0x10) {
+            registers[reg.code] = val;
             return;
         }
-        if (reg < 0x20) {
+        if (reg.code < 0x20) {
             if (!privilegeMode) {
                 interrupt(0x8000_0001);
                 return;
             }
-            registersI[reg] = val;
+            registersI[reg.code] = val;
             return;
         }
         switch (reg) {
-            case REG_PGM_PNTR -> {
+            case PGM -> {
                 pgmPtr = val;
             }
-            case REG_STACK_PNTR -> {
+            case STACK -> {
                 stackPtr = val;
             }
-            case REG_ARITHMETIC_FLAG -> {
+            case AF -> {
                 arithmeticFlag = val;
             }
-            case REG_PID -> {
+            case PID -> {
                 if (!privilegeMode) {
                     interrupt(0x8000_0001);
                     return;
                 }
                 pid = val;
             }
-            case REG_MEM_TABLE -> {
+            case MEM_TABLE -> {
                 if (!privilegeMode) {
                     interrupt(0x8000_0001);
                     return;
                 }
                 memTablePtr = val;
             }
-            case REG_PRIVILEGED_MODE -> {
+            case PRIVILEGE -> {
                 if (!privilegeMode) {
                     interrupt(0x8000_0001);
                     return;
                 }
                 privilegeMode = val != 0;
             }
-            case REG_INTERRUPT -> {
+            case INTERRUPT_CODE -> {
                 if (!privilegeMode) {
                     interrupt(0x8000_0001);
                     return;
                 }
                 interruptCode = val;
             }
-            case REG_INTR_HANDLER -> {
+            case INTERRUPT_HANDLER -> {
                 if (!privilegeMode) {
                     interrupt(0x8000_0001);
                     return;
@@ -195,42 +195,42 @@ public class CPU {
                 interruptHandler = val;
             }
 
-            case REG_CPU_ID -> {
+            case CPU_ID -> {
                 interrupt(0x8000_0001);
             }
             
-            case REG_PGM_PNTR_I -> {
+            case PGM_I -> {
                 if (!privilegeMode) {
                     interrupt(0x8000_0001);
                     return;
                 }
                 pgmPtrI = val;
             }
-            case REG_STACK_PNTR_I -> {
+            case STACK_I -> {
                 if (!privilegeMode) {
                     interrupt(0x8000_0001);
                     return;
                 }
                 stackPtrI = val;
             }
-            case REG_ARITHMETIC_FLAG_I -> {
+            case AF_I -> {
                 arithmeticFlagI = val;
             }
-            case REG_PID_I -> {
+            case PID_I -> {
                 if (!privilegeMode) {
                     interrupt(0x8000_0001);
                     return;
                 }
                 pidI = val;
             }
-            case REG_MEM_TABLE_I -> {
+            case MEM_TABLE_I -> {
                 if (!privilegeMode) {
                     interrupt(0x8000_0001);
                     return;
                 }
                 memTablePtrI = val;
             }
-            case REG_PRIVILEGED_MODE_I -> {
+            case PRIVILEGE_I -> {
                 if (!privilegeMode) {
                     interrupt(0x8000_0001);
                     return;
@@ -420,7 +420,10 @@ public class CPU {
                         setReg(mathI.rd, getReg(mathI.ra) * getReg(mathI.rb));
                     }
                     case DIV -> {
-                        setReg(mathI.rd, getReg(mathI.ra) / getReg(mathI.rb));
+                        int a = getReg(mathI.ra);
+                        int b = getReg(mathI.rb);
+                        setReg(mathI.rd, a / b);
+                        arithmeticFlag = a % b;
                     }
                     case INC -> {
                         setReg(mathI.rd, getReg(mathI.rd) + mathI.getInc());
@@ -446,17 +449,17 @@ public class CPU {
                     case LSHIFT -> {
                         int ra = getReg(mathI.ra);
                         if(mathI.rotate) {
-                            setReg(mathI.rd, Integer.rotateLeft(ra, mathI.rb & 0x7f));
+                            setReg(mathI.rd, Integer.rotateLeft(ra, mathI.data & 0x7f));
                         } else {
-                            setReg(mathI.rd, ra << mathI.rb);
+                            setReg(mathI.rd, ra << mathI.data);
                         }
                     }
                     case RSHIFT -> {
                         int ra = getReg(mathI.ra);
                         if(mathI.rotate) {
-                            setReg(mathI.rd, Integer.rotateRight(ra, mathI.rb & 0x7f));
+                            setReg(mathI.rd, Integer.rotateRight(ra, mathI.data & 0x7f));
                         } else {
-                            setReg(mathI.rd, ra >>> mathI.rb);
+                            setReg(mathI.rd, ra >>> mathI.data);
                         }
                     }
                     case UNKNOWN -> {
@@ -574,7 +577,7 @@ public class CPU {
                         if (!privilegeMode) {
                             return;
                         }
-                        pgmPtr = getReg(syscallI.data);
+                        pgmPtr = getReg(syscallI.rg);
                         privilegeMode = false;
                     }
                     case INTERRUPT -> {
@@ -599,7 +602,7 @@ public class CPU {
                                 interrupt(syscallI.data);
                             }
                             case REGISTER -> {
-                                interrupt(getReg(syscallI.data));
+                                interrupt(getReg(syscallI.rg));
                             }
                         }
                     }
@@ -613,6 +616,9 @@ public class CPU {
                         }
                         writeMem(SYSCALL_TABLE_START, pgmPtr);
                         pgmPtr = ptr;
+                    }
+                    case TRANSLATE -> {
+                        setReg(syscallI.rg, mmu.translate(this, getReg(syscallI.rg)));
                     }
                 }
             }
@@ -629,7 +635,7 @@ public class CPU {
         String vl = "";
         for (int i = 0; i <= 0xf; i++) {
             out += String.format("%-11s", MachineCode.translateReg(i));
-            vl += toHex(getReg(i)) + "  ";
+            vl += toHex(getReg(Reg.from(i))) + "  ";
         }
         out += "\n" + vl;
         
@@ -642,7 +648,7 @@ public class CPU {
                 continue;
             }
             out += String.format("%-11s", MachineCode.translateReg(i));
-            vl += toHex(getReg(i)) + "  ";
+            vl += toHex(getReg(Reg.from(i))) + "  ";
         }
         out += "\n" + vl;
         
@@ -650,20 +656,21 @@ public class CPU {
         vl = "";
         for (int i = 0x10; i <= 0x1f; i++) {
             out += String.format("%-11s", MachineCode.translateReg(i));
-            vl += toHex(getReg(i)) + "  ";
+            vl += toHex(getReg(Reg.from(i))) + "  ";
         }
         out += "\n" + vl;
         
         out += "\n";
         vl = "";
         for (int i = 0xe0; i <= 0xef; i++) {
-            if (!isValidReg(i)) {
+            Reg rg = Reg.from(i);
+            if (rg == Reg.UNKNOWN) {
                 out += "           ";
                 vl += "           ";
                 continue;
             }
             out += String.format("%-11s", MachineCode.translateReg(i));
-            vl += toHex(getReg(i)) + "  ";
+            vl += toHex(getReg(Reg.from(i))) + "  ";
         }
         out += "\n" + vl;
         return out;

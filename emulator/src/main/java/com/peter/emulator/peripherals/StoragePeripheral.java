@@ -9,7 +9,6 @@ import java.util.HashMap;
 import com.peter.emulator.CPU;
 import com.peter.emulator.Packer;
 import com.peter.emulator.components.ComponentBus;
-import com.peter.emulator.components.RAM;
 import com.peter.emulator.lang.base.Peripheral;
 
 public class StoragePeripheral implements DMAPeripheral {

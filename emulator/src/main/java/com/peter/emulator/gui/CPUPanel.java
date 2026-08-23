@@ -9,6 +9,7 @@ import javax.swing.JPanel;
 import com.peter.emulator.CPU;
 import com.peter.emulator.MachineCode;
 import com.peter.emulator.machinecode.Instruction;
+import com.peter.emulator.machinecode.Reg;
 
 public class CPUPanel extends JPanel {
 
@@ -114,7 +115,7 @@ public class CPUPanel extends JPanel {
             l0.setFont(EmulatorGui.monFont);
         }
         for(int i = 0; i < 8; i++) {
-            regLabels[i + 16] = new JLabel(EmulatorGui.toHex(cpu.getReg(i + 16)));
+            regLabels[i + 16] = new JLabel(EmulatorGui.toHex(cpu.getReg(Reg.from(i + 16))));
             regPanel.add(regLabels[i + 16]).setFont(EmulatorGui.monFont);
         }
         for(int i = 0; i < 8; i++) {
@@ -123,7 +124,7 @@ public class CPUPanel extends JPanel {
             l0.setFont(EmulatorGui.monFont);
         }
         for (int i = 0; i < 8; i++) {
-            regLabels[i + 24] = new JLabel(EmulatorGui.toHex(cpu.getReg(i + 24)));
+            regLabels[i + 24] = new JLabel(EmulatorGui.toHex(cpu.getReg(Reg.from(i + 24))));
             regPanel.add(regLabels[i + 24]).setFont(EmulatorGui.monFont);
         }
         
@@ -168,7 +169,7 @@ public class CPUPanel extends JPanel {
 
     public void update() {
         for(int i = 0; i < 32; i++) {
-            regLabels[i].setText(EmulatorGui.toHex(cpu.getReg(i)));
+            regLabels[i].setText(EmulatorGui.toHex(cpu.getReg(Reg.from(i))));
         }
         pgmPtrLbl.setText(EmulatorGui.toHex(cpu.pgmPtr));
         stackPtrLbl.setText(EmulatorGui.toHex(cpu.stackPtr));

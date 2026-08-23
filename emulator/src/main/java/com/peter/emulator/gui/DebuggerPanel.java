@@ -8,6 +8,7 @@ import javax.swing.JPanel;
 
 import com.peter.emulator.CPU;
 import com.peter.emulator.assembly.SymbolFile.StackVarSymbol;
+import com.peter.emulator.assembly.SymbolFile.VariableSymbol;
 import com.peter.emulator.debug.Debugger;
 
 public class DebuggerPanel extends JPanel {
@@ -55,10 +56,10 @@ public class DebuggerPanel extends JPanel {
                 for (VarDisplay vd : varDisplays.values()) {
                     varPanel.remove(vd);
                 }
-                for (String v : debugger.getVars()) {
+                for (VariableSymbol v : debugger.getVars()) {
                     VarDisplay vd = new VarDisplay(v);
                     varPanel.add(vd);
-                    varDisplays.put(v, vd);
+                    varDisplays.put(v.name, vd);
                 }
             }
             // String str = debugger.printStack()
@@ -91,15 +92,21 @@ public class DebuggerPanel extends JPanel {
     }
 
     protected class VarDisplay extends JLabel {
+        public final VariableSymbol symbol;
         public final String name;
 
-        public VarDisplay(String name) {
-            this.name = name;
+        public VarDisplay(VariableSymbol symbol) {
+            this.symbol = symbol;
+            this.name = symbol.name;
             update();
         }
 
         public void update() {
-            setText(String.format("%s: %s", name, debugger.getVar(cpu, name)));
+            if (symbol.end - symbol.start > 64) {
+                setText(String.format("%s: ... (%d)", name, symbol.end - symbol.start + 1));
+            } else {
+                setText(String.format("%s: %s", name, debugger.getVar(cpu, name)));
+            }
         }
     }
 }

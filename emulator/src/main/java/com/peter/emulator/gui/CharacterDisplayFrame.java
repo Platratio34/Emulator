@@ -1,5 +1,7 @@
 package com.peter.emulator.gui;
 
+import java.awt.Dimension;
+
 import javax.swing.JFrame;
 import javax.swing.JTextArea;
 
@@ -19,14 +21,16 @@ public class CharacterDisplayFrame extends JFrame {
         textArea = new JTextArea(peripheral.height, peripheral.width);
         add(textArea);
         textArea.setFont(EmulatorGui.monFont);
+        textArea.setEditable(false);
 
         updateDisplay();
 
-        setSize(800, 500);
+        pack();
     }
 
     public void updateDisplay() {
         textArea.setText(peripheral.getOut());
+        pack();
     }
 
 }

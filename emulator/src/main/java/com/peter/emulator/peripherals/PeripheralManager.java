@@ -1,7 +1,5 @@
 package com.peter.emulator.peripherals;
 
-import static com.peter.emulator.MachineCode.PERIPHERAL_START;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -9,7 +7,6 @@ import com.peter.emulator.CPU;
 import com.peter.emulator.components.BusComponent;
 import com.peter.emulator.components.ComponentBus;
 import com.peter.emulator.components.MemoryException;
-import com.peter.emulator.components.RAM;
 
 public class PeripheralManager implements BusComponent {
 

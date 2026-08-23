@@ -647,10 +647,12 @@ public class ActionBlock extends ComplexAction {
         
         // TODO desconstructors here
 
-        if(scope.getStackOffDif() > 0)
-            actions.add(scope.getStackResetAction());
-        if(scope.function != null)
+        if (scope.function != null) {
+            actions.add(new DirectAction("COPY r15 rStack"));
             actions.add(new DirectAction("STACK POP r15"));
+        }else if (scope.getStackOffDif() > 0) {
+            actions.add(scope.getStackResetAction());
+        }
         
         if(!tokens.isEmpty())
             scope.freeScopeHandles(errors, tokens.getLast().endLocation.span());

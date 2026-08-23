@@ -50,22 +50,11 @@ public class SysD extends Namespace {
         getPID.ret = ELPrimitives.UINT32;
 
         // const uint32 MEMORY_DEVICE_START = 0x1_0000;
-        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.STATIC, ELPrimitives.UINT32, "MEMORY_DEVICE_START", true, this, unit, SYSD_LOCATION).setValue(0x1_0000));
+        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.CONST, ELPrimitives.UINT32, "MEMORY_DEVICE_START", true, this, unit, SYSD_LOCATION).setValue(0x1_0000));
         // const uint32 MEMORY_PROCESS_START = 0x2_0000;
-        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.STATIC, ELPrimitives.UINT32, "MEMORY_PROCESS_START", true, this, unit, SYSD_LOCATION).setValue(0x2_0000));
+        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.CONST, ELPrimitives.UINT32, "MEMORY_PROCESS_START", true, this, unit, SYSD_LOCATION).setValue(0x2_0000));
         // const uint32 MEMORY_BLOCK_SIZE = 0x8000;
-        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.STATIC, ELPrimitives.UINT32, "MEMORY_BLOCK_SIZE", true, this, unit, SYSD_LOCATION).setValue(0x8000));
-
-        // const uint32 REG_PGM_PNTR = 0xf0;
-        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.STATIC, ELPrimitives.UINT32, "REG_PGM_PNTR", true, this, unit, SYSD_LOCATION).setValue(0xf0));
-        // const uint32 REG_STACK_PNTR = 0xf1;
-        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.STATIC, ELPrimitives.UINT32, "REG_STACK_PNTR", true, this, unit, SYSD_LOCATION).setValue(0xf1));
-        // const uint32 REG_PID = 0xf8;
-        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.STATIC, ELPrimitives.UINT32, "REG_PID", true, this, unit, SYSD_LOCATION).setValue(0xf8));
-        // const uint32 REG_MEM_TABLE = 0xf9;
-        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.STATIC, ELPrimitives.UINT32, "REG_MEM_TABLE", true, this, unit, SYSD_LOCATION).setValue(0xf9));
-        // const uint32 REG_PRIVILEGED_MODE = 0xff;
-        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.STATIC, ELPrimitives.UINT32, "REG_PRIVILEGED_MODE", true, this, unit, SYSD_LOCATION).setValue(0xff));
+        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.CONST, ELPrimitives.UINT32, "MEMORY_BLOCK_SIZE", true, this, unit, SYSD_LOCATION).setValue(0x8000));
 
         /*
         struct AddressSpace {
@@ -81,27 +70,6 @@ public class SysD extends Namespace {
         AddressSpace.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.UINT8, "type", false, this, unit, SYSD_LOCATION));
         AddressSpace.addMember(
                 new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.UINT8, "state", false, this, unit, SYSD_LOCATION));
-        
-        /*
-        struct PeripheralDescriptorShort {
-            const uint32 deviceID;
-            const uint32 deviceType;
-        }
-         */
-        ELStruct PeripheralDescriptorShort = new ELStruct("PeripheralDescriptorShort", this, unit);
-        PeripheralDescriptorShort.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.UINT32, "id", true, this, unit, SYSD_LOCATION));
-        PeripheralDescriptorShort.addMember(
-                new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.UINT32, "type", true, this, unit, SYSD_LOCATION));
-        
-        /*
-        struct PeripheralDescriptor {
-            const uint32 id;
-            const uint32 type;
-            const uint32[4] manufacturer;
-            const uint32[4] serial;
-            const uint32[6] data;
-        }
-         */
     }
 
     public static ELType getVarType(IdentifierToken it) {

@@ -25,6 +25,7 @@ public class ConsoleFrame extends JFrame {
         setLayout(new GridLayout(0, 1));
 
         textArea = new JTextArea();
+        textArea.setEditable(false);
         add(textArea);
 
         inputField = new JTextField();

@@ -209,7 +209,6 @@ public class MachineCode {
                 // };
             }
             case MATH -> {
-                int op = instruction & MASK_MATH_OP;
                 String rd = translateReg((instruction & MASK_MATH_RD) >> 16);
                 String ra = translateReg((instruction & MASK_MATH_RA) >> 8);
                 String rb = translateReg(instruction & MASK_MATH_RB);

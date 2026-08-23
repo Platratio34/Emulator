@@ -27,14 +27,9 @@
 
 // Ref static data
 // SysD
-#var SysD.REG_MEM_TABLE 0x00f9 uint32
-#var SysD.REG_STACK_PNTR 0x00f1 uint32
-#var SysD.REG_PID 0x00f8 uint32
-#var SysD.MEMORY_DEVICE_START 0x0001_0000 uint32
-#var SysD.MEMORY_PROCESS_START 0x0002_0000 uint32
-#var SysD.MEMORY_BLOCK_SIZE 0x8000 uint32
-#var SysD.REG_PGM_PNTR 0x00f0 uint32
-#var SysD.REG_PRIVILEGED_MODE 0x00ff uint32
+#define SysD.MEMORY_DEVICE_START 0x0001_0000 uint32
+#define SysD.MEMORY_PROCESS_START 0x0002_0000 uint32
+#define SysD.MEMORY_BLOCK_SIZE 0x8000 uint32
 // Peripheral
 #define Peripheral.TABLE 0x0001_0100 uint32*
 #define Peripheral.TIMERS 0x0001_0200 uint32*
@@ -690,13 +685,7 @@ GOTO :func_exit_Memory.malloc_uint32
 
 #lineend
 :func_exit_Memory.malloc_uint32
-STACK DEC 16
-// End of scope
-#stackVarClear next
-#stackVarClear size
-#stackVarClear lastEnd
-#stackVarClear block
-#stackVarClear wordSize
+COPY r15 rStack
 STACK POP r15
 GOTO POP
 #endfunction void*
@@ -781,9 +770,7 @@ STORE r1 r2
 
 #lineend
 :func_exit_Memory.setup
-STACK DEC 4
-// End of scope
-#stackVarClear list
+COPY r15 rStack
 STACK POP r15
 GOTO POP
 #endfunction void
@@ -994,11 +981,7 @@ STORE r1 r2
 
 #lineend
 :func_exit_Memory.free_void*
-STACK DEC 8
-// End of scope
-#stackVarClear last
-#stackVarClear block
-#stackVarClear ptr
+COPY r15 rStack
 STACK POP r15
 GOTO POP
 #endfunction void
@@ -1225,10 +1208,7 @@ STACK DEC 12
 
 #lineend
 :func_exit_CharacterDisplay.setup
-STACK DEC 16
-// End of scope
-#stackVarClear msg3
-#stackVarClear msg2
+COPY r15 rStack
 STACK POP r15
 GOTO POP
 #endfunction void
@@ -1263,6 +1243,7 @@ STORE BYTE r1 r2
 
 #lineend
 :func_exit_CharacterDisplay.write_uint32_char
+COPY r15 rStack
 STACK POP r15
 GOTO POP
 #endfunction void
@@ -1309,6 +1290,7 @@ STORE BYTE r1 r2
 
 #lineend
 :func_exit_CharacterDisplay.write_uint32_uint32_char
+COPY r15 rStack
 STACK POP r15
 GOTO POP
 #endfunction void
@@ -1432,12 +1414,7 @@ GOTO :while_condition_15
 
 #lineend
 :func_exit_CharacterDisplay.write_uint32_uint32_char*
-STACK DEC 4
-// End of scope
-#stackVarClear str
-#stackVarClear x
-#stackVarClear y
-#stackVarClear i
+COPY r15 rStack
 STACK POP r15
 GOTO POP
 #endfunction void
@@ -1618,12 +1595,7 @@ STORE BYTE r1 r2
 
 #lineend
 :func_exit_Console.read_char*_uint32
-STACK DEC 8
-// End of scope
-#stackVarClear i
-#stackVarClear buffer
-#stackVarClear inCount
-#stackVarClear bufferSize
+COPY r15 rStack
 STACK POP r15
 GOTO POP
 #endfunction void
@@ -1704,6 +1676,7 @@ GOTO GT r14 :printStr_len
 
 #lineend
 :func_exit_Console.printStr_char*_uint32
+COPY r15 rStack
 STACK POP r15
 GOTO POP
 #endfunction void
@@ -1731,6 +1704,7 @@ STORE BYTE r2 r1
 
 #lineend
 :func_exit_Console.printChar_char
+COPY r15 rStack
 STACK POP r15
 GOTO POP
 #endfunction void
@@ -1811,6 +1785,7 @@ GOTO GEQ r14 :intToHex_l1
 
 #lineend
 :func_exit_Console.intToHex_uint32_char*
+COPY r15 rStack
 STACK POP r15
 GOTO POP
 #endfunction void
@@ -1947,12 +1922,7 @@ STORE r1 r2
 
 #lineend
 :func_exit_FS.openFile_char*_out_uint32&_out_uint32&
-STACK DEC 8
-// End of scope
-#stackVarClear msg
-#stackVarClear path
-#stackVarClear handle
-#stackVarClear status
+COPY r15 rStack
 STACK POP r15
 GOTO POP
 #endfunction void
@@ -2114,15 +2084,7 @@ STORE r1 r2
 
 #lineend
 :func_exit_FS.readFile_uint32_void*_uint32_uint32_out_uint32&_out_uint32&
-STACK DEC 20
-// End of scope
-#stackVarClear msg
-#stackVarClear read
-#stackVarClear offset
-#stackVarClear size
-#stackVarClear handle
-#stackVarClear state
-#stackVarClear buffer
+COPY r15 rStack
 STACK POP r15
 GOTO POP
 #endfunction void
@@ -2244,6 +2206,7 @@ GOTO :func_exit_FS.setup
 
 #lineend
 :func_exit_FS.setup
+COPY r15 rStack
 STACK POP r15
 GOTO POP
 #endfunction bool
@@ -2437,6 +2400,11 @@ STACK DEC 8
 
 // 3 117:14
 #line run\lang\TestD\testd.el 117:14
+#breakpoint
+//  asm("#breakpoint");
+
+// 4 118:14
+#line run\lang\TestD\testd.el 118:14
 // Reserving r1
 LOAD r1 0 // 0
 STACK PUSH r1
@@ -2451,8 +2419,8 @@ STACK DEC 12
 // Releasing r1
 //  CharacterDisplay.write(0, 23, "Timer\0");
 
-// 4 118:14
-#line run\lang\TestD\testd.el 118:14
+// 5 119:14
+#line run\lang\TestD\testd.el 119:14
 GOTO :func_exit_TestD.onInterrupt
 //  return;
 
@@ -2461,10 +2429,10 @@ STACK DEC 4
 // End of scope
 #stackVarClear i
 :if_end_26
-//  if(code == 0x8000_0002) {uint32 i = 1; while(i < 16) {if(Peripheral.TIMERS[i] == 0xffff_ffff) {Peripheral.TIMERS[i] = 0x0;} i++;} Console.printStr("\nTimer\0", 0); CharacterDisplay.write(0, 23, "Timer\0"); return;}
+//  if(code == 0x8000_0002) {uint32 i = 1; while(i < 16) {if(Peripheral.TIMERS[i] == 0xffff_ffff) {Peripheral.TIMERS[i] = 0x0;} i++;} Console.printStr("\nTimer\0", 0); asm("#breakpoint"); CharacterDisplay.write(0, 23, "Timer\0"); return;}
 
-// 6 120:10
-#line run\lang\TestD\testd.el 120:10
+// 6 121:10
+#line run\lang\TestD\testd.el 121:10
 // Reserving r1
 COPY r15 r1
 // Reserving r1
@@ -2480,8 +2448,8 @@ STACK DEC 8
 // Releasing r1
 //  Console.intToHex(code, & str);
 
-// 7 121:10
-#line run\lang\TestD\testd.el 121:10
+// 7 122:10
+#line run\lang\TestD\testd.el 122:10
 // Reserving r1
 #define exp_str_inline_3 "\nInterrupt: \0"
 LOAD r1 exp_str_inline_3 // \nInterrupt: \0
@@ -2494,8 +2462,8 @@ STACK DEC 8
 // Releasing r1
 //  Console.printStr("\nInterrupt: \0", 0);
 
-// 8 122:10
-#line run\lang\TestD\testd.el 122:10
+// 8 123:10
+#line run\lang\TestD\testd.el 123:10
 // Reserving r1
 COPY r15 r1
 INC r1 4
@@ -2509,8 +2477,8 @@ STACK DEC 8
 // Releasing r1
 //  Console.printStr(& str, 8);
 
-// 9 123:10
-#line run\lang\TestD\testd.el 123:10
+// 9 124:10
+#line run\lang\TestD\testd.el 124:10
 // Reserving r1
 LOAD r1 '\n' // \n
 STACK PUSH r1
@@ -2522,10 +2490,7 @@ STACK DEC 4
 
 #lineend
 :func_exit_TestD.onInterrupt
-STACK DEC 16
-// End of scope
-#stackVarClear str
-#stackVarClear code
+COPY r15 rStack
 STACK POP r15
 INTERRUPT RET
 #endfunction void
@@ -2534,8 +2499,13 @@ INTERRUPT RET
 STACK PUSH r15
 COPY rStack r15
 #stackVar uint32 time -12
-// 0 127:10
-#line run\lang\TestD\testd.el 127:10
+// 0 128:10
+#line run\lang\TestD\testd.el 128:10
+#breakpoint
+//  asm("#breakpoint");
+
+// 1 129:10
+#line run\lang\TestD\testd.el 129:10
 :while_condition_29
 // Reserving r1
 COPY r15 r1
@@ -2545,8 +2515,8 @@ LOAD MEM r1 r1
 SET FORCE GT r1 r1 // time > 0
 GOTO EQ r1 :while_end_29
 // Releasing r1
-// 0 128:14
-#line run\lang\TestD\testd.el 128:14
+// 0 130:14
+#line run\lang\TestD\testd.el 130:14
 // Reserving r1
 // Reserving r2
 COPY r15 r2
@@ -2567,6 +2537,7 @@ GOTO :while_condition_29
 
 #lineend
 :func_exit_TestD.wait_uint32
+COPY r15 rStack
 STACK POP r15
 GOTO POP
 #endfunction void
@@ -2574,8 +2545,8 @@ GOTO POP
 #function TestD.testRet
 STACK PUSH r15
 COPY rStack r15
-// 0 138:10
-#line run\lang\TestD\testd.el 138:10
+// 0 140:10
+#line run\lang\TestD\testd.el 140:10
 // Reserving r1
 LOAD r1 2000 // 2000
 // Reserving r2
@@ -2589,6 +2560,7 @@ GOTO :func_exit_TestD.testRet
 
 #lineend
 :func_exit_TestD.testRet
+COPY r15 rStack
 STACK POP r15
 GOTO POP
 #endfunction uint32
@@ -2921,13 +2893,7 @@ STACK DEC 4
 
 #lineend
 :func_exit_TestD.main
-STACK DEC 32
-// End of scope
-#stackVarClear a
-#stackVarClear b
-#stackVarClear c
-#stackVarClear str2
-#stackVarClear sA
+COPY r15 rStack
 STACK POP r15
 HALT
 #endfunction void
@@ -2957,6 +2923,7 @@ STORE r1 r2
 
 #lineend
 :func_exit_TestD.funcb_uint32
+COPY r15 rStack
 STACK POP r15
 GOTO POP
 #endfunction void
@@ -2987,6 +2954,7 @@ STORE r1 r2
 
 #lineend
 :func_exit_TestD.funcb_uint32_uint32*
+COPY r15 rStack
 STACK POP r15
 GOTO POP
 #endfunction void
@@ -2995,8 +2963,8 @@ GOTO POP
 STACK PUSH r15
 COPY rStack r15
 #stackVar StructA& str -12
-// 0 133:10
-#line run\lang\TestD\testd.el 133:10
+// 0 135:10
+#line run\lang\TestD\testd.el 135:10
 // Reserving r1
 // Reserving r2
 COPY r15 r2
@@ -3010,8 +2978,8 @@ STORE r1 r2
 // Releasing r1
 //  str.a = 32;
 
-// 1 134:10
-#line run\lang\TestD\testd.el 134:10
+// 1 136:10
+#line run\lang\TestD\testd.el 136:10
 // Reserving r1
 // Reserving r2
 COPY r15 r2
@@ -3027,6 +2995,7 @@ STORE r1 r2
 
 #lineend
 :func_exit_TestD.testA_StructA&
+COPY r15 rStack
 STACK POP r15
 GOTO POP
 #endfunction void
@@ -3038,8 +3007,6 @@ GOTO POP
 // SysD
 
 // SysD.AddressSpace
-
-// SysD.PeripheralDescriptorShort
 
 // Peripheral
 

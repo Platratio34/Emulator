@@ -1,6 +1,7 @@
 package com.peter.emulator.debug;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -182,7 +183,7 @@ public class Debugger {
         };
     }
 
-    public Set<String> getVars() {
-        return symbols.variables.keySet();
+    public Collection<VariableSymbol> getVars() {
+        return symbols.variables.values();
     }
 }

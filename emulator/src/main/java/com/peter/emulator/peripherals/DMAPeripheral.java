@@ -1,8 +1,6 @@
 package com.peter.emulator.peripherals;
 
 import com.peter.emulator.CPU;
-import com.peter.emulator.components.ComponentBus;
-import com.peter.emulator.components.RAM;
 
 public interface DMAPeripheral extends Peripheral {
 

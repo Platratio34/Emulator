@@ -2,7 +2,6 @@ package com.peter.emulator.lang;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map.Entry;
 
 import com.peter.emulator.lang.ELSymbol.Type;
 import com.peter.emulator.lang.tokens.IdentifierToken;

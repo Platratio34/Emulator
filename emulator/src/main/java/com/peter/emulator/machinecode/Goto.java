@@ -2,45 +2,51 @@ package com.peter.emulator.machinecode;
 
 import java.util.HashMap;
 
-import com.peter.emulator.MachineCode;
-
 public class Goto extends Instruction {
 
     public final ConditionalOperator condition;
     public final Mode mode;
-    public final int ra;
-    public final int rg;
+    public final Reg ra;
+    public final Reg rg;
     public final boolean rel;
 
     public static final int REL_MASK = 0b0001_0000 << 16;
 
-    protected Goto(ConditionalOperator condition, Mode mode, int ra, int rg, boolean rel) {
+    protected Goto(ConditionalOperator condition, Mode mode, Reg ra, Reg rg) {
         super(Operator.GOTO);
         this.condition = condition;
         this.mode = mode;
-        if (rel) {
-            this.ra = 0;
-            data = ra;
-        } else {
-            this.ra = ra & 0xff;
-        }
-        this.rg = rg & 0xff;
-        this.rel = rel;
+        this.ra = ra;
+        this.rg = rg;
+        this.rel = false;
+    }
+    protected Goto(ConditionalOperator condition, Mode mode, int offset, Reg rg) {
+        super(Operator.GOTO);
+        this.condition = condition;
+        this.mode = mode;
+        this.ra = Reg.R0;
+        data = offset;
+        this.rg = rg;
+        this.rel = true;
     }
 
-    public static Goto Unconditional(Mode mode, int ra) {
-        return new Goto(ConditionalOperator.UNCONDITIONAL, mode, ra, 0, false);
+    public static Goto Unconditional(Mode mode, Reg ra) {
+        return new Goto(ConditionalOperator.UNCONDITIONAL, mode, ra, Reg.R0);
     }
 
     public static Goto UnconditionalRelative(Mode mode, int offset) {
-        return new Goto(ConditionalOperator.UNCONDITIONAL, mode, offset, 0, true);
+        return new Goto(ConditionalOperator.UNCONDITIONAL, mode, offset, Reg.R0);
     }
 
-    public static Goto Conditional(ConditionalOperator condition, Mode mode, int ra, int rg) {
-        return new Goto(condition, mode, ra, rg, false);
+    public static Goto Conditional(ConditionalOperator condition, Mode mode, Reg ra, Reg rg) {
+        return new Goto(condition, mode, ra, rg);
     }
-    public static Goto ConditionalRelative(ConditionalOperator condition, Mode mode, int offset, int rg) {
-        return new Goto(condition, mode, offset, rg, true);
+    public static Goto ConditionalRelative(ConditionalOperator condition, Mode mode, int offset, Reg rg) {
+        return new Goto(condition, mode, offset, rg);
+    }
+
+    public static Goto Pop(ConditionalOperator condition, Reg rg) {
+        return new Goto(condition, Mode.POP, Reg.R0, rg);
     }
 
     public static Goto fromBytecode(int bytecode, int next) {
@@ -50,14 +56,14 @@ public class Goto extends Instruction {
         ConditionalOperator condition = ConditionalOperator.fromBytecode(bytecode);
         Mode mode = Mode.fromBytecode(bytecode);
         if ((bytecode & REL_MASK) != 0) { // relative
-            return new Goto(condition, mode, next, bytecode, true);
+            return new Goto(condition, mode, next, Reg.from(bytecode));
         }
-        return new Goto(condition, mode, (bytecode >> 8), bytecode, false);
+        return new Goto(condition, mode, Reg.from(bytecode >> 8), Reg.from(bytecode));
     }
 
     @Override
     public int getBytecode() {
-        return op.id | mode.id | (rel ? REL_MASK : 0) | condition.id | (ra << 8) | rg;
+        return op.id | mode.id | (rel ? REL_MASK : 0) | condition.id | (ra.code << 8) | rg.code;
     }
 
     @Override
@@ -73,15 +79,18 @@ public class Goto extends Instruction {
     @Override
     public String toString() {
         String out = String.format("GOTO%s ", mode != Mode.NONE ? (" "+mode) : "");
-        String raStr = rel ? (((data >= 0) ? "+" : "") + data) : MachineCode.translateReg(ra);
+        String raStr = rel ? (((data >= 0) ? "+" : "") + data) : ra.string;
+        if (mode == Mode.POP) {
+            raStr = "";
+        }
         return out + switch (condition) {
             case UNCONDITIONAL -> raStr;
-            case EQ_ZERO -> String.format("EQ %s %s", MachineCode.translateReg(rg), raStr);
-            case NEQ_ZERO -> String.format("NEQ %s %s", MachineCode.translateReg(rg), raStr);
-            case GT_ZERO -> String.format("GT %s %s", MachineCode.translateReg(rg), raStr);
-            case LT_ZERO -> String.format("LT %s %s", MachineCode.translateReg(rg), raStr);
-            case GEQ_ZERO -> String.format("GEQ %s %s", MachineCode.translateReg(rg), raStr);
-            case LEQ_ZERO -> String.format("LEQ %s %s", MachineCode.translateReg(rg), raStr);
+            case EQ_ZERO -> String.format("EQ %s %s", rg.string, raStr);
+            case NEQ_ZERO -> String.format("NEQ %s %s", rg.string, raStr);
+            case GT_ZERO -> String.format("GT %s %s", rg.string, raStr);
+            case LT_ZERO -> String.format("LT %s %s", rg.string, raStr);
+            case GEQ_ZERO -> String.format("GEQ %s %s", rg.string, raStr);
+            case LEQ_ZERO -> String.format("LEQ %s %s", rg.string, raStr);
             default -> String.format("UNKNOWN (0x%s)", toHex(getBytecode()));
         };
     }

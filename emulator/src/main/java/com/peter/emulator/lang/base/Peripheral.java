@@ -98,6 +98,15 @@ public class Peripheral extends Namespace {
         command.actions.add(new DirectAction("#lineend"));
         addStaticFunction(command);
 
+        /*
+        struct PeripheralDescriptor {
+            const uint32 id;
+            const uint32 type;
+            const uint32[4] manufacturer;
+            const uint32[4] serial;
+            const uint32[6] data;
+        }
+         */
         ELStruct PeripheralDescriptor = new ELStruct("PeripheralDescriptor", this, unit);
         PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.UINT32, "id", true, this, unit, PERIPHERAL_LOCATION));
         PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.UINT32, "type", true, this, unit, PERIPHERAL_LOCATION));

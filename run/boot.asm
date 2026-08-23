@@ -58,12 +58,12 @@ INC r1 -1
 GOTO EQ r1 :startKernal
 
 STORE BYTE 'e' r7
-STORE BYTE 'o' r7
+STORE BYTE 'r' r7
 HALT
 
 :startKernal
 STORE BYTE 's' r7
-STORE BYTE 'c' r7
+STORE BYTE 'r' r7
 STORE BYTE '\n' r7
 
 LOAD r0 KERNAL_START
