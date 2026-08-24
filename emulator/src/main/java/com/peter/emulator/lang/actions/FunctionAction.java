@@ -67,9 +67,6 @@ public class FunctionAction extends ComplexAction {
         // boolean addr = false;
         ArrayList<Token> exp = new ArrayList<>();
         r = onStack ? newRegister() : scope.makeHandle(1);
-        if (onStack) {
-            addReserve(r);
-        }
         ArrayList<Action> tempActions = new ArrayList<>();
         int stackSize = 0;
         if (onStack) {
@@ -88,6 +85,7 @@ public class FunctionAction extends ComplexAction {
                 }
                 return str;
             }));
+            tempActions.add(r.reserveAction());
         }
         if (params.hasSub()) {
             for (int i = 0; i < params.subTokens.size(); i++) {
@@ -338,7 +336,7 @@ public class FunctionAction extends ComplexAction {
         if (!onStack) {
             add(this::constRelease);
         } else {
-            tempActions.add(new CompilerAction(scope, s -> {
+            add(new CompilerAction(scope, s -> {
                 String str = "";
                 for (int i = 15; i > 0; i--) {
                     if (targetReg != null && targetReg.reg == i) {

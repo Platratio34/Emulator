@@ -19,6 +19,7 @@ namespace CharacterDisplay {
             deviceId = 0;
             return;
         }
+        asm("NO_OP\n#breakpoint");
         uint32[2] msg2 = {0x01, deviceId};
         Peripheral.command(0, 2, &msg2);
         if(*Peripheral.RSP_STATUS != 0x01) {

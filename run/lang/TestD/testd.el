@@ -86,7 +86,7 @@ namespace TestD {
         // Console.read(&buff, 32);
         // Console.printStr(&buff, 0);
 
-        Peripheral.TIMERS[1] = 480 * 5;
+        Peripheral.TIMERS[1] = 1000;
 
         CharacterDisplay.write(0,0,"EmulatorOS\0");
 
@@ -114,16 +114,17 @@ namespace TestD {
             Console.printStr("\n\nHalting\0",0);
             asm("HALT");
         }
-        if(code == 0x8000_0002) { // timer
-            uint32 i = 1;
-            while(i < 16) {
-                if(Peripheral.TIMERS[i] == 0xffff_ffff) {
-                    Peripheral.TIMERS[i] = 0x0;
-                }
-                i++;
+        if((code & 0xffff_ff00) == 0x8000_0200) { // timer
+            uint32 i = code & 0xff;
+            if(i == 1) {
+                Peripheral.TIMERS[1] = 1000;
+                return;
             }
             
-            Console.printStr("\nTimer\0", 0);
+            Console.printStr("\nTimer \0", 0);
+            char[3] str;
+            Console.intToDec(i, &str);
+            Console.printStr(&str, 0);
             CharacterDisplay.write(0,23,"Timer\0");
             return;
         }
