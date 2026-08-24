@@ -361,7 +361,6 @@ public class ActionBlock extends ComplexAction {
                                                 Register r = newRegister();
                                                 addReserve(r);
                                                 actions.add(new Expression(scope, expTkns, r));
-                                                addDirect(String.format("#stackVar %s %s", type.typeString(), var.name));
                                                 actions.add(new DirectAction("STACK PUSH %s", r));
                                                 addRelease(r);
                                                 expTkns = new ArrayList<>();
@@ -375,8 +374,9 @@ public class ActionBlock extends ComplexAction {
                                         Register r = newRegister();
                                         addReserve(r);
                                         actions.add(new Expression(scope, expTkns, r));
-                                        addDirect(String.format("#stackVar %s %s", type.typeString(), var.name));
+                                        // addDirect(String.format("#stackVar %s %s", type.typeString(), var.name));
                                         actions.add(new DirectAction("STACK PUSH %s", r));
+                                        addDirect(String.format("#stackVar %s %s %d", type.typeString(), var.name, -var.sizeof()));
                                         addRelease(r);
                                         n++;
                                         if (n != type.arraySize()) {

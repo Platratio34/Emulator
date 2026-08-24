@@ -1,87 +1,87 @@
 {
     "variables": {
         "CharacterDisplay.charColorBuffer": {
-            "address": 11180,
-            "start": 11180,
-            "end": 12139,
+            "address": 11228,
+            "start": 11228,
+            "end": 12187,
             "type": "char[960]"
         },
         "Memory.allocatedBlocks": {
-            "address": 10208,
-            "start": 10208,
-            "end": 10211,
+            "address": 10256,
+            "start": 10256,
+            "end": 10259,
             "type": "MemoryBlock*"
         },
         "CharacterDisplay.charBuffer": {
-            "address": 10216,
-            "start": 10216,
-            "end": 11175,
+            "address": 10264,
+            "start": 10264,
+            "end": 11223,
             "type": "char[960]"
         },
         "CharacterDisplay.height": {
-            "address": 12140,
-            "start": 12140,
-            "end": 12143,
+            "address": 12188,
+            "start": 12188,
+            "end": 12191,
             "type": "uint32"
         },
         "TestD.testStr": {
-            "address": 10120,
-            "start": 10120,
-            "end": 10127,
+            "address": 10168,
+            "start": 10168,
+            "end": 10175,
             "type": "char[5]"
         },
         "Memory.blockFreeList": {
-            "address": 10088,
-            "start": 10088,
-            "end": 10091,
+            "address": 10136,
+            "start": 10136,
+            "end": 10139,
             "type": "MemoryBlock*"
         },
         "CharacterDisplay.width": {
-            "address": 10212,
-            "start": 10212,
-            "end": 10215,
+            "address": 10260,
+            "start": 10260,
+            "end": 10263,
             "type": "uint32"
         },
         "FS.deviceId": {
-            "address": 12144,
-            "start": 12144,
-            "end": 12147,
+            "address": 12192,
+            "start": 12192,
+            "end": 12195,
             "type": "uint32"
         },
         "Memory.heapStart": {
-            "address": 10084,
-            "start": 10084,
-            "end": 10087,
+            "address": 10132,
+            "start": 10132,
+            "end": 10135,
             "type": "void*"
         },
         "TestD.v": {
-            "address": 12148,
-            "start": 12148,
-            "end": 12151,
+            "address": 12196,
+            "start": 12196,
+            "end": 12199,
             "type": "uint32"
         },
         "TestD.testStr2": {
-            "address": 10112,
-            "start": 10112,
-            "end": 10119,
+            "address": 10160,
+            "start": 10160,
+            "end": 10167,
             "type": "char[7]"
         },
         "TestD.path": {
-            "address": 10100,
-            "start": 10100,
-            "end": 10111,
+            "address": 10148,
+            "start": 10148,
+            "end": 10159,
             "type": "char[9]"
         },
         "TestD.tc": {
-            "address": 12152,
-            "start": 12152,
-            "end": 12155,
+            "address": 12200,
+            "start": 12200,
+            "end": 12203,
             "type": "char"
         },
         "CharacterDisplay.deviceId": {
-            "address": 11176,
-            "start": 11176,
-            "end": 11179,
+            "address": 11224,
+            "start": 11224,
+            "end": 11227,
             "type": "uint32"
         }
     },
@@ -89,32 +89,32 @@
         "CharacterDisplay.setup": {
             "args": [],
             "rt": "void",
-            "start": 5836,
-            "end": 6292
+            "start": 5816,
+            "end": 6264
         },
         "TestD.testA_StructA&": {
             "args": ["str StructA&"],
             "rt": "void",
-            "start": 9900,
-            "end": 9968
+            "start": 9948,
+            "end": 10016
         },
         "TestD.testRet": {
             "args": [],
             "rt": "uint32",
-            "start": 9064,
-            "end": 9112
+            "start": 9056,
+            "end": 9104
         },
         "TestD.main": {
             "args": [],
             "rt": "void",
-            "start": 9112,
-            "end": 9796
+            "start": 9104,
+            "end": 9844
         },
         "Memory.setup": {
             "args": [],
             "rt": "void",
-            "start": 5332,
-            "end": 5476
+            "start": 5324,
+            "end": 5468
         },
         "CharacterDisplay.write_uint32_char": {
             "args": [
@@ -122,14 +122,14 @@
                 "data char"
             ],
             "rt": "void",
-            "start": 6292,
-            "end": 6352
+            "start": 6264,
+            "end": 6324
         },
         "TestD.wait_uint32": {
             "args": ["time uint32"],
             "rt": "void",
-            "start": 8992,
-            "end": 9064
+            "start": 8984,
+            "end": 9056
         },
         "Console.intToHex_uint32_char*": {
             "args": [
@@ -137,14 +137,14 @@
                 "str char*"
             ],
             "rt": "void",
-            "start": 7292,
-            "end": 7416
+            "start": 7260,
+            "end": 7384
         },
         "FS.setup": {
             "args": [],
             "rt": "bool",
-            "start": 7944,
-            "end": 8208
+            "start": 7928,
+            "end": 8180
         },
         "Console.printStr_char*_uint32": {
             "args": [
@@ -152,8 +152,8 @@
                 "len uint32"
             ],
             "rt": "void",
-            "start": 7136,
-            "end": 7248
+            "start": 7104,
+            "end": 7216
         },
         "Console.read_char*_uint32": {
             "args": [
@@ -161,8 +161,8 @@
                 "bufferSize uint32"
             ],
             "rt": "void",
-            "start": 6688,
-            "end": 7000
+            "start": 6656,
+            "end": 6968
         },
         "Peripheral.command_uint32_uint32_uint32*": {
             "args": [
@@ -171,14 +171,14 @@
                 "cmd uint32*"
             ],
             "rt": "void",
-            "start": 9968,
-            "end": 10080
+            "start": 10016,
+            "end": 10128
         },
         "Memory.free_void*": {
             "args": ["ptr void*"],
             "rt": "void",
-            "start": 5476,
-            "end": 5836
+            "start": 5468,
+            "end": 5816
         },
         "FS.readFile_uint32_void*_uint32_uint32_out_uint32&_out_uint32&": {
             "args": [
@@ -190,26 +190,26 @@
                 "state out uint32&"
             ],
             "rt": "void",
-            "start": 7656,
-            "end": 7944
+            "start": 7632,
+            "end": 7928
         },
         "Console.printChar_char": {
             "args": ["c char"],
             "rt": "void",
-            "start": 7248,
-            "end": 7292
+            "start": 7216,
+            "end": 7260
         },
         "TestD.onInterrupt": {
             "args": [],
             "rt": "void",
-            "start": 8208,
-            "end": 8992
+            "start": 8180,
+            "end": 8984
         },
         "Memory.malloc_uint32": {
             "args": ["size uint32"],
             "rt": "void*",
             "start": 4104,
-            "end": 5332
+            "end": 5324
         },
         "FS.openFile_char*_out_uint32&_out_uint32&": {
             "args": [
@@ -218,8 +218,8 @@
                 "handle out uint32&"
             ],
             "rt": "void",
-            "start": 7416,
-            "end": 7656
+            "start": 7384,
+            "end": 7632
         },
         "Console.intToDec_uint32_char*": {
             "args": [
@@ -227,14 +227,14 @@
                 "str char*"
             ],
             "rt": "void",
-            "start": 7000,
-            "end": 7136
+            "start": 6968,
+            "end": 7104
         },
         "TestD.funcb_uint32": {
             "args": ["a uint32"],
             "rt": "void",
-            "start": 9796,
-            "end": 9848
+            "start": 9844,
+            "end": 9896
         },
         "CharacterDisplay.write_uint32_uint32_char": {
             "args": [
@@ -243,8 +243,8 @@
                 "data char"
             ],
             "rt": "void",
-            "start": 6352,
-            "end": 6444
+            "start": 6324,
+            "end": 6416
         },
         "TestD.funcb_uint32_uint32*": {
             "args": [
@@ -252,8 +252,8 @@
                 "b uint32*"
             ],
             "rt": "void",
-            "start": 9848,
-            "end": 9900
+            "start": 9896,
+            "end": 9948
         },
         "CharacterDisplay.write_uint32_uint32_char*": {
             "args": [
@@ -262,8 +262,8 @@
                 "str char*"
             ],
             "rt": "void",
-            "start": 6444,
-            "end": 6688
+            "start": 6416,
+            "end": 6656
         }
     },
     "stackVars": [
@@ -281,344 +281,308 @@
         },
         {
             "offset": 0,
-            "start": 4304,
-            "end": 4304,
+            "start": 4300,
+            "end": 4300,
             "type": "MemoryBlock*"
         },
         {
             "offset": 0,
-            "start": 4344,
-            "end": 4556,
+            "start": 4340,
+            "end": 4552,
             "type": "MemoryBlock*"
         },
         {
             "offset": 0,
-            "start": 4568,
-            "end": 4568,
+            "start": 4564,
+            "end": 4564,
             "type": "void*"
         },
         {
             "offset": 0,
-            "start": 4864,
-            "end": 5084,
+            "start": 4856,
+            "end": 5076,
             "type": "MemoryBlock*"
         },
         {
             "offset": 0,
-            "start": 5096,
-            "end": 5096,
+            "start": 5088,
+            "end": 5088,
             "type": "MemoryBlock*"
         },
         {
             "offset": 0,
-            "start": 5352,
-            "end": 5352,
+            "start": 5344,
+            "end": 5344,
             "type": "MemoryBlock*"
         },
         {
             "offset": -12,
-            "start": 5484,
-            "end": 5484,
+            "start": 5476,
+            "end": 5476,
             "type": "void*"
         },
         {
             "offset": 0,
-            "start": 5528,
-            "end": 5528,
+            "start": 5520,
+            "end": 5520,
             "type": "MemoryBlock*"
         },
         {
             "offset": 0,
-            "start": 5540,
-            "end": 5540,
+            "start": 5532,
+            "end": 5532,
             "type": "MemoryBlock*"
         },
         {
-            "offset": 0,
-            "start": 6048,
-            "end": 6048,
+            "offset": -8,
+            "start": 6036,
+            "end": 6036,
             "type": "uint32[2]"
         },
         {
-            "offset": 0,
-            "start": 6064,
-            "end": 6064,
-            "type": "uint32[2]"
-        },
-        {
-            "offset": 0,
-            "start": 6212,
-            "end": 6212,
-            "type": "uint32[2]"
-        },
-        {
-            "offset": 0,
-            "start": 6224,
-            "end": 6224,
+            "offset": -8,
+            "start": 6196,
+            "end": 6196,
             "type": "uint32[2]"
         },
         {
             "offset": -9,
-            "start": 6300,
-            "end": 6300,
+            "start": 6272,
+            "end": 6272,
             "type": "char"
         },
         {
             "offset": -16,
-            "start": 6300,
-            "end": 6300,
+            "start": 6272,
+            "end": 6272,
             "type": "uint32"
         },
         {
             "offset": -9,
-            "start": 6360,
-            "end": 6360,
+            "start": 6332,
+            "end": 6332,
             "type": "char"
         },
         {
             "offset": -20,
-            "start": 6360,
-            "end": 6360,
+            "start": 6332,
+            "end": 6332,
             "type": "uint32"
         },
         {
             "offset": -16,
-            "start": 6360,
-            "end": 6360,
+            "start": 6332,
+            "end": 6332,
             "type": "uint32"
         },
         {
             "offset": -12,
-            "start": 6452,
-            "end": 6452,
+            "start": 6424,
+            "end": 6424,
             "type": "char*"
         },
         {
             "offset": -20,
-            "start": 6452,
-            "end": 6452,
+            "start": 6424,
+            "end": 6424,
             "type": "uint32"
         },
         {
             "offset": -16,
-            "start": 6452,
-            "end": 6452,
+            "start": 6424,
+            "end": 6424,
             "type": "uint32"
         },
         {
             "offset": 0,
-            "start": 6460,
-            "end": 6460,
+            "start": 6432,
+            "end": 6432,
             "type": "uint32"
         },
         {
             "offset": -16,
-            "start": 6696,
-            "end": 6696,
+            "start": 6664,
+            "end": 6664,
             "type": "char*"
         },
         {
             "offset": -12,
+            "start": 6664,
+            "end": 6664,
+            "type": "uint32"
+        },
+        {
+            "offset": 0,
             "start": 6696,
             "end": 6696,
             "type": "uint32"
         },
         {
             "offset": 0,
-            "start": 6728,
-            "end": 6728,
+            "start": 6764,
+            "end": 6764,
+            "type": "uint32"
+        },
+        {
+            "offset": -12,
+            "start": 6976,
+            "end": 6976,
+            "type": "char*"
+        },
+        {
+            "offset": -16,
+            "start": 6976,
+            "end": 6976,
             "type": "uint32"
         },
         {
             "offset": 0,
-            "start": 6796,
-            "end": 6796,
-            "type": "uint32"
-        },
-        {
-            "offset": -12,
-            "start": 7008,
-            "end": 7008,
-            "type": "char*"
+            "start": 7004,
+            "end": 7092,
+            "type": "char[16]"
         },
         {
             "offset": -16,
-            "start": 7008,
-            "end": 7008,
-            "type": "uint32"
-        },
-        {
-            "offset": -16,
-            "start": 7144,
-            "end": 7144,
+            "start": 7112,
+            "end": 7112,
             "type": "char*"
         },
         {
             "offset": -12,
-            "start": 7144,
-            "end": 7144,
+            "start": 7112,
+            "end": 7112,
             "type": "uint32"
         },
         {
             "offset": -9,
-            "start": 7256,
-            "end": 7256,
+            "start": 7224,
+            "end": 7224,
             "type": "char"
         },
         {
             "offset": -12,
-            "start": 7300,
-            "end": 7300,
+            "start": 7268,
+            "end": 7268,
             "type": "char*"
         },
         {
             "offset": -16,
-            "start": 7300,
-            "end": 7300,
+            "start": 7268,
+            "end": 7268,
             "type": "uint32"
         },
         {
             "offset": -20,
-            "start": 7424,
-            "end": 7424,
+            "start": 7392,
+            "end": 7392,
             "type": "char*"
         },
         {
             "offset": -12,
-            "start": 7424,
-            "end": 7424,
+            "start": 7392,
+            "end": 7392,
             "type": "uint32&"
         },
         {
             "offset": -16,
-            "start": 7424,
-            "end": 7424,
+            "start": 7392,
+            "end": 7392,
             "type": "uint32&"
         },
         {
-            "offset": 0,
-            "start": 7516,
-            "end": 7516,
-            "type": "uint32[2]"
-        },
-        {
-            "offset": 0,
-            "start": 7532,
-            "end": 7532,
+            "offset": -8,
+            "start": 7508,
+            "end": 7508,
             "type": "uint32[2]"
         },
         {
             "offset": -16,
-            "start": 7664,
-            "end": 7664,
+            "start": 7640,
+            "end": 7640,
             "type": "uint32&"
         },
         {
             "offset": -20,
-            "start": 7664,
-            "end": 7664,
+            "start": 7640,
+            "end": 7640,
             "type": "uint32"
         },
         {
             "offset": -24,
-            "start": 7664,
-            "end": 7664,
+            "start": 7640,
+            "end": 7640,
             "type": "uint32"
         },
         {
             "offset": -32,
-            "start": 7664,
-            "end": 7664,
+            "start": 7640,
+            "end": 7640,
             "type": "uint32"
         },
         {
             "offset": -12,
-            "start": 7664,
-            "end": 7664,
+            "start": 7640,
+            "end": 7640,
             "type": "uint32&"
         },
         {
             "offset": -28,
-            "start": 7664,
-            "end": 7664,
+            "start": 7640,
+            "end": 7640,
             "type": "void*"
         },
         {
-            "offset": 0,
-            "start": 7756,
-            "end": 7756,
-            "type": "uint32[5]"
-        },
-        {
-            "offset": 0,
-            "start": 7772,
-            "end": 7772,
-            "type": "uint32[5]"
-        },
-        {
-            "offset": 0,
-            "start": 7788,
-            "end": 7788,
-            "type": "uint32[5]"
-        },
-        {
-            "offset": 0,
+            "offset": -20,
             "start": 7804,
             "end": 7804,
             "type": "uint32[5]"
         },
         {
             "offset": 0,
-            "start": 7820,
-            "end": 7820,
-            "type": "uint32[5]"
-        },
-        {
-            "offset": 0,
-            "start": 8220,
-            "end": 8220,
+            "start": 8192,
+            "end": 8192,
             "type": "uint32"
         },
         {
             "offset": 0,
-            "start": 8232,
-            "end": 8232,
+            "start": 8204,
+            "end": 8204,
             "type": "char[9]"
         },
         {
             "offset": 0,
-            "start": 8364,
-            "end": 8624,
+            "start": 8340,
+            "end": 8592,
             "type": "uint32"
         },
         {
             "offset": 0,
-            "start": 8688,
-            "end": 8848,
+            "start": 8656,
+            "end": 8824,
             "type": "uint32"
         },
         {
             "offset": -12,
-            "start": 9000,
-            "end": 9000,
+            "start": 8992,
+            "end": 8992,
             "type": "uint32"
         },
         {
             "offset": 0,
-            "start": 9204,
-            "end": 9204,
+            "start": 9200,
+            "end": 9200,
             "type": "uint32"
         },
         {
             "offset": 0,
-            "start": 9212,
-            "end": 9212,
+            "start": 9208,
+            "end": 9208,
             "type": "uint32"
         },
         {
             "offset": 0,
-            "start": 9240,
-            "end": 9240,
+            "start": 9236,
+            "end": 9236,
             "type": "char"
         },
         {
@@ -629,50 +593,50 @@
         },
         {
             "offset": 0,
-            "start": 9556,
-            "end": 9556,
+            "start": 9580,
+            "end": 9580,
             "type": "char[16]"
         },
         {
             "offset": -12,
-            "start": 9804,
-            "end": 9804,
+            "start": 9852,
+            "end": 9852,
             "type": "uint32"
         },
         {
             "offset": -16,
-            "start": 9856,
-            "end": 9856,
+            "start": 9904,
+            "end": 9904,
             "type": "uint32"
         },
         {
             "offset": -12,
-            "start": 9856,
-            "end": 9856,
+            "start": 9904,
+            "end": 9904,
             "type": "uint32*"
         },
         {
             "offset": -12,
-            "start": 9908,
-            "end": 9908,
+            "start": 9956,
+            "end": 9956,
             "type": "StructA&"
         },
         {
             "offset": -20,
-            "start": 9976,
-            "end": 10072,
+            "start": 10024,
+            "end": 10120,
             "type": "uint32"
         },
         {
             "offset": -16,
-            "start": 9976,
-            "end": 10072,
+            "start": 10024,
+            "end": 10120,
             "type": "uint32"
         },
         {
             "offset": -12,
-            "start": 9976,
-            "end": 10072,
+            "start": 10024,
+            "end": 10120,
             "type": "uint32*"
         }
     ],
@@ -712,1122 +676,1122 @@
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "25:10",
             "start": 4240,
-            "end": 4272
+            "end": 4268
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "26:14",
-            "start": 4276,
-            "end": 4288
+            "start": 4272,
+            "end": 4284
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "28:10",
-            "start": 4292,
-            "end": 4304
+            "start": 4288,
+            "end": 4300
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "29:10",
-            "start": 4308,
-            "end": 4328
+            "start": 4304,
+            "end": 4324
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "30:14",
-            "start": 4332,
-            "end": 4344
+            "start": 4328,
+            "end": 4340
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "31:14",
-            "start": 4348,
-            "end": 4372
+            "start": 4344,
+            "end": 4368
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "32:14",
-            "start": 4376,
-            "end": 4408
+            "start": 4372,
+            "end": 4404
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "33:14",
-            "start": 4412,
-            "end": 4468
+            "start": 4408,
+            "end": 4464
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "34:14",
-            "start": 4472,
-            "end": 4492
+            "start": 4468,
+            "end": 4488
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "35:14",
-            "start": 4496,
-            "end": 4516
+            "start": 4492,
+            "end": 4512
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "36:14",
-            "start": 4520,
-            "end": 4544
+            "start": 4516,
+            "end": 4540
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "38:10",
-            "start": 4556,
-            "end": 4568
+            "start": 4552,
+            "end": 4564
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "39:10",
-            "start": 4572,
-            "end": 4656
+            "start": 4568,
+            "end": 4648
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "40:14",
-            "start": 4660,
-            "end": 4684
+            "start": 4652,
+            "end": 4676
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "41:14",
-            "start": 4688,
-            "end": 4712
+            "start": 4680,
+            "end": 4704
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "43:10",
-            "start": 4724,
-            "end": 4748
+            "start": 4716,
+            "end": 4740
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "44:14",
-            "start": 4752,
-            "end": 4820
+            "start": 4744,
+            "end": 4812
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "45:18",
-            "start": 4824,
-            "end": 4844
+            "start": 4816,
+            "end": 4836
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "47:14",
-            "start": 4852,
-            "end": 4864
+            "start": 4844,
+            "end": 4856
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "48:14",
-            "start": 4868,
-            "end": 4892
+            "start": 4860,
+            "end": 4884
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "49:14",
-            "start": 4896,
-            "end": 4928
+            "start": 4888,
+            "end": 4920
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "50:14",
-            "start": 4932,
-            "end": 4988
+            "start": 4924,
+            "end": 4980
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "51:14",
-            "start": 4992,
-            "end": 5012
+            "start": 4984,
+            "end": 5004
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "52:14",
-            "start": 5016,
-            "end": 5040
+            "start": 5008,
+            "end": 5032
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "53:14",
-            "start": 5044,
-            "end": 5072
+            "start": 5036,
+            "end": 5064
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "55:10",
-            "start": 5084,
-            "end": 5096
+            "start": 5076,
+            "end": 5088
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "56:10",
-            "start": 5100,
-            "end": 5124
+            "start": 5092,
+            "end": 5116
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "57:10",
-            "start": 5128,
-            "end": 5160
+            "start": 5120,
+            "end": 5152
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "58:10",
-            "start": 5164,
-            "end": 5220
+            "start": 5156,
+            "end": 5212
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "59:10",
-            "start": 5224,
-            "end": 5252
+            "start": 5216,
+            "end": 5244
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "60:10",
-            "start": 5256,
-            "end": 5280
+            "start": 5248,
+            "end": 5272
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "61:10",
-            "start": 5284,
-            "end": 5312
+            "start": 5276,
+            "end": 5304
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "9:10",
-            "start": 5340,
-            "end": 5352
+            "start": 5332,
+            "end": 5344
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "10:10",
-            "start": 5356,
-            "end": 5392
+            "start": 5348,
+            "end": 5384
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "11:14",
-            "start": 5396,
-            "end": 5416
+            "start": 5388,
+            "end": 5408
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "12:14",
-            "start": 5420,
-            "end": 5432
+            "start": 5412,
+            "end": 5424
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "14:10",
-            "start": 5444,
-            "end": 5460
+            "start": 5436,
+            "end": 5452
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "65:10",
-            "start": 5484,
-            "end": 5504
+            "start": 5476,
+            "end": 5496
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "66:14",
-            "start": 5508,
-            "end": 5508
+            "start": 5500,
+            "end": 5500
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "68:10",
-            "start": 5516,
-            "end": 5528
+            "start": 5508,
+            "end": 5520
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "69:10",
-            "start": 5532,
-            "end": 5540
+            "start": 5524,
+            "end": 5532
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "70:10",
-            "start": 5544,
-            "end": 5600
+            "start": 5536,
+            "end": 5584
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "71:14",
-            "start": 5604,
-            "end": 5620
+            "start": 5588,
+            "end": 5604
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "72:14",
-            "start": 5624,
-            "end": 5640
+            "start": 5608,
+            "end": 5624
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "74:10",
-            "start": 5652,
-            "end": 5688
+            "start": 5636,
+            "end": 5668
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "75:14",
-            "start": 5692,
-            "end": 5692
+            "start": 5672,
+            "end": 5672
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "77:10",
-            "start": 5700,
-            "end": 5720
+            "start": 5680,
+            "end": 5700
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "78:14",
-            "start": 5724,
-            "end": 5740
+            "start": 5704,
+            "end": 5720
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "80:14",
-            "start": 5752,
-            "end": 5776
+            "start": 5732,
+            "end": 5756
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "82:10",
-            "start": 5780,
-            "end": 5800
+            "start": 5760,
+            "end": 5780
         },
         {
             "file": "run\\lang\\TestD\\memory.el",
             "lineStr": "83:10",
-            "start": 5804,
-            "end": 5820
+            "start": 5784,
+            "end": 5800
         },
         {
             "file": "run\\lang\\TestD\\CharaterDisplay.el",
             "lineStr": "14:10",
-            "start": 5844,
-            "end": 5860
+            "start": 5824,
+            "end": 5840
         },
         {
             "file": "run\\lang\\TestD\\CharaterDisplay.el",
             "lineStr": "15:10",
-            "start": 5864,
-            "end": 5952
+            "start": 5844,
+            "end": 5920
         },
         {
             "file": "run\\lang\\TestD\\CharaterDisplay.el",
             "lineStr": "16:14",
-            "start": 5956,
-            "end": 5972
+            "start": 5924,
+            "end": 5940
         },
         {
             "file": "run\\lang\\TestD\\CharaterDisplay.el",
             "lineStr": "18:10",
-            "start": 5984,
-            "end": 6008
+            "start": 5952,
+            "end": 5976
         },
         {
             "file": "run\\lang\\TestD\\CharaterDisplay.el",
             "lineStr": "19:14",
-            "start": 6012,
-            "end": 6028
+            "start": 5980,
+            "end": 5996
         },
         {
             "file": "run\\lang\\TestD\\CharaterDisplay.el",
             "lineStr": "20:14",
-            "start": 6032,
-            "end": 6032
+            "start": 6000,
+            "end": 6000
         },
         {
             "file": "run\\lang\\TestD\\CharaterDisplay.el",
             "lineStr": "22:10",
-            "start": 6040,
-            "end": 6064
+            "start": 6008,
+            "end": 6032
         },
         {
             "file": "run\\lang\\TestD\\CharaterDisplay.el",
             "lineStr": "23:10",
-            "start": 6068,
-            "end": 6108
+            "start": 6036,
+            "end": 6080
         },
         {
             "file": "run\\lang\\TestD\\CharaterDisplay.el",
             "lineStr": "24:10",
-            "start": 6112,
-            "end": 6136
+            "start": 6084,
+            "end": 6104
         },
         {
             "file": "run\\lang\\TestD\\CharaterDisplay.el",
             "lineStr": "25:14",
-            "start": 6140,
-            "end": 6140
+            "start": 6108,
+            "end": 6108
         },
         {
             "file": "run\\lang\\TestD\\CharaterDisplay.el",
             "lineStr": "27:10",
-            "start": 6148,
-            "end": 6172
+            "start": 6116,
+            "end": 6140
         },
         {
             "file": "run\\lang\\TestD\\CharaterDisplay.el",
             "lineStr": "28:10",
-            "start": 6176,
-            "end": 6200
+            "start": 6144,
+            "end": 6168
         },
         {
             "file": "run\\lang\\TestD\\CharaterDisplay.el",
             "lineStr": "29:10",
-            "start": 6204,
-            "end": 6224
+            "start": 6172,
+            "end": 6192
         },
         {
             "file": "run\\lang\\TestD\\CharaterDisplay.el",
             "lineStr": "30:10",
-            "start": 6228,
-            "end": 6276
+            "start": 6196,
+            "end": 6248
         },
         {
             "file": "run\\lang\\TestD\\CharaterDisplay.el",
             "lineStr": "34:10",
-            "start": 6300,
-            "end": 6336
+            "start": 6272,
+            "end": 6308
         },
         {
             "file": "run\\lang\\TestD\\CharaterDisplay.el",
             "lineStr": "38:10",
-            "start": 6360,
-            "end": 6428
+            "start": 6332,
+            "end": 6400
         },
         {
             "file": "run\\lang\\TestD\\CharaterDisplay.el",
             "lineStr": "41:10",
-            "start": 6452,
-            "end": 6460
+            "start": 6424,
+            "end": 6432
         },
         {
             "file": "run\\lang\\TestD\\CharaterDisplay.el",
             "lineStr": "42:10",
-            "start": 6464,
-            "end": 6540
+            "start": 6436,
+            "end": 6508
         },
         {
             "file": "run\\lang\\TestD\\CharaterDisplay.el",
             "lineStr": "43:14",
-            "start": 6544,
-            "end": 6628
+            "start": 6512,
+            "end": 6596
         },
         {
             "file": "run\\lang\\TestD\\CharaterDisplay.el",
             "lineStr": "44:14",
-            "start": 6632,
-            "end": 6648
+            "start": 6600,
+            "end": 6616
         },
         {
             "file": "run\\lang\\TestD\\CharaterDisplay.el",
             "lineStr": "45:14",
-            "start": 6652,
-            "end": 6664
+            "start": 6620,
+            "end": 6632
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "81:10",
-            "start": 6696,
-            "end": 6712
+            "start": 6664,
+            "end": 6680
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "82:10",
-            "start": 6716,
-            "end": 6728
+            "start": 6684,
+            "end": 6696
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "83:10",
-            "start": 6732,
-            "end": 6764
+            "start": 6700,
+            "end": 6732
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "84:14",
-            "start": 6768,
-            "end": 6784
+            "start": 6736,
+            "end": 6752
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "86:10",
-            "start": 6788,
-            "end": 6796
+            "start": 6756,
+            "end": 6764
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "87:10",
-            "start": 6800,
-            "end": 6832
+            "start": 6768,
+            "end": 6800
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "88:14",
-            "start": 6836,
-            "end": 6876
+            "start": 6804,
+            "end": 6844
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "90:14",
-            "start": 6880,
-            "end": 6896
+            "start": 6848,
+            "end": 6864
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "92:10",
-            "start": 6908,
-            "end": 6944
+            "start": 6876,
+            "end": 6912
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "93:14",
-            "start": 6948,
-            "end": 6984
+            "start": 6916,
+            "end": 6952
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "45:10",
-            "start": 7008,
-            "end": 7016
+            "start": 6976,
+            "end": 6984
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "46:10",
-            "start": 7020,
-            "end": 7028
+            "start": 6988,
+            "end": 6996
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "47:10",
-            "start": 7032,
-            "end": 7036
+            "start": 7000,
+            "end": 7004
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "48:10",
-            "start": 7040,
-            "end": 7060
+            "start": 7008,
+            "end": 7028
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "49:10",
+            "start": 7032,
+            "end": 7028
+        },
+        {
+            "file": "run\\lang\\TestD\\console.el",
+            "lineStr": "50:14",
+            "start": 7032,
+            "end": 7040
+        },
+        {
+            "file": "run\\lang\\TestD\\console.el",
+            "lineStr": "51:14",
+            "start": 7044,
+            "end": 7048
+        },
+        {
+            "file": "run\\lang\\TestD\\console.el",
+            "lineStr": "52:14",
+            "start": 7052,
+            "end": 7056
+        },
+        {
+            "file": "run\\lang\\TestD\\console.el",
+            "lineStr": "53:10",
+            "start": 7060,
+            "end": 7060
+        },
+        {
+            "file": "run\\lang\\TestD\\console.el",
+            "lineStr": "54:10",
             "start": 7064,
             "end": 7060
         },
         {
             "file": "run\\lang\\TestD\\console.el",
-            "lineStr": "50:14",
+            "lineStr": "55:14",
             "start": 7064,
             "end": 7072
         },
         {
             "file": "run\\lang\\TestD\\console.el",
-            "lineStr": "51:14",
+            "lineStr": "56:14",
             "start": 7076,
             "end": 7080
         },
         {
             "file": "run\\lang\\TestD\\console.el",
-            "lineStr": "52:14",
-            "start": 7084,
-            "end": 7088
-        },
-        {
-            "file": "run\\lang\\TestD\\console.el",
-            "lineStr": "53:10",
-            "start": 7092,
-            "end": 7092
-        },
-        {
-            "file": "run\\lang\\TestD\\console.el",
-            "lineStr": "54:10",
-            "start": 7096,
-            "end": 7092
-        },
-        {
-            "file": "run\\lang\\TestD\\console.el",
-            "lineStr": "55:14",
-            "start": 7096,
-            "end": 7104
-        },
-        {
-            "file": "run\\lang\\TestD\\console.el",
-            "lineStr": "56:14",
-            "start": 7108,
-            "end": 7112
-        },
-        {
-            "file": "run\\lang\\TestD\\console.el",
             "lineStr": "57:10",
-            "start": 7116,
-            "end": 7116
+            "start": 7084,
+            "end": 7084
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "16:10",
-            "start": 7144,
-            "end": 7152
+            "start": 7112,
+            "end": 7120
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "17:10",
-            "start": 7156,
-            "end": 7160
+            "start": 7124,
+            "end": 7128
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "18:10",
-            "start": 7164,
-            "end": 7172
+            "start": 7132,
+            "end": 7140
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "19:10",
-            "start": 7176,
-            "end": 7180
+            "start": 7144,
+            "end": 7148
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "20:14",
-            "start": 7184,
-            "end": 7180
+            "start": 7152,
+            "end": 7148
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "21:18",
-            "start": 7184,
-            "end": 7192
+            "start": 7152,
+            "end": 7160
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "22:18",
-            "start": 7196,
-            "end": 7208
+            "start": 7164,
+            "end": 7176
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "23:14",
-            "start": 7212,
-            "end": 7216
+            "start": 7180,
+            "end": 7184
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "24:10",
-            "start": 7220,
-            "end": 7216
+            "start": 7188,
+            "end": 7184
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "25:14",
-            "start": 7220,
-            "end": 7220
+            "start": 7188,
+            "end": 7188
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "26:14",
-            "start": 7224,
-            "end": 7232
+            "start": 7192,
+            "end": 7200
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "27:10",
-            "start": 7236,
-            "end": 7228
+            "start": 7204,
+            "end": 7196
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "10:10",
-            "start": 7256,
-            "end": 7260
+            "start": 7224,
+            "end": 7228
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "11:10",
-            "start": 7264,
+            "start": 7232,
+            "end": 7240
+        },
+        {
+            "file": "run\\lang\\TestD\\console.el",
+            "lineStr": "12:10",
+            "start": 7244,
+            "end": 7244
+        },
+        {
+            "file": "run\\lang\\TestD\\console.el",
+            "lineStr": "31:10",
+            "start": 7268,
             "end": 7272
         },
         {
             "file": "run\\lang\\TestD\\console.el",
-            "lineStr": "12:10",
-            "start": 7276,
-            "end": 7276
-        },
-        {
-            "file": "run\\lang\\TestD\\console.el",
-            "lineStr": "31:10",
-            "start": 7300,
-            "end": 7304
-        },
-        {
-            "file": "run\\lang\\TestD\\console.el",
             "lineStr": "32:10",
-            "start": 7308,
-            "end": 7316
+            "start": 7276,
+            "end": 7284
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "33:10",
-            "start": 7320,
-            "end": 7328
+            "start": 7288,
+            "end": 7296
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "34:10",
-            "start": 7332,
-            "end": 7344
+            "start": 7300,
+            "end": 7312
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "35:10",
-            "start": 7348,
-            "end": 7344
+            "start": 7316,
+            "end": 7312
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "36:14",
-            "start": 7348,
-            "end": 7352
+            "start": 7316,
+            "end": 7320
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "37:14",
-            "start": 7356,
-            "end": 7364
+            "start": 7324,
+            "end": 7332
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "38:18",
-            "start": 7368,
-            "end": 7380
+            "start": 7336,
+            "end": 7348
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "39:14",
-            "start": 7384,
-            "end": 7380
+            "start": 7352,
+            "end": 7348
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "40:18",
-            "start": 7384,
-            "end": 7388
+            "start": 7352,
+            "end": 7356
         },
         {
             "file": "run\\lang\\TestD\\console.el",
             "lineStr": "41:14",
-            "start": 7392,
-            "end": 7396
+            "start": 7360,
+            "end": 7364
         },
         {
             "file": "run\\lang\\TestD\\fs.el",
             "lineStr": "20:10",
-            "start": 7424,
-            "end": 7444
+            "start": 7392,
+            "end": 7412
         },
         {
             "file": "run\\lang\\TestD\\fs.el",
             "lineStr": "21:14",
-            "start": 7448,
-            "end": 7456
+            "start": 7416,
+            "end": 7428
         },
         {
             "file": "run\\lang\\TestD\\fs.el",
             "lineStr": "22:14",
-            "start": 7460,
-            "end": 7480
+            "start": 7432,
+            "end": 7452
         },
         {
             "file": "run\\lang\\TestD\\fs.el",
             "lineStr": "23:18",
-            "start": 7484,
+            "start": 7456,
+            "end": 7476
+        },
+        {
+            "file": "run\\lang\\TestD\\fs.el",
+            "lineStr": "26:10",
+            "start": 7480,
             "end": 7504
         },
         {
             "file": "run\\lang\\TestD\\fs.el",
-            "lineStr": "26:10",
-            "start": 7508,
-            "end": 7532
-        },
-        {
-            "file": "run\\lang\\TestD\\fs.el",
             "lineStr": "27:10",
-            "start": 7536,
-            "end": 7580
+            "start": 7508,
+            "end": 7556
         },
         {
             "file": "run\\lang\\TestD\\fs.el",
             "lineStr": "28:10",
-            "start": 7584,
-            "end": 7608
+            "start": 7560,
+            "end": 7584
         },
         {
             "file": "run\\lang\\TestD\\fs.el",
             "lineStr": "29:10",
-            "start": 7612,
-            "end": 7640
+            "start": 7588,
+            "end": 7616
         },
         {
             "file": "run\\lang\\TestD\\fs.el",
             "lineStr": "33:10",
-            "start": 7664,
-            "end": 7684
+            "start": 7640,
+            "end": 7660
         },
         {
             "file": "run\\lang\\TestD\\fs.el",
             "lineStr": "34:14",
-            "start": 7688,
-            "end": 7696
+            "start": 7664,
+            "end": 7676
         },
         {
             "file": "run\\lang\\TestD\\fs.el",
             "lineStr": "35:14",
-            "start": 7700,
-            "end": 7720
+            "start": 7680,
+            "end": 7700
         },
         {
             "file": "run\\lang\\TestD\\fs.el",
             "lineStr": "36:18",
-            "start": 7724,
-            "end": 7744
+            "start": 7704,
+            "end": 7724
         },
         {
             "file": "run\\lang\\TestD\\fs.el",
             "lineStr": "39:10",
-            "start": 7748,
-            "end": 7820
+            "start": 7728,
+            "end": 7800
         },
         {
             "file": "run\\lang\\TestD\\fs.el",
             "lineStr": "40:10",
-            "start": 7824,
-            "end": 7868
+            "start": 7804,
+            "end": 7852
         },
         {
             "file": "run\\lang\\TestD\\fs.el",
             "lineStr": "41:10",
-            "start": 7872,
-            "end": 7896
+            "start": 7856,
+            "end": 7880
         },
         {
             "file": "run\\lang\\TestD\\fs.el",
             "lineStr": "42:10",
-            "start": 7900,
-            "end": 7928
+            "start": 7884,
+            "end": 7912
         },
         {
             "file": "run\\lang\\TestD\\fs.el",
             "lineStr": "8:10",
-            "start": 7952,
-            "end": 7968
+            "start": 7936,
+            "end": 7952
         },
         {
             "file": "run\\lang\\TestD\\fs.el",
             "lineStr": "9:10",
-            "start": 7972,
-            "end": 8060
+            "start": 7956,
+            "end": 8032
         },
         {
             "file": "run\\lang\\TestD\\fs.el",
             "lineStr": "10:14",
-            "start": 8064,
-            "end": 8080
+            "start": 8036,
+            "end": 8052
         },
         {
             "file": "run\\lang\\TestD\\fs.el",
             "lineStr": "12:10",
-            "start": 8092,
-            "end": 8116
+            "start": 8064,
+            "end": 8088
         },
         {
             "file": "run\\lang\\TestD\\fs.el",
             "lineStr": "13:14",
-            "start": 8120,
-            "end": 8136
+            "start": 8092,
+            "end": 8108
         },
         {
             "file": "run\\lang\\TestD\\fs.el",
             "lineStr": "14:14",
-            "start": 8140,
-            "end": 8160
+            "start": 8112,
+            "end": 8132
         },
         {
             "file": "run\\lang\\TestD\\fs.el",
             "lineStr": "16:10",
-            "start": 8168,
-            "end": 8188
+            "start": 8140,
+            "end": 8160
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "109:10",
-            "start": 8216,
-            "end": 8220
+            "start": 8188,
+            "end": 8192
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "110:10",
-            "start": 8224,
-            "end": 8228
+            "start": 8196,
+            "end": 8200
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "111:10",
-            "start": 8232,
-            "end": 8232
+            "start": 8204,
+            "end": 8204
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "112:10",
-            "start": 8236,
-            "end": 8256
+            "start": 8208,
+            "end": 8228
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "113:10",
-            "start": 8260,
-            "end": 8280
+            "start": 8232,
+            "end": 8252
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "114:14",
-            "start": 8284,
-            "end": 8316
+            "start": 8256,
+            "end": 8292
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "115:14",
-            "start": 8320,
-            "end": 8320
+            "start": 8296,
+            "end": 8296
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "117:10",
-            "start": 8324,
-            "end": 8352
+            "start": 8300,
+            "end": 8328
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "118:14",
-            "start": 8356,
-            "end": 8364
+            "start": 8332,
+            "end": 8340
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "119:14",
-            "start": 8368,
-            "end": 8392
+            "start": 8344,
+            "end": 8368
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "120:18",
-            "start": 8396,
-            "end": 8448
+            "start": 8372,
+            "end": 8416
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "121:22",
-            "start": 8452,
-            "end": 8496
+            "start": 8420,
+            "end": 8456
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "123:18",
-            "start": 8500,
-            "end": 8516
+            "start": 8460,
+            "end": 8476
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "126:14",
-            "start": 8528,
-            "end": 8560
+            "start": 8488,
+            "end": 8524
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "127:14",
-            "start": 8564,
-            "end": 8608
+            "start": 8528,
+            "end": 8576
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "128:14",
-            "start": 8612,
-            "end": 8612
+            "start": 8580,
+            "end": 8580
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "130:10",
-            "start": 8624,
-            "end": 8664
+            "start": 8592,
+            "end": 8632
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "131:14",
-            "start": 8668,
-            "end": 8688
+            "start": 8636,
+            "end": 8656
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "132:14",
-            "start": 8692,
-            "end": 8716
+            "start": 8660,
+            "end": 8684
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "133:18",
-            "start": 8720,
-            "end": 8740
+            "start": 8688,
+            "end": 8712
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "135:14",
-            "start": 8744,
-            "end": 8796
+            "start": 8716,
+            "end": 8768
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "136:18",
-            "start": 8800,
-            "end": 8800
+            "start": 8772,
+            "end": 8772
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "138:14",
-            "start": 8808,
-            "end": 8832
+            "start": 8780,
+            "end": 8808
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "139:14",
-            "start": 8836,
-            "end": 8836
+            "start": 8812,
+            "end": 8812
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "141:10",
-            "start": 8848,
-            "end": 8880
+            "start": 8824,
+            "end": 8860
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "142:10",
-            "start": 8884,
-            "end": 8916
+            "start": 8864,
+            "end": 8900
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "143:10",
-            "start": 8920,
-            "end": 8952
+            "start": 8904,
+            "end": 8940
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "144:10",
-            "start": 8956,
-            "end": 8976
+            "start": 8944,
+            "end": 8968
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "148:10",
-            "start": 9000,
-            "end": 9020
+            "start": 8992,
+            "end": 9012
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "149:14",
-            "start": 9024,
-            "end": 9040
+            "start": 9016,
+            "end": 9032
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "159:10",
-            "start": 9072,
-            "end": 9092
+            "start": 9064,
+            "end": 9084
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "21:10",
-            "start": 9120,
-            "end": 9164
+            "start": 9112,
+            "end": 9156
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "22:10",
-            "start": 9168,
-            "end": 9172
+            "start": 9160,
+            "end": 9164
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "23:10",
-            "start": 9176,
-            "end": 9192
+            "start": 9168,
+            "end": 9184
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "24:10",
-            "start": 9196,
-            "end": 9200
+            "start": 9188,
+            "end": 9196
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "25:10",
-            "start": 9204,
-            "end": 9204
+            "start": 9200,
+            "end": 9200
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "26:10",
-            "start": 9208,
-            "end": 9212
+            "start": 9204,
+            "end": 9208
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "27:10",
-            "start": 9216,
-            "end": 9236
+            "start": 9212,
+            "end": 9232
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "28:10",
-            "start": 9240,
-            "end": 9240
+            "start": 9236,
+            "end": 9236
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "29:10",
-            "start": 9244,
-            "end": 9260
+            "start": 9240,
+            "end": 9256
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "31:10",
-            "start": 9264,
-            "end": 9300
+            "start": 9260,
+            "end": 9296
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "32:10",
-            "start": 9304,
-            "end": 9320
+            "start": 9300,
+            "end": 9316
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "33:10",
-            "start": 9324,
+            "start": 9320,
             "end": 9348
         },
         {
@@ -1852,121 +1816,121 @@
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "38:10",
             "start": 9376,
-            "end": 9396
+            "end": 9400
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "41:10",
-            "start": 9400,
-            "end": 9432
+            "start": 9404,
+            "end": 9440
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "43:10",
-            "start": 9436,
-            "end": 9468
+            "start": 9444,
+            "end": 9480
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "44:10",
-            "start": 9472,
-            "end": 9504
+            "start": 9484,
+            "end": 9520
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "45:10",
-            "start": 9508,
-            "end": 9528
+            "start": 9524,
+            "end": 9548
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "46:10",
-            "start": 9532,
-            "end": 9552
+            "start": 9552,
+            "end": 9576
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "48:10",
-            "start": 9556,
-            "end": 9556
+            "start": 9580,
+            "end": 9580
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "49:10",
-            "start": 9560,
-            "end": 9592
+            "start": 9584,
+            "end": 9620
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "50:10",
-            "start": 9596,
-            "end": 9628
+            "start": 9624,
+            "end": 9660
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "51:10",
-            "start": 9632,
-            "end": 9652
+            "start": 9664,
+            "end": 9688
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "52:10",
-            "start": 9656,
-            "end": 9676
+            "start": 9692,
+            "end": 9716
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "53:10",
-            "start": 9680,
-            "end": 9700
+            "start": 9720,
+            "end": 9744
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "89:10",
-            "start": 9704,
-            "end": 9724
+            "start": 9748,
+            "end": 9768
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "91:10",
-            "start": 9728,
-            "end": 9772
+            "start": 9772,
+            "end": 9820
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "96:10",
-            "start": 9776,
-            "end": 9776
+            "start": 9824,
+            "end": 9824
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "100:10",
-            "start": 9804,
-            "end": 9832
+            "start": 9852,
+            "end": 9880
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "104:10",
-            "start": 9856,
-            "end": 9884
+            "start": 9904,
+            "end": 9932
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "154:10",
-            "start": 9908,
-            "end": 9928
+            "start": 9956,
+            "end": 9976
         },
         {
             "file": "run\\lang\\TestD\\testd.el",
             "lineStr": "155:10",
-            "start": 9932,
-            "end": 9952
+            "start": 9980,
+            "end": 10000
         },
         {
             "file": "<Peripheral>",
             "lineStr": "1:1",
-            "start": 9968,
-            "end": 10072
+            "start": 10016,
+            "end": 10120
         }
     ],
     "version": 1,
@@ -2002,8 +1966,8 @@
             "value": "66308"
         },
         "exp_str_inline_3": {
-            "start": 10156,
-            "end": 10171,
+            "start": 10204,
+            "end": 10219,
             "type": "\\0\"",
             "value": "\nInterrupt: \u0000"
         },
@@ -2020,14 +1984,14 @@
             "value": "66048"
         },
         "exp_str_inline_2": {
-            "start": 10148,
-            "end": 10155,
+            "start": 10196,
+            "end": 10203,
             "type": "char*",
             "value": "Timer\u0000"
         },
         "exp_str_inline_5": {
-            "start": 10196,
-            "end": 10207,
+            "start": 10244,
+            "end": 10255,
             "type": "char*",
             "value": "EmulatorOS\u0000"
         },
@@ -2038,8 +2002,8 @@
             "value": "16777233"
         },
         "exp_str_inline_4": {
-            "start": 10172,
-            "end": 10195,
+            "start": 10220,
+            "end": 10243,
             "type": "EmulatorOS\\n\\n\\0\"",
             "value": "Starting EmulatorOS\n\n\u0000"
         },
@@ -2050,14 +2014,14 @@
             "value": "131072"
         },
         "exp_str_inline_1": {
-            "start": 10140,
-            "end": 10147,
+            "start": 10188,
+            "end": 10195,
             "type": "char*",
             "value": "\nTimer\u0000"
         },
         "exp_str_inline_0": {
-            "start": 10128,
-            "end": 10139,
+            "start": 10176,
+            "end": 10187,
             "type": "char*",
             "value": "\n\nHalting\u0000"
         },
@@ -2098,8 +2062,8 @@
             "value": "16777218"
         },
         "TestD.str": {
-            "start": 10092,
-            "end": 10099,
+            "start": 10140,
+            "end": 10147,
             "type": "Test\"",
             "value": "// Test"
         },

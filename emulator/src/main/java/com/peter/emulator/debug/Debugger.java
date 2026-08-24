@@ -2,7 +2,6 @@ package com.peter.emulator.debug;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -13,6 +12,7 @@ import com.peter.emulator.assembly.SymbolFile.FunctionSymbol;
 import com.peter.emulator.assembly.SymbolFile.LineSymbol;
 import com.peter.emulator.assembly.SymbolFile.StackVarSymbol;
 import com.peter.emulator.assembly.SymbolFile.VariableSymbol;
+import com.peter.emulator.machinecode.Instruction;
 
 public class Debugger {
 
@@ -22,7 +22,7 @@ public class Debugger {
 
     private final ArrayList<FunctionSymbol> stack = new ArrayList<>();
 
-    private static final Pattern CHAR_ARRAY_PATTERN = Pattern.compile("char\\[(\\d+)\\]");
+    private static final Pattern TYPE_PATTERN = Pattern.compile("(\\w+)([\\*\\&]*)(\\[\\d+\\])?");
 
     public final ArrayList<StackVarSymbol> activeStackVars = new ArrayList<>();
 
@@ -75,7 +75,7 @@ public class Debugger {
                 }
                 ArrayList<StackVarSymbol> toRemove = new ArrayList<>();
                 for (StackVarSymbol sv : activeStackVars) {
-                    if (sv.end == addr) {
+                    if (cpu.stackPtr <= sv.address && sv.start != addr) {
                         toRemove.add(sv);
                     }
                 }
@@ -105,7 +105,7 @@ public class Debugger {
                 }
                 ArrayList<StackVarSymbol> toRemove = new ArrayList<>();
                 for (StackVarSymbol sv : activeStackVars) {
-                    if (sv.end == addr) {
+                    if (cpu.stackPtr <= sv.address && sv.start != addr) {
                         toRemove.add(sv);
                     }
                 }
@@ -163,23 +163,78 @@ public class Debugger {
         return readVar(cpu, vs.type, vs.address, vs.start, vs.end);
     }
 
+    private int getSizeFromIndex(String index) {
+        return Integer.parseInt(index.substring(1, index.length() - 1));
+    }
+
     private String readVar(CPU cpu, String type, int address, int start, int end) {
-        if (type.startsWith("char[")) {
-            // System.out.println(type);
-            Matcher m = CHAR_ARRAY_PATTERN.matcher(type);
-            if (!m.matches()) {
-                return "\"" + cpu.bus.readString(cpu.translateAddress(start), end - start) + "\"";
-            }
-            int len = Integer.parseInt(m.group(1));
-            return "\"" + cpu.bus.readString(cpu.translateAddress(start), len) + "\"";
+        Matcher m = TYPE_PATTERN.matcher(type);
+        if (!m.matches()) {
+            return "??";
         }
-        return switch (type) {
-            case "char*" -> "\"" + cpu.bus.readString(cpu.translateAddress(start), end - start) + "\"";
+        String baseType = m.group(1);
+        boolean pointer = m.group(2).length() > 0;
+        int arrSize = -1;
+        if (m.group(3) != null) {
+            arrSize = getSizeFromIndex(m.group(3));
+        }
+        if (baseType.equals("char") && !pointer && arrSize > -1) {
+            return "\"" + cpu.bus.readString(cpu.translateAddress(start), arrSize) + "\"";
+        }
+        if (arrSize > -1) {
+            String out = "{";
+            if (pointer) { // pointer
+                for (int i = 0; i < arrSize; i++) {
+                    if (out.length() > 1)
+                        out += ",";
+                    out += "@0x" + Instruction.toHex(cpu.readMem(address + (i * 4)));
+                }
+                return out += "}";
+            }
+            switch (baseType) {
+                case "uint16" -> {
+                    for (int i = 0; i < arrSize; i++) {
+                        if (out.length() > 1)
+                            out += ",";
+                        out += Integer.toString(cpu.readMemShort(address + (i * 2)));
+                    }
+                }
+                case "uint8" -> {
+                    for (int i = 0; i < arrSize; i++) {
+                        if (out.length() > 1)
+                            out += ",";
+                        out += Integer.toString(cpu.readMemByte(address + i));
+                    }
+                }
+                case "boolean" -> {
+                    for (int i = 0; i < arrSize; i++) {
+                        if (out.length() > 1)
+                            out += ",";
+                        out += cpu.readMemByte(address + i) != 0;
+                    }
+                }
+                default -> {
+                    for (int i = 0; i < arrSize; i++) {
+                        if (out.length() > 1)
+                            out += ",";
+                        out += Integer.toString(cpu.readMem(address + (i * 4)));
+                    }
+                }
+            }
+            return out += "}";
+        } else if (pointer) {
+            if (baseType.equals("char") && m.group(2).equals("*")) {
+                return "\"" + cpu.bus.readStringNT(cpu.translateAddress(cpu.readMem(address))) + "\""/* @0x" + Instruction.toHex(cpu.readMem(address))*/;
+            }
+            return "@0x" + Instruction.toHex(cpu.readMem(address));
+        }
+        return switch (baseType) {
             case "char" -> "'" + (char) cpu.readMemByte(address) + "'";
             case "uint8" -> Integer.toString(cpu.readMemByte(address));
             case "boolean" -> cpu.readMemByte(address) != 0 ? "true" : "false";
             case "uint16" -> Integer.toString(cpu.readMemShort(address));
-            default -> Integer.toString(cpu.readMem(address));
+            case "uint32" -> Integer.toString(cpu.readMem(address));
+            default -> Instruction.toHexLead(cpu.readMem(address));
         };
     }
 

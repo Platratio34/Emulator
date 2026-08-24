@@ -130,8 +130,7 @@ INC r1 -12
 // Reserving r1
 LOAD MEM r1 r1
 LOAD r2 3
-AND r1 r1 r2
-SET FORCE NEQ r1 r1 // size & 0x3 != 0
+AND r1 r1 r2 // size & 0x3 != 0
 GOTO EQ r1 :if_end_2
 // Releasing r1
 // 0 26:14
@@ -317,8 +316,7 @@ COPY r15 r1
 INC r1 4
 // Reserving r1
 LOAD MEM r1 r1
-LOAD MEM r1 r1
-SET FORCE NEQ r1 r1 // block.next != nullptr
+LOAD MEM r1 r1 // block.next != nullptr
 GOTO EQ r1 :exp_ee_0
 COPY r15 r1
 INC r1 4
@@ -827,8 +825,7 @@ STACK PUSH r1
 COPY r15 r1
 // Reserving r1
 LOAD MEM r1 r1
-LOAD MEM r1 r1
-SET FORCE NEQ r1 r1 // block.next != nullptr
+LOAD MEM r1 r1 // block.next != nullptr
 COPY r15 r2
 // Reserving r2
 LOAD MEM r2 r2
@@ -837,8 +834,7 @@ COPY r15 r3
 INC r3 -12
 // Reserving r3
 LOAD MEM r3 r3
-SUB r2 r2 r3
-SET FORCE NEQ r2 r2 // block.start != ptr
+SUB r2 r2 r3 // block.start != ptr
 AND r1 r1 r2 // ( block.next != nullptr ) & ( block.start != ptr )
 GOTO EQ r1 :while_end_9
 // Releasing r1
@@ -890,8 +886,7 @@ COPY r15 r2
 INC r2 -12
 // Reserving r2
 LOAD MEM r2 r2
-SUB r1 r1 r2
-SET FORCE NEQ r1 r1 // block.start != ptr
+SUB r1 r1 r2 // block.start != ptr
 GOTO EQ r1 :if_end_10
 // Releasing r1
 // 0 75:14
@@ -1025,15 +1020,12 @@ LOAD r1 Peripheral.TABLE
 LOAD r2 &CharacterDisplay.deviceId
 // Reserving r2
 LOAD MEM r2 r2 // deviceId
-// Found Free register r3
-LOAD r3 4
-MUL r2 r2 r3
+LSH r2 r2 2
 ADD r1 r1 r2
 // Releasing r2
 LOAD MEM r1 r1
 LOAD r2 16777233
-SUB r1 r1 r2
-SET FORCE NEQ r1 r1 // Peripheral.TABLE[deviceId] != Peripheral.TYPE_DISPLAY_CHARACTER
+SUB r1 r1 r2 // Peripheral.TABLE[deviceId] != Peripheral.TYPE_DISPLAY_CHARACTER
 :exp_ee_1 // ( deviceId < 64 ) && ( Peripheral.TABLE[deviceId] != Peripheral.TYPE_DISPLAY_CHARACTER )
 GOTO EQ r1 :while_end_12
 // Releasing r1
@@ -1091,21 +1083,21 @@ GOTO :func_exit_CharacterDisplay.setup
 #line run\lang\TestD\CharaterDisplay.el 22:10
 // Reserving r1
 LOAD r1 1 // 0x01
-#stackVar uint32[2] msg2
 STACK PUSH r1
 // Releasing r1
 // Reserving r1
 LOAD r1 &CharacterDisplay.deviceId
 // Reserving r1
 LOAD MEM r1 r1 // deviceId
-#stackVar uint32[2] msg2
 STACK PUSH r1
+#stackVar uint32[2] msg2 -8
 // Releasing r1
 //  uint32[2] msg2 = {0x01, deviceId};
 
 // 4 23:10
 #line run\lang\TestD\CharaterDisplay.el 23:10
 // Reserving r1
+STACK PUSH r1
 LOAD r1 0 // 0
 STACK PUSH r1
 LOAD r1 2 // 2
@@ -1126,8 +1118,7 @@ LOAD r1 Peripheral.RSP_STATUS
 // Reserving r1
 
 LOAD MEM BYTE r1 r1
-INC r1 -1
-SET FORCE NEQ r1 r1 // *Peripheral.RSP_STATUS != 0x01
+INC r1 -1 // *Peripheral.RSP_STATUS != 0x01
 GOTO EQ r1 :if_end_14
 // Releasing r1
 // 0 25:14
@@ -1179,20 +1170,20 @@ STORE r1 r2
 #line run\lang\TestD\CharaterDisplay.el 29:10
 // Reserving r1
 LOAD r1 1 // 0x01
-#stackVar uint32[2] msg3
 STACK PUSH r1
 // Releasing r1
 // Reserving r1
 LOAD r1 &CharacterDisplay.charBuffer
 // Reserving r1 // &charBuffer
-#stackVar uint32[2] msg3
 STACK PUSH r1
+#stackVar uint32[2] msg3 -8
 // Releasing r1
 //  uint32[2] msg3 = {0x01, & charBuffer};
 
 // 9 30:10
 #line run\lang\TestD\CharaterDisplay.el 30:10
 // Reserving r1
+STACK PUSH r1
 LOAD r1 &CharacterDisplay.deviceId
 // Reserving r1
 LOAD MEM r1 r1 // deviceId
@@ -1328,7 +1319,6 @@ LOAD MEM r2 r2 // i
 ADD r1 r1 r2
 // Releasing r2
 LOAD MEM BYTE r1 r1
-SET FORCE NEQ r1 r1
 GOTO EQ r1 :exp_ee_2
 COPY r15 r1
 INC r1 -20
@@ -1625,8 +1615,9 @@ LOAD MEM r2 r2
 // 2 47:10
 #line run\lang\TestD\console.el 47:10
 COPY rStack r3
+#stackVar char[16] tempStr
 STACK INC 16
-//  asm("COPY rStack r3\nSTACK INC 16");
+//  asm("COPY rStack r3\n#stackVar char[16] tempStr\nSTACK INC 16");
 
 // 3 48:10
 #line run\lang\TestD\console.el 48:10
@@ -1683,7 +1674,8 @@ GOTO NEQ r6 :intToDec_l2
 // 12 57:10
 #line run\lang\TestD\console.el 57:10
 STORE BYTE 0x0 r2
-//  asm("STORE BYTE 0x0 r2");
+#stackVarClear tempStr
+//  asm("STORE BYTE 0x0 r2\n#stackVarClear tempStr");
 
 #lineend
 :func_exit_Console.intToDec_uint32_char*
@@ -1901,6 +1893,7 @@ GOTO EQ r1 :if_end_19
 #line run\lang\TestD\fs.el 21:14
 // Reserving r1
 STACK INC 4
+STACK PUSH r1
 GOTO PUSH :FS.setup
 // Releasing r1
 //  setup();
@@ -1941,7 +1934,6 @@ STORE r1 r2
 #line run\lang\TestD\fs.el 26:10
 // Reserving r1
 LOAD r1 16 // 0x10
-#stackVar uint32[2] msg
 STACK PUSH r1
 // Releasing r1
 // Reserving r1
@@ -1949,14 +1941,15 @@ COPY r15 r1
 INC r1 -20
 // Reserving r1
 LOAD MEM r1 r1 // path
-#stackVar uint32[2] msg
 STACK PUSH r1
+#stackVar uint32[2] msg -8
 // Releasing r1
 //  uint32[2] msg = {0x10, path};
 
 // 2 27:10
 #line run\lang\TestD\fs.el 27:10
 // Reserving r1
+STACK PUSH r1
 LOAD r1 &FS.deviceId
 // Reserving r1
 LOAD MEM r1 r1 // deviceId
@@ -2039,6 +2032,7 @@ GOTO EQ r1 :if_end_21
 #line run\lang\TestD\fs.el 34:14
 // Reserving r1
 STACK INC 4
+STACK PUSH r1
 GOTO PUSH :FS.setup
 // Releasing r1
 //  setup();
@@ -2079,7 +2073,6 @@ STORE r1 r2
 #line run\lang\TestD\fs.el 39:10
 // Reserving r1
 LOAD r1 17 // 0x11
-#stackVar uint32[5] msg
 STACK PUSH r1
 // Releasing r1
 // Reserving r1
@@ -2087,7 +2080,6 @@ COPY r15 r1
 INC r1 -32
 // Reserving r1
 LOAD MEM r1 r1 // handle
-#stackVar uint32[5] msg
 STACK PUSH r1
 // Releasing r1
 // Reserving r1
@@ -2095,7 +2087,6 @@ COPY r15 r1
 INC r1 -28
 // Reserving r1
 LOAD MEM r1 r1 // buffer
-#stackVar uint32[5] msg
 STACK PUSH r1
 // Releasing r1
 // Reserving r1
@@ -2103,7 +2094,6 @@ COPY r15 r1
 INC r1 -24
 // Reserving r1
 LOAD MEM r1 r1 // size
-#stackVar uint32[5] msg
 STACK PUSH r1
 // Releasing r1
 // Reserving r1
@@ -2111,14 +2101,15 @@ COPY r15 r1
 INC r1 -20
 // Reserving r1
 LOAD MEM r1 r1 // offset
-#stackVar uint32[5] msg
 STACK PUSH r1
+#stackVar uint32[5] msg -20
 // Releasing r1
 //  uint32[5] msg = {0x11, handle, buffer, size, offset};
 
 // 2 40:10
 #line run\lang\TestD\fs.el 40:10
 // Reserving r1
+STACK PUSH r1
 LOAD r1 &FS.deviceId
 // Reserving r1
 LOAD MEM r1 r1 // deviceId
@@ -2211,15 +2202,12 @@ LOAD r1 Peripheral.TABLE
 LOAD r2 &FS.deviceId
 // Reserving r2
 LOAD MEM r2 r2 // deviceId
-// Found Free register r3
-LOAD r3 4
-MUL r2 r2 r3
+LSH r2 r2 2
 ADD r1 r1 r2
 // Releasing r2
 LOAD MEM r1 r1
 LOAD r2 16777217
-SUB r1 r1 r2
-SET FORCE NEQ r1 r1 // Peripheral.TABLE[deviceId] != Peripheral.TYPE_STORAGE_VIRTUAL
+SUB r1 r1 r2 // Peripheral.TABLE[deviceId] != Peripheral.TYPE_STORAGE_VIRTUAL
 :exp_ee_3 // ( deviceId < 64 ) && ( Peripheral.TABLE[deviceId] != Peripheral.TYPE_STORAGE_VIRTUAL )
 GOTO EQ r1 :while_end_23
 // Releasing r1
@@ -2356,6 +2344,7 @@ GOTO EQ r1 :if_end_25
 // 0 114:14
 #line run\lang\TestD\testd.el 114:14
 // Reserving r1
+STACK PUSH r1
 #define exp_str_inline_0 "\n\nHalting\0"
 LOAD r1 exp_str_inline_0 // \n\nHalting\0
 STACK PUSH r1
@@ -2418,9 +2407,7 @@ COPY r15 r2
 INC r2 16
 // Reserving r2
 LOAD MEM r2 r2 // i
-// Found Free register r3
-LOAD r3 4
-MUL r2 r2 r3
+LSH r2 r2 2
 ADD r1 r1 r2
 // Releasing r2
 LOAD MEM r1 r1
@@ -2439,9 +2426,7 @@ COPY r15 r3
 INC r3 16
 // Reserving r3
 LOAD MEM r3 r3 // i
-// Found Free register r4
-LOAD r4 4
-MUL r3 r3 r4
+LSH r3 r3 2
 ADD r2 r2 r3
 // Releasing r3
 // Releasing r1
@@ -2477,6 +2462,7 @@ GOTO :while_condition_27
 // 2 126:14
 #line run\lang\TestD\testd.el 126:14
 // Reserving r1
+STACK PUSH r1
 #define exp_str_inline_1 "\nTimer\0"
 LOAD r1 exp_str_inline_1 // \nTimer\0
 STACK PUSH r1
@@ -2491,6 +2477,7 @@ STACK DEC 8
 // 3 127:14
 #line run\lang\TestD\testd.el 127:14
 // Reserving r1
+STACK PUSH r1
 LOAD r1 0 // 0
 STACK PUSH r1
 LOAD r1 23 // 23
@@ -2556,6 +2543,7 @@ GOTO EQ r1 :if_end_30
 // 0 133:18
 #line run\lang\TestD\testd.el 133:18
 // Reserving r1
+STACK PUSH r1
 LOAD r1 '\n' // \n
 STACK PUSH r1
 // Releasing r1
@@ -2599,6 +2587,7 @@ GOTO :func_exit_TestD.onInterrupt
 // 3 138:14
 #line run\lang\TestD\testd.el 138:14
 // Reserving r1
+STACK PUSH r1
 COPY r15 r1
 INC r1 16
 // Reserving r1
@@ -2625,6 +2614,7 @@ STACK DEC 4
 // 7 141:10
 #line run\lang\TestD\testd.el 141:10
 // Reserving r1
+STACK PUSH r1
 COPY r15 r1
 // Reserving r1
 LOAD MEM r1 r1 // code
@@ -2642,6 +2632,7 @@ STACK DEC 8
 // 8 142:10
 #line run\lang\TestD\testd.el 142:10
 // Reserving r1
+STACK PUSH r1
 #define exp_str_inline_3 "\nInterrupt: \0"
 LOAD r1 exp_str_inline_3 // \nInterrupt: \0
 STACK PUSH r1
@@ -2656,6 +2647,7 @@ STACK DEC 8
 // 9 143:10
 #line run\lang\TestD\testd.el 143:10
 // Reserving r1
+STACK PUSH r1
 COPY r15 r1
 INC r1 4
 // Reserving r1 // &str
@@ -2671,6 +2663,7 @@ STACK DEC 8
 // 10 144:10
 #line run\lang\TestD\testd.el 144:10
 // Reserving r1
+STACK PUSH r1
 LOAD r1 '\n' // \n
 STACK PUSH r1
 // Releasing r1
@@ -2786,6 +2779,7 @@ STORE BYTE r1 r2
 // 3 24:10
 #line run\lang\TestD\testd.el 24:10
 // Reserving r1
+STACK PUSH r1
 GOTO PUSH :CharacterDisplay.setup
 // Releasing r1
 //  CharacterDisplay.setup();
@@ -2883,6 +2877,7 @@ STORE BYTE r1 r2
 // 11 33:10
 #line run\lang\TestD\testd.el 33:10
 // Reserving r1
+STACK PUSH r1
 COPY r15 r1
 INC r1 8
 // Reserving r1
@@ -2915,6 +2910,7 @@ STACK INC 8
 // 15 38:10
 #line run\lang\TestD\testd.el 38:10
 // Reserving r1
+STACK PUSH r1
 COPY r15 r1
 INC r1 12
 // Reserving r1 // &sA
@@ -2928,6 +2924,7 @@ STACK DEC 4
 // 16 41:10
 #line run\lang\TestD\testd.el 41:10
 // Reserving r1
+STACK PUSH r1
 #define exp_str_inline_4 "Starting EmulatorOS\n\n\0"
 LOAD r1 exp_str_inline_4 // Starting EmulatorOS\n\n\0
 STACK PUSH r1
@@ -2942,6 +2939,7 @@ STACK DEC 8
 // 17 43:10
 #line run\lang\TestD\testd.el 43:10
 // Reserving r1
+STACK PUSH r1
 LOAD r1 &TestD.testStr
 // Reserving r1 // &testStr
 STACK PUSH r1
@@ -2956,6 +2954,7 @@ STACK DEC 8
 // 18 44:10
 #line run\lang\TestD\testd.el 44:10
 // Reserving r1
+STACK PUSH r1
 LOAD r1 &TestD.testStr2
 // Reserving r1 // &testStr2
 STACK PUSH r1
@@ -2970,6 +2969,7 @@ STACK DEC 8
 // 19 45:10
 #line run\lang\TestD\testd.el 45:10
 // Reserving r1
+STACK PUSH r1
 LOAD r1 'a' // a
 STACK PUSH r1
 // Releasing r1
@@ -2981,6 +2981,7 @@ STACK DEC 4
 // 20 46:10
 #line run\lang\TestD\testd.el 46:10
 // Reserving r1
+STACK PUSH r1
 LOAD r1 '\n' // \n
 STACK PUSH r1
 // Releasing r1
@@ -2998,6 +2999,7 @@ STACK INC 16
 // 22 49:10
 #line run\lang\TestD\testd.el 49:10
 // Reserving r1
+STACK PUSH r1
 LOAD r1 4096 // 0x1000
 STACK PUSH r1
 COPY r15 r1
@@ -3013,6 +3015,7 @@ STACK DEC 8
 // 23 50:10
 #line run\lang\TestD\testd.el 50:10
 // Reserving r1
+STACK PUSH r1
 COPY r15 r1
 INC r1 20
 // Reserving r1 // &str2
@@ -3028,6 +3031,7 @@ STACK DEC 8
 // 24 51:10
 #line run\lang\TestD\testd.el 51:10
 // Reserving r1
+STACK PUSH r1
 LOAD r1 '\n' // \n
 STACK PUSH r1
 // Releasing r1
@@ -3039,6 +3043,7 @@ STACK DEC 4
 // 25 52:10
 #line run\lang\TestD\testd.el 52:10
 // Reserving r1
+STACK PUSH r1
 LOAD r1 'd' // d
 STACK PUSH r1
 // Releasing r1
@@ -3050,6 +3055,7 @@ STACK DEC 4
 // 26 53:10
 #line run\lang\TestD\testd.el 53:10
 // Reserving r1
+STACK PUSH r1
 LOAD r1 '\n' // \n
 STACK PUSH r1
 // Releasing r1
@@ -3077,6 +3083,7 @@ STORE r1 r2
 // 28 91:10
 #line run\lang\TestD\testd.el 91:10
 // Reserving r1
+STACK PUSH r1
 LOAD r1 0 // 0
 STACK PUSH r1
 LOAD r1 0 // 0

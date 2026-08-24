@@ -44,7 +44,7 @@ namespace Console {
     public static void intToDec(uint32 value, char* str) {
         asm("COPY r15 r1\nINC r1 -16\nLOAD MEM r1 r1"); // value
         asm("COPY r15 r2\nINC r2 -12\nLOAD MEM r2 r2"); // str
-        asm("COPY rStack r3\nSTACK INC 16"); // char* str2
+        asm("COPY rStack r3\n#stackVar char[16] tempStr\nSTACK INC 16"); // char* str2
         asm("LOAD r4 10\nLOAD r5 0x30\nLOAD r6 0x0");
         asm(":intToDec_l1");
             asm("DIV r1 r1 r4\nCOPY rAF r7\nADD r7 r7 r5");
@@ -54,7 +54,7 @@ namespace Console {
         asm(":intToDec_l2");
             asm("COPY MEM BYTE r3 r2 INC_RD\nINC r6 -1\nINC r3 -1");
             asm("GOTO NEQ r6 :intToDec_l2");
-        asm("STORE BYTE 0x0 r2");
+        asm("STORE BYTE 0x0 r2\n#stackVarClear tempStr");
         /*
         :loop
         r1 = r1 / r4

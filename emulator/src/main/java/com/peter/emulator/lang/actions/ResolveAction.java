@@ -51,31 +51,6 @@ public class ResolveAction extends ComplexAction {
             case CONST -> {
                 addDirect("LOAD %s %s", reg, var.getQualifiedName());
                 wasConst = true;
-                // switch (var.startingValue) {
-                //     case ELNumberValue nv -> {
-                //         addDirect("LOAD %s %d", reg, nv.value));
-                //         returnType = var.type;
-                //         returnVar = var;
-                //         // scope.addSymbol(new ELSymbol(ELSymbol.Type.VARIABLE_CONSTANT, it.spanFirst(),
-                //         //         "### `const %s %s = %d`", var.type.typeString(), it.value, nv.value));
-                //         scope.addSymbol(new ELVarSymbol(var, it.spanFirst()));
-                //         return;
-                //     }
-                //     case ELStringValue sv -> {
-                //         if (sv.type.equals(ELPrimitives.CHAR)) {
-                //             addDirect("LOAD %s '%s'", reg, sv.value));
-                //             returnType = var.type;
-                //             returnVar = var;
-                //             // scope.addSymbol(new ELSymbol(ELSymbol.Type.VARIABLE_CONSTANT, it.spanFirst(),
-                //             //         "### `const %s %s = '%s'`", var.type.typeString(), it.value, sv.value));
-                //             scope.addSymbol(new ELVarSymbol(var, it.spanFirst()));
-                //             return;
-                //         } else {
-                //             throw ELAnalysisError.error("Can not reference constant char* right now");
-                //         }
-                //     }
-                //     default -> throw ELAnalysisError.error("Unknown constant type");
-                // }
             }
             case STATIC -> addDirect("LOAD %s &%s", reg, var.getQualifiedName());
             case MEMBER -> {
@@ -114,9 +89,12 @@ public class ResolveAction extends ComplexAction {
                     int size = resolvedType.sizeof();
                     if (indexExp.isConstant()) {
                         addDirect("INC %s %d", reg, indexExp.getConstant() * size);
+                        
                     } else {
                         actions.add(indexExp);
-                        if (size > 1) {
+                        if (size > 1 && (size & (size - 1)) == 0) { // power of 2
+                            addDirect("LSH %s %s %d", rIndex, rIndex, Integer.numberOfTrailingZeros(size));
+                        } else if (size > 1) {
                             Register rSize = newRegister();
                             addFind(rSize);
                             addDirect("LOAD %s %d\nMUL %s %s %s", rSize, size, rIndex, rIndex, rSize);

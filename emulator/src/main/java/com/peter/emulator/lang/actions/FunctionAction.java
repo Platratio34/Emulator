@@ -72,6 +72,23 @@ public class FunctionAction extends ComplexAction {
         }
         ArrayList<Action> tempActions = new ArrayList<>();
         int stackSize = 0;
+        if (onStack) {
+            tempActions.add(new CompilerAction(scope, s -> {
+                String str = "";
+                for (int i = 1; i < 15; i++) {
+                    if (targetReg != null && targetReg.reg == i) {
+                        continue;
+                    }
+                    if (scope.isReserved(i)) {
+                        if(str.length() > 0)
+                            str += "\n";
+                        str += "STACK PUSH r" + i;
+                        pushed[i] = true;
+                    }
+                }
+                return str;
+            }));
+        }
         if (params.hasSub()) {
             for (int i = 0; i < params.subTokens.size(); i++) {
                 Token t2 = params.subTokens.get(i);
@@ -321,6 +338,20 @@ public class FunctionAction extends ComplexAction {
         if (!onStack) {
             add(this::constRelease);
         } else {
+            tempActions.add(new CompilerAction(scope, s -> {
+                String str = "";
+                for (int i = 15; i > 0; i--) {
+                    if (targetReg != null && targetReg.reg == i) {
+                        continue;
+                    }
+                    if (pushed[i]) {
+                        if(str.length() > 0)
+                            str += "\n";
+                        str += "STACK POP r" + i;
+                    }
+                }
+                return str;
+            }));
             addRelease(r);
         }
     }

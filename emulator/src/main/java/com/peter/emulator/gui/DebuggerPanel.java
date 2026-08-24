@@ -75,6 +75,8 @@ public class DebuggerPanel extends JPanel {
                 lbl.setText(String.format("%s: %s", sv.name, debugger.readVar(cpu, sv)));
                 sVarPanel.add(lbl);
             }
+            revalidate();
+            repaint();
         }
     }
 
