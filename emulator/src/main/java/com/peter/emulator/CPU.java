@@ -304,7 +304,7 @@ public class CPU {
         
         if (interruptCode != 0 && !inInterrupt) {
             inInterrupt = true;
-            System.err.println("Interrupt: "+interruptCode);
+            // System.err.println("Interrupt: "+interruptCode);
             for (int i = 0; i <= 0xf; i++) {
                 registersI[i] = registers[i];
                 registers[i] = 0;
@@ -596,7 +596,7 @@ public class CPU {
                                 pgmPtr = pgmPtrI;
 
                                 inInterrupt = false;
-                                System.out.println("Interrupt ret to " + pgmPtr);
+                                // System.out.println("Interrupt ret to " + pgmPtr);
                             }
                             case VALUE -> {
                                 interrupt(syscallI.data);

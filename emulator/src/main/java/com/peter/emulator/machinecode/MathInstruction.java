@@ -33,7 +33,7 @@ public class MathInstruction extends Instruction {
         this.ra = ra;
         this.rb = Reg.R0;
         this.data = amt & 0x7f;
-        this.rotate = false;
+        this.rotate = rotate;
     }
     protected MathInstruction(Operation operation, Reg rd, int val) {
         super(Operator.MATH);
@@ -96,11 +96,11 @@ public class MathInstruction extends Instruction {
     }
 
     public static MathInstruction LShift(Reg rd, Reg rg, int amt) {
-        return new MathInstruction(Operation.LSHIFT, rd, rg, amt & 0x7f, false);
+        return new MathInstruction(Operation.LSHIFT, rd, rg, amt, false);
     }
 
     public static MathInstruction RShift(Reg rd, Reg rg, int amt) {
-        return new MathInstruction(Operation.RSHIFT, rd, rg, amt & 0x7f, false);
+        return new MathInstruction(Operation.RSHIFT, rd, rg, amt, false);
     }
 
     public static MathInstruction LRotate(Reg rd, Reg rg, int amt) {
@@ -150,6 +150,11 @@ public class MathInstruction extends Instruction {
 
     @Override
     public String toString() {
+        if (operation == Operation.LSHIFT && rotate) {
+            return String.format("LRT %s %s %d", rd.string, ra.string, data);
+        } else if (operation == Operation.RSHIFT && rotate) {
+            return String.format("RRT %s %s %d", rd.string, ra.string, data);
+        }
         return switch(operation) {
             case ADD, SUB, AND, OR, NAND, NOR, XOR, MUL, DIV -> String.format("%s %s %s %s", operation, rd.string, ra.string, rb.string);
 
@@ -157,7 +162,7 @@ public class MathInstruction extends Instruction {
 
             case NOT -> String.format("NOT %s %s", rd.string, ra.string);
 
-            case LSHIFT, RSHIFT -> String.format("%s %s %s %d", operation, rd.string, ra.string, rb);
+            case LSHIFT, RSHIFT -> String.format("%s %s %s %d", operation, rd.string, ra.string, data);
             default -> String.format("MATH UNKNOWN (0x%08x)", getBytecode());
         };
     }

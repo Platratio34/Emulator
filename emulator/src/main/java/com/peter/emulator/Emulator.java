@@ -20,7 +20,7 @@ public class Emulator {
 
     public final RAM mainRam = new RAM(0x2_0000, 0x7e);
     public final MMU mmu = new MMU();
-    public float tickSpeed = 480;
+    public float tickSpeed = 1000;
 
     public final CPU[] cores = new CPU[] {
         new CPU(0, componentBus, mmu)
@@ -29,7 +29,7 @@ public class Emulator {
     public final EmulatorGui gui;
     public final TimerUnit timerUnit = new TimerUnit(PeripheralManager.PERIPHERAL_START + 0x200, cores[0]);
     public final ConsolePeripheral console = new ConsolePeripheral(PeripheralManager.PERIPHERAL_START + 0x300);
-    public final KeyboardPeripheral keyboard = new KeyboardPeripheral(PeripheralManager.PERIPHERAL_START + 0x304);
+    public final KeyboardPeripheral keyboard = new KeyboardPeripheral(PeripheralManager.PERIPHERAL_START + 0x304, peripheralManager);
     public final StoragePeripheral vd0 = new StoragePeripheral(Main.ROOT_PATH.resolve("devices/vd0"));
     public final CharacterDisplay charDisplay = new CharacterDisplay(40, 24);
 
@@ -72,6 +72,7 @@ public class Emulator {
         cores[0].running = true;
         thread = new Thread(() -> {
             System.out.println("Emulator started\n");
+            long lastTime = 0;
             while (running) {
                 if(wait) {
                     while(waiting) {
@@ -81,11 +82,22 @@ public class Emulator {
                         }
                     }
                 } else if(tickSpeed > 0) {
-                    try {
-                        Thread.sleep((long)((1/tickSpeed)*1000));
-                    } catch (InterruptedException e) {
+                    long maxRunTime = (long)((1 / tickSpeed) * 1e9);
+                    if (lastTime != 0) {
+                        long t = System.nanoTime() - lastTime;
+                        if (t > maxRunTime) {
+                            // System.out.println("Took " + t + "ns (" + (((t - maxRunTime) / 1e6) + "ms over)"));
+                            // System.out.println(cores[0].lastInstruction.toString());
+                        } else {
+                            long ms = (long)((maxRunTime - t) / 1e6);
+                            try {
+                                Thread.sleep(ms, ((int)(maxRunTime - t) % 1000000));
+                            } catch (InterruptedException e) {
+                            }
+                        }
                     }
                 }
+                lastTime = System.nanoTime();
                 if(!running)
                     break;
                 try {

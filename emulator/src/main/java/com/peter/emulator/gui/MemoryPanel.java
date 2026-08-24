@@ -22,7 +22,12 @@ public class MemoryPanel extends JPanel {
     protected final JLabel[] rowLabels;
     protected final JLabel[] labels;
 
+    
     public MemoryPanel(CPU cpu, int start, int rows) {
+        this(cpu, start, rows, 0);
+    }
+
+    public MemoryPanel(CPU cpu, int start, int rows, int maxCount) {
         this.cpu = cpu;
         this.start = start;
         this.rows = rows;
@@ -34,9 +39,12 @@ public class MemoryPanel extends JPanel {
         panelOuter.add(panel);
         panel.setLayout(new GridLayout(rows, 9, 10, 0));
 
+        if (maxCount == 0) {
+            maxCount = 8 * rows;
+        }
         rowLabels = new JLabel[rows];
-        labels = new JLabel[8*rows];
-        for (int i = 0; i < 8 * rows; i++) {
+        labels = new JLabel[maxCount];
+        for (int i = 0; i < maxCount; i++) {
             if (i % 8 == 0) {
                 int rI = i / 8;
                 rowLabels[rI] = new JLabel(EmulatorGui.toHex((i * 4) + start));

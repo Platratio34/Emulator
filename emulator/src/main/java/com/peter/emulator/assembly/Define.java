@@ -80,7 +80,7 @@ public class Define {
         if (resolved) {
             throw new IllegalStateException("Define " + name + " was already resolved");
         } else {
-            System.out.println("Resolving "+name+" at "+Instruction.toHexLead(address));
+            // System.out.println("Resolving "+name+" at "+Instruction.toHexLead(address));
         }
         resolved = true;
         // System.out.println("Resolving "+name+" at "+address);

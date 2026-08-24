@@ -177,6 +177,9 @@ public class PeripheralManager implements BusComponent {
             return mappedPeripherals.get(address).get(address);
         }
         int i = (address - PERIPHERAL_TABLE) / 4;
+        if (i > peripherals.length) {
+            return 0;
+        }
         int o = address % 4;
         if(i == 0) {
             return (byte)((o == 3) ? 1 : 0);

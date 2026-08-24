@@ -17,7 +17,7 @@ public class TempGoto extends Goto implements ResolvableValue {
 
     @Override
     public void onResolve(int value) {
-        System.out.println("Resolving goto from "+toHexLead(address) + " to " + target.name + " @"+toHexLead(value));
+        // System.out.println("Resolving goto from "+toHexLead(address) + " to " + target.name + " @"+toHexLead(value));
         data = value - address;
     }
     

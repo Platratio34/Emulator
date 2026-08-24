@@ -414,6 +414,9 @@ public class Assembler {
                     case "HALT" -> {
                         add(Instruction.Halt());
                     }
+                    case "NO_OP" -> {
+                        add(Instruction.NoOp());
+                    }
                     case "LOAD" -> {
                         if (parts.length < 2) {
                             errors.add(new AssemblerError("Invalid load instruction: LOAD <MEM> [rg] [ra|val]", lineN,
@@ -674,7 +677,7 @@ public class Assembler {
                     }
                     case "LSH" -> {
                         if (parts.length < 4) {
-                            errors.add(new AssemblerError("Invalid mul instruction: LSH [rd] [ra] [amt]", lineN,
+                            errors.add(new AssemblerError("Invalid shift instruction: LSH [rd] [ra] [amt]", lineN,
                                     line.length(), line, source));
                             continue;
                         }
@@ -682,7 +685,7 @@ public class Assembler {
                     }
                     case "RSH" -> {
                         if (parts.length < 4) {
-                            errors.add(new AssemblerError("Invalid mul instruction: RSH [rd] [ra] [amt]", lineN,
+                            errors.add(new AssemblerError("Invalid shift instruction: RSH [rd] [ra] [amt]", lineN,
                                     line.length(), line, source));
                             continue;
                         }
@@ -690,7 +693,7 @@ public class Assembler {
                     }
                     case "LRT" -> {
                         if (parts.length < 4) {
-                            errors.add(new AssemblerError("Invalid mul instruction: LRT [rd] [ra] [amt]", lineN,
+                            errors.add(new AssemblerError("Invalid rotate instruction: LRT [rd] [ra] [amt]", lineN,
                                     line.length(), line, source));
                             continue;
                         }
@@ -698,7 +701,7 @@ public class Assembler {
                     }
                     case "RRT" -> {
                         if (parts.length < 4) {
-                            errors.add(new AssemblerError("Invalid mul instruction: RRT [rd] [ra] [amt]", lineN,
+                            errors.add(new AssemblerError("Invalid rotate instruction: RRT [rd] [ra] [amt]", lineN,
                                     line.length(), line, source));
                             continue;
                         }

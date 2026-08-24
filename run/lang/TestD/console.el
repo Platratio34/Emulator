@@ -30,15 +30,51 @@ namespace Console {
     public static void intToHex(uint32 value, char* str) {
         asm("LOAD r14 7");
         asm("COPY r15 r1\nINC r1 -16\nLOAD MEM r1 r1"); // value
-        asm("COPY r15 r2\nINC r2 -12\nLOAD MEM r2 r2\nINC r2 8"); // str
+        asm("COPY r15 r2\nINC r2 -12\nLOAD MEM r2 r2"); // str
         asm("LOAD r3 0xf\nLOAD r6 0xa");
         asm(":intToHex_l1");
-            asm("INC r2 -1\nAND r4 r1 r3\nRSH r1 r1 4");
+            asm("LRT r1 r1 4\nAND r4 r1 r3");
             asm("SUB r5 r4 r6\nGOTO GEQ r5 :intToHex_gt");
-                asm("INC r4 0x30\nSTORE BYTE r4 r2\nGOTO :intToHex_l1_end");
+                asm("INC r4 0x30\nSTORE BYTE r4 r2 INC_RA\nGOTO :intToHex_l1_end");
             asm(":intToHex_gt");
-                asm("INC r4 0x57\nSTORE BYTE r4 r2");
+                asm("INC r4 0x57\nSTORE BYTE r4 r2 INC_RA");
             asm(":intToHex_l1_end\nINC r14 -1\nGOTO GEQ r14 :intToHex_l1");
+    }
+    
+    public static void intToDec(uint32 value, char* str) {
+        asm("COPY r15 r1\nINC r1 -16\nLOAD MEM r1 r1"); // value
+        asm("COPY r15 r2\nINC r2 -12\nLOAD MEM r2 r2"); // str
+        asm("COPY rStack r3\nSTACK INC 16"); // char* str2
+        asm("LOAD r4 10\nLOAD r5 0x30\nLOAD r6 0x0");
+        asm(":intToDec_l1");
+            asm("DIV r1 r1 r4\nCOPY rAF r7\nADD r7 r7 r5");
+            asm("STORE BYTE r7 r3 INC_RA\nINC r6");
+            asm("GOTO NEQ r1 :intToDec_l1");
+        asm("INC r3 -1");
+        asm(":intToDec_l2");
+            asm("COPY MEM BYTE r3 r2 INC_RD\nINC r6 -1\nINC r3 -1");
+            asm("GOTO NEQ r6 :intToDec_l2");
+        asm("STORE BYTE 0x0 r2");
+        /*
+        :loop
+        r1 = r1 / r4
+        r7 = rAF + r5
+        *(r3++) = r7
+        r6++
+        if(r1 != 0) GOTO :loop
+        :loop2
+        *(r2++) = *r3
+        r6--
+        if(r6 != 0) GOTO :loop2
+        */
+        // asm("LOAD r3 0xf\nLOAD r6 0xa");
+        // asm(":intToHex_l1");
+        //     asm("LRT r1 r1 4\nAND r4 r1 r3");
+        //     asm("SUB r5 r4 r6\nGOTO GEQ r5 :intToHex_gt");
+        //         asm("INC r4 0x30\nSTORE BYTE r4 r2 INC_RA\nGOTO :intToHex_l1_end");
+        //     asm(":intToHex_gt");
+        //         asm("INC r4 0x57\nSTORE BYTE r4 r2 INC_RA");
+        //     asm(":intToHex_l1_end\nINC r14 -1\nGOTO GEQ r14 :intToHex_l1");
     }
 
     public static void read(char* buffer, uint32 bufferSize) {

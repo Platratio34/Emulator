@@ -12,10 +12,15 @@ namespace TestD {
 
     public static const uint32* TIMERS = 0x0001_0200;
 
+    public static const uint8* KEYBOARD_MOD = 0x0001_0304;
+    public static const uint8* KEYBOARD_CONTROL = 0x0001_0305;
+    public static const char* KEYBOARD_KEYS = 0x0001_0306;
+
     @Entrypoint(raw)
     public static void main() {
         asm("STORE BYTE 'T' r7\nSTORE BYTE 'e' r7\nSTORE BYTE 's' r7\nSTORE BYTE 't' r7\nSTORE BYTE 'D' r7\nSTORE BYTE '\\n' r7");
         asm("LOAD rIH &:TestD.onInterrupt");
+        *KEYBOARD_CONTROL = 0x03; // Enable press interrupts
         CharacterDisplay.setup();
         uint32 b;
         uint32 a = SysD.rPgm;
@@ -40,9 +45,12 @@ namespace TestD {
         Console.printChar('a');
         Console.printChar('\n');
 
-        char[10] str2;
-        str2[8] = '\n';
-        str2[9] = '\0';
+        char[16] str2;
+        Console.intToDec(0x1000, &str2);
+        Console.printStr(&str2, 0);
+        Console.printChar('\n');
+        Console.printChar('d');
+        Console.printChar('\n');
 
         // StructA* pntr = new StructA();
 
@@ -73,7 +81,7 @@ namespace TestD {
             Console.printStr(&buffer, read);
         }*/
 
-        Console.printStr("\n> \0",0);
+        // Console.printStr("\n> \0",0);
         // char[32] buff;
         // Console.read(&buff, 32);
         // Console.printStr(&buff, 0);
@@ -82,8 +90,10 @@ namespace TestD {
 
         CharacterDisplay.write(0,0,"EmulatorOS\0");
 
-        wait(testRet());
+        // wait(testRet());
         // funcC();
+
+        asm(":main_loop\nGOTO :main_loop");
     }
 
     public static void funcb(uint32 a) {
@@ -115,6 +125,17 @@ namespace TestD {
             
             Console.printStr("\nTimer\0", 0);
             CharacterDisplay.write(0,23,"Timer\0");
+            return;
+        }
+        if((code & 0xffff_ff00) == 0x8000_0100) { // key pressed
+            uint32 c = code & 0xff;
+            if(c == 10) {
+                Console.printChar('\n');
+            }
+            if(c < 32 || c > 127) {
+                return;
+            }
+            Console.printChar(c);
             return;
         }
         Console.intToHex(code, &str);

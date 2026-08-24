@@ -6,6 +6,7 @@ import javax.swing.JFrame;
 import javax.swing.JTextArea;
 
 import com.peter.emulator.peripherals.CharacterDisplay;
+import com.peter.emulator.peripherals.KeyboardPeripheral;
 
 public class CharacterDisplayFrame extends JFrame {
 
@@ -13,7 +14,7 @@ public class CharacterDisplayFrame extends JFrame {
 
     protected JTextArea textArea;
 
-    public CharacterDisplayFrame(CharacterDisplay peripheral) {
+    public CharacterDisplayFrame(CharacterDisplay peripheral, KeyboardPeripheral keyboardPeripheral) {
         super("Emulator - Character Display");
         this.peripheral = peripheral;
         peripheral.frame = this;
@@ -26,6 +27,11 @@ public class CharacterDisplayFrame extends JFrame {
         updateDisplay();
 
         pack();
+
+        if (keyboardPeripheral != null) {
+            System.out.println("Adding keyboard");
+            textArea.addKeyListener(keyboardPeripheral);
+        }
     }
 
     public void updateDisplay() {
