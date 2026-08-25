@@ -5,6 +5,7 @@
         "endfunction",
         "kernal",
         "LSHIFT",
+        "machinecode",
         "malloc",
         "NAND",
         "nullptr",

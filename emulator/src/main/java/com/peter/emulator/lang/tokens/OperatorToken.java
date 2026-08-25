@@ -136,6 +136,8 @@ public class OperatorToken extends Token {
         BITWISE_AND("&"),
         /** <code>|</code> */
         BITWISE_OR("|"),
+        /** <code>|=</code> */
+        BITWISE_OR_ASSIGN("|="),
         /** <code>&amp;&amp;</code> */
         AND("&&"),
         /** <code>||</code> */
@@ -159,6 +161,7 @@ public class OperatorToken extends Token {
             NOT.addNext('=', NEQ);
             BITWISE_AND.addNext('&', AND);
             BITWISE_OR.addNext('|', OR);
+            BITWISE_OR.addNext('=', BITWISE_OR_ASSIGN);
             ADD.addNext('+', INC);
             ADD.addNext('=', ADD_ASSIGN);
             SUB.addNext('-', DEC);

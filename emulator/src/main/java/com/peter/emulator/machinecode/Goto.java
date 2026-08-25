@@ -1,7 +1,5 @@
 package com.peter.emulator.machinecode;
 
-import java.util.HashMap;
-
 public class Goto extends Instruction {
 
     public final ConditionalOperator condition;
@@ -96,28 +94,25 @@ public class Goto extends Instruction {
     }
 
     public enum Mode {
-        NONE(0b000),
-        PUSH(0b010),
-        POP(0b100),
+        NONE(0b00),
+        PUSH(0b01),
+        POP(0b10),
         ;
 
         public final int id;
 
         private Mode(int id) {
-            this.id = id << 20;
-            setup();
-        }
-
-        protected static HashMap<Integer, Mode> byId;
-
-        private void setup() {
-            if(byId == null)
-                byId = new HashMap<>();
-            byId.put(id, this);
+            this.id = id << 21;
         }
 
         public static Mode fromBytecode(int bytecode) {
-            return byId.getOrDefault(bytecode & (0b00110<<20), NONE);
+            return switch ((bytecode >> 21) & 0b11) {
+                case 0b00 -> NONE;
+                case 0b01 -> PUSH;
+                case 0b10 -> POP;
+            
+                default -> NONE;
+            };
         }
     }
 }

@@ -12,12 +12,15 @@ public class TimerUnit implements MemoryMappedPeripheral {
 
     protected int time;
 
-    protected int[] timers = new int[15];
+    protected final int[] timers = new int[14];
+    protected final int[] timersB = new int[14];
+    protected final int[] modes = new int[14];
+    protected final byte[] modeRaw = new byte[4];
 
     public TimerUnit(int startAddress, CPU cpu) {
         this.startAddress = startAddress;
         this.cpu = cpu;
-        addresses = new int[(1 + timers.length)*4];
+        addresses = new int[(2 + timers.length)*4];
         for (int i = 0; i < addresses.length; i++) {
             addresses[i] = startAddress + i;
         }
@@ -32,7 +35,11 @@ public class TimerUnit implements MemoryMappedPeripheral {
             }
             timers[i]--;
             if (timers[i] == 0) {
-                timers[i] = 0xffff_ffff;
+                if (modes[i] == 0b01) {
+                    timers[i] = timersB[i];
+                } else {
+                    timers[i] = 0xffff_ffff;
+                }
                 cpu.interrupt(INTERRUPT | (i+1));
             }
         }
@@ -48,13 +55,42 @@ public class TimerUnit implements MemoryMappedPeripheral {
     public void onUpdate(int address, byte value) {
         address -= startAddress;
         if (address < 4) { // writing to time field, not allowed
-            System.err.println("write to timer unit time");
-            return;
+            throw MemoryException.Write(address);
         }
         int timerIndex = (address / 4) - 1;
-        if (timerIndex >= timers.length || timerIndex < 0) { // invalid timer index
-            System.err.println("write to timer unit invalid timer");
+        if (timerIndex == timers.length) { // timer mode
+            modeRaw[address % 4] = value;
+            switch (address % 4) {
+                case 0 -> {
+                    // unused first 2 bytes
+                    modes[0] = (value >> 4) & 0b11;
+                    modes[1] = (value >> 2) & 0b11;
+                    modes[2] = value & 0b11;
+                }
+                case 1 -> {
+                    modes[3] = (value >> 6) & 0b11;
+                    modes[4] = (value >> 4) & 0b11;
+                    modes[5] = (value >> 2) & 0b11;
+                    modes[6] = value & 0b11;
+                }
+                case 2 -> {
+                    modes[7] = (value >> 6) & 0b11;
+                    modes[8] = (value >> 4) & 0b11;
+                    modes[9] = (value >> 2) & 0b11;
+                    modes[10] = value & 0b11;
+                }
+                case 3 -> {
+                    modes[11] = (value >> 6) & 0b11;
+                    modes[12] = (value >> 4) & 0b11;
+                    modes[13] = (value >> 2) & 0b11;
+                    // unused last 2 bytes
+                }
+            }
             return;
+        }
+        if (timerIndex >= timers.length || timerIndex < 0) { // invalid timer index
+            System.err.println("write to timer unit invalid timer #"+timerIndex);
+            throw MemoryException.Write(address);
         }
         timers[timerIndex] = switch (address % 4) {
             case 0 -> (timers[timerIndex] & 0x00ff_ffff) | ((value & 0xff) << 24);
@@ -63,6 +99,9 @@ public class TimerUnit implements MemoryMappedPeripheral {
             case 3 -> (timers[timerIndex] & 0xffff_ff00) | (value & 0xff);
             default -> timers[timerIndex];
         };
+        if(modes[timerIndex] != 0) {
+            timersB[timerIndex] = timers[timerIndex];
+        }
     }
 
     @Override
@@ -72,6 +111,9 @@ public class TimerUnit implements MemoryMappedPeripheral {
             return getByte(address, time);
         }
         int timerIndex = (address / 4) - 1;
+        if (timerIndex == timers.length) {
+            return modeRaw[address % 4];
+        }
         if (timerIndex >= timers.length || timerIndex < 0) { // invalid timer index
             System.err.println("read from timer unit invalid timer");
             return 0x0;

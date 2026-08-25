@@ -9,9 +9,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.peter.emulator.machinecode.ConditionalOperator;
-import com.peter.emulator.machinecode.Set;
-import com.peter.emulator.machinecode.Stack;
-import com.peter.emulator.MachineCode.MathOperator;
+import com.peter.emulator.machinecode.SetInstruction;
+import com.peter.emulator.machinecode.StackInstruction;
 import static com.peter.emulator.MachineCode.*;
 import com.peter.emulator.assembly.SymbolFile.FunctionSymbol;
 import com.peter.emulator.assembly.SymbolFile.ValueSymbol;
@@ -20,15 +19,14 @@ import com.peter.emulator.machinecode.Goto;
 import com.peter.emulator.machinecode.Instruction;
 import com.peter.emulator.machinecode.Load;
 import com.peter.emulator.machinecode.MathInstruction;
+import com.peter.emulator.machinecode.MemorySize;
 import com.peter.emulator.machinecode.Reg;
-import com.peter.emulator.machinecode.Store;
+import com.peter.emulator.machinecode.StoreInstruction;
 import com.peter.emulator.machinecode.Syscall;
 import com.peter.emulator.machinecode.Goto.Mode;
-import com.peter.emulator.machinecode.Store.Size;
 
 public class Assembler {
 
-    // private Entry[] data = null;
     private ArrayList<Instruction> instructions = null;
     private int memAddr = 0;
     private int lastNonZeroAddress = 0;
@@ -36,7 +34,6 @@ public class Assembler {
     private final HashMap<String, Define> defines = new HashMap<>();
     private final ArrayList<Define> defineOrder = new ArrayList<>();
     private final ArrayList<Define> defineEmpties = new ArrayList<>();
-    // private final ArrayList<MemSet> memSet = new ArrayList<>();
     protected HashMap<String, Integer> syscallDef = new HashMap<>();
     protected HashMap<String, Integer> syscallMap = new HashMap<>();
 
@@ -447,10 +444,6 @@ public class Assembler {
                                         line.length(), line, source));
                                 continue;
                             }
-                            // int rg = getReg(parts[1]);
-                            // data[addr++] = (Entry.Load(rg));
-                            // int val = getVal(parts[2]);
-                            // data[addr++] = (Entry.Literal(val));
                             add(new TempLoad(Reg.from(parts[1]), getVal(parts[2])));
                         }
                     }
@@ -463,7 +456,6 @@ public class Assembler {
                             continue;
                         }
                         int next = 1;
-                        StoreEntry entry;
                         if (parts[next].equals("MEM")) {
                             next++;
                             if (parts.length < next + 2) {
@@ -473,29 +465,26 @@ public class Assembler {
                                         line.length(), line, source));
                                 continue;
                             }
-                            Store.Size size = Size.WORD;
+                            MemorySize size = MemorySize.WORD;
                             switch (parts[next]) {
                                 case "SHORT" -> {
-                                    size = Size.SHORT;
+                                    size = MemorySize.SHORT;
                                     next++;
                                 }
                                 case "BYTE" -> {
-                                    size = Size.BYTE;
+                                    size = MemorySize.BYTE;
                                     next++;
                                 }
                             }
                             int rs = getReg(parts[next++]);
                             int rd = getReg(parts[next++]);
-                            entry = new StoreEntry(rs, size.id, STORE_SOURCE_MEM, rd);
-                            Store instruction = add(Store.CopyMem(size, Reg.from(rs), Reg.from(rd)));
+                            StoreInstruction instruction = add(StoreInstruction.CopyMem(size, Reg.from(rs), Reg.from(rd)));
                             if (parts.length > next) {
                                 switch (parts[next++]) {
                                     case "INC_RS" -> {
-                                        entry.incRG();
                                         instruction.withIncRG();
                                     }
                                     case "INC_RD" -> {
-                                        entry.incRA();
                                         instruction.withIncRA();
                                     }
                                 }
@@ -503,11 +492,9 @@ public class Assembler {
                             if (parts.length > next) {
                                 switch (parts[next++]) {
                                     case "INC_RS" -> {
-                                        entry.incRG();
                                         instruction.withIncRG();
                                     }
                                     case "INC_RD" -> {
-                                        entry.incRA();
                                         instruction.withIncRA();
                                     }
                                 }
@@ -520,10 +507,8 @@ public class Assembler {
                             }
                             int rs = getReg(parts[next++]);
                             int rd = getReg(parts[next++]);
-                            entry = new StoreEntry(rs, 0x0, STORE_SOURCE_REG_REG, rd);
-                            add(Store.CopyReg(Reg.from(rs), Reg.from(rd)));
+                            add(StoreInstruction.CopyReg(Reg.from(rs), Reg.from(rd)));
                         }
-                        // data[addr++] = entry;
                     }
                     case "STORE" -> {
                         if (parts.length < 2) {
@@ -533,19 +518,19 @@ public class Assembler {
                                     line.length(), line, source));
                             continue;
                         }
-                        Size size = Size.WORD;
+                        MemorySize size = MemorySize.WORD;
                         int next = 1;
                         switch (parts[next]) {
                             case "SHORT" -> {
-                                size = Size.SHORT;
+                                size = MemorySize.SHORT;
                                 next++;
                             }
                             case "BYTE" -> {
-                                size = Size.BYTE;
+                                size = MemorySize.BYTE;
                                 next++;
                             }
                         }
-                        Store store;
+                        StoreInstruction store;
                         if (parts[next].equals("VAL")) {
                             if (parts.length < next + 3) {
                                 errors.add(new AssemblerError(
@@ -576,7 +561,7 @@ public class Assembler {
                             }
                             int rg = getReg(parts[next++]);
                             int ra = getReg(parts[next++]);
-                            store = add(Store.StoreReg(size, Reg.from(rg), Reg.from(ra)));
+                            store = add(StoreInstruction.StoreReg(size, Reg.from(rg), Reg.from(ra)));
                         }
                         if (parts.length > next && parts[next].equals("INC_RA")) {
                             // entry.incRA();
@@ -792,23 +777,23 @@ public class Assembler {
                             case "NEQ" -> ConditionalOperator.NEQ_ZERO;
                             case "LT" -> ConditionalOperator.LT_ZERO;
                             case "GEQ" -> ConditionalOperator.GEQ_ZERO;
-                            default -> ConditionalOperator.UNKNOWN;
+                            default -> ConditionalOperator.UNUSED_F;
                         };
-                        if (cond == ConditionalOperator.UNKNOWN) {
+                        if (cond == ConditionalOperator.UNUSED_F) {
                             errors.add(new AssemblerError(
                                     "Invalid set instruction operator: SET (FORCED) <EQ|LEQ|GEQ|NEQ|LT|GEQ> [rg] [rd]",
                                     lineN, line.length(), line, source));
                             continue;
                         }
-                        add(new Set(cond, rg, rd, forced));
+                        add(new SetInstruction(cond, rg, rd, forced));
                     }
                     case "STACK" -> {
                         if (parts.length == 2) {
                             if (parts[1].equals("INC")) {
-                                add(Stack.Inc(1));
+                                add(StackInstruction.Inc(1));
                                 continue;
                             } else if (parts[1].equals("DEC")) {
-                                add(Stack.Dec(1));
+                                add(StackInstruction.Dec(1));
                                 continue;
                             }
                         }
@@ -820,14 +805,14 @@ public class Assembler {
                             continue;
                         }
                         if (parts[1].equals("INC")) {
-                            add(Stack.Inc(getVal(parts[2]).value));
+                            add(StackInstruction.Inc(getVal(parts[2]).value));
                         } else if (parts[1].equals("DEC")) {
-                            add(Stack.Dec(getVal(parts[2]).value));
+                            add(StackInstruction.Dec(getVal(parts[2]).value));
                         } else {
                             if (parts[1].equals("PUSH")) {
-                                add(Stack.Push(Reg.from(parts[2])));
+                                add(StackInstruction.Push(Reg.from(parts[2])));
                             } else {
-                                add(Stack.Pop(Reg.from(parts[2])));
+                                add(StackInstruction.Pop(Reg.from(parts[2])));
                             }
                         }
                     }
@@ -1122,251 +1107,6 @@ public class Assembler {
         return new Define("<literal>", v);
     }
     
-    private static class Entry {
-
-        public int instruction;
-        public boolean literal;
-
-        private Entry(int instruction) {
-            this.instruction = instruction;
-        }
-
-        @SuppressWarnings("unused")
-        public String toASMString() {
-            if (literal) {
-                return Integer.toHexString(instruction);
-            }
-            return translate(instruction);
-        }
-
-        public static Entry Literal(int val) {
-            Entry e = new Entry(val);
-            e.literal = true;
-            return e;
-        }
-
-        public static Entry Direct(int instruction) {
-            return new Entry(instruction);
-        }
-
-        public static Entry Load(int rg) {
-            return new Entry(LOAD | (rg << 16));
-        }
-
-        public static Entry LoadMem(int rg, int ra) {
-            return new Entry(LOAD | (rg << 16) | LOAD_MEM | ra);
-        }
-        public static Entry LoadMemShort(int rg, int ra) {
-            return new Entry(LOAD | (rg << 16) | LOAD_MEM_SHORT | ra);
-        }
-        public static Entry LoadMemByte(int rg, int ra) {
-            return new Entry(LOAD | (rg << 16) | LOAD_MEM_BYTE | ra);
-        }
-
-        public static Entry Math(MathOperator op, int rd, int ra, int rb) {
-            return new Entry(MATH | op.value | ((rd & 0xf) << 16) | (ra << 8) | rb);
-        }
-
-        public static Entry MathInc(int rd, int inc) {
-            if (inc < 0) {
-                inc *= -1;
-                inc &= 0x7fff;
-                inc |= 0x8000;
-            } else {
-                inc -= 1;
-                inc &= 0x7fff;
-            }
-            return new Entry(MATH | MathOperator.INC.value | ((rd & 0xf) << 16) | inc);
-        }
-        
-        public static Entry Stack(boolean push, int rg) {
-            return new Entry(STACK | (push ? 0x0 : STACK_POP) | rg);
-        }
-
-        public static Entry StackInc(int v) {
-            return new Entry(STACK | STACK_INC | (v-1));
-        }
-
-        public static Entry StackDec(int v) {
-            return new Entry(STACK | STACK_DEC | (v-1));
-        }
-
-        public static Entry SysCall(int function) {
-            return new Entry(SYSCALL | (function & MASK_SYSCALL_FUNCTION));
-        }
-
-        public static Entry SysReturn() {
-            return new Entry(SYSCALL | SYSCALL_RETURN);
-        }
-
-        public static Entry SysGoto(int rg) {
-            return new Entry(SYSCALL | SYSCALL_GOTO | (rg & MASK_SYSCALL_RG));
-        }
-
-        public static Entry Interrupt(int op, int rg) {
-            return new Entry(SYSCALL | SYSCALL_INTERRUPT | op | (rg & MASK_SYSCALL_RG));
-        }
-
-        public static Entry Set(boolean forced, ConditionalOperator op, int rg, int rd) {
-            return new Entry(SET | (forced ? SET_FORCED : 0x00) | op.id | (rg << 8) | rd);
-        }
-    }
-
-    private static class StoreEntry extends Entry {
-
-        public StoreEntry(int rg, int size, int source, int ra) {
-            super(STORE | (rg << 16) | size | source | ra);
-        }
-
-        public StoreEntry incRG() {
-            instruction |= MASK_STORE_FLAG_INC_RG;
-            return this;
-        }
-        public StoreEntry incRA() {
-            instruction |= MASK_STORE_FLAG_INC_RA;
-            return this;
-        }
-    }
-
-    private static class GotoEntry extends Entry {
-
-        public String target;
-        public Entry next;
-
-        private GotoEntry(int instruction, String target, Entry next) {
-            super(instruction);
-            this.target = target;
-            this.next = next;
-        }
-
-        public static GotoEntry Unconditional(boolean relative, int ra, String target, Entry next) {
-            return new GotoEntry(GOTO | (relative ? MASK_GOTO_REL : 0) | (ra << 8), target, next);
-        }
-
-        public static GotoEntry UnconditionalPush(boolean relative, int ra, String target, Entry next) {
-            return new GotoEntry(GOTO | MASK_GOTO_PUSH | (relative ? MASK_GOTO_REL : 0) | (ra<<8), target, next);
-        }
-
-        public static GotoEntry UnconditionalPop() {
-            return new GotoEntry(GOTO | MASK_GOTO_POP, "", null);
-        }
-
-        public static GotoEntry Conditional(boolean relative, ConditionalOperator op, int ra, int ro, String target, Entry next) {
-            return new GotoEntry(GOTO | (relative ? MASK_GOTO_REL : 0) | op.id | (ra << 8) | ro, target, next);
-        }
-        public static GotoEntry ConditionalPush(boolean relative, ConditionalOperator op, int ra, int ro, String target, Entry next) {
-            return new GotoEntry(GOTO | MASK_GOTO_PUSH | (relative ? MASK_GOTO_REL : 0) | op.id | (ra << 8) | ro, target, next);
-        }
-        public static GotoEntry ConditionalPop(ConditionalOperator op, int ro) {
-            return new GotoEntry(GOTO | MASK_GOTO_POP | op.id | ro, "", null);
-        }
-
-        // public static GotoEntry Zero(boolean relative, int ra, int ro, String target, Entry next) {
-        //     return new GotoEntry(GOTO | (relative ? GOTO_REL_EQ_ZERO : GOTO_EQ_ZERO) | (ra << 8) | ro, target, next);
-        // }
-
-        // public static GotoEntry ZeroPush(boolean relative, int ra, int ro, String target, Entry next) {
-        //     return new GotoEntry(GOTO | (relative ? GOTO_PUSH_REL_EQ_ZERO : GOTO_PUSH_EQ_ZERO) | (ra << 8) | ro,
-        //             target, next);
-        // }
-
-        // public static GotoEntry ZeroPop(int ro) {
-        //     return new GotoEntry(GOTO | GOTO_POP_EQ_ZERO | ro, "", null);
-        // }
-
-        // public static GotoEntry LessEqual(boolean relative, int ra, int ro, String target, Entry next) {
-        //     return new GotoEntry(GOTO | (relative ? GOTO_REL_LEQ_ZERO : GOTO_LEQ_ZERO) | (ra << 8) | ro, target, next);
-        // }
-
-        // public static GotoEntry LessEqualPush(boolean relative, int ra, int ro, String target, Entry next) {
-        //     return new GotoEntry(GOTO | (relative ? GOTO_PUSH_REL_LEQ_ZERO : GOTO_PUSH_LEQ_ZERO) | (ra << 8) | ro,
-        //             target, next);
-        // }
-
-        // public static GotoEntry LessEqualPop(int ro) {
-        //     return new GotoEntry(GOTO | GOTO_POP_LEQ_ZERO | ro, "", null);
-        // }
-
-        // public static GotoEntry Greater(boolean relative, int ra, int ro, String target, Entry next) {
-        //     return new GotoEntry(GOTO | (relative ? GOTO_REL_GT_ZERO : GOTO_GT_ZERO) | (ra << 8) | ro, target, next);
-        // }
-
-        // public static GotoEntry GreaterPush(boolean relative, int ra, int ro, String target, Entry next) {
-        //     return new GotoEntry(GOTO | (relative ? GOTO_PUSH_REL_GT_ZERO : GOTO_PUSH_GT_ZERO) | (ra << 8) | ro,
-        //             target, next);
-        // }
-
-        // public static GotoEntry GreaterPop(int ro) {
-        //     return new GotoEntry(GOTO | GOTO_POP_GT_ZERO | ro, "", null);
-        // }
-
-        // public static GotoEntry NotZero(boolean relative, int ra, int ro, String target, Entry next) {
-        //     return new GotoEntry(GOTO | (relative ? GOTO_REL_NOT_ZERO : GOTO_NOT_ZERO) | (ra << 8) | ro, target, next);
-        // }
-
-        // public static GotoEntry NotZeroPush(boolean relative, int ra, int ro, String target, Entry next) {
-        //     return new GotoEntry(GOTO | (relative ? GOTO_PUSH_REL_NOT_ZERO : GOTO_PUSH_NOT_ZERO) | (ra << 8) | ro,
-        //             target, next);
-        // }
-
-        // public static GotoEntry NotZeroPop(int ro) {
-        //     return new GotoEntry(GOTO | GOTO_POP_NOT_ZERO | ro, "", null);
-        // }
-
-        public void setOffset(int offset) {
-            next.instruction = offset;
-            // instruction |= uint32ToInt8(offset) << 8;
-        }
-
-    }
-
-    private static class MemSet {
-        public final String name;
-        public final int[] values;
-
-        public MemSet(String name, int[] values) {
-            this.name = name;
-            this.values = values;
-        }
-
-        public MemSet(String name, byte[] bytes) {
-            this.name = name;
-            // bytes = values;
-            values = new int[Math.ceilDiv(bytes.length, 4)];
-            for (int i = 0; i < bytes.length; i += 4) {
-                int v = ((int) bytes[i]) << 24;
-                if(i+1 < bytes.length)
-                    v |= ((int) bytes[i+1]) << 16;
-                if(i+2 < bytes.length)
-                    v |= ((int) bytes[i+2]) << 8;
-                if(i+3 < bytes.length)
-                    v |= (int) bytes[i + 3];
-                values[i / 4] = v;
-            }
-        }
-
-        public MemSet(String name, String str) {
-            this.name = name;
-            int len = str.length();
-            // values = new int[len];
-            // for (int i = 0; i < len; i++) {
-            //     values[i] = str.charAt(i);
-            // }
-            
-            values = new int[Math.ceilDiv(len, 4)];
-            for (int i = 0; i < str.length(); i += 4) {
-                int v = ((int) str.charAt(i)) << 24;
-                if(i+1 < len)
-                    v |= ((int) str.charAt(i+1)) << 16;
-                if(i+2 < len)
-                    v |= ((int) str.charAt(i+2)) << 8;
-                if(i+3 < len)
-                    v |= (int) str.charAt(i + 3);
-                values[i / 4] = v;
-            }
-        }
-    }
-
     public java.util.Set<java.util.Map.Entry<String, Integer>> getSyscallMapping() {
         return syscallMap.entrySet();
     }

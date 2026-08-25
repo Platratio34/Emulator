@@ -48,18 +48,6 @@ public class MathInstruction extends Instruction {
         rotate = false;
     }
 
-    // public static Math Literal(int rg, int value) {
-    //     return new Math(Operation.LITERAL, rg, value);
-    // }
-    // public static Math MemWord(int rg, int ra) {
-    //     return new Math(Operation.MEM_WORD, rg, ra);
-    // }
-    // public static Math MemShort(int rg, int ra) {
-    //     return new Math(Operation.MEM_SHORT, rg, ra);
-    // }
-    // public static Math MemByte(int rg, int ra) {
-    //     return new Math(Operation.MEM_BYTE, rg, ra);
-    // }
     public static MathInstruction Add(Reg rd, Reg ra, Reg rb) {
         return new MathInstruction(Operation.ADD, rd, ra, rb);
     }
@@ -168,6 +156,7 @@ public class MathInstruction extends Instruction {
     }
 
     public enum Operation {
+        NONE(0x0),
         ADD(0x1),
         SUB(0x2),
         INC(0x3),
@@ -181,7 +170,8 @@ public class MathInstruction extends Instruction {
         RSHIFT(0xb),
         MUL(0xc),
         DIV(0xd),
-        UNKNOWN(0xf);
+        UNUSED_E(0xe),
+        UNUSED_F(0xf);
         ;
 
         public final int id;
@@ -191,16 +181,17 @@ public class MathInstruction extends Instruction {
             setup();
         }
 
-        protected static HashMap<Integer, Operation> byId;
+        protected static Operation[] byId;
 
         private void setup() {
-            if(byId == null)
-                byId = new HashMap<>();
-            byId.put(id, this);
+            if (byId == null) {
+                byId = new Operation[16];
+            }
+            byId[id >> 20] = this;
         }
 
         public static Operation fromBytecode(int bytecode) {
-            return byId.getOrDefault(bytecode & 0x00f0_0000, UNKNOWN);
+            return byId[(bytecode >> 20) & 0xf];
         }
     }
 }

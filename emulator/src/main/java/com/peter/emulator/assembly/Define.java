@@ -2,8 +2,6 @@ package com.peter.emulator.assembly;
 
 import java.util.ArrayList;
 
-import com.peter.emulator.machinecode.Instruction;
-
 public class Define {
 
     public String name;

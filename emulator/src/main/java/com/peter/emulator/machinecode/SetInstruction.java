@@ -1,6 +1,6 @@
 package com.peter.emulator.machinecode;
 
-public class Set extends Instruction {
+public class SetInstruction extends Instruction {
 
     public final ConditionalOperator condition;
     public final Reg rg;
@@ -9,7 +9,7 @@ public class Set extends Instruction {
 
     public static int FORCE_MASK = 0x0010_0000;
 
-    public Set(ConditionalOperator condition, Reg rg, Reg rd, boolean forced) {
+    public SetInstruction(ConditionalOperator condition, Reg rg, Reg rd, boolean forced) {
         super(Operator.SET);
         this.condition = condition;
         this.rg = rg;
@@ -18,18 +18,18 @@ public class Set extends Instruction {
     }
     
 
-    public static Set NonForced(ConditionalOperator condition, Reg rg, Reg rd) {
-        return new Set(condition, rg, rd, false);
+    public static SetInstruction NonForced(ConditionalOperator condition, Reg rg, Reg rd) {
+        return new SetInstruction(condition, rg, rd, false);
     }
-    public static Set Forced(ConditionalOperator condition, Reg rg, Reg rd) {
-        return new Set(condition, rg, rd, true);
+    public static SetInstruction Forced(ConditionalOperator condition, Reg rg, Reg rd) {
+        return new SetInstruction(condition, rg, rd, true);
     }
 
-    public static Set fromBytecode(int bytecode, int next) {
+    public static SetInstruction fromBytecode(int bytecode, int next) {
         if ((bytecode & 0xff00_0000) != Operator.SET.id) {
             return null;
         }
-        return new Set(ConditionalOperator.fromBytecode(bytecode), Reg.from(bytecode >> 8), Reg.from(bytecode), (bytecode & FORCE_MASK) != 0);
+        return new SetInstruction(ConditionalOperator.fromBytecode(bytecode), Reg.from(bytecode >> 8), Reg.from(bytecode), (bytecode & FORCE_MASK) != 0);
     }
 
     @Override

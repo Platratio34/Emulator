@@ -3,6 +3,8 @@ package com.peter.emulator.machinecode;
 import java.util.HashMap;
 
 public enum Reg {
+    UNKNOWN(0xd0,"UNKNOWN"),
+
     R0(0x00, "r0"),
     R1(0x01, "r1"),
     R2(0x02, "r2"),
@@ -58,8 +60,6 @@ public enum Reg {
             
     CPU_ID(0xfe, "rID"),
     PRIVILEGE(0xff, "rPM"),
-
-    UNKNOWN(0xd0,"UNKNOWN")
     ;
 
     public final int code;
@@ -71,20 +71,22 @@ public enum Reg {
         setup();
     }
 
-    private static HashMap<Integer, Reg> byCode;
+    private static Reg[] byCode;
     private static HashMap<String, Reg> byString;
 
     private void setup() {
-        if (byCode == null)
-            byCode = new HashMap<>();
-        byCode.put(code, this);
+        if (byCode == null) {
+            byCode = new Reg[256];
+        }
+        byCode[code] = this;
         if (byString == null)
             byString = new HashMap<>();
         byString.put(string, this);
     }
     
     public static Reg from(int code) {
-        return byCode.getOrDefault(code & 0xff, UNKNOWN);
+        Reg r = byCode[code & 0xff];
+        return r != null ? r : UNKNOWN;
     }
     public static Reg from(String code) {
         return byString.getOrDefault(code, UNKNOWN);

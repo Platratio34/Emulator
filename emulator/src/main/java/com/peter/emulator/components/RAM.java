@@ -1,10 +1,5 @@
 package com.peter.emulator.components;
 
-import java.util.HashMap;
-
-import com.peter.emulator.machinecode.Instruction;
-import com.peter.emulator.peripherals.MemoryMappedPeripheral;
-
 public class RAM implements BusComponent {
 
     public final int start;

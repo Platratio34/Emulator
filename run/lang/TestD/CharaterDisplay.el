@@ -25,9 +25,11 @@ namespace CharacterDisplay {
         if(*Peripheral.RSP_STATUS != 0x01) {
             return;
         }
+        asm("NO_OP\n#breakpoint");
         width = Peripheral.RSP_DATA[10];
         height = Peripheral.RSP_DATA[11];
         uint32[2] msg3 = {0x01, &charBuffer};
+        asm("NO_OP\n#breakpoint");
         Peripheral.command(deviceId, 2, &msg3);
     }
 

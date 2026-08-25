@@ -86,6 +86,7 @@ namespace TestD {
         // Console.read(&buff, 32);
         // Console.printStr(&buff, 0);
 
+        Peripheral.TIMERS[15] |= 0b01 << 24;
         Peripheral.TIMERS[1] = 1000;
 
         CharacterDisplay.write(0,0,"EmulatorOS\0");
@@ -117,7 +118,7 @@ namespace TestD {
         if((code & 0xffff_ff00) == 0x8000_0200) { // timer
             uint32 i = code & 0xff;
             if(i == 1) {
-                Peripheral.TIMERS[1] = 1000;
+                // Peripheral.TIMERS[1] = 1000;
                 return;
             }
             

@@ -1,6 +1,7 @@
 package com.peter.emulator.assembly;
 
 import com.peter.emulator.machinecode.Instruction;
+import com.peter.emulator.machinecode.Operator;
 
 public class LiteralInstruction extends Instruction {
 

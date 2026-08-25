@@ -2,61 +2,61 @@ package com.peter.emulator.machinecode;
 
 import java.util.HashMap;
 
-public class Stack extends Instruction {
+public class StackInstruction extends Instruction {
 
     public final Operation operation;
     public final Reg rg;
 
-    protected Stack(Operation operation, Reg rg) {
+    protected StackInstruction(Operation operation, Reg rg) {
         super(Operator.STACK);
         this.operation = operation;
         this.rg = rg;
     }
-    protected Stack(Operation operation, int data) {
+    protected StackInstruction(Operation operation, int data) {
         super(Operator.STACK);
         this.operation = operation;
         this.rg = Reg.R0;
         this.data = data;
     }
 
-    public static Stack Inc(int amt) {
+    public static StackInstruction Inc(int amt) {
         if(amt == 0) {
             throw new IllegalArgumentException("Amount mut bet non-zero");
         }
         if (amt < 0) {
             return Dec(amt);
         }
-        return new Stack(Operation.INC, amt - 1);
+        return new StackInstruction(Operation.INC, amt - 1);
     }
 
-    public static Stack Dec(int amt) {
+    public static StackInstruction Dec(int amt) {
         if (amt == 0) {
             throw new IllegalArgumentException("Amount mut bet non-zero");
         }
         if (amt < 0) {
             return Inc(amt);
         }
-        return new Stack(Operation.DEC, amt - 1);
+        return new StackInstruction(Operation.DEC, amt - 1);
     }
     
-    public static Stack Push(Reg rg) {
-        return new Stack(Operation.PUSH, rg);
+    public static StackInstruction Push(Reg rg) {
+        return new StackInstruction(Operation.PUSH, rg);
     }
-    public static Stack Pop(Reg rg) {
-        return new Stack(Operation.POP, rg);
+    public static StackInstruction Pop(Reg rg) {
+        return new StackInstruction(Operation.POP, rg);
     }
 
-    public static Stack fromBytecode(int bytecode, int next) {
+    public static StackInstruction fromBytecode(int bytecode, int next) {
         if((bytecode & 0xff00_0000) != Operator.STACK.id) {
             return null;
         }
         Operation operation = Operation.fromBytecode(bytecode);
         switch (operation) {
             case PUSH, POP -> {
-                return new Stack(operation, Reg.from(bytecode));
+                return new StackInstruction(operation, Reg.from(bytecode));
             }
-            case DEC, INC, UNKNOWN -> {
-                return new Stack(operation, bytecode & 0xffff);
+            case DEC, INC -> {
+                return new StackInstruction(operation, bytecode & 0xffff);
             }
         }
         return null;
@@ -85,31 +85,27 @@ public class Stack extends Instruction {
     }
 
     public enum Operation {
-        UNKNOWN(0x0),
-                
-        PUSH(0x00),
-        POP(0x01),
-        INC(0x02),
-        DEC(0x03)
+        PUSH(0b00),
+        POP(0b01),
+        INC(0b10),
+        DEC(0b11)
         ;
 
         public final int id;
 
         private Operation(int id) {
             this.id = id << 16;
-            setup();
-        }
-
-        protected static HashMap<Integer, Operation> byId;
-
-        private void setup() {
-            if(byId == null)
-                byId = new HashMap<>();
-            byId.put(id, this);
         }
 
         public static Operation fromBytecode(int bytecode) {
-            return byId.getOrDefault(bytecode & 0x00ff_0000, UNKNOWN);
+            return switch((bytecode >> 16) & 0b11) {
+                case 0b00 -> PUSH;
+                case 0b01 -> POP;
+                case 0b10 -> INC;
+                case 0b11 -> DEC;
+                
+                default -> PUSH;
+            };
         }
     }
 }

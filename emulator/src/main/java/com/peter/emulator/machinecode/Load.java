@@ -1,7 +1,5 @@
 package com.peter.emulator.machinecode;
 
-import java.util.HashMap;
-
 public class Load extends Instruction {
 
     public final Mode mode;
@@ -44,7 +42,7 @@ public class Load extends Instruction {
         Reg ra = Reg.from(bytecode);
         return switch(Mode.fromBytecode(bytecode)) {
             case LITERAL -> Literal(rg, next);
-            case MEM_WORD, UNKNOWN -> MemWord(rg, ra);
+            case MEM_WORD -> MemWord(rg, ra);
             case MEM_SHORT -> MemShort(rg, ra);
             case MEM_BYTE -> MemByte(rg, ra);
         };
@@ -77,12 +75,10 @@ public class Load extends Instruction {
     }
 
     public enum Mode {
-        UNKNOWN(0x00),
-                
-        LITERAL(0x00),
-        MEM_WORD(0x01),
-        MEM_SHORT(0x02),
-        MEM_BYTE(0x03)
+        LITERAL(0b00),
+        MEM_WORD(0b01),
+        MEM_SHORT(0b10),
+        MEM_BYTE(0b11)
         ;
 
         public final int id;
@@ -92,16 +88,17 @@ public class Load extends Instruction {
             setup();
         }
 
-        protected static HashMap<Integer, Mode> byId;
+        protected static Mode[] byId;
 
         private void setup() {
-            if(byId == null)
-                byId = new HashMap<>();
-            byId.put(id, this);
+            if (byId == null) {
+                byId = new Mode[4];
+            }
+            byId[id >> 8] = this;
         }
 
         public static Mode fromBytecode(int bytecode) {
-            return byId.getOrDefault(bytecode & 0x0000_0300, UNKNOWN);
+            return byId[(bytecode >> 8) & 0b11];
         }
     }
 }

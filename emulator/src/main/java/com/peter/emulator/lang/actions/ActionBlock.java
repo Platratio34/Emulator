@@ -417,7 +417,7 @@ public class ActionBlock extends ComplexAction {
                     wI++;
                     tkn = tokens.get(wI);
 
-                    if (tkn instanceof OperatorToken ot && (ot.type == OperatorToken.Type.ASSIGN || ot.type == OperatorToken.Type.ADD_ASSIGN || ot.type == OperatorToken.Type.SUB_ASSIGN
+                    if (tkn instanceof OperatorToken ot && (ot.type == OperatorToken.Type.ASSIGN || ot.type == OperatorToken.Type.ADD_ASSIGN || ot.type == OperatorToken.Type.SUB_ASSIGN || ot.type == OperatorToken.Type.BITWISE_OR_ASSIGN
                             || ot.type == OperatorToken.Type.INC || ot.type == OperatorToken.Type.DEC)) {
                         scope.addSymbol(ELSymbol.Type.OPERATOR, ot.span());
                         Span actionSpan = tkn.span();
@@ -587,6 +587,11 @@ public class ActionBlock extends ComplexAction {
                             addFind(r2);
                             actions.add(new DirectAction("LOAD MEM%s %s %s", size, r2, rT));
                             actions.add(new DirectAction("SUB %s %s %s", r, r2, r));
+                        } else if (ot.type == OperatorToken.Type.BITWISE_OR_ASSIGN) {
+                            Register r2 = newRegister();
+                            addFind(r2);
+                            actions.add(new DirectAction("LOAD MEM%s %s %s", size, r2, rT));
+                            actions.add(new DirectAction("OR %s %s %s", r, r2, r));
                         }
                         actions.add(assignAction);
                         // actions.add(new DirectAction("STORE %s %s", r, rT));

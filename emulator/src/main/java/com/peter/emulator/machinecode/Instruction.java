@@ -1,7 +1,6 @@
 package com.peter.emulator.machinecode;
 
 import java.util.HashMap;
-import java.util.function.BiFunction;
 
 public class Instruction {
 
@@ -74,53 +73,6 @@ public class Instruction {
         return new Instruction(Operator.NO_OP, 0x0);
     }
 
-    public static enum Operator {
-        NO_OP(0x00, Generic::fromBytecode),
-        LOAD(0x01, Load::fromBytecode),
-        STORE(0x02, Store::fromBytecode),
-
-        MATH(0x04, MathInstruction::fromBytecode),
-        GOTO(0x05, Goto::fromBytecode),
-        SET(0x06, Set::fromBytecode),
-
-        STACK(0x10, Stack::fromBytecode),
-        SYSCALL(0x11, Syscall::fromBytecode),
-
-        HALT(0xff, Generic::fromBytecode),
-
-        UNKNOWN(-1, null);
-
-        public final int id;
-        public final BiFunction<Integer, Integer, Instruction> supplier;
-
-        private Operator(int id, BiFunction<Integer, Integer, Instruction> supplier) {
-            if (id == -1) {
-                this.id = 0xffff_ffff;
-                this.supplier = Unknown::fromBytecode;
-                setup();
-                return;
-            }
-            this.id = id << 24;
-            this.supplier = supplier;
-
-            setup();
-        }
-
-        protected static HashMap<Integer, Operator> byId;
-
-        private void setup() {
-            if (byId == null) {
-                byId = new HashMap<>();
-            }
-            byId.put(id, this);
-        }
-
-        public static Operator fromBytecode(int bytecode) {
-            // System.out.println(toHexLead(bytecode & 0xff00_0000));
-            return byId.getOrDefault(bytecode & 0xff00_0000, UNKNOWN);
-        }
-    }
-    
     public static String toHex(int num) {
         String str = String.format("%08x", num);
         return str.substring(0, 4) + "_" + str.substring(4);

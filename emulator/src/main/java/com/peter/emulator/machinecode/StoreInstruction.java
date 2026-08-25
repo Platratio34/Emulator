@@ -1,10 +1,8 @@
 package com.peter.emulator.machinecode;
 
-import java.util.HashMap;
+public class StoreInstruction extends Instruction {
 
-public class Store extends Instruction {
-
-    public final Size size;
+    public final MemorySize size;
     public final Source source;
     
     public final Reg rg;
@@ -16,14 +14,14 @@ public class Store extends Instruction {
     public static final int INC_RG_FLAG = 0b1000_0000 << 8;
     public static final int INC_RA_FLAG = 0b0100_0000 << 8;
 
-    protected Store(Size size, Source source, Reg rg, Reg ra) {
+    protected StoreInstruction(MemorySize size, Source source, Reg rg, Reg ra) {
         super(Operator.STORE);
         this.size = size;
         this.source = source;
         this.rg = rg;
         this.ra = ra;
     }
-    protected Store(Size size, int value, Reg ra) {
+    protected StoreInstruction(MemorySize size, int value, Reg ra) {
         super(Operator.STORE);
         this.size = size;
         this.source = Source.VAL;
@@ -31,7 +29,7 @@ public class Store extends Instruction {
         this.rg = Reg.R0;
         this.ra = ra;
     }
-    protected Store(Size size, Source source, Reg rg, Reg ra, boolean incRG, boolean incRA) {
+    protected StoreInstruction(MemorySize size, Source source, Reg rg, Reg ra, boolean incRG, boolean incRA) {
         super(Operator.STORE);
         this.size = size;
         this.source = source;
@@ -40,7 +38,7 @@ public class Store extends Instruction {
         this.incRG = incRG;
         this.incRA = incRA;
     }
-    protected Store(Size size, int value, Reg ra, boolean incRG, boolean incRA) {
+    protected StoreInstruction(MemorySize size, int value, Reg ra, boolean incRG, boolean incRA) {
         super(Operator.STORE);
         this.size = size;
         this.source = Source.VAL;
@@ -51,59 +49,46 @@ public class Store extends Instruction {
         this.incRA = incRA;
     }
 
-    public Store withIncRG() {
+    public StoreInstruction withIncRG() {
         incRG = true;
         return this;
     }
-    public Store withIncRA() {
+    public StoreInstruction withIncRA() {
         incRA = true;
         return this;
     }
 
-    public static Store StoreReg(Size size, Reg rg, Reg ra) {
-        return new Store(size, Source.REG, rg, ra);
+    public static StoreInstruction StoreReg(MemorySize size, Reg rg, Reg ra) {
+        return new StoreInstruction(size, Source.REG, rg, ra);
     }
-    public static Store StoreVal(Size size, int val, Reg ra) {
-        return new Store(size, val, ra);
-    }
-
-    public static Store CopyReg(Reg rs, Reg rd) {
-        return new Store(Size.WORD, Source.REG_REG, rs, rd);
-    }
-    public static Store CopyMem(Size size, Reg rs, Reg rd) {
-        return new Store(size, Source.MEM, rs, rd);
+    public static StoreInstruction StoreVal(MemorySize size, int val, Reg ra) {
+        return new StoreInstruction(size, val, ra);
     }
 
-    // public static Store Literal(int rg, int value) {
-    //     return new Store(Mode.LITERAL, rg, value);
-    // }
-    // public static Store MemWord(int rg, int ra) {
-    //     return new Store(Mode.MEM_WORD, rg, ra);
-    // }
-    // public static Store MemShort(int rg, int ra) {
-    //     return new Store(Mode.MEM_SHORT, rg, ra);
-    // }
-    // public static Store MemByte(int rg, int ra) {
-    //     return new Store(Mode.MEM_BYTE, rg, ra);
-    // }
+    public static StoreInstruction CopyReg(Reg rs, Reg rd) {
+        return new StoreInstruction(MemorySize.WORD, Source.REG_REG, rs, rd);
+    }
+    public static StoreInstruction CopyMem(MemorySize size, Reg rs, Reg rd) {
+        return new StoreInstruction(size, Source.MEM, rs, rd);
+    }
 
-    public static Store fromBytecode(int bytecode, int next) {
+    public static StoreInstruction fromBytecode(int bytecode, int next) {
         if((bytecode & 0xff00_0000) != Operator.STORE.id) {
             return null;
         }
-        Size size = Size.fromBytecode(bytecode);
+        MemorySize size = MemorySize.fromBytecode(bytecode >> 8);
         Source source = Source.fromBytecode(bytecode);
         boolean incRG = (bytecode & INC_RG_FLAG) != 0;
         boolean incRA = (bytecode & INC_RA_FLAG) != 0;
         if (source == Source.VAL) {
-            return new Store(size, next, Reg.from(bytecode), incRG, incRA);
+            return new StoreInstruction(size, next, Reg.from(bytecode), incRG, incRA);
         }
-        return new Store(size, source, Reg.from(bytecode >> 16), Reg.from(bytecode), incRG, incRA);
+        return new StoreInstruction(size, source, Reg.from(bytecode >> 16), Reg.from(bytecode), incRG, incRA);
     }
 
     @Override
     public int getBytecode() {
-        return op.id | (rg.code << 16) | (incRG ? INC_RG_FLAG : 0) | (incRA ? INC_RA_FLAG : 0) | source.id | size.id | ra.code;
+        return op.id | (rg.code << 16) | (incRG ? INC_RG_FLAG : 0) | (incRA ? INC_RA_FLAG : 0) | source.id | (size.id << 8) | ra.code;
     }
 
     @Override
@@ -139,32 +124,6 @@ public class Store extends Instruction {
         return out;
     }
 
-    public enum Size {
-        WORD(0b00),
-        SHORT(0b01),
-        BYTE(0b10)
-        ;
-
-        public final int id;
-
-        private Size(int id) {
-            this.id = id << 8;
-            setup();
-        }
-
-        protected static HashMap<Integer, Size> byId;
-
-        private void setup() {
-            if(byId == null)
-                byId = new HashMap<>();
-            byId.put(id, this);
-        }
-
-        public static Size fromBytecode(int bytecode) {
-            return byId.getOrDefault(bytecode & (0b11 << 8), WORD);
-        }
-    }
-
     public enum Source {
         REG(0b00),
         VAL(0b01),
@@ -176,19 +135,16 @@ public class Store extends Instruction {
 
         private Source(int id) {
             this.id = id << 10;
-            setup();
-        }
-
-        protected static HashMap<Integer, Source> byId;
-
-        private void setup() {
-            if(byId == null)
-                byId = new HashMap<>();
-            byId.put(id, this);
         }
 
         public static Source fromBytecode(int bytecode) {
-            return byId.getOrDefault(bytecode & (0b11 << 10), REG);
+            return switch ((bytecode >> 10) & 0b11) {
+                case 0b00 -> REG;
+                case 0b01 -> VAL;
+                case 0b10 -> MEM;
+                case 0b11 -> REG_REG;
+                default -> REG;
+            };
         }
     }
 }

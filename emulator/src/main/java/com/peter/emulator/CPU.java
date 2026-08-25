@@ -10,7 +10,7 @@ import com.peter.emulator.components.RAM;
 import com.peter.emulator.debug.Debugger;
 import com.peter.emulator.machinecode.*;
 import com.peter.emulator.machinecode.Goto.Mode;
-import com.peter.emulator.machinecode.Store.Source;
+import com.peter.emulator.machinecode.StoreInstruction.Source;
 
 public class CPU {
 
@@ -359,7 +359,7 @@ public class CPU {
                 setReg(loadInstr.rg, val);
             }
             case STORE -> {
-                Store storeI = (Store) lastInstruction;
+                StoreInstruction storeI = (StoreInstruction) lastInstruction;
                 int val = switch(storeI.source) {
                     case REG, REG_REG -> getReg(storeI.rg);
                     case MEM -> switch(storeI.size) {
@@ -462,7 +462,7 @@ public class CPU {
                             setReg(mathI.rd, ra >>> mathI.data);
                         }
                     }
-                    case UNKNOWN -> {
+                    case NONE, UNUSED_E, UNUSED_F -> {
                     }
                 }
             }
@@ -476,7 +476,7 @@ public class CPU {
                     case NEQ_ZERO -> getReg(gotoInstruction.rg) != 0;
                     case LT_ZERO -> getReg(gotoInstruction.rg) < 0;
                     case GEQ_ZERO -> getReg(gotoInstruction.rg) >= 0;
-                    case UNKNOWN -> true;
+                    case UNUSED_7, UNUSED_8, UNUSED_9, UNUSED_A, UNUSED_B, UNUSED_C, UNUSED_D, UNUSED_E, UNUSED_F -> true;
                 };
                 if (condVal) {
                     if (gotoInstruction.mode == Mode.POP) {
@@ -492,7 +492,7 @@ public class CPU {
                 }
             }
             case SET -> {
-                Set setI = (Set) lastInstruction;
+                SetInstruction setI = (SetInstruction) lastInstruction;
                 switch (setI.condition) {
                     case EQ_ZERO -> {
                         if (getReg(setI.rg) == 0) {
@@ -536,12 +536,12 @@ public class CPU {
                             setReg(setI.rd, 0);
                         }
                     }
-                    case UNCONDITIONAL, UNKNOWN -> {
+                    case UNCONDITIONAL, UNUSED_7, UNUSED_8, UNUSED_9, UNUSED_A, UNUSED_B, UNUSED_C, UNUSED_D, UNUSED_E, UNUSED_F -> {
                     }
                 }
             }
             case STACK -> {
-                Stack stackInstr = (Stack) lastInstruction;
+                StackInstruction stackInstr = (StackInstruction) lastInstruction;
                 switch(stackInstr.operation) {
                     case PUSH -> {
                         stackPush(getReg(stackInstr.rg));
@@ -554,9 +554,6 @@ public class CPU {
                     }
                     case DEC -> {
                         stackPtr -= stackInstr.getInc();
-                    }
-                    case UNKNOWN -> {
-
                     }
                 }
             }
