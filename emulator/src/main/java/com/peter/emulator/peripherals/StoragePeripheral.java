@@ -29,9 +29,6 @@ public class StoragePeripheral implements DMAPeripheral {
 
     public StoragePeripheral(Path rootPath) {
         this.rootPath = rootPath;
-        // for (String fName : rootPath.toFile().list()) {
-        //     System.out.println(fName);
-        // }
     }
 
     @Override
@@ -41,6 +38,10 @@ public class StoragePeripheral implements DMAPeripheral {
 
     @Override
     public void message(int[] msg) {
+        if (msg.length < 1) {
+            manager.writeRspWords(0x01, deviceId, 0xff, 0xff);
+            return;
+        }
         switch (msg[0]) {
             case 0x01 -> { // list files
                 int startPathPntr = cpu.translateAddress(msg[1]); // null terminated char buffer
@@ -107,37 +108,53 @@ public class StoragePeripheral implements DMAPeripheral {
                 return;
             }
             case 0x11 -> { // read from handle
+                if (msg.length < 2) {
+                    manager.writeRspWords(0x01, deviceId, 0x0f, 0x0, 0x0);
+                    return;
+                }
                 int handle = msg[1];
+                if (msg.length != 6) {
+                    manager.writeRspWords(0x01, deviceId, 0x0f, handle, 0x0);
+                    return;
+                }
                 int buffStart = cpu.translateAddress(msg[2]);
                 int buffSize = msg[3];
                 int offset = msg[4];
+                int readPtr = cpu.translateAddress(msg[5]);
                 // System.out.println(String.format("- %x %x %x %x", handle, buffStart, buffSize, offset));
                 if (!openFiles.containsKey(handle)) {
                     manager.writeRspWords(0x01, deviceId, 0x02, handle, 0x0);
                     return;
                 }
-                File f = openFiles.get(handle);
-                int written = 0;
-                byte[] bytes;
-                try {
-                    bytes = Files.readAllBytes(f.toPath());
-                    // System.out.println("- "+bytes.length);
-                } catch (IOException e) {
-                    manager.writeRspWords(0x01, deviceId, 0x0f, handle, 0x0);
-                    System.err.println(e);
-                    return;
-                }
-                for (int i = 0; i < buffSize; i++) {
-                    int j = i + offset;
-                    if (j >= bytes.length) {
-                        break;
+                bus.writeWord(readPtr, 0xffff_ffff);
+                Thread t = new Thread(() -> {
+                    int ptr = buffStart;
+                    File f = openFiles.get(handle);
+                    int written = 0;
+                    byte[] bytes;
+                    try {
+                        bytes = Files.readAllBytes(f.toPath());
+                        // System.out.println("- "+bytes.length);
+                    } catch (IOException e) {
+                        // manager.writeRspWords(0x01, deviceId, 0x0f, handle, 0x0);
+                        System.err.println(e);
+                        bus.writeWord(readPtr, 0xffff_fffe);
+                        return;
                     }
-                    written++;
-                    bus.writeByte(buffStart++, bytes[j]);
-                }
+                    for (int i = 0; i < buffSize; i++) {
+                        int j = i + offset;
+                        if (j >= bytes.length) {
+                            break;
+                        }
+                        written++;
+                        bus.writeByte(ptr++, bytes[j]);
+                    }
+                    bus.writeWord(readPtr, written);
+                });
+                t.start();
                 
                 // System.out.println("- "+written);
-                manager.writeRspWords(0x01, deviceId, 0x01, handle, written);
+                manager.writeRspWords(0x01, deviceId, 0x01, handle);
             }
 
             default -> {

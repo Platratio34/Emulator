@@ -50,7 +50,7 @@ public class ActionScope {
                 stackVars.put(name, var);
             }
             if (function.ret != null) {
-                returnOffset = o - function.ret.sizeof();
+                returnOffset = o - (Math.ceilDiv(function.ret.sizeof(), 4) * 4);
             }
         }
     }

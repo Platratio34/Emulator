@@ -99,7 +99,7 @@ public class TimerUnit implements MemoryMappedPeripheral {
             case 3 -> (timers[timerIndex] & 0xffff_ff00) | (value & 0xff);
             default -> timers[timerIndex];
         };
-        if(modes[timerIndex] != 0) {
+        if (modes[timerIndex] != 0) {
             timersB[timerIndex] = timers[timerIndex];
         }
     }

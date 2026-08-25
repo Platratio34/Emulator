@@ -295,8 +295,11 @@ public class FunctionAction extends ComplexAction {
         }
         if (f.type == FunctionType.INSTANCE)
             addDirect("STACK PUSH r0");
-        if (f.ret != null)
-            addDirect("STACK INC %d", Math.ceilDiv(f.ret.sizeof(), 4) * 4);
+        int retSize = 0;
+        if (f.ret != null && onStack) {
+            retSize = Math.ceilDiv(f.ret.sizeof(), 4) * 4;
+            addDirect("STACK INC %d", retSize);
+        }
         actions.addAll(tempActions);
         if (f.type == FunctionType.INSTANCE) {
             Register r0T = newRegister();
@@ -319,17 +322,19 @@ public class FunctionAction extends ComplexAction {
         if (f.ret == null) {
             if (onStack && stackSize > 0)
                 actions.add(new DirectAction("STACK DEC %d", stackSize));
-        } else if (targetReg != null) {
-            retType = f.ret;
-            if (onStack) {
-                if (stackSize - 4 > 0)
-                    actions.add(new DirectAction("STACK DEC %d", stackSize - 4));
-                actions.add(new DirectAction("STACK POP %s", targetReg));
-            } else {
-                actions.add(new DirectAction("COPY r1 %s", targetReg));
+        } else {
+            if (targetReg != null) {
+                retType = f.ret;
+                if (onStack) {
+                    if (stackSize > 0)
+                        actions.add(new DirectAction("STACK DEC %d", stackSize));
+                    actions.add(new DirectAction("STACK POP %s", targetReg));
+                } else {
+                    actions.add(new DirectAction("COPY r1 %s", targetReg));
+                }
+            } else if (onStack && (stackSize + retSize) > 0) {
+                actions.add(new DirectAction("STACK DEC %d", stackSize + retSize));
             }
-        } else if (onStack && stackSize > 0) {
-            actions.add(new DirectAction("STACK DEC %d", stackSize));
         }
         if (f.type == FunctionType.INSTANCE)
             actions.add(new DirectAction("STACK POP r0"));

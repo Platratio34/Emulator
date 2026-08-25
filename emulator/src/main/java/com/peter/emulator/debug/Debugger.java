@@ -206,7 +206,7 @@ public class Debugger {
                         out += Integer.toString(cpu.readMemByte(address + i));
                     }
                 }
-                case "boolean" -> {
+                case "bool" -> {
                     for (int i = 0; i < arrSize; i++) {
                         if (out.length() > 1)
                             out += ",";
@@ -231,7 +231,7 @@ public class Debugger {
         return switch (baseType) {
             case "char" -> "'" + (char) cpu.readMemByte(address) + "'";
             case "uint8" -> Integer.toString(cpu.readMemByte(address));
-            case "boolean" -> cpu.readMemByte(address) != 0 ? "true" : "false";
+            case "bool" -> cpu.readMemByte(address) != 0 ? "true" : "false";
             case "uint16" -> Integer.toString(cpu.readMemShort(address));
             case "uint32" -> Integer.toString(cpu.readMem(address));
             default -> Instruction.toHexLead(cpu.readMem(address));

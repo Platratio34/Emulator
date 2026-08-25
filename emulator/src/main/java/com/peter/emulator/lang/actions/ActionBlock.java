@@ -427,6 +427,8 @@ public class ActionBlock extends ComplexAction {
                         boolean regTarget = false;
                         ELType t;
                         Action assignAction = null;
+                        boolean opAssign = ot.type == OperatorToken.Type.ADD_ASSIGN || ot.type == OperatorToken.Type.SUB_ASSIGN || ot.type == OperatorToken.Type.BITWISE_OR_ASSIGN
+                                || ot.type == OperatorToken.Type.INC || ot.type == OperatorToken.Type.DEC;
 
                         String size;
                         if (targetVal.value.equals("SysD")) { // if lh is SysD
@@ -484,7 +486,8 @@ public class ActionBlock extends ComplexAction {
                                 default -> "";
                             };
                             actions.add(rA);
-                            addRelease(r);
+                            if(!opAssign)
+                                addRelease(r);
                             // if (!r.fistFree())
                             //     throw ELAnalysisError.error("No free register", targetVal);
                             assignAction = new DirectAction("STORE%s %s %s", size, r, rT);
@@ -508,6 +511,7 @@ public class ActionBlock extends ComplexAction {
                                 actions.add(new DirectAction("STORE%s %s %s", size, r, rT));
                             }
                             addRelease(rT);
+                            addRelease(r);
                             wI++;
                             if(!(tokens.get(wI) instanceof OperatorToken ot2 && ot2.type == Type.SEMICOLON)) {
                                 throw ELAnalysisError.error("Expected `;` after incrementor", ot.endLocation.span());
@@ -538,6 +542,7 @@ public class ActionBlock extends ComplexAction {
                                 actions.add(new DirectAction("STORE%s %s %s", size, r2, rT));
                             }
                             addRelease(rT);
+                            addRelease(r);
                             wI++;
                             if(!(tokens.get(wI) instanceof OperatorToken ot2 && ot2.type == Type.SEMICOLON)) {
                                 throw ELAnalysisError.error("Expected `;` after decrementor", ot.endLocation.span());
@@ -566,6 +571,7 @@ public class ActionBlock extends ComplexAction {
                         if(exp.isEmpty())
                             throw ELAnalysisError.error("Empty expression", tkn);
                         
+                        // addReserve(r);
                         Expression expA = new Expression(scope, exp, r);
                         actions.add(expA);
 

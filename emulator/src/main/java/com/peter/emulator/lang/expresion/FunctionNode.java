@@ -15,7 +15,7 @@ public class FunctionNode extends ExpressionNode {
     public FunctionNode(ActionScope scope, IdentifierToken token) {
         super(scope);
         this.token = token;
-        action = new FunctionAction(scope, register, token);
+        action = new FunctionAction(scope, scope.makeHandle(1), token);
     }
 
     @Override

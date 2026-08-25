@@ -56,7 +56,7 @@ namespace TestD {
 
 
         // asm("#breakpoint");
-        /*uint32 fh;
+        uint32 fh;
         uint32 rstat;
         FS.openFile("test.txt\0", &rstat, &fh);
         if(fh == 0) {
@@ -68,7 +68,7 @@ namespace TestD {
             char[32] buffer;
             uint32 read;
             uint32 state;
-            FS.readFile(fh, &buffer, 32, 0, &read, &state);
+            FS.readFileSync(fh, &buffer, 32, 0, &read, &state);
             // asm("#breakpoint");
             Console.intToHex(state, &str2);
             Console.printStr(&str2, 0);
@@ -79,14 +79,14 @@ namespace TestD {
             
             Console.printChar('\n');
             Console.printStr(&buffer, read);
-        }*/
+        }
 
         // Console.printStr("\n> \0",0);
         // char[32] buff;
         // Console.read(&buff, 32);
         // Console.printStr(&buff, 0);
 
-        Peripheral.TIMERS[15] |= 0b01 << 24;
+        Peripheral.TIMERS[15] |= 0b01 << 28;
         Peripheral.TIMERS[1] = 1000;
 
         CharacterDisplay.write(0,0,"EmulatorOS\0");

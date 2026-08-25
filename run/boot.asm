@@ -7,6 +7,7 @@
 #define STORAGE_COMMAND_READ 0x11
 #define KERNAL_START 0x0_1000
 #define CONSOLE_OUT 0x1_0300
+#var readCount 0 uint32
 
 LOAD r7 CONSOLE_OUT
 // (uint32 status, uint32 handle) openFile(uint32 commandSize, uint32 command, char* path)
@@ -40,12 +41,13 @@ LOAD MEM r2 r0
 
 // readFile(uint32 commandSize, uint32 command, uint32 handle, void* buffer, uint32 bufferSize, uint32 offset)
 LOAD r0 PERIPHERAL_COMMAND_START
-STORE 0x5 r0 INC_RA // size
+STORE 0x6 r0 INC_RA // size
 STORE STORAGE_COMMAND_READ r0 INC_RA // command
 STORE r2 r0 INC_RA // handle
 STORE KERNAL_START r0 INC_RA // buffer
 STORE 0x1_0000 r0 INC_RA // bufferSize
 STORE 0 r0 INC_RA // offset
+STORE &readCount r0 INC_RA // offset
 
 // execute
 LOAD r0 PERIPHERAL_COMMAND_EX
@@ -65,6 +67,11 @@ HALT
 STORE BYTE 's' r7
 STORE BYTE 'r' r7
 STORE BYTE '\n' r7
+
+LOAD r0 &readCount
+:wait
+LOAD MEM r1 r0
+GOTO LT r1 :wait
 
 LOAD r0 KERNAL_START
 GOTO r0

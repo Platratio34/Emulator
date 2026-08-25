@@ -45,7 +45,7 @@ public class PeripheralManager implements BusComponent {
                 for (int i = 0; i < size; i++) {
                     msg[i] = getCommandWord(i + 2);
                 }
-                System.out.println("Message for device"+d+" of size "+size);
+                // System.out.println("Message for device"+d+" of size "+size);
                 if (d == 0) {
                     onMessage(msg);
                 } else {
