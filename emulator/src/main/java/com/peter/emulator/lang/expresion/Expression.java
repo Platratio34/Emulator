@@ -253,10 +253,28 @@ public class Expression extends Action {
 
     @Override
     public String toAssembly() {
-        if(head == null) {
+        if (head == null) {
             return "";
         }
-        return head.toAssembly() + " // "+printNodes();
+        return head.toAssembly() + " // " + printNodes();
+    }
+    
+    public boolean hadGoto() {
+        if (head instanceof OperatorNode on) {
+            return on.hasGoto();
+        }
+        return false;
+    }
+
+    public void setFalseTarget(String falseTarget) {
+        if (head == null)
+            return;
+        head.setFalseTarget(falseTarget);
+    }
+    public void setTrueTarget(String trueTarget) {
+        if(head == null)
+            return;
+        head.setTrueTarget(trueTarget);
     }
 
     public void setRegister(Register register) {

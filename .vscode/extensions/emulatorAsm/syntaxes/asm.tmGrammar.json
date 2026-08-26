@@ -204,7 +204,7 @@
             }
         },
         {
-            "match": "^(ADD|SUB|MUL|LSH|RSH|OR|AND)(?:\\s+(\\S+)(?:\\s+(\\S+)(?:\\s+(\\S+))?)?)?",
+            "match": "^(ADD|SUB|MUL|OR|AND)(?:\\s+(\\S+)(?:\\s+(\\S+)(?:\\s+(\\S+))?)?)?",
             "captures": {
                 "1": {
                     "name": "keyword.control.instruction"
@@ -227,8 +227,31 @@
             }
         },
         {
+            "match": "^(LSH|RSH|LRT|RRT)(?:\\s+(\\S+)(?:\\s+(\\S+)(?:\\s+(\\S+))?)?)?",
+            "captures": {
+                "1": {
+                    "name": "keyword.control.instruction"
+                },
+                "2": {
+                    "patterns": [
+                        { "include": "#register" }
+                    ]
+                },
+                "3": {  
+                    "patterns": [
+                        { "include": "#register" }
+                    ]
+                },
+                "4": {
+                    "patterns": [
+                        { "include": "#value.constant" }
+                    ]
+                }
+            }
+        },
+        {
             "name": "keyword.control.instruction",
-            "match": "^(HALT|SYSRETURN)\\b"
+            "match": "^(HALT|SYSRETURN|NO_OP)\\b"
         },
         {
             "match": "^(GOTO(?:\\s+(?:PUSH|POP))?(?:\\s+(?:EQ|LEQ|GT|NEQ|LT|GEQ))?)(?:\\s+(r\\S+))?(?:\\s+(\\:\\S+))?",
@@ -274,6 +297,19 @@
                     "patterns": [
                         { "include": "#value.constant" },
                         { "name": "support.function" }
+                    ]
+                }
+            }
+        },
+        {
+            "match": "^(SYSGOTO|TRANSLATE)(?:\\s+(\\S+))?",
+            "captures": {
+                "1": {
+                    "name": "keyword.control.instruction"
+                },
+                "2": {
+                    "patterns": [
+                        { "include": "#register" }
                     ]
                 }
             }

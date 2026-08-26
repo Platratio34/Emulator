@@ -14,6 +14,8 @@ public class OperatorNode extends ExpressionNode {
     public final OperatorToken token;
 
     private static int earlyExitI = 0;
+    private String falseTarget = null;
+    private String trueTarget = null;
 
     public OperatorNode(ActionScope scope, OperatorType type, OperatorToken token) {
         super(scope);
@@ -254,11 +256,29 @@ public class OperatorNode extends ExpressionNode {
 
     @Override
     public ELType getType() {
-        return switch(type) {
+        return switch (type) {
             case AND, OR, LEQ, GEQ, LT, GT, NEQ -> ELPrimitives.BOOL;
             case ADDRESS -> child1.getType().addressOf();
             case DEREF -> child1.getType().resolve(span());
             default -> child1.getType();
+        };
+    }
+
+    @Override
+    public void setFalseTarget(String falseTarget) {
+        this.falseTarget = falseTarget;
+    }
+
+    @Override
+    public void setTrueTarget(String trueTarget) {
+        this.trueTarget = trueTarget;
+    }
+
+    @Override
+    public boolean hasGoto() {
+        return switch (type) {
+            case NOT, EQUALS, LEQ, LT, GEQ, GT, AND, OR -> true;
+            default -> false;
         };
     }
 
@@ -480,34 +500,44 @@ public class OperatorNode extends ExpressionNode {
 
             case NOT -> {
                 child1.register = register;
+                if (falseTarget != null) {
+                    return child1.toAssembly() + String.format("\nGOTO EQ %s %s", register, falseTarget);
+                } else if (trueTarget != null) {
+                    return child1.toAssembly() + String.format("\nGOTO NEQ %s %s", register, trueTarget);
+                }
                 return child1.toAssembly() + String.format("\nSET FORCE EQ %s %s", register, register);
             }
 
             case EQUALS -> {
+                String setString = (falseTarget != null) ? String.format("GOTO NEQ %s %s", register, falseTarget)
+                        : String.format("SET FORCE EQ %s %s", register, register);
+                if (trueTarget != null) {
+                    setString = String.format("GOTO EQ %s %s", register, trueTarget);
+                }
                 if(child1.isConstant()) {
                     int c1 = child1.getConstant();
                     child2.register = register;
                     String str = child2.toAssembly();
                     if(c1 == 0) {
-                        return str + String.format("\nSET FORCE EQ %s %s", register, register);
+                        return str + String.format("\n%s", setString);
                     } else if (MachineCode.inIncRange(c1)) {
-                        return str + String.format("\nINC %s %d\nSET FORCE EQ %s %s", register, -c1, register, register);
+                        return str + String.format("\nINC %s %d\n%s", register, -c1, setString);
                     }
                     Register r1 = newRegister();
                     r1.fistFree();
-                    return str + String.format("\nLOAD %s %d\nSUB %s %s %s\nSET FORCE EQ %s %s", r1, c1, register, r1, register, register, register);
+                    return str + String.format("\nLOAD %s %d\nSUB %s %s %s\n%s", r1, c1, register, r1, register, setString);
                 } else if(child2.isConstant()) {
                     int c2 = child2.getConstant();
                     child1.register = register;
                     String str = child1.toAssembly();
                     if(c2 == 0) {
-                        return str + String.format("\nSET FORCE EQ %s %s", register, register);
+                        return str + String.format("\n%s", setString);
                     } else if (MachineCode.inIncRange(c2)) {
-                        return str + String.format("\nINC %s %d\nSET FORCE EQ %s %s", register, -c2, register, register);
+                        return str + String.format("\nINC %s %d\n%s", register, -c2, setString);
                     }
                     Register r2 = newRegister();
                     r2.fistFree();
-                    return str + String.format("\nLOAD %s %d\nSUB %s %s %s\nSET FORCE EQ %s %s", r2, c2, register, register, r2, register, register);
+                    return str + String.format("\nLOAD %s %d\nSUB %s %s %s\n%s", r2, c2, register, register, r2, setString);
                 }
                 child1.register = register;
                 String str = child1.toAssembly() + "\n";
@@ -515,35 +545,43 @@ public class OperatorNode extends ExpressionNode {
                 r2.fistFree();
                 r2.reserve();
                 child2.register = r2;
-                str += child2.toAssembly() + String.format("\nSUB %s %s %s\nSET FORCE EQ %s %s", register, register, r2, register, register);
+                str += child2.toAssembly() + String.format("\nSUB %s %s %s\n%s", register, register, r2, setString);
                 r2.release();
                 return str;
             }
             case LEQ -> {
+                String setString = (falseTarget != null) ? String.format("GOTO GT %s %s", register, falseTarget)
+                        : String.format("SET FORCE LEQ %s %s", register, register);
+                String setInvString = (falseTarget != null) ? String.format("GOTO LT %s %s", register, falseTarget)
+                        : String.format("SET FORCE GEQ %s %s", register, register);
+                if (trueTarget != null) {
+                    setString = String.format("GOTO LEQ %s %s", register, trueTarget);
+                    setInvString = String.format("GOTO GEQ %s %s", register, trueTarget);
+                }
                 if(child1.isConstant()) {
                     int c1 = child1.getConstant();
                     child2.register = register;
                     String str = child2.toAssembly();
                     if(c1 == 0) {
-                        return str + String.format("\nSET FORCE GEQ %s %s", register, register);
+                        return str + String.format("\n%s", setInvString);
                     } else if (MachineCode.inIncRange(c1)) {
-                        return str + String.format("\nINC %s %d\nSET FORCE GEQ %s %s", register, -c1, register, register);
+                        return str + String.format("\nINC %s %d\n%s", register, -c1, setInvString);
                     }
                     Register r1 = newRegister();
                     r1.fistFree();
-                    return str + String.format("\nLOAD %s %d\nSUB %s %s %s\nSET FORCE LEQ %s %s", r1, c1, register, r1, register, register, register);
+                    return str + String.format("\nLOAD %s %d\nSUB %s %s %s\n%s", r1, c1, register, r1, register, setString);
                 } else if(child2.isConstant()) {
                     int c2 = child2.getConstant();
                     child1.register = register;
                     String str = child1.toAssembly();
                     if(c2 == 0) {
-                        return str + String.format("\nSET FORCE LEQ %s %s", register, register);
+                        return str + String.format("\n%s", setString);
                     } else if (MachineCode.inIncRange(c2)) {
-                        return str + String.format("\nINC %s %d\nSET FORCE LEQ %s %s", register, -c2, register, register);
+                        return str + String.format("\nINC %s %d\n%s", register, -c2, setString);
                     }
                     Register r1 = newRegister();
                     r1.fistFree();
-                    return str + String.format("\nLOAD %s %d\nSUB %s %s %s\nSET FORCE LEQ %s %s", r1, c2, register, register, r1, register, register);
+                    return str + String.format("\nLOAD %s %d\nSUB %s %s %s\n%s", r1, c2, register, register, r1, setString);
                 }
                 child1.register = register;
                 String str = child1.toAssembly() + "\n";
@@ -551,35 +589,43 @@ public class OperatorNode extends ExpressionNode {
                 r2.fistFree();
                 r2.reserve();
                 child2.register = r2;
-                str += child2.toAssembly() + String.format("\nSUB %s %s %s\nSET FORCE LEQ %s %s", register, register, r2, register, register);
+                str += child2.toAssembly() + String.format("\nSUB %s %s %s\n%s", register, register, r2, setString);
                 r2.release();
                 return str;
             }
             case GEQ -> {
+                String setString = (falseTarget != null) ? String.format("GOTO LT %s %s", register, falseTarget)
+                        : String.format("SET FORCE GEQ %s %s", register, register);
+                String setInvString = (falseTarget != null) ? String.format("GOTO GT %s %s", register, falseTarget)
+                        : String.format("SET FORCE LEQ %s %s", register, register);
+                if (trueTarget != null) {
+                    setString = String.format("GOTO GEQ %s %s", register, trueTarget);
+                    setInvString = String.format("GOTO LEQ %s %s", register, trueTarget);
+                }
                 if(child1.isConstant()) {
                     int c1 = child1.getConstant();
                     child2.register = register;
                     String str = child2.toAssembly();
                     if(c1 == 0) {
-                        return str + String.format("\nSET FORCE LEQ %s %s", register, register);
+                        return str + String.format("\n%s", setInvString);
                     } else if (MachineCode.inIncRange(c1)) {
-                        return str + String.format("\nINC %s %d\nSET FORCE LEQ %s %s", register, -c1, register, register);
+                        return str + String.format("\nINC %s %d\n%s", register, -c1, setInvString);
                     }
                     Register r1 = newRegister();
                     r1.fistFree();
-                    return str + String.format("\nLOAD %s %d\nSUB %s %s %s\nSET FORCE GEQ %s %s", r1, c1, register, r1, register, register, register);
+                    return str + String.format("\nLOAD %s %d\nSUB %s %s %s\n%s", r1, c1, register, r1, register, setString);
                 } else if(child2.isConstant()) {
                     int c2 = child2.getConstant();
                     child1.register = register;
                     String str = child1.toAssembly();
                     if(c2 == 0) {
-                        return str + String.format("\nSET FORCE GEQ %s %s", register, register);
+                        return str + String.format("\n%s", setString);
                     } else if (MachineCode.inIncRange(c2)) {
-                        return str + String.format("\nINC %s %d\nSET FORCE GEQ %s %s", register, -c2, register, register);
+                        return str + String.format("\nINC %s %d\n%s", register, -c2, setString);
                     }
                     Register r1 = newRegister();
                     r1.fistFree();
-                    return str + String.format("\nLOAD %s %d\nSUB %s %s %s\nSET FORCE GEQ %s %s", r1, c2, register, register, r1, register, register);
+                    return str + String.format("\nLOAD %s %d\nSUB %s %s %s\n%s", r1, c2, register, register, r1, setString);
                 }
                 child1.register = register;
                 String str = child1.toAssembly() + "\n";
@@ -587,35 +633,43 @@ public class OperatorNode extends ExpressionNode {
                 r2.fistFree();
                 r2.reserve();
                 child2.register = r2;
-                str += child2.toAssembly() + String.format("\nSUB %s %s %s\nSET FORCE GEQ %s %s", register, register, r2, register, register);
+                str += child2.toAssembly() + String.format("\nSUB %s %s %s\n%s", register, register, r2, setString);
                 r2.release();
                 return str;
             }
             case LT -> {
+                String setString = (falseTarget != null) ? String.format("GOTO GEQ %s %s", register, falseTarget)
+                        : String.format("SET FORCE LT %s %s", register, register);
+                String setInvString = (falseTarget != null) ? String.format("GOTO LEQ %s %s", register, falseTarget)
+                        : String.format("SET FORCE GT %s %s", register, register);
+                if (trueTarget != null) {
+                    setString = String.format("GOTO LT %s %s", register, trueTarget);
+                    setInvString = String.format("GOTO GT %s %s", register, trueTarget);
+                }
                 if(child1.isConstant()) {
                     int c1 = child1.getConstant();
                     child2.register = register;
                     String str = child2.toAssembly();
                     if(c1 == 0) {
-                        return str + String.format("\nSET FORCE GT %s %s", register, register);
+                        return str + String.format("\n%s", setInvString);
                     } else if (MachineCode.inIncRange(c1)) {
-                        return str + String.format("\nINC %s %d\nSET FORCE GT %s %s", register, -c1, register, register);
+                        return str + String.format("\nINC %s %d\n%s", register, -c1, setInvString);
                     }
                     Register r1 = newRegister();
                     r1.fistFree();
-                    return str + String.format("\nLOAD %s %d\nSUB %s %s %s\nSET FORCE LT %s %s", r1, c1, register, r1, register, register, register);
+                    return str + String.format("\nLOAD %s %d\nSUB %s %s %s\n%s", r1, c1, register, r1, register, setString);
                 } else if(child2.isConstant()) {
                     int c2 = child2.getConstant();
                     child1.register = register;
                     String str = child1.toAssembly();
                     if(c2 == 0) {
-                        return str + String.format("\nSET FORCE LT %s %s", register, register);
+                        return str + String.format("\n%s", setString);
                     } else if (MachineCode.inIncRange(c2)) {
-                        return str + String.format("\nINC %s %d\nSET FORCE LT %s %s", register, -c2, register, register);
+                        return str + String.format("\nINC %s %d\n%s", register, -c2, setString);
                     }
                     Register r1 = newRegister();
                     r1.fistFree();
-                    return str + String.format("\nLOAD %s %d\nSUB %s %s %s\nSET FORCE LT %s %s", r1, c2, register, register, r1, register, register);
+                    return str + String.format("\nLOAD %s %d\nSUB %s %s %s\n%s", r1, c2, register, register, r1, setString);
                 }
                 child1.register = register;
                 String str = child1.toAssembly() + "\n";
@@ -623,35 +677,43 @@ public class OperatorNode extends ExpressionNode {
                 r2.fistFree();
                 r2.reserve();
                 child2.register = r2;
-                str += child2.toAssembly() + String.format("\nSUB %s %s %s\nSET FORCE LT %s %s", register, register, r2, register, register);
+                str += child2.toAssembly() + String.format("\nSUB %s %s %s\n%s", register, register, r2, setString);
                 r2.release();
                 return str;
             }
             case GT -> {
+                String setString = (falseTarget != null) ? String.format("GOTO LEQ %s %s", register, falseTarget)
+                        : String.format("SET FORCE GT %s %s", register, register);
+                String setInvString = (falseTarget != null) ? String.format("GOTO GEQ %s %s", register, falseTarget)
+                        : String.format("SET FORCE LT %s %s", register, register);
+                if (trueTarget != null) {
+                    setString = String.format("GOTO GT %s %s", register, trueTarget);
+                    setInvString = String.format("GOTO LT %s %s", register, trueTarget);
+                }
                 if(child1.isConstant()) {
                     int c1 = child1.getConstant();
                     child2.register = register;
                     String str = child2.toAssembly();
                     if(c1 == 0) {
-                        return str + String.format("\nSET FORCE LT %s %s", register, register);
+                        return str + String.format("\n%s", setInvString);
                     } else if (MachineCode.inIncRange(c1)) {
-                        return str + String.format("\nINC %s %d\nSET FORCE LT %s %s", register, -c1, register, register);
+                        return str + String.format("\nINC %s %d\n%s", register, -c1, setInvString);
                     }
                     Register r1 = newRegister();
                     r1.fistFree();
-                    return str + String.format("\nLOAD %s %d\nSUB %s %s %s\nSET FORCE GT %s %s", r1, c1, register, r1, register, register, register);
+                    return str + String.format("\nLOAD %s %d\nSUB %s %s %s\n%s", r1, c1, register, r1, register, setString);
                 } else if(child2.isConstant()) {
                     int c2 = child2.getConstant();
                     child1.register = register;
                     String str = child1.toAssembly();
                     if(c2 == 0) {
-                        return str + String.format("\nSET FORCE GT %s %s", register, register);
+                        return str + String.format("\n%s", setString);
                     } else if (MachineCode.inIncRange(c2)) {
-                        return str + String.format("\nINC %s %d\nSET FORCE GT %s %s", register, -c2, register, register);
+                        return str + String.format("\nINC %s %d\n%s", register, -c2, setString);
                     }
                     Register r1 = newRegister();
                     r1.fistFree();
-                    return str + String.format("\nLOAD %s %d\nSUB %s %s %s\nSET FORCE GT %s %s", r1, c2, register, register, r1, register, register);
+                    return str + String.format("\nLOAD %s %d\nSUB %s %s %s\n%s", r1, c2, register, register, r1, setString);
                 }
                 child1.register = register;
                 String str = child1.toAssembly() + "\n";
@@ -659,7 +721,7 @@ public class OperatorNode extends ExpressionNode {
                 r2.fistFree();
                 r2.reserve();
                 child2.register = r2;
-                str += child2.toAssembly() + String.format("\nSUB %s %s %s\nSET FORCE GT %s %s", register, register, r2, register, register);
+                str += child2.toAssembly() + String.format("\nSUB %s %s %s\n%s", register, register, r2, setString);
                 r2.release();
                 return str;
             }
@@ -724,22 +786,64 @@ public class OperatorNode extends ExpressionNode {
             }
 
             case AND -> {
-                String earlyExitId = String.format("exp_ee_%d",earlyExitI++);
+                String earlyExitId = (falseTarget != null) ? falseTarget : String.format(":exp_ee_%d",earlyExitI++);
                 child1.register = register;
-                String str = child1.toAssembly();
-                str += String.format("\nGOTO EQ %s :%s\n", register, earlyExitId);
+                String str;
+                child1.setFalseTarget(earlyExitId);
+                str = child1.toAssembly();
+                if (!child1.hasGoto()) {
+                    str += String.format("\nGOTO EQ %s %s\n", register, earlyExitId);
+                } else {
+                    str += "\n";
+                }
+                // String str = child1.toAssembly();
                 child2.register = register;
-                str += child2.toAssembly();
-                return str + "\n:"+earlyExitId;
+                if (trueTarget != null) {
+                    child2.setTrueTarget(trueTarget);
+                    str += child2.toAssembly();
+                    if (!child2.hasGoto()) {
+                        str += String.format("\nGOTO NEQ %s %s", register, trueTarget);
+                    }
+                } else if (falseTarget != null) {
+                    child2.setFalseTarget(falseTarget);
+                    str += child2.toAssembly();
+                    if (!child2.hasGoto()) {
+                        str += String.format("\nGOTO EQ %s %s", register, falseTarget);
+                    }
+                } else {
+                    str += child2.toAssembly() + "\n" + earlyExitId;
+                }
+                return str;
             }
             case OR -> {
-                String earlyExitId = String.format("exp_ee_%d",earlyExitI++);
+                String earlyExitId = (trueTarget != null) ? trueTarget : String.format(":exp_ee_%d",earlyExitI++);
                 child1.register = register;
-                String str = child1.toAssembly();
-                str += String.format("\nGOTO NEQ %s :%s\n", register, earlyExitId);
+                String str;
+                child1.setTrueTarget(earlyExitId);
+                str = child1.toAssembly();
+                if (!child1.hasGoto()) {
+                    str += String.format("\nGOTO NEQ %s %s\n", register, earlyExitId);
+                } else {
+                    str += "\n";
+                }
                 child2.register = register;
-                str += child2.toAssembly();
-                return str + "\n:"+earlyExitId;
+                if(falseTarget != null) {
+                    child2.setFalseTarget(falseTarget);
+                    str += child2.toAssembly();
+                    if (!child2.hasGoto()) {
+                        str += String.format("\nGOTO EQ %s %s", register, falseTarget);
+                    }
+                    str += "\n" + earlyExitId;
+                } else if (trueTarget != null) {
+                    child2.setTrueTarget(trueTarget);
+                    str += child2.toAssembly();
+                    if (!child2.hasGoto()) {
+                        str += String.format("\nGOTO NEQ %s %s", register, trueTarget);
+                    }
+                } else {
+                    str += child2.toAssembly() + "\n" + earlyExitId;
+                }
+                return str;
             }
             case SHIFT_LEFT, SHIFT_RIGHT -> {
                 child1.register = register;

@@ -29,4 +29,14 @@ public abstract class ExpressionNode extends Action {
     public abstract boolean validate(ErrorSet errors);
 
     public abstract Span span();
+
+    public void setFalseTarget(String falseTarget) {
+    }
+
+    public void setTrueTarget(String trueTarget) {
+    }
+
+    public boolean hasGoto() {
+        return false;
+    }
 }

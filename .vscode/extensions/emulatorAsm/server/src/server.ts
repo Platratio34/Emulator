@@ -648,6 +648,7 @@ const compilerLines: { [id: string]: AsmLine } = {
     "stackVarClear": { name: "Stack Var Clear", desc: "Mark the end of a stack variable scope. Will clear the most recently defined variable with name", usage: "`#stackVar [name]`" }
 }
 const asmLines: { [id: string]: AsmLine } = {
+    "NO_OP": { name: "NoOp", desc: "No operation", usage: "`NO_OP`" },
     "HALT": { name: "Halt", desc: "Halts the CPU. **Privileged**", usage: "`HALT`" },
     "LOAD": {
         name: "Load", desc: "Load a value into a register. Equivalent to `r[rg] = [value]`", usage: "`LOAD [rg] [value]`", sub: {
@@ -711,6 +712,12 @@ const asmLines: { [id: string]: AsmLine } = {
     "RSH": {
         name: "Right Shift", desc: "Right Shift a registers. Equivalent to `r[rd] = r[ra] >> amt`", usage: "`RSH [rd] [ra] [amt]`"
     },
+    "LRT": {
+        name: "Left Rotate", desc: "Left Rotate a registers. Equivalent to `r[rd] = r[ra] << amt`", usage: "`LSH [rd] [ra] [amt]`"
+    },
+    "RRT": {
+        name: "Right Rotate", desc: "Right Rotate a registers. Equivalent to `r[rd] = r[ra] >> amt`", usage: "`RSH [rd] [ra] [amt]`"
+    },
     "STACK": {
         name: "Stack", desc: "Stack operation", usage: "`STACK <PUSH|POP> [rg] | STACK <INC|DEC> ([amount])`", sub: {
             "PUSH": { name: "Stack Push", desc: "Push the value of a register to the stack", usage: "`STACK PUSH [rg]`" },
@@ -729,6 +736,9 @@ const asmLines: { [id: string]: AsmLine } = {
         name: "Interrupt", desc: "Trigger an interrupt", usage: "`INTERRUPT <RET|[code]>`", sub: {
             "RET": { name: "Interrupt return", desc: "Return from an interrupt, resetting registers", usage: "INTERRUPT RET"}
         }
+    },
+    "TRANSLATE": {
+        name: "Translate Address", desc: "Translated the address in `r[rg]` using the MMU, storing the result back into `r[rg]`", usage: "`TRANSLATE [rg]`"
     },
     "GOTO": {
         name: "Goto", desc: "Unconditional goto", usage: "`GOTO (<PUSH|POP>) (<EQ|LEQ|GT|NEQ|LT|GEQ> [rg]) <[:label]|[ra]>`", sub: {

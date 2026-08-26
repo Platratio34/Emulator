@@ -853,6 +853,14 @@ public class Assembler {
                         }
                         add(Syscall.Goto(Reg.from(parts[1])));
                     }
+                    case "TRANSLATE" -> {
+                        if (parts.length < 2) {
+                            errors.add(new AssemblerError("Invalid translate instruction: TRANSLATE [rg]", lineN,
+                                    line.length(), line, source));
+                            continue;
+                        }
+                        add(Syscall.Translate(Reg.from(parts[1])));
+                    }
                     case "INTERRUPT" -> {
                         if (parts.length < 2) {
                             errors.add(new AssemblerError("Invalid interrupt instruction: INTERRUPT <RET|[rg]|[val]>",

@@ -6,52 +6,65 @@ import com.peter.emulator.lang.Span;
 
 public class SubNode extends ExpressionNode {
 
-    public Expression expresion;
+    public Expression expression;
 
-    public SubNode(Expression expresion) {
-        super(expresion.scope);
-        this.expresion = expresion;
+    public SubNode(Expression expression) {
+        super(expression.scope);
+        this.expression = expression;
     }
 
     @Override
     public String printTree() {
-        return expresion.printTree();
+        return expression.printTree();
     }
 
     @Override
     public String printNode() {
-        return "( " + expresion.printNodes() + " )";
+        return "( " + expression.printNodes() + " )";
     }
 
     @Override
     public boolean isConstant() {
-        return expresion.isConstant();
+        return expression.isConstant();
     }
     
     @Override
     public int getConstant() {
-        return expresion.getConstant();
+        return expression.getConstant();
     }
 
     @Override
     public boolean validate(ErrorSet errors) {
-        return expresion.validate(errors);
+        return expression.validate(errors);
     }
 
     @Override
     public ELType getType() {
-        return expresion.getType();
+        return expression.getType();
+    }
+
+    @Override
+    public void setFalseTarget(String falseTarget) {
+        expression.setFalseTarget(falseTarget);
+    }
+    @Override
+    public void setTrueTarget(String trueTarget) {
+        expression.setTrueTarget(trueTarget);
+    }
+    @Override
+    public boolean hasGoto() {
+        return expression.hadGoto();
     }
 
     @Override
     public Span span() {
-        return expresion.span();
+        return expression.span();
     }
 
     @Override
     public String toAssembly() {
-        expresion.setRegister(register);
-        return expresion.toAssembly();
+        expression.setRegister(register);
+        return expression.toAssembly();
     }
 
 }

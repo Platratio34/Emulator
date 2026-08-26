@@ -86,6 +86,8 @@ namespace TestD {
         // Console.read(&buff, 32);
         // Console.printStr(&buff, 0);
 
+        @Breakpoint(noOp)
+
         Peripheral.TIMERS[15] |= 0b01 << 28;
         Peripheral.TIMERS[1] = 1000;
 

@@ -3,8 +3,10 @@ package com.peter.emulator.lang.actions;
 import java.util.ArrayList;
 
 import com.peter.emulator.MachineCode;
+import com.peter.emulator.lang.ELSymbol.ELAnnotationSymbol;
 import com.peter.emulator.lang.ELSymbol.ELVarSymbol;
 import com.peter.emulator.lang.ELValue.ELStringValue;
+import com.peter.emulator.lang.annotations.ELBreakpointAnnotation;
 import com.peter.emulator.lang.*;
 import com.peter.emulator.lang.base.ELPrimitives;
 import com.peter.emulator.lang.expresion.Expression;
@@ -102,13 +104,15 @@ public class ActionBlock extends ComplexAction {
 
                                 Register r = newRegister();
                                 addReserve(r);
-                                actions.add(new Expression(scope, it.params.subTokens, r));
-                                // actions.add(new ConditionalAction(scope, ":while_body_"+index, ":while_end_"+index, it.params.subTokens));
-                                // actions.add(new DirectAction(":while_body_%d",index));
-                                if(elsePresent)
-                                    actions.add(new DirectAction("GOTO EQ %s :if_else_%d", r, index));
-                                else
-                                    actions.add(new DirectAction("GOTO EQ %s :if_end_%d", r, index));
+                                Expression exp = new Expression(scope, it.params.subTokens, r);
+                                exp.setFalseTarget(String.format((elsePresent ? ":if_else_%d" : ":if_end_%d"), index));
+                                actions.add(exp);
+                                if (!exp.hadGoto()) {
+                                    if(elsePresent)
+                                        actions.add(new DirectAction("GOTO EQ %s :if_else_%d", r, index));
+                                    else
+                                        actions.add(new DirectAction("GOTO EQ %s :if_end_%d", r, index));
+                                }
                                 addRelease(r);
                                 // actions.add(new DirectAction(":if_true_%d", index));
                                 ActionBlock innerBlock = new ActionBlock(scope.createChild());
@@ -156,10 +160,11 @@ public class ActionBlock extends ComplexAction {
                                 actions.add(new DirectAction(":while_condition_%d", index));
                                 Register r = newRegister();
                                 addReserve(r);
-                                actions.add(new Expression(scope, it.params.subTokens, r));
-                                // actions.add(new ConditionalAction(scope, ":while_body_"+index, ":while_end_"+index, it.params.subTokens));
-                                // actions.add(new DirectAction(":while_body_%d",index));
-                                actions.add(new DirectAction("GOTO EQ %s :while_end_%d", r, index));
+                                Expression exp = new Expression(scope, it.params.subTokens, r);
+                                exp.setFalseTarget(String.format(":while_end_%d", index));
+                                actions.add(exp);
+                                if(!exp.hadGoto())
+                                    actions.add(new DirectAction("GOTO EQ %s :while_end_%d", r, index));
                                 addRelease(r);
                                 ActionBlock innerBlock = new ActionBlock(scope.createChild());
                                 innerBlock.parse(tokens.get(wI).subTokens, errors, withDebug);
@@ -604,6 +609,17 @@ public class ActionBlock extends ComplexAction {
                         addRelease(rT);
                         addRelease(r);
                         
+                    }
+                } else if (tkn instanceof AnnotationToken at) {
+                    if (at.name.equals("Breakpoint")) {
+                        ELBreakpointAnnotation bpa = new ELBreakpointAnnotation(at);
+                        if (bpa.noOp) {
+                            addDirect("NO_OP");
+                        }
+                        scope.addSymbol(new ELAnnotationSymbol(bpa));
+                        addDirect("#breakpoint");
+                    } else {
+                        throw ELAnalysisError.error("Unexpected token found at start of expression ("+tkn.debugString()+")", tkn);
                     }
                 } else {
                     if(tkn instanceof OperatorToken ot && ot.type == OperatorToken.Type.SEMICOLON) {
