@@ -2,12 +2,12 @@ import System.Collections.List;
 
 namespace Test {
     static const char* SYS_NAME = "EmulatorOS";
-    static const uint32[] CONSOLE_SETUP_CMD = {0x0001,CONSOLE_START,0x0020};
+    static const int32[] CONSOLE_SETUP_CMD = {0x0001,CONSOLE_START,0x0020};
     public static List<List<string>> strings;
     
     struct AddressSpace {
-        public uint32 addressOffset;
-        public uint32 pid;
+        public int32 addressOffset;
+        public int32 pid;
         public uint8 type;
         public uint8 state;
     }

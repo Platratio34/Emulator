@@ -165,7 +165,7 @@ public class Assembler {
                             }
                             addDefine(new Define(name, val));
                             if (type == null)
-                                type = "uint32*";
+                                type = "int32*";
                             symbols.addDefinition(new ValueSymbol(name, -1, -1, type, content), lineN + 1);
                         } else if (parts[2].startsWith("(")) {
                             Matcher m = ALLOC_PATTERN.matcher(parts[2]);
@@ -173,14 +173,14 @@ public class Assembler {
                             int size = Math.ceilDiv(getVal(m.group(1)).value, 4);
                             addDefine(new Define(name).withSize(size * 4));
                             if (type == null)
-                                type = "uint32[" + size + "]*";
+                                type = "int32[" + size + "]*";
                             symbols.addDefinition(new ValueSymbol(name, -1, -1, type, ""),
                                     lineN + 1);
                         } else {
                             int val = getVal(parts[2]).value;
                             addDefine(new Define(name, val));
                             if (type == null)
-                                type = "uint32";
+                                type = "int32";
                             symbols.addDefinition(
                                     new ValueSymbol(name, -1, -1, "const " + type, val + ""),
                                     lineN + 1);
@@ -188,7 +188,7 @@ public class Assembler {
                     }
                     case "var" -> {
                         String name = parts[1];
-                        String type = parts.length > 3 ? parts[3] : "uint32";
+                        String type = parts.length > 3 ? parts[3] : "int32";
                         if (parts[2].startsWith("\"")) {
                             Matcher m = STRING_PATTERN.matcher(line);
                             m.find();
@@ -245,7 +245,7 @@ public class Assembler {
                             }
                             addDefine(new Define(name, val));
                             if (type == null)
-                                type = "uint32*";
+                                type = "int32*";
                             symbols.addVariable(new VariableSymbol(name, -1, -1, type, content), lineN + 1);
                         } else if (parts[2].startsWith("(")) {
                             Matcher m = ALLOC_PATTERN.matcher(parts[2]);
@@ -253,7 +253,7 @@ public class Assembler {
                             int size = Math.ceilDiv(getVal(m.group(1)).value, 4);
                             addDefine(new Define(name).withSize(size * 4));
                             if (type == null)
-                                type = "uint32[" + size + "]*";
+                                type = "int32[" + size + "]*";
                             symbols.addVariable(new VariableSymbol(name, -1, -1, type, ""),
                                     lineN + 1);
                         } else {
@@ -264,7 +264,7 @@ public class Assembler {
                                 addDefine(new Define(name, new int[] { val }));
                             }
                             if (type == null)
-                                type = "uint32";
+                                type = "int32";
                             symbols.addVariable(
                                     new VariableSymbol(name, -1, -1, type, val + ""),
                                     lineN + 1);

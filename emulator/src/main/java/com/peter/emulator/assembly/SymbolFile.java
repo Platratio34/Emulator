@@ -382,10 +382,10 @@ public class SymbolFile {
         }
 
         public int getValue() {
-            if (type.equals("const uint32")) {
+            if (type.equals("const int32")) {
                 return Integer.parseInt(value);
             }
-            throw new RuntimeException("Can't get value of non `const uint32`");
+            throw new RuntimeException("Can't get value of non `const int32`");
         }
 
         @Override

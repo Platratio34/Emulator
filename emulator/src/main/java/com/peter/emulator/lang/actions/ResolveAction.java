@@ -82,8 +82,8 @@ public class ResolveAction extends ComplexAction {
                     addReserve(rIndex);
                     // addDirect("// index; %s", rIndex);
                     Expression indexExp = new Expression(scope, it.index.subTokens, rIndex);
-                    if (indexExp.getType() != null && !indexExp.getType().equals(ELPrimitives.UINT32))
-                        throw ELAnalysisError.error("Index must resolve to a uint32",
+                    if (indexExp.getType() != null && !indexExp.getType().equals(ELPrimitives.INT32))
+                        throw ELAnalysisError.error("Index must resolve to a int32",
                                 it.index.subFirst().startLocation.span(it.index.subLast().endLocation));
                     ELType resolvedType = t.resolve(it.span());
                     int size = resolvedType.sizeof();

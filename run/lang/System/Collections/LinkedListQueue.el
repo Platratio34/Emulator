@@ -42,7 +42,7 @@ class LinkedListQueue<T> extends Collection<T> {
     }
 
     @Override
-    public uint32 size() {
+    public int32 size() {
         return _size;
     }
 

@@ -330,9 +330,9 @@ public class MachineCode {
         return (int)v;
     }
 
-    public static int uint32ToInt8(int val) {
+    public static int int32ToInt8(int val) {
         if (val < -128 || val > 127)
-            throw new RuntimeException("Invalid uint32 to int8 conversion");
+            throw new RuntimeException("Invalid int32 to int8 conversion");
         if (val < 0) {
             byte v = (byte) val;
             return ((int) v) & 0xff;

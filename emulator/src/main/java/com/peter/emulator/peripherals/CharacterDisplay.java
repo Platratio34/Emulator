@@ -73,7 +73,7 @@ public class CharacterDisplay implements DMAPeripheral {
             if(addr == 0) {
                 charBufferStart = 0;
             } else {
-                charBufferStart = cpu.translateAddress(msg[1]);
+                charBufferStart = msg[1];
             }
             manager.writeRspWords(0x01, deviceId, 0x01);
         } else if(msg[0] == 0x0000_0002) {
@@ -81,7 +81,7 @@ public class CharacterDisplay implements DMAPeripheral {
             if(addr == 0) {
                 colorBufferStart = 0;
             } else {
-                colorBufferStart = cpu.translateAddress(msg[1]);
+                colorBufferStart = msg[1];
             }
             manager.writeRspWords(0x01, deviceId, 0x01);
         } else {

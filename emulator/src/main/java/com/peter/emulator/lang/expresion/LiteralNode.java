@@ -10,7 +10,7 @@ import com.peter.emulator.lang.tokens.Token;
 
 public class LiteralNode extends ExpressionNode {
     public int value;
-    public ELType type = ELPrimitives.UINT32;
+    public ELType type = ELPrimitives.INT32;
 
     public Token token;
 

@@ -33,7 +33,7 @@ public class FunctionAction extends ComplexAction {
         if (id.starts("SysD")) {
             switch (id.parts[1]) {
                 case "memSet", "memGet", "memCopy" -> {
-                    // SysD.memSet(uint32 addr, uint32 value);
+                    // SysD.memSet(int32 addr, int32 value);
                     // errors.warning("SysD.memSet is not currently implemented", it);
                     onStack = false;
                 }
@@ -164,14 +164,14 @@ public class FunctionAction extends ComplexAction {
                     actions.addAll(tempActions);
                     scope.addSymbol(new ELSymbol.ELNamespaceSymbol("SysD", it.spanFirst()));
                     scope.addSymbol(new ELSymbol(ELSymbol.Type.FUNCTION_NAME, it.next().spanFirst(),
-                            "`constexp void SysD.memSet(void* addr, uint32 value)`\n\nSets the memory at `addr` to `value`"));
-                    // void SysD.memSet(uint32 addr, uint32 value);
-                    if (types.size() != 2 || !((types.get(0).canCastTo(ELPrimitives.UINT32)
+                            "`constexp void SysD.memSet(void* addr, int32 value)`\n\nSets the memory at `addr` to `value`"));
+                    // void SysD.memSet(int32 addr, int32 value);
+                    if (types.size() != 2 || !((types.get(0).canCastTo(ELPrimitives.INT32)
                             || types.get(0).canCastTo(ELPrimitives.VOID_PTR))
-                            && types.get(1).canCastTo(ELPrimitives.UINT32))) {
+                            && types.get(1).canCastTo(ELPrimitives.INT32))) {
 
                         throw ELAnalysisError.error(String.format(
-                                "Found no overload of SysD.memSet matching %s; Found SysD.memSet(uint32 addr, uint32 value)",
+                                "Found no overload of SysD.memSet matching %s; Found SysD.memSet(int32 addr, int32 value)",
                                 tStr), startOfParams.span(endOfParams));
                     }
                     actions.add(new DirectAction("STORE r1 r2"));
@@ -183,12 +183,12 @@ public class FunctionAction extends ComplexAction {
                     actions.addAll(tempActions);
                     scope.addSymbol(new ELSymbol.ELNamespaceSymbol("SysD", it.spanFirst()));
                     scope.addSymbol(new ELSymbol(ELSymbol.Type.FUNCTION_NAME, it.next().spanFirst(),
-                            "`constexp uint32 SysD.memGet(void* addr)`\n\nGets the memory at `addr`"));
-                    // uint32 SysD.memGet(uint32 addr);
-                    if (types.size() != 1 || !(types.get(0).canCastTo(ELPrimitives.UINT32))) {
+                            "`constexp int32 SysD.memGet(void* addr)`\n\nGets the memory at `addr`"));
+                    // int32 SysD.memGet(int32 addr);
+                    if (types.size() != 1 || !(types.get(0).canCastTo(ELPrimitives.INT32))) {
 
                         throw ELAnalysisError.error(String.format(
-                                "Found no overload of SysD.memSet matching %s; Found SysD.memSet(uint32 addr, uint32 value)",
+                                "Found no overload of SysD.memSet matching %s; Found SysD.memSet(int32 addr, int32 value)",
                                 tStr), startOfParams.span(endOfParams));
                     }
                     actions.add(new DirectAction("LOAD r1 %s", targetReg));
@@ -200,17 +200,17 @@ public class FunctionAction extends ComplexAction {
                     actions.addAll(tempActions);
                     scope.addSymbol(new ELSymbol.ELNamespaceSymbol("SysD", it.spanFirst()));
                     scope.addSymbol(new ELSymbol(ELSymbol.Type.FUNCTION_NAME, it.next().spanFirst(),
-                            "`constexp void SysD.memCopy(void* src, uint32 start, uint32 end, void* dest, uint32 destStart)`\n\nCopies the memory from `src + start` through `src + end` to memory starting at `dest + destStart`"));
+                            "`constexp void SysD.memCopy(void* src, int32 start, int32 end, void* dest, int32 destStart)`\n\nCopies the memory from `src + start` through `src + end` to memory starting at `dest + destStart`"));
                     // errors.warning("SysD.copy is not currently implemented", it);
 
                     /*
-                    [r1 = void* src, r2 = uint32 start, r3 = uint32 end, r4 = void* dest, r5 = uint32 destStart]
+                    [r1 = void* src, r2 = int32 start, r3 = int32 end, r4 = void* dest, r5 = int32 destStart]
                     
                     ADD r1 r1 r2 // src += start
                     ADD r4 r4 r5 // dest += destStart
                     SUB r3 r3 r2 // end -= start // end = num elements
                     
-                    // r2 = uint32 temp
+                    // r2 = int32 temp
                     :loopStart
                     COPY MEM r1 r4 // mem[dest] = msm[src]
                     DEC r3 // end--

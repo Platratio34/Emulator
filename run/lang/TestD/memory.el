@@ -3,7 +3,7 @@ namespace Memory {
     protected static void* heapStart = 0x2_3000;
     protected static MemoryBlock* allocatedBlocks = 0;
     protected static MemoryBlock* blockFreeList = 0x2_2000;
-    protected static const uint32 ALLOCATED_BLOCK_LIST = 0x2_2000;
+    protected static const int32 ALLOCATED_BLOCK_LIST = 0x2_2000;
 
     public static void setup() {
         MemoryBlock* list = blockFreeList;
@@ -14,14 +14,14 @@ namespace Memory {
         list.next = nullptr;
     }
 
-    public static void* malloc(uint32 size) {
+    public static void* malloc(int32 size) {
         if(size > 0x1000) {
             return nullptr;
         }
         if(blockFreeList == nullptr) {
             return nullptr;
         }
-        uint32 wordSize = size >> 2;
+        int32 wordSize = size >> 2;
         if(size & 0x3 != 0) {
             wordSize++;
         }

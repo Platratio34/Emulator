@@ -1,18 +1,18 @@
 // static data
 // TestD
-#define TestD.CONSOLE_END 0x0002_0200 // uint32
-#define TestD.CMD_ADDR 0x0002_0000 // uint32*
-#var TestD.CONSOLE_SETUP_CMD [0x0001,0x0002_0100,0x0002_0200] // uint32[3]
+#define TestD.CONSOLE_END 0x0002_0200 // int32
+#define TestD.CMD_ADDR 0x0002_0000 // int32*
+#var TestD.CONSOLE_SETUP_CMD [0x0001,0x0002_0100,0x0002_0200] // int32[3]
 #var TestD.testStr "Test\n" // char[5]
-#define TestD.CONSOLE_START 0x0002_0100 // uint32
-#define TestD.CMD_DEVICE 0x0002_0002 // uint32*
+#define TestD.CONSOLE_START 0x0002_0100 // int32
+#define TestD.CMD_DEVICE 0x0002_0002 // int32*
 #define TestD.str "// Test" // char*
-#define TestD.CMD_WRITTEN 0x0001 // uint32
-#var TestD.v 0x0000 // uint32
+#define TestD.CMD_WRITTEN 0x0001 // int32
+#var TestD.v 0x0000 // int32
 #var TestD.testStr2 "Test2\n\0" // char[7]
-#define TestD.CMD_STATUS 0x0002_0001 // uint32*
-#define TestD.CMD_START 0x0002_0008 // uint32*
-#define TestD.CMD_SIZE 0x0002_0004 // uint32*
+#define TestD.CMD_STATUS 0x0002_0001 // int32*
+#define TestD.CMD_START 0x0002_0008 // int32*
+#define TestD.CMD_SIZE 0x0002_0004 // int32*
 #var TestD.consolePntr TestD.CONSOLE_START // void*
 
 //--------
@@ -26,7 +26,7 @@ COPY rStack r15
 // 0 48:10
 COPY rIC r1
 STACK PUSH r1
-//  uint32 code = SysD.rIC;
+//  int32 code = SysD.rIC;
 
 // 1 49:10
 LOAD rIC 0
@@ -64,7 +64,7 @@ LOAD r1 3
 STACK PUSH r1
 LOAD r1 &TestD.CONSOLE_SETUP_CMD
 STACK PUSH r1
-GOTO PUSH :TestD.peripheralCommand_uint32_uint32_uint32*
+GOTO PUSH :TestD.peripheralCommand_int32_int32_int32*
 STACK DEC 12
 //  peripheralCommand(0x001, 0x003, & CONSOLE_SETUP_CMD)
 
@@ -76,7 +76,7 @@ STACK POP r15
 GOTO POP
 #endfunction void
 
-#function TestD.wait_uint32 time uint32
+#function TestD.wait_int32 time int32
 STACK PUSH r15
 COPY rStack r15
 // 0 56:10
@@ -98,7 +98,7 @@ GOTO :while_condition_1
 :while_end_1
 //  while(time > 0) {time--;}
 
-:func_exit_TestD.wait_uint32
+:func_exit_TestD.wait_int32
 STACK POP r15
 GOTO POP
 #endfunction void
@@ -113,12 +113,12 @@ LOAD rIH &:TestD.onInterrupt
 
 // 1 13:10
 STACK INC 4
-//  uint32 b;
+//  int32 b;
 
 // 2 14:10
 COPY rPgm r1
 STACK PUSH r1
-//  uint32 a = SysD.rPgm;
+//  int32 a = SysD.rPgm;
 
 // 3 15:10
 LOAD r1 &TestD.v
@@ -165,7 +165,7 @@ COPY r15 r1
 INC r1 8
 LOAD MEM r1 r1
 STACK PUSH r1
-GOTO PUSH :TestD.funcb_uint32
+GOTO PUSH :TestD.funcb_int32
 STACK DEC 4
 //  funcb(c);
 
@@ -200,7 +200,7 @@ LOAD r1 &TestD.testStr
 STACK PUSH r1
 LOAD r1 5
 STACK PUSH r1
-GOTO PUSH :TestD.printStr_char*_uint32
+GOTO PUSH :TestD.printStr_char*_int32
 STACK DEC 8
 //  printStr(& testStr, 5);
 
@@ -209,7 +209,7 @@ LOAD r1 &TestD.testStr2
 STACK PUSH r1
 LOAD r1 0
 STACK PUSH r1
-GOTO PUSH :TestD.printStr_char*_uint32
+GOTO PUSH :TestD.printStr_char*_int32
 STACK DEC 8
 //  printStr(& testStr2, 0);
 
@@ -223,7 +223,7 @@ STACK DEC 4
 // 17 34:10
 LOAD r1 1000
 STACK PUSH r1
-GOTO PUSH :TestD.wait_uint32
+GOTO PUSH :TestD.wait_int32
 STACK DEC 4
 //  wait(1000)
 
@@ -236,7 +236,7 @@ STACK POP r15
 HALT
 #endfunction void
 
-#function TestD.funcb_uint32 a uint32
+#function TestD.funcb_int32 a int32
 STACK PUSH r15
 COPY rStack r15
 // 0 39:10
@@ -249,12 +249,12 @@ ADD r2 r3 r2
 STORE r2 r1
 //  v += a;
 
-:func_exit_TestD.funcb_uint32
+:func_exit_TestD.funcb_int32
 STACK POP r15
 GOTO POP
 #endfunction void
 
-#function TestD.funcb_uint32_uint32* a uint32, b uint32*
+#function TestD.funcb_int32_int32* a int32, b int32*
 STACK PUSH r15
 COPY rStack r15
 // 0 43:10
@@ -267,12 +267,12 @@ ADD r2 r3 r2
 STORE r2 r1
 //  v += a;
 
-:func_exit_TestD.funcb_uint32_uint32*
+:func_exit_TestD.funcb_int32_int32*
 STACK POP r15
 GOTO POP
 #endfunction void
 
-#function TestD.peripheralCommand_uint32_uint32_uint32* deviceId uint32, cmdSize uint32, cmd uint32*
+#function TestD.peripheralCommand_int32_int32_int32* deviceId int32, cmdSize int32, cmd int32*
 STACK PUSH r15
 COPY rStack r15
 // 0 19:10
@@ -321,7 +321,7 @@ OR r2 r2 r3
 STORE r2 r1
 // * CMD_ADDR = 0x0101_0000 | deviceId;
 
-:func_exit_TestD.peripheralCommand_uint32_uint32_uint32*
+:func_exit_TestD.peripheralCommand_int32_int32_int32*
 STACK POP r15
 GOTO POP
 #endfunction void
@@ -360,7 +360,7 @@ STACK POP r15
 GOTO POP
 #endfunction StructA*
 
-#function TestD.printStr_char*_uint32 str char*, len uint32
+#function TestD.printStr_char*_int32 str char*, len int32
 STACK PUSH r15
 COPY rStack r15
 // 0 50:10
@@ -461,7 +461,7 @@ STORE r1 r3
 // 19 70:56
 // ;
 
-:func_exit_TestD.printStr_char*_uint32
+:func_exit_TestD.printStr_char*_int32
 STACK POP r15
 GOTO POP
 #endfunction void

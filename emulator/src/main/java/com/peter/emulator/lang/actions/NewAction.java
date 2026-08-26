@@ -44,7 +44,7 @@ public class NewAction extends ComplexAction {
             // return p
             addDirect("LOAD %s %d", targetReg, classSize);
             addDirect("STACK INC 4\nSTACK PUSH %s", targetReg);
-            addDirect("GOTO PUSH :Memory.malloc_uint32");
+            addDirect("GOTO PUSH :Memory.malloc_int32");
             addDirect("STACK INC -4\nSTACK POP %s", targetReg);
             // addDirect("STACK PUSH %s", targetReg);
             // FunctionAction fa = new FunctionAction(scope, null, clazz)
@@ -66,7 +66,7 @@ public class NewAction extends ComplexAction {
             // needs to be eqivelant to:
             // malloc(T.sizeof() * len); -> malloc(r[sr])
             addDirect("STACK INC 4\nSTACK PUSH %s", targetReg);
-            addDirect("GOTO PUSH :Memory.malloc_uint32");
+            addDirect("GOTO PUSH :Memory.malloc_int32");
             addDirect("STACK INC -4\nSTACK POP %s", targetReg);
         } else {
             throw ELAnalysisError.error("Unknown new expression. Expected array size or constructor", it);

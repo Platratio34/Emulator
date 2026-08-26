@@ -663,7 +663,7 @@ const asmLines = {
         }
     },
     "TRANSLATE": {
-        name: "Translate Address", desc: "Translated the address in `r[rg]` using the MMU, storing the result back into `r[rg]`", usage: "`TRANSLATE [rg]`"
+        name: "Translate Address", desc: "Translated the address in `r[rg]` using the MMU, storing the result back into `r[rg]`. **Privileged**", usage: "`TRANSLATE [rg]`"
     },
     "GOTO": {
         name: "Goto", desc: "Unconditional goto", usage: "`GOTO (<PUSH|POP>) (<EQ|LEQ|GT|NEQ|LT|GEQ> [rg]) <[:label]|[ra]>`", sub: {

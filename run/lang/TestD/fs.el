@@ -2,7 +2,7 @@ import Peripheral;
 
 namespace FS {
 
-    protected static uint32 deviceId = 0;
+    protected static int32 deviceId = 0;
 
     protected static bool setup() {
         deviceId = 1;
@@ -16,7 +16,7 @@ namespace FS {
         return true;
     }
 
-    public static void openFile(char* path, out uint32& status, out uint32& handle) {
+    public static void openFile(char* path, out int32& status, out int32& handle) {
         if(deviceId == 0) {
             if(!setup()) {
                 status = 0xff;
@@ -34,7 +34,7 @@ namespace FS {
         handle = Peripheral.RSP_DATA[1];
     }
 
-    public static void readFile(uint32 handle, void* buffer, uint32 size, uint32 offset, uint32* read, out uint32& state) {
+    public static void readFile(int32 handle, void* buffer, int32 size, int32 offset, int32* read, out int32& state) {
         if(deviceId == 0) {
             if(!setup()) {
                 state = 0xff;
@@ -55,7 +55,7 @@ namespace FS {
         state = *Peripheral.RSP_DATA;
     }
 
-    public static void readFileSync(uint32 handle, void* buffer, uint32 size, uint32 offset, out uint32& read, out uint32& state) {
+    public static void readFileSync(int32 handle, void* buffer, int32 size, int32 offset, out int32& read, out int32& state) {
         if(deviceId == 0) {
             if(!setup()) {
                 state = 0xff;

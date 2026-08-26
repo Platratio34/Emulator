@@ -3,7 +3,7 @@ import SysD;
 namespace System.Collections;
 
 abstract class Queue<T> extends Collection<T> {
-    protected uint32 _size = 0;
+    protected int32 _size = 0;
 
     public abstract bool enqueue(T el);
 
@@ -14,7 +14,7 @@ abstract class Queue<T> extends Collection<T> {
     public abstract T peek();
 
     @Override
-    public uint32 size() {
+    public int32 size() {
         return _size;
     }
 }

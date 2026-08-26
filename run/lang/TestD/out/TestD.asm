@@ -3,24 +3,24 @@
 #var Memory.heapStart 0x0002_3000 void*
 #var Memory.allocatedBlocks 0x0000 MemoryBlock*
 #var Memory.blockFreeList 0x0002_2000 MemoryBlock*
-#define Memory.ALLOCATED_BLOCK_LIST 0x0002_2000 uint32
+#define Memory.ALLOCATED_BLOCK_LIST 0x0002_2000 int32
 // CharacterDisplay
-#var CharacterDisplay.width 0x00 uint32
+#var CharacterDisplay.width 0x00 int32
 #var CharacterDisplay.charBuffer (960) char[960]
-#var CharacterDisplay.deviceId 0x0000 uint32
+#var CharacterDisplay.deviceId 0x0000 int32
 #var CharacterDisplay.charColorBuffer (960) char[960]
-#var CharacterDisplay.height 0x00 uint32
+#var CharacterDisplay.height 0x00 int32
 // Console
 #define Console.CONSOLE_OUT 0x0001_0300 char*
 #define Console.CONSOLE_IN 0x0001_0301 char*
 #define Console.CONSOLE_IN_COUNT 0x0001_0302 uint8*
 // FS
-#var FS.deviceId 0x0000 uint32
+#var FS.deviceId 0x0000 int32
 // TestD
 #define TestD.str "// Test" char*
 #var TestD.path "test.txt\0" char[9]
-#define TestD.TIMERS 0x0001_0200 uint32*
-#var TestD.v 0x0000 uint32
+#define TestD.TIMERS 0x0001_0200 int32*
+#var TestD.v 0x0000 int32
 #var TestD.testStr2 "Test2\n\0" char[7]
 #var TestD.testStr "Test\n" char[5]
 #define TestD.KEYBOARD_CONTROL 0x0001_0305 uint8*
@@ -30,31 +30,31 @@
 
 // Ref static data
 // SysD
-#define SysD.MEMORY_DEVICE_START 0x0001_0000 uint32
-#define SysD.MEMORY_PROCESS_START 0x0002_0000 uint32
-#define SysD.MEMORY_BLOCK_SIZE 0x8000 uint32
+#define SysD.MEMORY_DEVICE_START 0x0001_0000 int32
+#define SysD.MEMORY_PROCESS_START 0x0002_0000 int32
+#define SysD.MEMORY_BLOCK_SIZE 0x8000 int32
 // Peripheral
-#define Peripheral.TABLE 0x0001_0100 uint32*
-#define Peripheral.TIMERS 0x0001_0200 uint32*
-#define Peripheral.TYPE_STORAGE_BLOCK 0x0100_0002 uint32*
+#define Peripheral.TABLE 0x0001_0100 int32*
+#define Peripheral.TIMERS 0x0001_0200 int32*
+#define Peripheral.TYPE_STORAGE_BLOCK 0x0100_0002 int32*
 #define Peripheral.RSP_DEVICE 0x0001_0083 uint8*
-#define Peripheral.TYPE_DISPLAY_CHARACTER 0x0100_0011 uint32*
-#define Peripheral.CMD_ADDR 0x0001_0000 uint32*
+#define Peripheral.TYPE_DISPLAY_CHARACTER 0x0100_0011 int32*
+#define Peripheral.CMD_ADDR 0x0001_0000 int32*
 #define Peripheral.RSP_STATUS 0x0001_0080 uint8*
-#define Peripheral.RSP_DATA 0x0001_0084 uint32*
-#define Peripheral.CMD_DATA 0x0001_0008 uint32*
-#define Peripheral.TYPE_STORAGE_VIRTUAL 0x0100_0001 uint32*
-#define Peripheral.CMD_SIZE 0x0001_0004 uint32*
+#define Peripheral.RSP_DATA 0x0001_0084 int32*
+#define Peripheral.CMD_DATA 0x0001_0008 int32*
+#define Peripheral.TYPE_STORAGE_VIRTUAL 0x0100_0001 int32*
+#define Peripheral.CMD_SIZE 0x0001_0004 int32*
 
 //--------
 // text
 
 // Memory
 
-#function Memory.malloc_uint32 size uint32
+#function Memory.malloc_int32 size int32
 STACK PUSH r15
 COPY rStack r15
-#stackVar uint32 size -12
+#stackVar int32 size -12
 // 0 18:10
 #line run\lang\TestD\memory.el 18:10
 // Reserving r1
@@ -73,7 +73,7 @@ LOAD r1 0 // nullptr
 COPY r15 r2
 INC r2 -16
 STORE r1 r2
-GOTO :func_exit_Memory.malloc_uint32
+GOTO :func_exit_Memory.malloc_int32
 // Releasing r1
 // Releasing r2
 //  return nullptr;
@@ -98,7 +98,7 @@ LOAD r1 0 // nullptr
 COPY r15 r2
 INC r2 -16
 STORE r1 r2
-GOTO :func_exit_Memory.malloc_uint32
+GOTO :func_exit_Memory.malloc_int32
 // Releasing r1
 // Releasing r2
 //  return nullptr;
@@ -115,10 +115,10 @@ INC r1 -12
 // Reserving r1
 LOAD MEM r1 r1
 RSH r1 r1 2 // size >> 2
-#stackVar uint32 wordSize
+#stackVar int32 wordSize
 STACK PUSH r1
 // Releasing r1
-//  uint32 wordSize = size >> 2;
+//  int32 wordSize = size >> 2;
 
 // 3 25:10
 #line run\lang\TestD\memory.el 25:10
@@ -282,7 +282,7 @@ LOAD MEM r1 r1 // heapStart
 COPY r15 r2
 INC r2 -16
 STORE r1 r2
-GOTO :func_exit_Memory.malloc_uint32
+GOTO :func_exit_Memory.malloc_int32
 // Releasing r1
 // Releasing r2
 //  return heapStart;
@@ -411,7 +411,7 @@ LOAD r1 0 // nullptr
 COPY r15 r2
 INC r2 -16
 STORE r1 r2
-GOTO :func_exit_Memory.malloc_uint32
+GOTO :func_exit_Memory.malloc_int32
 // Releasing r1
 // Releasing r2
 //  return nullptr;
@@ -538,7 +538,7 @@ LOAD MEM r1 r1 // next.start
 COPY r15 r2
 INC r2 -16
 STORE r1 r2
-GOTO :func_exit_Memory.malloc_uint32
+GOTO :func_exit_Memory.malloc_int32
 // Releasing r1
 // Releasing r2
 //  return next.start;
@@ -672,13 +672,13 @@ LOAD MEM r1 r1 // next.start
 COPY r15 r2
 INC r2 -16
 STORE r1 r2
-GOTO :func_exit_Memory.malloc_uint32
+GOTO :func_exit_Memory.malloc_int32
 // Releasing r1
 // Releasing r2
 //  return next.start;
 
 #lineend
-:func_exit_Memory.malloc_uint32
+:func_exit_Memory.malloc_int32
 COPY r15 rStack
 STACK POP r15
 GOTO POP
@@ -1077,9 +1077,9 @@ LOAD r1 &CharacterDisplay.deviceId
 // Reserving r1
 LOAD MEM r1 r1 // deviceId
 STACK PUSH r1
-#stackVar uint32[2] msg2 -8
+#stackVar int32[2] msg2 -8
 // Releasing r1
-//  uint32[2] msg2 = {0x01, deviceId};
+//  int32[2] msg2 = {0x01, deviceId};
 
 // 4 24:10
 #line run\lang\TestD\CharaterDisplay.el 24:10
@@ -1092,7 +1092,7 @@ COPY r15 r1
 // Reserving r1 // &msg2
 STACK PUSH r1
 // Releasing r1
-GOTO PUSH :Peripheral.command_uint32_uint32_uint32*
+GOTO PUSH :Peripheral.command_int32_int32_int32*
 STACK DEC 12
 // Releasing r1
 //  Peripheral.command(0, 2, & msg2);
@@ -1162,9 +1162,9 @@ STACK PUSH r1
 LOAD r1 &CharacterDisplay.charBuffer
 // Reserving r1 // &charBuffer
 STACK PUSH r1
-#stackVar uint32[2] msg3 -8
+#stackVar int32[2] msg3 -8
 // Releasing r1
-//  uint32[2] msg3 = {0x01, & charBuffer};
+//  int32[2] msg3 = {0x01, & charBuffer};
 
 // 9 33:10
 #line run\lang\TestD\CharaterDisplay.el 33:10
@@ -1180,7 +1180,7 @@ INC r1 8
 // Reserving r1 // &msg3
 STACK PUSH r1
 // Releasing r1
-GOTO PUSH :Peripheral.command_uint32_uint32_uint32*
+GOTO PUSH :Peripheral.command_int32_int32_int32*
 STACK DEC 12
 // Releasing r1
 //  Peripheral.command(deviceId, 2, & msg3);
@@ -1192,11 +1192,11 @@ STACK POP r15
 GOTO POP
 #endfunction void
 
-#function CharacterDisplay.write_uint32_char index uint32, data char
+#function CharacterDisplay.write_int32_char index int32, data char
 STACK PUSH r15
 COPY rStack r15
 #stackVar char data -9
-#stackVar uint32 index -16
+#stackVar int32 index -16
 // 0 37:10
 #line run\lang\TestD\CharaterDisplay.el 37:10
 // Reserving r1
@@ -1221,18 +1221,18 @@ STORE BYTE r1 r2
 //  charBuffer[index] = data;
 
 #lineend
-:func_exit_CharacterDisplay.write_uint32_char
+:func_exit_CharacterDisplay.write_int32_char
 COPY r15 rStack
 STACK POP r15
 GOTO POP
 #endfunction void
 
-#function CharacterDisplay.write_uint32_uint32_char x uint32, y uint32, data char
+#function CharacterDisplay.write_int32_int32_char x int32, y int32, data char
 STACK PUSH r15
 COPY rStack r15
 #stackVar char data -9
-#stackVar uint32 x -20
-#stackVar uint32 y -16
+#stackVar int32 x -20
+#stackVar int32 y -16
 // 0 41:10
 #line run\lang\TestD\CharaterDisplay.el 41:10
 // Reserving r1
@@ -1268,26 +1268,26 @@ STORE BYTE r1 r2
 //  charBuffer[x + (y* width)] = data;
 
 #lineend
-:func_exit_CharacterDisplay.write_uint32_uint32_char
+:func_exit_CharacterDisplay.write_int32_int32_char
 COPY r15 rStack
 STACK POP r15
 GOTO POP
 #endfunction void
 
-#function CharacterDisplay.write_uint32_uint32_char* x uint32, y uint32, str char*
+#function CharacterDisplay.write_int32_int32_char* x int32, y int32, str char*
 STACK PUSH r15
 COPY rStack r15
 #stackVar char* str -12
-#stackVar uint32 x -20
-#stackVar uint32 y -16
+#stackVar int32 x -20
+#stackVar int32 y -16
 // 0 44:10
 #line run\lang\TestD\CharaterDisplay.el 44:10
 // Reserving r1
 LOAD r1 0 // 0
-#stackVar uint32 i
+#stackVar int32 i
 STACK PUSH r1
 // Releasing r1
-//  uint32 i = 0;
+//  int32 i = 0;
 
 // 1 45:10
 #line run\lang\TestD\CharaterDisplay.el 45:10
@@ -1389,7 +1389,7 @@ GOTO :while_condition_15
 //  while(str[i] != '\0' && x < width) {charBuffer[x + (y* width)] = str[i]; x++; i++;}
 
 #lineend
-:func_exit_CharacterDisplay.write_uint32_uint32_char*
+:func_exit_CharacterDisplay.write_int32_int32_char*
 COPY r15 rStack
 STACK POP r15
 GOTO POP
@@ -1401,11 +1401,11 @@ GOTO POP
 
 // Console
 
-#function Console.read_char*_uint32 buffer char*, bufferSize uint32
+#function Console.read_char*_int32 buffer char*, bufferSize int32
 STACK PUSH r15
 COPY rStack r15
 #stackVar char* buffer -16
-#stackVar uint32 bufferSize -12
+#stackVar int32 bufferSize -12
 // 0 81:10
 #line run\lang\TestD\console.el 81:10
 LOAD r1 Console.CONSOLE_IN_COUNT
@@ -1421,10 +1421,10 @@ LOAD r1 Console.CONSOLE_IN_COUNT
 // Reserving r1
 
 LOAD MEM BYTE r1 r1 // *CONSOLE_IN_COUNT
-#stackVar uint32 inCount
+#stackVar int32 inCount
 STACK PUSH r1
 // Releasing r1
-//  uint32 inCount =* CONSOLE_IN_COUNT;
+//  int32 inCount =* CONSOLE_IN_COUNT;
 
 // 2 83:10
 #line run\lang\TestD\console.el 83:10
@@ -1463,10 +1463,10 @@ STORE r1 r2
 #line run\lang\TestD\console.el 86:10
 // Reserving r1
 LOAD r1 0 // 0
-#stackVar uint32 i
+#stackVar int32 i
 STACK PUSH r1
 // Releasing r1
-//  uint32 i = 0;
+//  int32 i = 0;
 
 // 4 87:10
 #line run\lang\TestD\console.el 87:10
@@ -1567,17 +1567,17 @@ STORE BYTE r1 r2
 //  if(i < bufferSize) {buffer[i] = '\0';}
 
 #lineend
-:func_exit_Console.read_char*_uint32
+:func_exit_Console.read_char*_int32
 COPY r15 rStack
 STACK POP r15
 GOTO POP
 #endfunction void
 
-#function Console.intToDec_uint32_char* value uint32, str char*
+#function Console.intToDec_int32_char* value int32, str char*
 STACK PUSH r15
 COPY rStack r15
 #stackVar char* str -12
-#stackVar uint32 value -16
+#stackVar int32 value -16
 // 0 45:10
 #line run\lang\TestD\console.el 45:10
 COPY r15 r1
@@ -1658,17 +1658,17 @@ STORE BYTE 0x0 r2
 //  asm("STORE BYTE 0x0 r2\n#stackVarClear tempStr");
 
 #lineend
-:func_exit_Console.intToDec_uint32_char*
+:func_exit_Console.intToDec_int32_char*
 COPY r15 rStack
 STACK POP r15
 GOTO POP
 #endfunction void
 
-#function Console.printStr_char*_uint32 str char*, len uint32
+#function Console.printStr_char*_int32 str char*, len int32
 STACK PUSH r15
 COPY rStack r15
 #stackVar char* str -16
-#stackVar uint32 len -12
+#stackVar int32 len -12
 // 0 16:10
 #line run\lang\TestD\console.el 16:10
 COPY r15 r14
@@ -1739,7 +1739,7 @@ GOTO GT r14 :printStr_len
 //  asm(":printStr_exit");
 
 #lineend
-:func_exit_Console.printStr_char*_uint32
+:func_exit_Console.printStr_char*_int32
 COPY r15 rStack
 STACK POP r15
 GOTO POP
@@ -1773,11 +1773,11 @@ STACK POP r15
 GOTO POP
 #endfunction void
 
-#function Console.intToHex_uint32_char* value uint32, str char*
+#function Console.intToHex_int32_char* value int32, str char*
 STACK PUSH r15
 COPY rStack r15
 #stackVar char* str -12
-#stackVar uint32 value -16
+#stackVar int32 value -16
 // 0 31:10
 #line run\lang\TestD\console.el 31:10
 LOAD r14 7
@@ -1846,7 +1846,7 @@ GOTO GEQ r14 :intToHex_l1
 //  asm(":intToHex_l1_end\nINC r14 -1\nGOTO GEQ r14 :intToHex_l1");
 
 #lineend
-:func_exit_Console.intToHex_uint32_char*
+:func_exit_Console.intToHex_int32_char*
 COPY r15 rStack
 STACK POP r15
 GOTO POP
@@ -1854,12 +1854,12 @@ GOTO POP
 
 // FS
 
-#function FS.openFile_char*_out_uint32&_out_uint32& path char*, status out uint32&, handle out uint32&
+#function FS.openFile_char*_out_int32&_out_int32& path char*, status out int32&, handle out int32&
 STACK PUSH r15
 COPY rStack r15
 #stackVar char* path -20
-#stackVar out uint32& handle -12
-#stackVar out uint32& status -16
+#stackVar out int32& handle -12
+#stackVar out int32& status -16
 // 0 20:10
 #line run\lang\TestD\fs.el 20:10
 // Reserving r1
@@ -1895,7 +1895,7 @@ STORE r1 r2
 
 // 1 23:18
 #line run\lang\TestD\fs.el 23:18
-GOTO :func_exit_FS.openFile_char*_out_uint32&_out_uint32&
+GOTO :func_exit_FS.openFile_char*_out_int32&_out_int32&
 //  return;
 
 #lineend
@@ -1982,20 +1982,20 @@ STORE r1 r2
 //  handle = Peripheral.RSP_DATA[1];
 
 #lineend
-:func_exit_FS.openFile_char*_out_uint32&_out_uint32&
+:func_exit_FS.openFile_char*_out_int32&_out_int32&
 COPY r15 rStack
 STACK POP r15
 GOTO POP
 #endfunction void
 
-#function FS.readFileSync_uint32_void*_uint32_uint32_out_uint32&_out_uint32& handle uint32, buffer void*, size uint32, offset uint32, read out uint32&, state out uint32&
+#function FS.readFileSync_int32_void*_int32_int32_out_int32&_out_int32& handle int32, buffer void*, size int32, offset int32, read out int32&, state out int32&
 STACK PUSH r15
 COPY rStack r15
-#stackVar out uint32& read -16
-#stackVar uint32 offset -20
-#stackVar uint32 size -24
-#stackVar uint32 handle -32
-#stackVar out uint32& state -12
+#stackVar out int32& read -16
+#stackVar int32 offset -20
+#stackVar int32 size -24
+#stackVar int32 handle -32
+#stackVar out int32& state -12
 #stackVar void* buffer -28
 // 0 59:10
 #line run\lang\TestD\fs.el 59:10
@@ -2032,7 +2032,7 @@ STORE r1 r2
 
 // 1 62:18
 #line run\lang\TestD\fs.el 62:18
-GOTO :func_exit_FS.readFileSync_uint32_void*_uint32_uint32_out_uint32&_out_uint32&
+GOTO :func_exit_FS.readFileSync_int32_void*_int32_int32_out_int32&_out_int32&
 //  return;
 
 #lineend
@@ -2128,20 +2128,20 @@ GOTO LT r2 :FS.readFileSync_wait
 //  asm(":FS.readFileSync_wait\nLOAD MEM r2 r1\nGOTO LT r2 :FS.readFileSync_wait");
 
 #lineend
-:func_exit_FS.readFileSync_uint32_void*_uint32_uint32_out_uint32&_out_uint32&
+:func_exit_FS.readFileSync_int32_void*_int32_int32_out_int32&_out_int32&
 COPY r15 rStack
 STACK POP r15
 GOTO POP
 #endfunction void
 
-#function FS.readFile_uint32_void*_uint32_uint32_uint32*_out_uint32& handle uint32, buffer void*, size uint32, offset uint32, read uint32*, state out uint32&
+#function FS.readFile_int32_void*_int32_int32_int32*_out_int32& handle int32, buffer void*, size int32, offset int32, read int32*, state out int32&
 STACK PUSH r15
 COPY rStack r15
-#stackVar uint32* read -16
-#stackVar uint32 offset -20
-#stackVar uint32 size -24
-#stackVar uint32 handle -32
-#stackVar out uint32& state -12
+#stackVar int32* read -16
+#stackVar int32 offset -20
+#stackVar int32 size -24
+#stackVar int32 handle -32
+#stackVar out int32& state -12
 #stackVar void* buffer -28
 // 0 38:10
 #line run\lang\TestD\fs.el 38:10
@@ -2178,7 +2178,7 @@ STORE r1 r2
 
 // 1 41:18
 #line run\lang\TestD\fs.el 41:18
-GOTO :func_exit_FS.readFile_uint32_void*_uint32_uint32_uint32*_out_uint32&
+GOTO :func_exit_FS.readFile_int32_void*_int32_int32_int32*_out_int32&
 //  return;
 
 #lineend
@@ -2265,7 +2265,7 @@ STORE r1 r2
 //  state =* Peripheral.RSP_DATA;
 
 #lineend
-:func_exit_FS.readFile_uint32_void*_uint32_uint32_uint32*_out_uint32&
+:func_exit_FS.readFile_int32_void*_int32_int32_int32*_out_int32&
 COPY r15 rStack
 STACK POP r15
 GOTO POP
@@ -2396,10 +2396,10 @@ COPY rStack r15
 #line run\lang\TestD\testd.el 112:10
 // Reserving r1
 COPY rIC r1 // SysD.rIC
-#stackVar uint32 code
+#stackVar int32 code
 STACK PUSH r1
 // Releasing r1
-//  uint32 code = SysD.rIC;
+//  int32 code = SysD.rIC;
 
 // 1 113:10
 #line run\lang\TestD\testd.el 113:10
@@ -2447,7 +2447,7 @@ STACK PUSH r1
 LOAD r1 0 // 0
 STACK PUSH r1
 // Releasing r1
-GOTO PUSH :Console.printStr_char*_uint32
+GOTO PUSH :Console.printStr_char*_int32
 STACK DEC 8
 // Releasing r1
 //  Console.printStr("\n\nHalting\0", 0);
@@ -2481,10 +2481,10 @@ COPY r15 r1
 LOAD MEM r1 r1
 LOAD r2 255
 AND r1 r1 r2 // code & 0xff
-#stackVar uint32 i
+#stackVar int32 i
 STACK PUSH r1
 // Releasing r1
-//  uint32 i = code & 0xff;
+//  int32 i = code & 0xff;
 
 // 1 122:14
 #line run\lang\TestD\testd.el 122:14
@@ -2514,7 +2514,7 @@ STACK PUSH r1
 LOAD r1 0 // 0
 STACK PUSH r1
 // Releasing r1
-GOTO PUSH :Console.printStr_char*_uint32
+GOTO PUSH :Console.printStr_char*_int32
 STACK DEC 8
 // Releasing r1
 //  Console.printStr("\nTimer \0", 0);
@@ -2538,7 +2538,7 @@ INC r1 20
 // Reserving r1 // &str
 STACK PUSH r1
 // Releasing r1
-GOTO PUSH :Console.intToDec_uint32_char*
+GOTO PUSH :Console.intToDec_int32_char*
 STACK DEC 8
 // Releasing r1
 //  Console.intToDec(i, & str);
@@ -2553,7 +2553,7 @@ STACK PUSH r1
 LOAD r1 0 // 0
 STACK PUSH r1
 // Releasing r1
-GOTO PUSH :Console.printStr_char*_uint32
+GOTO PUSH :Console.printStr_char*_int32
 STACK DEC 8
 // Releasing r1
 //  Console.printStr(& str, 0);
@@ -2569,7 +2569,7 @@ STACK PUSH r1
 LOAD r1 exp_str_inline_2 // Timer\0
 STACK PUSH r1
 // Releasing r1
-GOTO PUSH :CharacterDisplay.write_uint32_uint32_char*
+GOTO PUSH :CharacterDisplay.write_int32_int32_char*
 STACK DEC 12
 // Releasing r1
 //  CharacterDisplay.write(0, 23, "Timer\0");
@@ -2585,7 +2585,7 @@ STACK DEC 8
 #stackVarClear str
 #stackVarClear i
 :if_end_28
-//  if((code & 0xffff_ff00) == 0x8000_0200) {uint32 i = code & 0xff; if(i == 1) {return;} Console.printStr("\nTimer \0", 0); char[3] str; Console.intToDec(i, & str); Console.printStr(& str, 0); CharacterDisplay.write(0, 23, "Timer\0"); return;}
+//  if((code & 0xffff_ff00) == 0x8000_0200) {int32 i = code & 0xff; if(i == 1) {return;} Console.printStr("\nTimer \0", 0); char[3] str; Console.intToDec(i, & str); Console.printStr(& str, 0); CharacterDisplay.write(0, 23, "Timer\0"); return;}
 
 // 6 134:10
 #line run\lang\TestD\testd.el 134:10
@@ -2607,10 +2607,10 @@ COPY r15 r1
 LOAD MEM r1 r1
 LOAD r2 255
 AND r1 r1 r2 // code & 0xff
-#stackVar uint32 c
+#stackVar int32 c
 STACK PUSH r1
 // Releasing r1
-//  uint32 c = code & 0xff;
+//  int32 c = code & 0xff;
 
 // 1 136:14
 #line run\lang\TestD\testd.el 136:14
@@ -2687,7 +2687,7 @@ STACK DEC 4
 // End of scope
 #stackVarClear c
 :if_end_30
-//  if((code & 0xffff_ff00) == 0x8000_0100) {uint32 c = code & 0xff; if(c == 10) {Console.printChar('\n');} if(c < 32 || c > 127) {return;} Console.printChar(c); return;}
+//  if((code & 0xffff_ff00) == 0x8000_0100) {int32 c = code & 0xff; if(c == 10) {Console.printChar('\n');} if(c < 32 || c > 127) {return;} Console.printChar(c); return;}
 
 // 7 145:10
 #line run\lang\TestD\testd.el 145:10
@@ -2701,7 +2701,7 @@ INC r1 4
 // Reserving r1 // &str
 STACK PUSH r1
 // Releasing r1
-GOTO PUSH :Console.intToHex_uint32_char*
+GOTO PUSH :Console.intToHex_int32_char*
 STACK DEC 8
 // Releasing r1
 //  Console.intToHex(code, & str);
@@ -2715,7 +2715,7 @@ STACK PUSH r1
 LOAD r1 0 // 0
 STACK PUSH r1
 // Releasing r1
-GOTO PUSH :Console.printStr_char*_uint32
+GOTO PUSH :Console.printStr_char*_int32
 STACK DEC 8
 // Releasing r1
 //  Console.printStr("\nInterrupt: \0", 0);
@@ -2730,7 +2730,7 @@ STACK PUSH r1
 LOAD r1 8 // 8
 STACK PUSH r1
 // Releasing r1
-GOTO PUSH :Console.printStr_char*_uint32
+GOTO PUSH :Console.printStr_char*_int32
 STACK DEC 8
 // Releasing r1
 //  Console.printStr(& str, 8);
@@ -2753,10 +2753,10 @@ STACK POP r15
 INTERRUPT RET
 #endfunction void
 
-#function TestD.wait_uint32 time uint32
+#function TestD.wait_int32 time int32
 STACK PUSH r15
 COPY rStack r15
-#stackVar uint32 time -12
+#stackVar int32 time -12
 // 0 152:10
 #line run\lang\TestD\testd.el 152:10
 :while_condition_33
@@ -2788,7 +2788,7 @@ GOTO :while_condition_33
 //  while(time > 0) {time--;}
 
 #lineend
-:func_exit_TestD.wait_uint32
+:func_exit_TestD.wait_int32
 COPY r15 rStack
 STACK POP r15
 GOTO POP
@@ -2815,7 +2815,7 @@ GOTO :func_exit_TestD.testRet
 COPY r15 rStack
 STACK POP r15
 GOTO POP
-#endfunction uint32
+#endfunction int32
 
 :__start
 #function TestD.main
@@ -2858,18 +2858,18 @@ GOTO PUSH :CharacterDisplay.setup
 
 // 4 25:10
 #line run\lang\TestD\testd.el 25:10
-#stackVar uint32 b
+#stackVar int32 b
 STACK INC 4
-//  uint32 b;
+//  int32 b;
 
 // 5 26:10
 #line run\lang\TestD\testd.el 26:10
 // Reserving r1
 COPY rPgm r1 // SysD.rPgm
-#stackVar uint32 a
+#stackVar int32 a
 STACK PUSH r1
 // Releasing r1
-//  uint32 a = SysD.rPgm;
+//  int32 a = SysD.rPgm;
 
 // 6 27:10
 #line run\lang\TestD\testd.el 27:10
@@ -2955,7 +2955,7 @@ INC r1 8
 LOAD MEM BYTE r1 r1 // c
 STACK PUSH r1
 // Releasing r1
-GOTO PUSH :TestD.funcb_uint32
+GOTO PUSH :TestD.funcb_int32
 STACK DEC 4
 // Releasing r1
 //  funcb(c);
@@ -3000,7 +3000,7 @@ STACK PUSH r1
 LOAD r1 0 // 0
 STACK PUSH r1
 // Releasing r1
-GOTO PUSH :Console.printStr_char*_uint32
+GOTO PUSH :Console.printStr_char*_int32
 STACK DEC 8
 // Releasing r1
 //  Console.printStr("Starting EmulatorOS\n\n\0", 0);
@@ -3014,7 +3014,7 @@ STACK PUSH r1
 LOAD r1 5 // 5
 STACK PUSH r1
 // Releasing r1
-GOTO PUSH :Console.printStr_char*_uint32
+GOTO PUSH :Console.printStr_char*_int32
 STACK DEC 8
 // Releasing r1
 //  Console.printStr(& testStr, 5);
@@ -3028,7 +3028,7 @@ STACK PUSH r1
 LOAD r1 0 // 0
 STACK PUSH r1
 // Releasing r1
-GOTO PUSH :Console.printStr_char*_uint32
+GOTO PUSH :Console.printStr_char*_int32
 STACK DEC 8
 // Releasing r1
 //  Console.printStr(& testStr2, 0);
@@ -3071,7 +3071,7 @@ INC r1 20
 // Reserving r1 // &str2
 STACK PUSH r1
 // Releasing r1
-GOTO PUSH :Console.intToDec_uint32_char*
+GOTO PUSH :Console.intToDec_int32_char*
 STACK DEC 8
 // Releasing r1
 //  Console.intToDec(0x1000, & str2);
@@ -3086,7 +3086,7 @@ STACK PUSH r1
 LOAD r1 0 // 0
 STACK PUSH r1
 // Releasing r1
-GOTO PUSH :Console.printStr_char*_uint32
+GOTO PUSH :Console.printStr_char*_int32
 STACK DEC 8
 // Releasing r1
 //  Console.printStr(& str2, 0);
@@ -3126,15 +3126,15 @@ STACK DEC 4
 
 // 27 59:10
 #line run\lang\TestD\testd.el 59:10
-#stackVar uint32 fh
+#stackVar int32 fh
 STACK INC 4
-//  uint32 fh;
+//  int32 fh;
 
 // 28 60:10
 #line run\lang\TestD\testd.el 60:10
-#stackVar uint32 rstat
+#stackVar int32 rstat
 STACK INC 4
-//  uint32 rstat;
+//  int32 rstat;
 
 // 29 61:10
 #line run\lang\TestD\testd.el 61:10
@@ -3151,7 +3151,7 @@ INC r1 36
 // Reserving r1 // &fh
 STACK PUSH r1
 // Releasing r1
-GOTO PUSH :FS.openFile_char*_out_uint32&_out_uint32&
+GOTO PUSH :FS.openFile_char*_out_int32&_out_int32&
 STACK DEC 12
 // Releasing r1
 //  FS.openFile("test.txt\0", & rstat, & fh);
@@ -3174,7 +3174,7 @@ STACK PUSH r1
 LOAD r1 0 // 0
 STACK PUSH r1
 // Releasing r1
-GOTO PUSH :Console.printStr_char*_uint32
+GOTO PUSH :Console.printStr_char*_int32
 STACK DEC 8
 // Releasing r1
 //  Console.printStr("ERROR\n\0", 0);
@@ -3192,7 +3192,7 @@ INC r1 20
 // Reserving r1 // &str2
 STACK PUSH r1
 // Releasing r1
-GOTO PUSH :Console.intToHex_uint32_char*
+GOTO PUSH :Console.intToHex_int32_char*
 STACK DEC 8
 // Releasing r1
 //  Console.intToHex(rstat, & str2);
@@ -3207,7 +3207,7 @@ STACK PUSH r1
 LOAD r1 0 // 0
 STACK PUSH r1
 // Releasing r1
-GOTO PUSH :Console.printStr_char*_uint32
+GOTO PUSH :Console.printStr_char*_int32
 STACK DEC 8
 // Releasing r1
 //  Console.printStr(& str2, 0);
@@ -3224,7 +3224,7 @@ STACK PUSH r1
 LOAD r1 0 // 0
 STACK PUSH r1
 // Releasing r1
-GOTO PUSH :Console.printStr_char*_uint32
+GOTO PUSH :Console.printStr_char*_int32
 STACK DEC 8
 // Releasing r1
 //  Console.printStr("Opened\n\0", 0);
@@ -3237,15 +3237,15 @@ STACK INC 32
 
 // 2 69:14
 #line run\lang\TestD\testd.el 69:14
-#stackVar uint32 read
+#stackVar int32 read
 STACK INC 4
-//  uint32 read;
+//  int32 read;
 
 // 3 70:14
 #line run\lang\TestD\testd.el 70:14
-#stackVar uint32 state
+#stackVar int32 state
 STACK INC 4
-//  uint32 state;
+//  int32 state;
 
 // 4 71:14
 #line run\lang\TestD\testd.el 71:14
@@ -3272,7 +3272,7 @@ INC r1 80
 // Reserving r1 // &state
 STACK PUSH r1
 // Releasing r1
-GOTO PUSH :FS.readFileSync_uint32_void*_uint32_uint32_out_uint32&_out_uint32&
+GOTO PUSH :FS.readFileSync_int32_void*_int32_int32_out_int32&_out_int32&
 STACK DEC 24
 // Releasing r1
 //  FS.readFileSync(fh, & buffer, 32, 0, & read, & state);
@@ -3290,7 +3290,7 @@ INC r1 20
 // Reserving r1 // &str2
 STACK PUSH r1
 // Releasing r1
-GOTO PUSH :Console.intToHex_uint32_char*
+GOTO PUSH :Console.intToHex_int32_char*
 STACK DEC 8
 // Releasing r1
 //  Console.intToHex(state, & str2);
@@ -3305,7 +3305,7 @@ STACK PUSH r1
 LOAD r1 0 // 0
 STACK PUSH r1
 // Releasing r1
-GOTO PUSH :Console.printStr_char*_uint32
+GOTO PUSH :Console.printStr_char*_int32
 STACK DEC 8
 // Releasing r1
 //  Console.printStr(& str2, 0);
@@ -3323,7 +3323,7 @@ INC r1 20
 // Reserving r1 // &str2
 STACK PUSH r1
 // Releasing r1
-GOTO PUSH :Console.intToHex_uint32_char*
+GOTO PUSH :Console.intToHex_int32_char*
 STACK DEC 8
 // Releasing r1
 //  Console.intToHex(read, & str2);
@@ -3338,7 +3338,7 @@ STACK PUSH r1
 LOAD r1 0 // 0
 STACK PUSH r1
 // Releasing r1
-GOTO PUSH :Console.printStr_char*_uint32
+GOTO PUSH :Console.printStr_char*_int32
 STACK DEC 8
 // Releasing r1
 //  Console.printStr(& str2, 0);
@@ -3367,7 +3367,7 @@ INC r1 76
 LOAD MEM r1 r1 // read
 STACK PUSH r1
 // Releasing r1
-GOTO PUSH :Console.printStr_char*_uint32
+GOTO PUSH :Console.printStr_char*_int32
 STACK DEC 8
 // Releasing r1
 //  Console.printStr(& buffer, read);
@@ -3379,7 +3379,7 @@ STACK DEC 40
 #stackVarClear buffer
 #stackVarClear state
 :if_end_34
-//  if(fh == 0) {Console.printStr("ERROR\n\0", 0); Console.intToHex(rstat, & str2); Console.printStr(& str2, 0);} else {Console.printStr("Opened\n\0", 0); char[32] buffer; uint32 read; uint32 state; FS.readFileSync(fh, & buffer, 32, 0, & read, & state); Console.intToHex(state, & str2); Console.printStr(& str2, 0); Console.intToHex(read, & str2); Console.printStr(& str2, 0); Console.printChar('\n'); Console.printStr(& buffer, read);}
+//  if(fh == 0) {Console.printStr("ERROR\n\0", 0); Console.intToHex(rstat, & str2); Console.printStr(& str2, 0);} else {Console.printStr("Opened\n\0", 0); char[32] buffer; int32 read; int32 state; FS.readFileSync(fh, & buffer, 32, 0, & read, & state); Console.intToHex(state, & str2); Console.printStr(& str2, 0); Console.intToHex(read, & str2); Console.printStr(& str2, 0); Console.printChar('\n'); Console.printStr(& buffer, read);}
 
 // 31 89:10
 #line run\lang\TestD\testd.el 89:10
@@ -3432,7 +3432,7 @@ STACK PUSH r1
 LOAD r1 exp_str_inline_8 // EmulatorOS\0
 STACK PUSH r1
 // Releasing r1
-GOTO PUSH :CharacterDisplay.write_uint32_uint32_char*
+GOTO PUSH :CharacterDisplay.write_int32_int32_char*
 STACK DEC 12
 // Releasing r1
 //  CharacterDisplay.write(0, 0, "EmulatorOS\0");
@@ -3450,10 +3450,10 @@ STACK POP r15
 HALT
 #endfunction void
 
-#function TestD.funcb_uint32 a uint32
+#function TestD.funcb_int32 a int32
 STACK PUSH r15
 COPY rStack r15
-#stackVar uint32 a -12
+#stackVar int32 a -12
 // 0 103:10
 #line run\lang\TestD\testd.el 103:10
 // Reserving r1
@@ -3473,17 +3473,17 @@ STORE r1 r2
 //  v += a;
 
 #lineend
-:func_exit_TestD.funcb_uint32
+:func_exit_TestD.funcb_int32
 COPY r15 rStack
 STACK POP r15
 GOTO POP
 #endfunction void
 
-#function TestD.funcb_uint32_uint32* a uint32, b uint32*
+#function TestD.funcb_int32_int32* a int32, b int32*
 STACK PUSH r15
 COPY rStack r15
-#stackVar uint32 a -16
-#stackVar uint32* b -12
+#stackVar int32 a -16
+#stackVar int32* b -12
 // 0 107:10
 #line run\lang\TestD\testd.el 107:10
 // Reserving r1
@@ -3503,7 +3503,7 @@ STORE r1 r2
 //  v += a;
 
 #lineend
-:func_exit_TestD.funcb_uint32_uint32*
+:func_exit_TestD.funcb_int32_int32*
 COPY r15 rStack
 STACK POP r15
 GOTO POP
@@ -3560,13 +3560,13 @@ GOTO POP
 
 // Peripheral
 
-#function Peripheral.command_uint32_uint32_uint32* deviceId uint32, cmdSize uint32, cmd uint32*
+#function Peripheral.command_int32_int32_int32* deviceId int32, cmdSize int32, cmd int32*
 #line <Peripheral> 1:1
 STACK PUSH r15
 COPY rStack r15
-#stackVar uint32 deviceId -20
-#stackVar uint32 cmdSize -16
-#stackVar uint32* cmd -12
+#stackVar int32 deviceId -20
+#stackVar int32 cmdSize -16
+#stackVar int32* cmd -12
 LOAD r1 Peripheral.CMD_SIZE
 COPY r15 r2
 INC r2 -16

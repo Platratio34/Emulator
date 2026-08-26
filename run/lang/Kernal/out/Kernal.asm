@@ -1,26 +1,26 @@
 // static data
 // Kernal
-#var Kernal.lastPID 0x0000 uint32
-#define Kernal.TIMER_UNIT 0x00 uint32*
-#define Kernal.CMD_DEVICE 0x8002 uint32
+#var Kernal.lastPID 0x0000 int32
+#define Kernal.TIMER_UNIT 0x00 int32*
+#define Kernal.CMD_DEVICE 0x8002 int32
 #var Kernal.SYS_NAME "EmulatorOS\0" char*
 #define Kernal.CONSOLE_OUT 0x0001_0000 char*
-#define Kernal.CMD_WRITTEN 0x0001 uint32
+#define Kernal.CMD_WRITTEN 0x0001 int32
 #var Kernal.processStates (102400) ProcessState[1024]
-#define Kernal.CMD_1 0x8005 uint32
-#define Kernal.CMD_STATUS 0x8001 uint32
-#define Kernal.CMD_2 0x8006 uint32
-#define Kernal.CMD_3 0x8007 uint32
-#define Kernal.CMD_4 0x8008 uint32
+#define Kernal.CMD_1 0x8005 int32
+#define Kernal.CMD_STATUS 0x8001 int32
+#define Kernal.CMD_2 0x8006 int32
+#define Kernal.CMD_3 0x8007 int32
+#define Kernal.CMD_4 0x8008 int32
 #define Kernal.CONSOLE_IN 0x0001_0001 char*
 #define Kernal.CONSOLE_IN_COUNT 0x0001_0002 char*
-#define Kernal.CMD_SIZE 0x8003 uint32
-#define Kernal.CMD_0 0x8004 uint32
+#define Kernal.CMD_SIZE 0x8003 int32
+#define Kernal.CMD_0 0x8004 int32
 // Kernal.Memory
-#define Kernal.Memory.MMU_MAX_BLOCKS 0x0800 uint32
-#var Kernal.Memory.mmuId 0x00 uint32
-#define Kernal.Memory.MMU_DEVICE_TYPE 0x0100_0002 uint32
-#define Kernal.Memory.MMU_START 0x0001_0000 uint32
+#define Kernal.Memory.MMU_MAX_BLOCKS 0x0800 int32
+#var Kernal.Memory.mmuId 0x00 int32
+#define Kernal.Memory.MMU_DEVICE_TYPE 0x0100_0002 int32
+#define Kernal.Memory.MMU_START 0x0001_0000 int32
 
 //--------
 // text
@@ -105,11 +105,11 @@ STACK POP r15
 GOTO POP
 #endfunction void
 
-#function Kernal.print_char*_uint32 str char*, len uint32
+#function Kernal.print_char*_int32 str char*, len int32
 STACK PUSH r15
 COPY rStack r15
 #stackVar char* str -16
-#stackVar uint32 len -12
+#stackVar int32 len -12
 // 0 23:10
 #line run/lang/Kernal/console.el 23:10
 LOAD MEM r1 Kernal.CONSOLE_OUT
@@ -131,8 +131,8 @@ LOAD MEM r3 r3
 
 // 3 26:10
 #line run/lang/Kernal/console.el 26:10
-:Kernal.print_char*_uint32_l1
-//  asm(":Kernal.print_char*_uint32_l1");
+:Kernal.print_char*_int32_l1
+//  asm(":Kernal.print_char*_int32_l1");
 
 // 4 27:14
 #line run/lang/Kernal/console.el 27:14
@@ -142,21 +142,21 @@ COPY MEM BYTE r2 r1 INC_RS
 // 5 28:14
 #line run/lang/Kernal/console.el 28:14
 INC r13 -1
-GOTO GT r13 :Kernal.print_char*_uint32_l1
-//  asm("INC r13 -1\nGOTO GT r13 :Kernal.print_char*_uint32_l1");
+GOTO GT r13 :Kernal.print_char*_int32_l1
+//  asm("INC r13 -1\nGOTO GT r13 :Kernal.print_char*_int32_l1");
 
 #lineend
-:func_exit_Kernal.print_char*_uint32
+:func_exit_Kernal.print_char*_int32
 STACK POP r15
 GOTO POP
 #endfunction void
 
-#function Kernal.read_char*_uint32_out_uint32& buffer char*, bufferSize uint32, count out uint32&
+#function Kernal.read_char*_int32_out_int32& buffer char*, bufferSize int32, count out int32&
 STACK PUSH r15
 COPY rStack r15
-#stackVar out uint32& count -12
+#stackVar out int32& count -12
 #stackVar char* buffer -20
-#stackVar uint32 bufferSize -16
+#stackVar int32 bufferSize -16
 // 0 32:10
 #line run/lang/Kernal/console.el 32:10
 LOAD r1 Console.CONSOLE_IN_COUNT
@@ -185,8 +185,8 @@ LOAD r6 1
 // 4 36:10
 #line run/lang/Kernal/console.el 36:10
 SUB r4 r3 r1
-GOTO LT r4 :Kernal.read_char*_uint32_if_end_0
-//  asm("SUB r4 r3 r1\nGOTO LT r4 :Kernal.read_char*_uint32_if_end_0");
+GOTO LT r4 :Kernal.read_char*_int32_if_end_0
+//  asm("SUB r4 r3 r1\nGOTO LT r4 :Kernal.read_char*_int32_if_end_0");
 
 // 5 37:14
 #line run/lang/Kernal/console.el 37:14
@@ -196,16 +196,16 @@ LOAD r6 0
 
 // 6 38:10
 #line run/lang/Kernal/console.el 38:10
-:Kernal.read_char*_uint32_if_end_0
-//  asm(":Kernal.read_char*_uint32_if_end_0");
+:Kernal.read_char*_int32_if_end_0
+//  asm(":Kernal.read_char*_int32_if_end_0");
 
 // 7 39:10
 #line run/lang/Kernal/console.el 39:10
 COPY r2 r4
 COPY r15 r5
 INC r5 -20
-:Kernal.read_char*_uint32_l0
-//  asm("COPY r2 r4\nCOPY r15 r5\nINC r5 -20\n:Kernal.read_char*_uint32_l0");
+:Kernal.read_char*_int32_l0
+//  asm("COPY r2 r4\nCOPY r15 r5\nINC r5 -20\n:Kernal.read_char*_int32_l0");
 
 // 8 40:14
 #line run/lang/Kernal/console.el 40:14
@@ -215,13 +215,13 @@ INC r4 -1
 
 // 9 41:14
 #line run/lang/Kernal/console.el 41:14
-GOTO GT r4 :Kernal.read_char*_uint32_l0
-//  asm("GOTO GT r4 :Kernal.read_char*_uint32_l0");
+GOTO GT r4 :Kernal.read_char*_int32_l0
+//  asm("GOTO GT r4 :Kernal.read_char*_int32_l0");
 
 // 10 42:10
 #line run/lang/Kernal/console.el 42:10
-GOTO EQ r1 :Kernal.read_char*_uint32_end
-//  asm("GOTO EQ r1 :Kernal.read_char*_uint32_end");
+GOTO EQ r1 :Kernal.read_char*_int32_end
+//  asm("GOTO EQ r1 :Kernal.read_char*_int32_end");
 
 // 11 43:14
 #line run/lang/Kernal/console.el 43:14
@@ -231,8 +231,8 @@ STORE BYTE r6 r5
 
 // 12 44:10
 #line run/lang/Kernal/console.el 44:10
-:Kernal.read_char*_uint32_end
-//  asm(":Kernal.read_char*_uint32_end");
+:Kernal.read_char*_int32_end
+//  asm(":Kernal.read_char*_int32_end");
 
 // 13 45:10
 #line run/lang/Kernal/console.el 45:10
@@ -242,7 +242,7 @@ STORE r2 r6
 //  asm("COPY r15 r6\nINC r6 -12\nSTORE r2 r6");
 
 #lineend
-:func_exit_Kernal.read_char*_uint32_out_uint32&
+:func_exit_Kernal.read_char*_int32_out_int32&
 STACK POP r15
 GOTO POP
 #endfunction void
@@ -296,9 +296,9 @@ COPY rStack r15
 LOAD r1 &Kernal.lastPID
 LOAD MEM r1 r1
 INC r1 1
-#stackVar uint32 nextPID
+#stackVar int32 nextPID
 STACK PUSH r1
-//  uint32 nextPID = lastPID + 1;
+//  int32 nextPID = lastPID + 1;
 
 // 1 120:10
 #line run/lang/Kernal/kernal.el 120:10
@@ -443,9 +443,9 @@ STORE r2 r1
 // 3 49:10
 #line run/lang/Kernal/kernal.el 49:10
 COPY rIC r1
-#stackVar uint32 code
+#stackVar int32 code
 STACK PUSH r1
-//  uint32 code = SysD.rIC;
+//  int32 code = SysD.rIC;
 
 // 4 50:10
 #line run/lang/Kernal/kernal.el 50:10
@@ -503,9 +503,9 @@ GOTO EQ r1 :if_end_6
 // 0 62:18
 #line run/lang/Kernal/kernal.el 62:18
 LOAD r1 1
-#stackVar uint32 timerIndex
+#stackVar int32 timerIndex
 STACK PUSH r1
-//  uint32 timerIndex = 1;
+//  int32 timerIndex = 1;
 
 // 1 63:18
 #line run/lang/Kernal/kernal.el 63:18
@@ -552,7 +552,7 @@ STACK DEC 4
 // End of scope
 #stackVarClear timerIndex
 :if_end_6
-//  if(code == 0x1) {uint32 timerIndex = 1; while(TIMER_UNIT[timerIndex] != 0xffff_ffff) {timerIndex++;} TIMER_UNIT[timerIndex] = 0x0;}
+//  if(code == 0x1) {int32 timerIndex = 1; while(TIMER_UNIT[timerIndex] != 0xffff_ffff) {timerIndex++;} TIMER_UNIT[timerIndex] = 0x0;}
 
 // 2 68:14
 #line run/lang/Kernal/kernal.el 68:14
@@ -571,7 +571,7 @@ GOTO EQ r1 :if_end_8
 
 #lineend
 :if_end_4
-//  if((code & 0x8000_0000) == 0) {SysD.rPM = false; SysD.interruptReturn(); return;} else {if(code == 0x8000_0001) {SysD.halt();} if(code == 0x1) {uint32 timerIndex = 1; while(TIMER_UNIT[timerIndex] != 0xffff_ffff) {timerIndex++;} TIMER_UNIT[timerIndex] = 0x0;} if((code & 0x0001_0000) != 0) {}}
+//  if((code & 0x8000_0000) == 0) {SysD.rPM = false; SysD.interruptReturn(); return;} else {if(code == 0x8000_0001) {SysD.halt();} if(code == 0x1) {int32 timerIndex = 1; while(TIMER_UNIT[timerIndex] != 0xffff_ffff) {timerIndex++;} TIMER_UNIT[timerIndex] = 0x0;} if((code & 0x0001_0000) != 0) {}}
 
 // 5 76:10
 #line run/lang/Kernal/kernal.el 76:10
@@ -599,18 +599,18 @@ STACK POP r15
 GOTO POP
 #endfunction void
 
-#function Kernal.peripheralCmd_uint32_uint32_uint32* deviceId uint32, cmdSize uint32, cmd uint32*
+#function Kernal.peripheralCmd_int32_int32_int32* deviceId int32, cmdSize int32, cmd int32*
 STACK PUSH r15
 COPY rStack r15
-#stackVar uint32 cmdSize -16
-#stackVar uint32* cmd -12
-#stackVar uint32 deviceId -20
+#stackVar int32 cmdSize -16
+#stackVar int32* cmd -12
+#stackVar int32 deviceId -20
 // 0 90:10
 #line run/lang/Kernal/kernal.el 90:10
 LOAD r1 Kernal.CMD_DEVICE
-#stackVar uint32 addr
+#stackVar int32 addr
 STACK PUSH r1
-//  uint32 addr = CMD_DEVICE;
+//  int32 addr = CMD_DEVICE;
 
 // 1 91:10
 #line run/lang/Kernal/kernal.el 91:10
@@ -685,7 +685,7 @@ STACK POP r1
 //  SysD.memSet(CMD_STATUS, CMD_WRITTEN);
 
 #lineend
-:func_exit_Kernal.peripheralCmd_uint32_uint32_uint32*
+:func_exit_Kernal.peripheralCmd_int32_int32_int32*
 STACK DEC 4
 // End of scope
 #stackVarClear cmdSize

@@ -48,10 +48,10 @@ HALT
 
 :printS
 // r15 const char* str
-// r16 const uint32 size
+// r16 const int32 size
 // r1 char* c
-// r2 uint32 end
-// r14 uint32 off
+// r2 int32 end
+// r14 int32 off
 STACK PUSH r1
 STACK PUSH r2
 COPY r15 r1
@@ -69,10 +69,10 @@ STACK POP r1
 GOTO POP
 
 :print
-// r10 uint32* consolePntr
+// r10 int32* consolePntr
 // r11 const char* c
-// r13 const uint32 CONSOLE_END
-// r14 uint32 off
+// r13 const int32 CONSOLE_END
+// r14 int32 off
 STORE r11 r10
 INC r10
 STORE CMD_WRITTEN r10

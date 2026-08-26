@@ -35,7 +35,7 @@ public class ELPrimitives {
     public static final ELClass UINT8_CLASS = new ELClass("uint8", INTERNAL_NAMESPACE, INTERNAL_UNIT) {
         @Override
         public boolean canStaticCast(ELType target) {
-            return target.equals(CHAR) || target.equals(UINT16) || target.equals(UINT32);
+            return target.equals(CHAR) || target.equals(UINT16) || target.equals(INT32);
         }
 
         @Override
@@ -48,7 +48,7 @@ public class ELPrimitives {
     public static final ELClass CHAR_CLASS = new ELClass("char", INTERNAL_NAMESPACE, INTERNAL_UNIT) {
         @Override
         public boolean canStaticCast(ELType target) {
-            return target.equals(UINT8) || target.equals(UINT16) || target.equals(UINT32);
+            return target.equals(UINT8) || target.equals(UINT16) || target.equals(INT32);
         }
 
         @Override
@@ -66,7 +66,7 @@ public class ELPrimitives {
     public static final ELClass UINT16_CLASS = new ELClass("uint16", INTERNAL_NAMESPACE, INTERNAL_UNIT) {
         @Override
         public boolean canStaticCast(ELType target) {
-            return target.equals(UINT32);
+            return target.equals(INT32);
         }
 
         public int getSize() {
@@ -74,8 +74,8 @@ public class ELPrimitives {
         };
     }.withParent(OBJECT_CLASS, OBJECT);
     public static final ELType UINT16 = new ELType("uint16", UINT16_CLASS, INTERNAL_LOCATION);
-    // uint32
-    public static final ELClass UINT32_CLASS = new ELClass("uint32", INTERNAL_NAMESPACE, INTERNAL_UNIT) {
+    // int32
+    public static final ELClass INT32_CLASS = new ELClass("int32", INTERNAL_NAMESPACE, INTERNAL_UNIT) {
         @Override
         public boolean canStaticCast(ELType target) {
             return target.equals(VOID_PTR);
@@ -86,7 +86,7 @@ public class ELPrimitives {
             return 4;
         };
     }.withParent(OBJECT_CLASS, OBJECT);
-    public static final ELType UINT32 = new ELType("uint32", UINT32_CLASS, INTERNAL_LOCATION);
+    public static final ELType INT32 = new ELType("int32", INT32_CLASS, INTERNAL_LOCATION);
     // void*
     public static final ELType VOID_PTR = new ELType.Builder("void").pointer().location(INTERNAL_LOCATION).build();
 
@@ -102,14 +102,14 @@ public class ELPrimitives {
 
     /* []
         struct array<T> {
-            public final uint32 length;
+            public final int32 length;
             public final T* values;
     
-            public array<T>(uint32 length) {
+            public array<T>(int32 length) {
                 this.length = length;
                 values = malloc(length*sizeof(T));
             }
-            public array<T>(uint32 length, T* values) {
+            public array<T>(int32 length, T* values) {
                 this.length = length;
                 this.values = values;
             }
@@ -123,7 +123,7 @@ public class ELPrimitives {
             }
     
             @Operator([])
-            operator constexpr T* get(uint32 i) {
+            operator constexpr T* get(int32 i) {
                 return values + i;
             }
     
@@ -153,11 +153,11 @@ public class ELPrimitives {
     */
     /* string
         struct string extends array<char> {
-            public string substring(uint32 start) {
+            public string substring(int32 start) {
                 return substring(start, length);
             }
-            public string substring(uint32 start, uint32 end) {
-                uint32 l = end - start;
+            public string substring(int32 start, int32 end) {
+                int32 l = end - start;
                 string str = new string[l];
                 SysD.memCopy(values, start, end, str2.values, 0, end);
                 return str;
@@ -197,7 +197,7 @@ public class ELPrimitives {
     */
 
     public static boolean isNumber(ELType type) {
-        return type.equals(UINT8, true) || type.equals(UINT16, true) || type.equals(UINT32, true);
+        return type.equals(UINT8, true) || type.equals(UINT16, true) || type.equals(INT32, true);
     }
 
     public static boolean isString(ELType type) {
@@ -210,7 +210,7 @@ public class ELPrimitives {
         PRIMITIVE_TYPES.put(UINT8, UINT8_CLASS);
         PRIMITIVE_TYPES.put(CHAR, CHAR_CLASS);
         PRIMITIVE_TYPES.put(UINT16, UINT16_CLASS);
-        PRIMITIVE_TYPES.put(UINT32, UINT32_CLASS);
+        PRIMITIVE_TYPES.put(INT32, INT32_CLASS);
         // PRIMITIVE_TYPES.put(STRING, null);
         PRIMITIVE_TYPES.put(OBJECT, OBJECT_CLASS);
         PRIMITIVE_TYPES.put(METHOD, METHOD_CLASS);

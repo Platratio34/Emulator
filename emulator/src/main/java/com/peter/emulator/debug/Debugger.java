@@ -233,7 +233,7 @@ public class Debugger {
             case "uint8" -> Integer.toString(cpu.readMemByte(address));
             case "bool" -> cpu.readMemByte(address) != 0 ? "true" : "false";
             case "uint16" -> Integer.toString(cpu.readMemShort(address));
-            case "uint32" -> Integer.toString(cpu.readMem(address));
+            case "int32" -> Integer.toString(cpu.readMem(address));
             default -> Instruction.toHexLead(cpu.readMem(address));
         };
     }

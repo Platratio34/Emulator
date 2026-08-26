@@ -419,7 +419,7 @@ public class ELType {
                         type.endLocation = token.endLocation;
                         if (!ot.subTokens.isEmpty()) {
                             if (ot.subTokens.get(0) instanceof NumberToken nt) {
-                                type.arraySizeValue = ELValue.number(ELPrimitives.UINT32, nt);
+                                type.arraySizeValue = ELValue.number(ELPrimitives.INT32, nt);
                                 type.arraySize = -1;
                             } else {
                                 throw ELAnalysisError.error("Expected number token, found "+ot.subTokens.get(0));
@@ -613,7 +613,7 @@ public class ELType {
 
     public boolean canCastTo(ELType target) {
         // check modifiers
-        if (((isVoidPtr()) && target.equals(ELPrimitives.UINT32)) || (target.isVoidPtr() && equals(ELPrimitives.UINT32)))
+        if (((isVoidPtr()) && target.equals(ELPrimitives.INT32)) || (target.isVoidPtr() && equals(ELPrimitives.INT32)))
             return true;
         if (subType == null && target.subType == null) {
             

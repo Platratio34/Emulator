@@ -294,6 +294,7 @@ public class CPU {
     public int instr;
     public int instrB;
     public boolean inInterrupt = false;
+
     public void tick() {
         if (!running)
             return;
@@ -615,11 +616,15 @@ public class CPU {
                         pgmPtr = ptr;
                     }
                     case TRANSLATE -> {
+                        if (!privilegeMode) {
+                            return;
+                        }
                         setReg(syscallI.rg, mmu.translate(this, getReg(syscallI.rg)));
                     }
                 }
             }
         }
+
     }
 
     public static String toHex(int num) {

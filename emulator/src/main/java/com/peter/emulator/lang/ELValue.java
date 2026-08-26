@@ -55,7 +55,7 @@ public abstract class ELValue {
                 size = 2;
                 if (value < 0 || value > 0xffff)
                     throw new ELCompileException("Invalid value for uint16");
-            } else if (type.equals(ELPrimitives.UINT32)) {
+            } else if (type.equals(ELPrimitives.INT32)) {
                 size = 4;
             } else if (type.pointer) {
                 size = 4;

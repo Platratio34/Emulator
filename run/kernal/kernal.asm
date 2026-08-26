@@ -45,12 +45,12 @@ SYSGOTO r0
 
 HALT // just in case ;)
 
-// void peripheralCmd(uint32 deviceID, uint32 cmdSize, uint32* cmd)
-#function peripheralCmd r0 uint32 deviceId, r1 uint32 cmdSize, r2 uint32* cmd
+// void peripheralCmd(int32 deviceID, int32 cmdSize, int32* cmd)
+#function peripheralCmd r0 int32 deviceId, r1 int32 cmdSize, r2 int32* cmd
 // r3 void* memAddr
-// r4 uint32* cmdValPntr
-// r5 uint32 end
-// r6 uint32 offset
+// r4 int32* cmdValPntr
+// r5 int32 end
+// r6 int32 offset
 STACK PUSH r3
 STACK PUSH r4
 STACK PUSH r5

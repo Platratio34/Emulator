@@ -44,11 +44,11 @@ public class StoragePeripheral implements DMAPeripheral {
         }
         switch (msg[0]) {
             case 0x01 -> { // list files
-                int startPathPntr = cpu.translateAddress(msg[1]); // null terminated char buffer
-                int rplyAddr = cpu.translateAddress(msg[2]); // start address of reply buffer
+                int startPathPntr = msg[1]; // null terminated char buffer
+                int rplyAddr = msg[2]; // start address of reply buffer
                 int rplyEnd = rplyAddr + msg[3]; // length of reply buffer (then added to start for simpler logic)
                 int offset = msg[4]; // offset within the name list to read from
-                String startPath = bus.readStringNT(startPathPntr);
+                String startPath = startPathPntr == 0 ? "" : bus.readStringNT(startPathPntr);
 
                 bus.writeWord(rplyAddr, 0x0);
 
@@ -75,9 +75,7 @@ public class StoragePeripheral implements DMAPeripheral {
                 manager.writeRspWords(0x01, deviceId, 0x01, names.length, numWritten);
             }
             case 0x02 -> { // get file descriptor
-                int pathPntr = cpu.translateAddress(msg[1]); // pointer to null terminated path string
-                // int rplyPntr = cpu.translateAddress(msg[2]); // start address of reply buffer
-                // int rplyEnd = rplyPntr + msg[3]; // length of reply buffer (then added to start for simpler logic)
+                int pathPntr = msg[1]; // pointer to null terminated path string
 
                 String path = bus.readStringNT(pathPntr);
                 File f = rootPath.resolve(path).toFile();
@@ -94,7 +92,7 @@ public class StoragePeripheral implements DMAPeripheral {
                 manager.writeRspWords(0x01, deviceId, 0x01, isDir ? 0x2 : 0x1, len);
             }
             case 0x10 -> { // open handle
-                int pathPntr = cpu.translateAddress(msg[1]); // pointer to null terminated path string
+                int pathPntr = msg[1]; // pointer to null terminated path string
                 String path = bus.readStringNT(pathPntr);
                 File f = rootPath.resolve(path).toFile();
                 if (!f.exists()) {
@@ -117,10 +115,10 @@ public class StoragePeripheral implements DMAPeripheral {
                     manager.writeRspWords(0x01, deviceId, 0x0f, handle, 0x0);
                     return;
                 }
-                int buffStart = cpu.translateAddress(msg[2]);
+                int buffStart = msg[2];
                 int buffSize = msg[3];
                 int offset = msg[4];
-                int readPtr = cpu.translateAddress(msg[5]);
+                int readPtr = msg[5];
                 // System.out.println(String.format("- %x %x %x %x", handle, buffStart, buffSize, offset));
                 if (!openFiles.containsKey(handle)) {
                     manager.writeRspWords(0x01, deviceId, 0x02, handle, 0x0);

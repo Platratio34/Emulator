@@ -2,26 +2,26 @@ import SysD;
 
 namespace Kernal {
 
-    static const uint32* CMD_ADDR = 0x1_0000;
+    static const int32* CMD_ADDR = 0x1_0000;
     static const uint8* CMD_STATUS = 0x1_0001;
     static const uint16* CMD_DEVICE = 0x1_0002;
-    static const uint32* CMD_SIZE = 0x1_0004;
-    static const uint32* CMD_START = 0x1_0008;
+    static const int32* CMD_SIZE = 0x1_0004;
+    static const int32* CMD_START = 0x1_0008;
 
-    // static const uint32 CMD_STATUS = 0x8001;
-    // static const uint32 CMD_DEVICE = 0x8002;
-    // static const uint32 CMD_SIZE = 0x8003;
-    // static const uint32 CMD_0 = 0x8004;
-    // static const uint32 CMD_1 = 0x8005;
-    // static const uint32 CMD_2 = 0x8006;
-    // static const uint32 CMD_3 = 0x8007;
-    // static const uint32 CMD_4 = 0x8008;
-    static const uint32 CMD_WRITTEN = 0x0001;
+    // static const int32 CMD_STATUS = 0x8001;
+    // static const int32 CMD_DEVICE = 0x8002;
+    // static const int32 CMD_SIZE = 0x8003;
+    // static const int32 CMD_0 = 0x8004;
+    // static const int32 CMD_1 = 0x8005;
+    // static const int32 CMD_2 = 0x8006;
+    // static const int32 CMD_3 = 0x8007;
+    // static const int32 CMD_4 = 0x8008;
+    static const int32 CMD_WRITTEN = 0x0001;
 
     static final char* SYS_NAME = "EmulatorOS\0";
     static final ProcessState[1024] processStates;
 
-    static const uint32* TIMER_UNIT;
+    static const int32* TIMER_UNIT;
     // static Console console;
 
     // #syscall 0x0001 printChar
@@ -52,7 +52,7 @@ namespace Kernal {
         oldState.pid = 0;
         oldState.updateInterrupt();
 
-        uint32 code = SysD.rIC;
+        int32 code = SysD.rIC;
         if((code & 0x8000_0000) == 0) { // system interrupt in the active process
             SysD.rPM = false;
             // System.onInterrupt(code);
@@ -65,7 +65,7 @@ namespace Kernal {
                 SysD.halt(); // this is a breaking instruct, we just don't know it
             }
             if(code == 0x8000_0002) { // Timer interrupt
-                uint32 timerIndex = 1;
+                int32 timerIndex = 1;
                 while(TIMER_UNIT[timerIndex] != 0xffff_ffff) {
                     timerIndex++;
                 }
@@ -92,23 +92,23 @@ namespace Kernal {
         SysD.halt(); // this is a breaking instruct, we just don't know it
     }
 
-    public static void peripheralCmd(uint32 deviceId, uint32 cmdSize, uint32* cmd) {
+    public static void peripheralCmd(int32 deviceId, int32 cmdSize, int32* cmd) {
         *CMD_SIZE = cmdSize;
         *CMD_DEVICE = deviceId;
         SysD.memCopy(cmd, 0, cmdSize, CMD_START, 0);
         *CMD_STATUS = 0x1;
     }
 
-    // public static uint32 getPeripheral(uint32 type) {
-    //     uint32[1] cmd = {0x1};
+    // public static int32 getPeripheral(int32 type) {
+    //     int32[1] cmd = {0x1};
     //     peripheralCmd(0, 0x1, &cmd);
     //     while(SysD.memGet(0x8080) != 0x1) {
     //         asm("NO OP");
     //     }
-    //     uint32 numDevices = SysD.memGet(0x8082);
+    //     int32 numDevices = SysD.memGet(0x8082);
     //     for(int i = 0; i < numDevices; i++) {
-    //         uint32 addr = 0x8083 + ( i * 2 );
-    //         uint32 deviceType = SysD.memGet(addr+1);
+    //         int32 addr = 0x8083 + ( i * 2 );
+    //         int32 deviceType = SysD.memGet(addr+1);
     //         if(deviceType == type) {
     //             return SysD.memGet(addr);
     //         }
@@ -116,10 +116,10 @@ namespace Kernal {
     //     return 0;
     // }
 
-    static uint32 lastPID = 0;
+    static int32 lastPID = 0;
 
     public static ProcessState* createProcess() {
-        uint32 nextPID = lastPID + 1;
+        int32 nextPID = lastPID + 1;
         if(nextPID == 1024) {
             nextPID = 1;
             while(processStates[nextPID].status != 0) {
@@ -137,15 +137,15 @@ namespace Kernal {
     }
 
     struct ProcessState {
-        public uint32 pid;
-        public uint32 pgmPtr;
+        public int32 pid;
+        public int32 pgmPtr;
         public void* stackPtr;
         public void* memTablePtr;
         public bool privileged;
-        public uint32[16] registers;
+        public int32[16] registers;
 
-        public uint32 status;
-        public method<uint32> interruptHandler;
+        public int32 status;
+        public method<int32> interruptHandler;
 
         public void update() {
             pgmPtr = SysD.rPgm;

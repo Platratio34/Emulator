@@ -13,60 +13,60 @@ public class SysD extends Namespace {
     public SysD(ProgramModule module) {
         super("SysD");
         unit = new ProgramUnit(module, "<SysD>");
-        // void memSet(uint32 address, uint32 value)
+        // void memSet(int32 address, int32 value)
         ELFunction memSet = addStaticFunction(new ELFunction(ELProtectionLevel.PUBLIC, true, this, "memSet", FunctionType.STATIC, true, unit, SYSD_LOCATION));
-        memSet.addParameter(ELPrimitives.UINT32, "address");
-        memSet.addParameter(ELPrimitives.UINT32, "value");
-        // void memSet(uint32 address, char value)
+        memSet.addParameter(ELPrimitives.INT32, "address");
+        memSet.addParameter(ELPrimitives.INT32, "value");
+        // void memSet(int32 address, char value)
         ELFunction memSet2 = addStaticFunction(new ELFunction(ELProtectionLevel.PUBLIC, true, this, "memSet", FunctionType.STATIC, true, unit, SYSD_LOCATION));
-        memSet2.addParameter(ELPrimitives.UINT32, "address");
+        memSet2.addParameter(ELPrimitives.INT32, "address");
         memSet2.addParameter(ELPrimitives.CHAR, "value");
-        // uint32 memGet(uint32 address)
+        // int32 memGet(int32 address)
         ELFunction memGet = addStaticFunction(new ELFunction(ELProtectionLevel.PUBLIC, true, this, "memGet", FunctionType.STATIC, true, unit, SYSD_LOCATION));
-        memGet.addParameter(ELPrimitives.UINT32, "address");
-        memGet.ret = ELPrimitives.UINT32;
-        // void memCopy(void* src, uint32 start, uint32 end, void* dest, uint32 destStart);
+        memGet.addParameter(ELPrimitives.INT32, "address");
+        memGet.ret = ELPrimitives.INT32;
+        // void memCopy(void* src, int32 start, int32 end, void* dest, int32 destStart);
         ELFunction memCopy = addStaticFunction(new ELFunction(ELProtectionLevel.PUBLIC, true, this, "memCopy", FunctionType.STATIC, true, unit, SYSD_LOCATION));
         memCopy.addParameter(ELPrimitives.VOID_PTR, "src");
-        memCopy.addParameter(ELPrimitives.UINT32, "start");
-        memCopy.addParameter(ELPrimitives.UINT32, "end");
+        memCopy.addParameter(ELPrimitives.INT32, "start");
+        memCopy.addParameter(ELPrimitives.INT32, "end");
         memCopy.addParameter(ELPrimitives.VOID_PTR, "dest");
-        memCopy.addParameter(ELPrimitives.UINT32, "destStart");
-        // void <T> memCopy(T* src, uint32 start, uint32 end, T* dest, uint32 start);
-        // boolean <T> memEquals(T* a, T* b, uint32 length);
+        memCopy.addParameter(ELPrimitives.INT32, "destStart");
+        // void <T> memCopy(T* src, int32 start, int32 end, T* dest, int32 start);
+        // boolean <T> memEquals(T* a, T* b, int32 length);
         ELFunction memEquals = addStaticFunction(new ELFunction(ELProtectionLevel.PUBLIC, true, this, "memEquals", FunctionType.STATIC, true, unit, SYSD_LOCATION));
         memEquals.addParameter(ELPrimitives.VOID_PTR, "a");
         memEquals.addParameter(ELPrimitives.VOID_PTR, "b");
-        memEquals.addParameter(ELPrimitives.UINT32, "length");
+        memEquals.addParameter(ELPrimitives.INT32, "length");
         memEquals.ret = ELPrimitives.BOOL;
 
-        // void* sysCall(uint32 call)
+        // void* sysCall(int32 call)
         ELFunction sysCall = addStaticFunction(new ELFunction(ELProtectionLevel.PUBLIC, true, this, "sysCall", FunctionType.STATIC, true, unit, SYSD_LOCATION));
-        sysCall.addParameter(ELPrimitives.UINT32, "call");
+        sysCall.addParameter(ELPrimitives.INT32, "call");
         sysCall.ret = ELPrimitives.VOID_PTR;
 
-        // uint32 getPID()
+        // int32 getPID()
         ELFunction getPID = addStaticFunction(new ELFunction(ELProtectionLevel.PUBLIC, true, this, "getPID", FunctionType.STATIC, true, unit, SYSD_LOCATION));
-        getPID.ret = ELPrimitives.UINT32;
+        getPID.ret = ELPrimitives.INT32;
 
-        // const uint32 MEMORY_DEVICE_START = 0x1_0000;
-        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.CONST, ELPrimitives.UINT32, "MEMORY_DEVICE_START", true, this, unit, SYSD_LOCATION).setValue(0x1_0000));
-        // const uint32 MEMORY_PROCESS_START = 0x2_0000;
-        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.CONST, ELPrimitives.UINT32, "MEMORY_PROCESS_START", true, this, unit, SYSD_LOCATION).setValue(0x2_0000));
-        // const uint32 MEMORY_BLOCK_SIZE = 0x8000;
-        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.CONST, ELPrimitives.UINT32, "MEMORY_BLOCK_SIZE", true, this, unit, SYSD_LOCATION).setValue(0x8000));
+        // const int32 MEMORY_DEVICE_START = 0x1_0000;
+        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.CONST, ELPrimitives.INT32, "MEMORY_DEVICE_START", true, this, unit, SYSD_LOCATION).setValue(0x1_0000));
+        // const int32 MEMORY_PROCESS_START = 0x2_0000;
+        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.CONST, ELPrimitives.INT32, "MEMORY_PROCESS_START", true, this, unit, SYSD_LOCATION).setValue(0x2_0000));
+        // const int32 MEMORY_BLOCK_SIZE = 0x8000;
+        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.CONST, ELPrimitives.INT32, "MEMORY_BLOCK_SIZE", true, this, unit, SYSD_LOCATION).setValue(0x8000));
 
         /*
         struct AddressSpace {
-            public uint32 addressOffset;
-            public uint32 pid;
+            public int32 addressOffset;
+            public int32 pid;
             public uint8 type;
             public uint8 state;
         }
          */
         ELStruct AddressSpace = new ELStruct("AddressSpace", this, unit);
-        AddressSpace.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.UINT32, "addressOffset", false, this, unit, SYSD_LOCATION));
-        AddressSpace.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.UINT32, "pid", false, this, unit, SYSD_LOCATION));
+        AddressSpace.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.INT32, "addressOffset", false, this, unit, SYSD_LOCATION));
+        AddressSpace.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.INT32, "pid", false, this, unit, SYSD_LOCATION));
         AddressSpace.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.UINT8, "type", false, this, unit, SYSD_LOCATION));
         AddressSpace.addMember(
                 new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.UINT8, "state", false, this, unit, SYSD_LOCATION));
@@ -78,14 +78,14 @@ public class SysD extends Namespace {
                 return ELPrimitives.VOID_PTR;
             }
             case "rAF", "rPID", "rIC", "rID", "rAFI", "rPIDI" -> {
-                return ELPrimitives.UINT32;
+                return ELPrimitives.INT32;
             }
             case "rPM", "rPMI" -> {
                 return ELPrimitives.BOOL;
             }
             default -> {
                 if (it.value.matches("r\\d\\d?I?")) {
-                    return ELPrimitives.UINT32;
+                    return ELPrimitives.INT32;
                 }
             }
         }

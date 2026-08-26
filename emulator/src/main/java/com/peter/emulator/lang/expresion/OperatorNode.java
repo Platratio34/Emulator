@@ -191,8 +191,8 @@ public class OperatorNode extends ExpressionNode {
                     }
                 }
                 case SUB -> {
-                    if(!t.canCastTo(ELPrimitives.UINT32)) {
-                        errors.error(String.format("Can not cast %s to uint32", t.typeString()), span());
+                    if(!t.canCastTo(ELPrimitives.INT32)) {
+                        errors.error(String.format("Can not cast %s to int32", t.typeString()), span());
                         return false;
                     }
                 }
@@ -219,7 +219,7 @@ public class OperatorNode extends ExpressionNode {
         switch(type) {
             case SHIFT_LEFT, SHIFT_RIGHT -> {
                 boolean bad = false;
-                if(!t1.canCastTo(ELPrimitives.UINT32)) {
+                if(!t1.canCastTo(ELPrimitives.INT32)) {
                     errors.error("Right side of shift must be a integer value", token);
                     bad = true;
                 }
@@ -231,7 +231,7 @@ public class OperatorNode extends ExpressionNode {
             }
             case ADD, SUB -> {
                 if(t1.isPointer()) {
-                    if(!(t2.equals(ELPrimitives.UINT32) || t2.equals(t1))) {
+                    if(!(t2.equals(ELPrimitives.INT32) || t2.equals(t1))) {
                         errors.error("Right side of pointer addition must be an integer or same type", token);
                         return false;
                     }
@@ -239,10 +239,10 @@ public class OperatorNode extends ExpressionNode {
                 }
             }
             case EQUALS, NEQ, LT, LEQ, GT, GEQ -> {
-                if(t1.isPointer() && t2.canCastTo(ELPrimitives.UINT32)) {
+                if(t1.isPointer() && t2.canCastTo(ELPrimitives.INT32)) {
                     return true;
                 }
-                if(t2.isPointer() && t1.canCastTo(ELPrimitives.UINT32)) {
+                if(t2.isPointer() && t1.canCastTo(ELPrimitives.INT32)) {
                     return true;
                 }
             }   

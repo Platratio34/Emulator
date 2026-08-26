@@ -75,7 +75,7 @@ public class VariableNode extends ExpressionNode {
             return SysD.getVarType(token.next());
         }
         if(rA == null) {
-            return ELPrimitives.UINT32;
+            return ELPrimitives.INT32;
         }
         return rA.returnType;
     }

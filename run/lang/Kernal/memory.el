@@ -2,10 +2,10 @@ import SysD;
 
 namespace Kernal.Memory {
 
-    protected static const uint32 MMU_DEVICE_TYPE = 0x0100_0002;
-    protected static const uint32 MMU_START = 0x1_0000;
-    protected static const uint32 MMU_MAX_BLOCKS = 0x0800;
-    protected static uint32 mmuId;
+    protected static const int32 MMU_DEVICE_TYPE = 0x0100_0002;
+    protected static const int32 MMU_START = 0x1_0000;
+    protected static const int32 MMU_MAX_BLOCKS = 0x0800;
+    protected static int32 mmuId;
 
     // protected static SysD.AddressSpace* blocks = MMU_START;
     // protected static SysD.AddressSpace** blocks2 = MMU_START;
@@ -13,15 +13,15 @@ namespace Kernal.Memory {
     // @Privileged()
     // internal static void _setup() {
     //     mmuId = Kernal.getPeripheral(MMU_DEVICE_TYPE);
-    //     Kernal.peripheralCmd(mmuId, 3, new uint32[] {0x00, MMU_START, MMU_MAX_BLOCKS});
+    //     Kernal.peripheralCmd(mmuId, 3, new int32[] {0x00, MMU_START, MMU_MAX_BLOCKS});
     // }
 
     // @Syscall
     // public static void* mallocBlock() {
-    //     uint32 blockId;
-    //     uint32 lastOffset = 0;
-    //     uint32 pid = SysD.rPID;
-    //     for(uint32 i = 1; i < MMU_MAX_BLOCKS; i++) {
+    //     int32 blockId;
+    //     int32 lastOffset = 0;
+    //     int32 pid = SysD.rPID;
+    //     for(int32 i = 1; i < MMU_MAX_BLOCKS; i++) {
     //         if(blocks[i].state == 0) {
     //             blockId = i;
     //             break;
@@ -40,9 +40,9 @@ namespace Kernal.Memory {
 
     // @Syscall
     // public static void freeBlock(void* block) {
-    //     uint32 pid = SysD.getPID();
-    //     uint32 offset = ((uint32)block) - MEMORY_PROCESS_START;
-    //     for(uint32 i = 1; i < MMU_MAX_BLOCKS; i++) {
+    //     int32 pid = SysD.getPID();
+    //     int32 offset = ((int32)block) - MEMORY_PROCESS_START;
+    //     for(int32 i = 1; i < MMU_MAX_BLOCKS; i++) {
     //         if(blocks[i].pid != pid && blocks[i].state != 1) {
     //             continue;
     //         }
@@ -54,10 +54,10 @@ namespace Kernal.Memory {
     //     }
     // }
 
-    // internal static uint32 getBlocks() {
-    //     uint32 pid = SysD.getPID();
-    //     uint32 num = 0;
-    //     for(uint32 i = 1; i < MMU_MAX_BLOCKS; i++) {
+    // internal static int32 getBlocks() {
+    //     int32 pid = SysD.getPID();
+    //     int32 num = 0;
+    //     for(int32 i = 1; i < MMU_MAX_BLOCKS; i++) {
     //         if(blocks[i].pid == pid && blocks[i].state == 1) {
     //             num++;
     //         }
@@ -67,8 +67,8 @@ namespace Kernal.Memory {
 
     struct PageMapTable {
 
-        public uint32 numPages;
-        public uint32* pagePointers;
+        public int32 numPages;
+        public int32* pagePointers;
 
     }
 }

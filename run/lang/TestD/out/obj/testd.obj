@@ -22,7 +22,7 @@
             "address": 12748,
             "start": 12748,
             "end": 12751,
-            "type": "uint32"
+            "type": "int32"
         },
         "TestD.testStr": {
             "address": 10700,
@@ -40,13 +40,13 @@
             "address": 10820,
             "start": 10820,
             "end": 10823,
-            "type": "uint32"
+            "type": "int32"
         },
         "FS.deviceId": {
             "address": 12752,
             "start": 12752,
             "end": 12755,
-            "type": "uint32"
+            "type": "int32"
         },
         "Memory.heapStart": {
             "address": 10664,
@@ -58,7 +58,7 @@
             "address": 12756,
             "start": 12756,
             "end": 12759,
-            "type": "uint32"
+            "type": "int32"
         },
         "TestD.testStr2": {
             "address": 10692,
@@ -82,7 +82,7 @@
             "address": 11784,
             "start": 11784,
             "end": 11787,
-            "type": "uint32"
+            "type": "int32"
         }
     },
     "functions": {
@@ -98,14 +98,14 @@
             "start": 10480,
             "end": 10548
         },
-        "FS.readFileSync_uint32_void*_uint32_uint32_out_uint32&_out_uint32&": {
+        "FS.readFileSync_int32_void*_int32_int32_out_int32&_out_int32&": {
             "args": [
-                "handle uint32",
+                "handle int32",
                 "buffer void*",
-                "size uint32",
-                "offset uint32",
-                "read out uint32&",
-                "state out uint32&"
+                "size int32",
+                "offset int32",
+                "read out int32&",
+                "state out int32&"
             ],
             "rt": "void",
             "start": 7552,
@@ -113,7 +113,7 @@
         },
         "TestD.testRet": {
             "args": [],
-            "rt": "uint32",
+            "rt": "int32",
             "start": 9056,
             "end": 9104
         },
@@ -129,24 +129,24 @@
             "start": 5300,
             "end": 5440
         },
-        "CharacterDisplay.write_uint32_char": {
+        "CharacterDisplay.write_int32_char": {
             "args": [
-                "index uint32",
+                "index int32",
                 "data char"
             ],
             "rt": "void",
             "start": 6212,
             "end": 6272
         },
-        "TestD.wait_uint32": {
-            "args": ["time uint32"],
+        "TestD.wait_int32": {
+            "args": ["time int32"],
             "rt": "void",
             "start": 8988,
             "end": 9056
         },
-        "Console.intToHex_uint32_char*": {
+        "Console.intToHex_int32_char*": {
             "args": [
-                "value uint32",
+                "value int32",
                 "str char*"
             ],
             "rt": "void",
@@ -159,29 +159,29 @@
             "start": 8008,
             "end": 8252
         },
-        "Console.printStr_char*_uint32": {
+        "Console.printStr_char*_int32": {
             "args": [
                 "str char*",
-                "len uint32"
+                "len int32"
             ],
             "rt": "void",
             "start": 7036,
             "end": 7148
         },
-        "Console.read_char*_uint32": {
+        "Console.read_char*_int32": {
             "args": [
                 "buffer char*",
-                "bufferSize uint32"
+                "bufferSize int32"
             ],
             "rt": "void",
             "start": 6600,
             "end": 6900
         },
-        "Peripheral.command_uint32_uint32_uint32*": {
+        "Peripheral.command_int32_int32_int32*": {
             "args": [
-                "deviceId uint32",
-                "cmdSize uint32",
-                "cmd uint32*"
+                "deviceId int32",
+                "cmdSize int32",
+                "cmd int32*"
             ],
             "rt": "void",
             "start": 10548,
@@ -205,73 +205,73 @@
             "start": 8252,
             "end": 8988
         },
-        "Memory.malloc_uint32": {
-            "args": ["size uint32"],
+        "Memory.malloc_int32": {
+            "args": ["size int32"],
             "rt": "void*",
             "start": 4104,
             "end": 5300
         },
-        "FS.openFile_char*_out_uint32&_out_uint32&": {
+        "FS.openFile_char*_out_int32&_out_int32&": {
             "args": [
                 "path char*",
-                "status out uint32&",
-                "handle out uint32&"
+                "status out int32&",
+                "handle out int32&"
             ],
             "rt": "void",
             "start": 7316,
             "end": 7552
         },
-        "Console.intToDec_uint32_char*": {
+        "Console.intToDec_int32_char*": {
             "args": [
-                "value uint32",
+                "value int32",
                 "str char*"
             ],
             "rt": "void",
             "start": 6900,
             "end": 7036
         },
-        "TestD.funcb_uint32": {
-            "args": ["a uint32"],
+        "TestD.funcb_int32": {
+            "args": ["a int32"],
             "rt": "void",
             "start": 10376,
             "end": 10428
         },
-        "CharacterDisplay.write_uint32_uint32_char": {
+        "CharacterDisplay.write_int32_int32_char": {
             "args": [
-                "x uint32",
-                "y uint32",
+                "x int32",
+                "y int32",
                 "data char"
             ],
             "rt": "void",
             "start": 6272,
             "end": 6364
         },
-        "FS.readFile_uint32_void*_uint32_uint32_uint32*_out_uint32&": {
+        "FS.readFile_int32_void*_int32_int32_int32*_out_int32&": {
             "args": [
-                "handle uint32",
+                "handle int32",
                 "buffer void*",
-                "size uint32",
-                "offset uint32",
-                "read uint32*",
-                "state out uint32&"
+                "size int32",
+                "offset int32",
+                "read int32*",
+                "state out int32&"
             ],
             "rt": "void",
             "start": 7788,
             "end": 8008
         },
-        "TestD.funcb_uint32_uint32*": {
+        "TestD.funcb_int32_int32*": {
             "args": [
-                "a uint32",
-                "b uint32*"
+                "a int32",
+                "b int32*"
             ],
             "rt": "void",
             "start": 10428,
             "end": 10480
         },
-        "CharacterDisplay.write_uint32_uint32_char*": {
+        "CharacterDisplay.write_int32_int32_char*": {
             "args": [
-                "x uint32",
-                "y uint32",
+                "x int32",
+                "y int32",
                 "str char*"
             ],
             "rt": "void",
@@ -284,13 +284,13 @@
             "offset": -12,
             "start": 4112,
             "end": 4112,
-            "type": "uint32"
+            "type": "int32"
         },
         {
             "offset": 0,
             "start": 4228,
             "end": 4228,
-            "type": "uint32"
+            "type": "int32"
         },
         {
             "offset": 0,
@@ -350,13 +350,13 @@
             "offset": -8,
             "start": 5992,
             "end": 5992,
-            "type": "uint32[2]"
+            "type": "int32[2]"
         },
         {
             "offset": -8,
             "start": 6148,
             "end": 6148,
-            "type": "uint32[2]"
+            "type": "int32[2]"
         },
         {
             "offset": -9,
@@ -368,7 +368,7 @@
             "offset": -16,
             "start": 6220,
             "end": 6220,
-            "type": "uint32"
+            "type": "int32"
         },
         {
             "offset": -9,
@@ -380,13 +380,13 @@
             "offset": -20,
             "start": 6280,
             "end": 6280,
-            "type": "uint32"
+            "type": "int32"
         },
         {
             "offset": -16,
             "start": 6280,
             "end": 6280,
-            "type": "uint32"
+            "type": "int32"
         },
         {
             "offset": -12,
@@ -398,19 +398,19 @@
             "offset": -20,
             "start": 6372,
             "end": 6372,
-            "type": "uint32"
+            "type": "int32"
         },
         {
             "offset": -16,
             "start": 6372,
             "end": 6372,
-            "type": "uint32"
+            "type": "int32"
         },
         {
             "offset": 0,
             "start": 6380,
             "end": 6380,
-            "type": "uint32"
+            "type": "int32"
         },
         {
             "offset": -16,
@@ -422,19 +422,19 @@
             "offset": -12,
             "start": 6608,
             "end": 6608,
-            "type": "uint32"
+            "type": "int32"
         },
         {
             "offset": 0,
             "start": 6640,
             "end": 6640,
-            "type": "uint32"
+            "type": "int32"
         },
         {
             "offset": 0,
             "start": 6704,
             "end": 6704,
-            "type": "uint32"
+            "type": "int32"
         },
         {
             "offset": -12,
@@ -446,7 +446,7 @@
             "offset": -16,
             "start": 6908,
             "end": 6908,
-            "type": "uint32"
+            "type": "int32"
         },
         {
             "offset": 0,
@@ -464,7 +464,7 @@
             "offset": -12,
             "start": 7044,
             "end": 7044,
-            "type": "uint32"
+            "type": "int32"
         },
         {
             "offset": -9,
@@ -482,7 +482,7 @@
             "offset": -16,
             "start": 7200,
             "end": 7200,
-            "type": "uint32"
+            "type": "int32"
         },
         {
             "offset": -20,
@@ -494,43 +494,43 @@
             "offset": -12,
             "start": 7324,
             "end": 7324,
-            "type": "uint32&"
+            "type": "int32&"
         },
         {
             "offset": -16,
             "start": 7324,
             "end": 7324,
-            "type": "uint32&"
+            "type": "int32&"
         },
         {
             "offset": -16,
             "start": 7560,
             "end": 7560,
-            "type": "uint32&"
+            "type": "int32&"
         },
         {
             "offset": -20,
             "start": 7560,
             "end": 7560,
-            "type": "uint32"
+            "type": "int32"
         },
         {
             "offset": -24,
             "start": 7560,
             "end": 7560,
-            "type": "uint32"
+            "type": "int32"
         },
         {
             "offset": -32,
             "start": 7560,
             "end": 7560,
-            "type": "uint32"
+            "type": "int32"
         },
         {
             "offset": -12,
             "start": 7560,
             "end": 7560,
-            "type": "uint32&"
+            "type": "int32&"
         },
         {
             "offset": -28,
@@ -542,31 +542,31 @@
             "offset": -16,
             "start": 7796,
             "end": 7796,
-            "type": "uint32*"
+            "type": "int32*"
         },
         {
             "offset": -20,
             "start": 7796,
             "end": 7796,
-            "type": "uint32"
+            "type": "int32"
         },
         {
             "offset": -24,
             "start": 7796,
             "end": 7796,
-            "type": "uint32"
+            "type": "int32"
         },
         {
             "offset": -32,
             "start": 7796,
             "end": 7796,
-            "type": "uint32"
+            "type": "int32"
         },
         {
             "offset": -12,
             "start": 7796,
             "end": 7796,
-            "type": "uint32&"
+            "type": "int32&"
         },
         {
             "offset": -28,
@@ -578,7 +578,7 @@
             "offset": 0,
             "start": 8264,
             "end": 8264,
-            "type": "uint32"
+            "type": "int32"
         },
         {
             "offset": 0,
@@ -590,7 +590,7 @@
             "offset": 0,
             "start": 8424,
             "end": 8636,
-            "type": "uint32"
+            "type": "int32"
         },
         {
             "offset": 0,
@@ -602,25 +602,25 @@
             "offset": 0,
             "start": 8696,
             "end": 8844,
-            "type": "uint32"
+            "type": "int32"
         },
         {
             "offset": -12,
             "start": 8996,
             "end": 8996,
-            "type": "uint32"
+            "type": "int32"
         },
         {
             "offset": 0,
             "start": 9196,
             "end": 9196,
-            "type": "uint32"
+            "type": "int32"
         },
         {
             "offset": 0,
             "start": 9204,
             "end": 9204,
-            "type": "uint32"
+            "type": "int32"
         },
         {
             "offset": 0,
@@ -644,13 +644,13 @@
             "offset": 0,
             "start": 9696,
             "end": 9696,
-            "type": "uint32"
+            "type": "int32"
         },
         {
             "offset": 0,
             "start": 9700,
             "end": 9700,
-            "type": "uint32"
+            "type": "int32"
         },
         {
             "offset": 0,
@@ -662,31 +662,31 @@
             "offset": 0,
             "start": 9932,
             "end": 10248,
-            "type": "uint32"
+            "type": "int32"
         },
         {
             "offset": 0,
             "start": 9936,
             "end": 10248,
-            "type": "uint32"
+            "type": "int32"
         },
         {
             "offset": -12,
             "start": 10384,
             "end": 10384,
-            "type": "uint32"
+            "type": "int32"
         },
         {
             "offset": -16,
             "start": 10436,
             "end": 10436,
-            "type": "uint32"
+            "type": "int32"
         },
         {
             "offset": -12,
             "start": 10436,
             "end": 10436,
-            "type": "uint32*"
+            "type": "int32*"
         },
         {
             "offset": -12,
@@ -698,19 +698,19 @@
             "offset": -20,
             "start": 10556,
             "end": 10652,
-            "type": "uint32"
+            "type": "int32"
         },
         {
             "offset": -16,
             "start": 10556,
             "end": 10652,
-            "type": "uint32"
+            "type": "int32"
         },
         {
             "offset": -12,
             "start": 10556,
             "end": 10652,
-            "type": "uint32*"
+            "type": "int32*"
         }
     ],
     "breakpoints": {},
@@ -2335,13 +2335,13 @@
         "Memory.ALLOCATED_BLOCK_LIST": {
             "start": -1,
             "end": -1,
-            "type": "const uint32",
+            "type": "const int32",
             "value": "139264"
         },
         "TestD.TIMERS": {
             "start": -1,
             "end": -1,
-            "type": "const uint32*",
+            "type": "const int32*",
             "value": "66048"
         },
         "exp_str_inline_2": {
@@ -2359,7 +2359,7 @@
         "Peripheral.TYPE_DISPLAY_CHARACTER": {
             "start": -1,
             "end": -1,
-            "type": "const uint32*",
+            "type": "const int32*",
             "value": "16777233"
         },
         "exp_str_inline_4": {
@@ -2371,7 +2371,7 @@
         "SysD.MEMORY_PROCESS_START": {
             "start": -1,
             "end": -1,
-            "type": "const uint32",
+            "type": "const int32",
             "value": "131072"
         },
         "exp_str_inline_1": {
@@ -2389,13 +2389,13 @@
         "SysD.MEMORY_DEVICE_START": {
             "start": -1,
             "end": -1,
-            "type": "const uint32",
+            "type": "const int32",
             "value": "65536"
         },
         "Peripheral.CMD_ADDR": {
             "start": -1,
             "end": -1,
-            "type": "const uint32*",
+            "type": "const int32*",
             "value": "65536"
         },
         "exp_str_inline_7": {
@@ -2413,7 +2413,7 @@
         "Peripheral.TIMERS": {
             "start": -1,
             "end": -1,
-            "type": "const uint32*",
+            "type": "const int32*",
             "value": "66048"
         },
         "exp_str_inline_8": {
@@ -2425,7 +2425,7 @@
         "Peripheral.TYPE_STORAGE_VIRTUAL": {
             "start": -1,
             "end": -1,
-            "type": "const uint32*",
+            "type": "const int32*",
             "value": "16777217"
         },
         "Console.CONSOLE_IN_COUNT": {
@@ -2437,7 +2437,7 @@
         "Peripheral.TYPE_STORAGE_BLOCK": {
             "start": -1,
             "end": -1,
-            "type": "const uint32*",
+            "type": "const int32*",
             "value": "16777218"
         },
         "TestD.str": {
@@ -2455,13 +2455,13 @@
         "Peripheral.CMD_DATA": {
             "start": -1,
             "end": -1,
-            "type": "const uint32*",
+            "type": "const int32*",
             "value": "65544"
         },
         "Peripheral.CMD_SIZE": {
             "start": -1,
             "end": -1,
-            "type": "const uint32*",
+            "type": "const int32*",
             "value": "65540"
         },
         "Console.CONSOLE_IN": {
@@ -2473,19 +2473,19 @@
         "Peripheral.RSP_DATA": {
             "start": -1,
             "end": -1,
-            "type": "const uint32*",
+            "type": "const int32*",
             "value": "65668"
         },
         "Peripheral.TABLE": {
             "start": -1,
             "end": -1,
-            "type": "const uint32*",
+            "type": "const int32*",
             "value": "65792"
         },
         "SysD.MEMORY_BLOCK_SIZE": {
             "start": -1,
             "end": -1,
-            "type": "const uint32",
+            "type": "const int32",
             "value": "32768"
         }
     },

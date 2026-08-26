@@ -11,8 +11,8 @@ class LinkedList<T> extends List<T> {
     }
 
     @Override
-    public uint32 add(T el) {
-        uint32 i = _size;
+    public int32 add(T el) {
+        int32 i = _size;
         _size++;
         ListEntry<T>* entry = new ListEntry<T>(el, nullptr);
         if(tail == nullptr) {
@@ -26,7 +26,7 @@ class LinkedList<T> extends List<T> {
     }
 
     @Override
-    public T get(uint32 index) {
+    public T get(int32 index) {
         if(index < 0 || index >= _size) {
             throw;
         }
@@ -43,7 +43,7 @@ class LinkedList<T> extends List<T> {
     }
 
     @Override
-    public T remove(uint32 index) {
+    public T remove(int32 index) {
         if(index < 0 || index >= _size) {
             throw;
         }

@@ -460,7 +460,7 @@ public class ActionBlock extends ComplexAction {
                                     }
                                     default -> {
                                         assignAction = new DirectAction("COPY %s %s", vN, r);
-                                        t = ELPrimitives.UINT32;
+                                        t = ELPrimitives.INT32;
                                     }
                                 }
                                 rT = Register.of(scope, vN);
@@ -500,7 +500,7 @@ public class ActionBlock extends ComplexAction {
 
                         if (ot.type == OperatorToken.Type.INC) {
                             int incSize = t.isPointer() ? t.stepSize() : 1;
-                            if(!(t.isPointer() || t.equals(ELPrimitives.UINT32)))
+                            if(!(t.isPointer() || t.equals(ELPrimitives.INT32)))
                                 throw ELAnalysisError.error("Unable to increment type " + t.typeString(), it.span());
                             if (regTarget) {
                                 if(rT.reg < 0x10) {
@@ -526,7 +526,7 @@ public class ActionBlock extends ComplexAction {
                             continue;
                         } else if (ot.type == OperatorToken.Type.DEC) {
                             int incSize = t.isPointer() ? t.stepSize() : 1;
-                            if(!(t.isPointer() || t.equals(ELPrimitives.UINT32)))
+                            if(!(t.isPointer() || t.equals(ELPrimitives.INT32)))
                                 throw ELAnalysisError.error("Unable to decrement type " + t.typeString(), it.span());
                             if (regTarget) {
                                 if(rT.reg < 0x10) {

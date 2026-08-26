@@ -3,14 +3,14 @@ import Peripheral;
 
 namespace TestD {
 
-    public static uint32 v = 0;
+    public static int32 v = 0;
     public static const char* str = "// Test";
     public static char[5] testStr = "Test\n";
     public static char[7] testStr2 = "Test2\n\0";
     public static char[9] path = "test.txt\0";
     public static char tc;
 
-    public static const uint32* TIMERS = 0x0001_0200;
+    public static const int32* TIMERS = 0x0001_0200;
 
     public static const uint8* KEYBOARD_MOD = 0x0001_0304;
     public static const uint8* KEYBOARD_CONTROL = 0x0001_0305;
@@ -22,8 +22,8 @@ namespace TestD {
         asm("LOAD rIH &:TestD.onInterrupt");
         *KEYBOARD_CONTROL = 0x03; // Enable press interrupts
         CharacterDisplay.setup();
-        uint32 b;
-        uint32 a = SysD.rPgm;
+        int32 b;
+        int32 a = SysD.rPgm;
         v = a;
         char c;
         c = b;
@@ -56,8 +56,8 @@ namespace TestD {
 
 
         // asm("#breakpoint");
-        uint32 fh;
-        uint32 rstat;
+        int32 fh;
+        int32 rstat;
         FS.openFile("test.txt\0", &rstat, &fh);
         if(fh == 0) {
             Console.printStr("ERROR\n\0", 0);
@@ -66,8 +66,8 @@ namespace TestD {
         } else {
             Console.printStr("Opened\n\0", 0);
             char[32] buffer;
-            uint32 read;
-            uint32 state;
+            int32 read;
+            int32 state;
             FS.readFileSync(fh, &buffer, 32, 0, &read, &state);
             // asm("#breakpoint");
             Console.intToHex(state, &str2);
@@ -99,17 +99,17 @@ namespace TestD {
         asm(":main_loop\nGOTO :main_loop");
     }
 
-    public static void funcb(uint32 a) {
+    public static void funcb(int32 a) {
         v += a;
     }
     
-    public static void funcb(uint32 a, uint32* b) {
+    public static void funcb(int32 a, int32* b) {
         v += a;
     }
 
     @InterruptHandler(raw)
     internal static void onInterrupt() {
-        uint32 code = SysD.rIC;
+        int32 code = SysD.rIC;
         asm("LOAD rIC 0");
         char[9] str;
         str[8] = '\0';
@@ -118,7 +118,7 @@ namespace TestD {
             asm("HALT");
         }
         if((code & 0xffff_ff00) == 0x8000_0200) { // timer
-            uint32 i = code & 0xff;
+            int32 i = code & 0xff;
             if(i == 1) {
                 // Peripheral.TIMERS[1] = 1000;
                 return;
@@ -132,7 +132,7 @@ namespace TestD {
             return;
         }
         if((code & 0xffff_ff00) == 0x8000_0100) { // key pressed
-            uint32 c = code & 0xff;
+            int32 c = code & 0xff;
             if(c == 10) {
                 Console.printChar('\n');
             }
@@ -148,7 +148,7 @@ namespace TestD {
         Console.printChar('\n');
     }
 
-    public static void wait(uint32 time) {
+    public static void wait(int32 time) {
         while(time > 0) {
             time--;
         }
@@ -159,12 +159,12 @@ namespace TestD {
         str.b = 0xffffffff;
     }
 
-    public static uint32 testRet() {
+    public static int32 testRet() {
         return 2000;
     }
 
     struct StructA {
-        public uint32 a;
-        public uint32 b;
+        public int32 a;
+        public int32 b;
     }
 }

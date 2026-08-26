@@ -4,7 +4,7 @@
             "address": 148,
             "start": 148,
             "end": 148,
-            "type": "uint32"
+            "type": "int32"
         },
         "TestD.str": {
             "address": 141,
@@ -32,22 +32,22 @@
             "start": 31,
             "end": 90
         },
-        "TestD.funcb_uint32": {
-            "args": ["a uint32"],
+        "TestD.funcb_int32": {
+            "args": ["a int32"],
             "rt": "void",
             "start": 90,
             "end": 102
         },
-        "TestD.wait_uint32": {
-            "args": ["time uint32"],
+        "TestD.wait_int32": {
+            "args": ["time int32"],
             "rt": "void",
             "start": 16,
             "end": 31
         },
-        "TestD.funcb_uint32_uint32*": {
+        "TestD.funcb_int32_int32*": {
             "args": [
-                "a uint32",
-                "b uint32*"
+                "a int32",
+                "b int32*"
             ],
             "rt": "void",
             "start": 102,

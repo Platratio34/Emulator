@@ -22,13 +22,13 @@ Rsp starts at `mem[0x8080]`
 ### Device descriptor
 ```
 struct deviceDescriptorShort {
-    uint32 deviceID;
-    uint32 deviceType;
+    int32 deviceID;
+    int32 deviceType;
 }
 
 struct deviceDescriptor {
-    uint32 deviceID;
-    uint32 deviceType;
+    int32 deviceID;
+    int32 deviceType;
     ((packed))uint8[16] manufacture;
     ((packed))uint8[16] serial;
     uiunt32[6] usrData;

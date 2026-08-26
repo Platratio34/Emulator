@@ -28,38 +28,38 @@ public class Peripheral extends Namespace {
         super("Peripheral");
         unit = new ProgramUnit(module, "<Peripheral>");
         
-        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.UINT32.pointerTo(), "CMD_ADDR", false, this, unit, PERIPHERAL_LOCATION).setValue(PeripheralManager.PERIPHERAL_START));
-        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.UINT32.pointerTo(), "CMD_SIZE", false, this, unit, PERIPHERAL_LOCATION).setValue(PeripheralManager.PERIPHERAL_CMD_SIZE));
-        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.UINT32.pointerTo(), "CMD_DATA", false, this, unit, PERIPHERAL_LOCATION).setValue(PeripheralManager.PERIPHERAL_CMD_MSG));
+        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.INT32.pointerTo(), "CMD_ADDR", false, this, unit, PERIPHERAL_LOCATION).setValue(PeripheralManager.PERIPHERAL_START));
+        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.INT32.pointerTo(), "CMD_SIZE", false, this, unit, PERIPHERAL_LOCATION).setValue(PeripheralManager.PERIPHERAL_CMD_SIZE));
+        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.INT32.pointerTo(), "CMD_DATA", false, this, unit, PERIPHERAL_LOCATION).setValue(PeripheralManager.PERIPHERAL_CMD_MSG));
         
         addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.UINT8.pointerTo(), "RSP_STATUS", false, this, unit, PERIPHERAL_LOCATION).setValue(PeripheralManager.PERIPHERAL_RSP_STATUS));
         addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.UINT8.pointerTo(), "RSP_DEVICE", false, this, unit, PERIPHERAL_LOCATION).setValue(PeripheralManager.PERIPHERAL_RSP_DEVICE));
-        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.UINT32.pointerTo(), "RSP_DATA", false, this, unit, PERIPHERAL_LOCATION).setValue(PeripheralManager.PERIPHERAL_RSP_DATA));
+        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.INT32.pointerTo(), "RSP_DATA", false, this, unit, PERIPHERAL_LOCATION).setValue(PeripheralManager.PERIPHERAL_RSP_DATA));
         
-        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.UINT32.pointerTo(), "TABLE",
+        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.INT32.pointerTo(), "TABLE",
                 false, this, unit, PERIPHERAL_LOCATION).setValue(PeripheralManager.PERIPHERAL_TABLE));
                 
-        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.UINT32.pointerTo(), "TIMERS",
+        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.INT32.pointerTo(), "TIMERS",
                 false, this, unit, PERIPHERAL_LOCATION).setValue(PeripheralManager.PERIPHERAL_START + 0x200));
         
-        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.UINT32.pointerTo(), "TYPE_DISPLAY_CHARACTER", true, this, unit, PERIPHERAL_LOCATION).setValue(TYPE_DISPLAY_CHARACTER));
-        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.UINT32.pointerTo(), "TYPE_STORAGE_VIRTUAL", true, this, unit, PERIPHERAL_LOCATION).setValue(TYPE_STORAGE_VIRTUAL));
-        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.UINT32.pointerTo(), "TYPE_STORAGE_BLOCK", true, this, unit, PERIPHERAL_LOCATION).setValue(TYPE_STORAGE_BLOCK));
+        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.INT32.pointerTo(), "TYPE_DISPLAY_CHARACTER", true, this, unit, PERIPHERAL_LOCATION).setValue(TYPE_DISPLAY_CHARACTER));
+        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.INT32.pointerTo(), "TYPE_STORAGE_VIRTUAL", true, this, unit, PERIPHERAL_LOCATION).setValue(TYPE_STORAGE_VIRTUAL));
+        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.INT32.pointerTo(), "TYPE_STORAGE_BLOCK", true, this, unit, PERIPHERAL_LOCATION).setValue(TYPE_STORAGE_BLOCK));
 
         ELFunction command = new ELFunction(ELProtectionLevel.PUBLIC, false, this, "command", FunctionType.STATIC,
                 false, unit, PERIPHERAL_LOCATION);
-        command.addParameter(ELPrimitives.UINT32, "deviceId");
-        command.addParameter(ELPrimitives.UINT32, "cmdSize");
-        command.addParameter(ELPrimitives.UINT32.pointerTo(), "cmd");
+        command.addParameter(ELPrimitives.INT32, "deviceId");
+        command.addParameter(ELPrimitives.INT32, "cmdSize");
+        command.addParameter(ELPrimitives.INT32.pointerTo(), "cmd");
         // ComplexAction commandBody = new ComplexAction(new ActionScope(this, unit, command));
         // command.setBody(commandBody);
         command.actions.add(new DirectAction("#line <Peripheral> 1:1"));
         command.actions.add(new DirectAction("STACK PUSH r15"));
         command.actions.add(new DirectAction("COPY rStack r15"));
 
-        command.actions.add(new DirectAction("#stackVar uint32 deviceId -20"));
-        command.actions.add(new DirectAction("#stackVar uint32 cmdSize -16"));
-        command.actions.add(new DirectAction("#stackVar uint32* cmd -12"));
+        command.actions.add(new DirectAction("#stackVar int32 deviceId -20"));
+        command.actions.add(new DirectAction("#stackVar int32 cmdSize -16"));
+        command.actions.add(new DirectAction("#stackVar int32* cmd -12"));
         
         command.actions.add(new DirectAction("LOAD r1 Peripheral.CMD_SIZE"));
         command.actions.add(new DirectAction("COPY r15 r2"));
@@ -100,20 +100,20 @@ public class Peripheral extends Namespace {
 
         /*
         struct PeripheralDescriptor {
-            const uint32 id;
-            const uint32 type;
-            const uint32[4] manufacturer;
-            const uint32[4] serial;
-            const uint32[6] data;
+            const int32 id;
+            const int32 type;
+            const int32[4] manufacturer;
+            const int32[4] serial;
+            const int32[6] data;
         }
          */
         ELStruct PeripheralDescriptor = new ELStruct("PeripheralDescriptor", this, unit);
-        PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.UINT32, "id", true, this, unit, PERIPHERAL_LOCATION));
-        PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.UINT32, "type", true, this, unit, PERIPHERAL_LOCATION));
+        PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.INT32, "id", true, this, unit, PERIPHERAL_LOCATION));
+        PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.INT32, "type", true, this, unit, PERIPHERAL_LOCATION));
         PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.CHAR.builder().array(16).location(PERIPHERAL_LOCATION).build(), "manufacturer", true, this, unit, PERIPHERAL_LOCATION));
         PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.CHAR.builder().array(16).location(PERIPHERAL_LOCATION).build(), "serial", true, this, unit, PERIPHERAL_LOCATION));
         PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER,
-                ELPrimitives.UINT32.builder().array(6).location(PERIPHERAL_LOCATION).build(), "data", true, this, unit,
+                ELPrimitives.INT32.builder().array(6).location(PERIPHERAL_LOCATION).build(), "data", true, this, unit,
                 PERIPHERAL_LOCATION));
     }
 

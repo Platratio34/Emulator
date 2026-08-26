@@ -3,10 +3,10 @@ import SysD;
 namespace System;
 
 class String {
-    public final uint32 length;
+    public final int32 length;
     public final char* str;
 
-    public String(uint32 len, char* chars) {
+    public String(int32 len, char* chars) {
         length = len;
         str = malloc(sizeof(char) * length);
         SysD.memCopy(chars, 0, length-1, str, 0);
@@ -18,7 +18,7 @@ class String {
         SysD.memCopy(str.values, 0, length-1, str, 0);
     }
 
-    internal String(uint32 len) {
+    internal String(int32 len) {
         length = len;
         str = malloc(sizeof(char) * length);
     }
@@ -28,7 +28,7 @@ class String {
     }
 
     @Operator([])
-    operator constexpr char get(uint32 i) {
+    operator constexpr char get(int32 i) {
         return chars[i];
     }
 
@@ -41,7 +41,7 @@ class String {
         if(s2.length != length) {
             return false;
         }
-        for(uint32 i = 0; i < length; i++) {
+        for(int32 i = 0; i < length; i++) {
             if(str[i] != s2.str[i]) {
                 return false;
             }
@@ -49,10 +49,10 @@ class String {
         return true;
     }
 
-    public String substring(uint32 start) {
+    public String substring(int32 start) {
         return substring(start, length)
     }
-    public String substring(uint32 start, uint32 end) {
+    public String substring(int32 start, int32 end) {
         String s2 = new String(end-start);
         SysD.memCopy(str, start, end, s2.str, 0);
         return s2;
@@ -80,7 +80,7 @@ class String {
 
     @Operator(cast)
     operator String _cast(char* c) {
-        uint32 len = 0;
+        int32 len = 0;
         while(c[len] != '\00') {
             len++;
         }
