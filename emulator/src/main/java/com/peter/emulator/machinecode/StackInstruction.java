@@ -5,16 +5,19 @@ import java.util.HashMap;
 public class StackInstruction extends Instruction {
 
     public final Operation operation;
+    public final MemorySize size;
     public final Reg rg;
 
-    protected StackInstruction(Operation operation, Reg rg) {
+    protected StackInstruction(Operation operation, MemorySize size, Reg rg) {
         super(Operator.STACK);
         this.operation = operation;
+        this.size = size;
         this.rg = rg;
     }
     protected StackInstruction(Operation operation, int data) {
         super(Operator.STACK);
         this.operation = operation;
+        this.size = MemorySize.WORD;
         this.rg = Reg.R0;
         this.data = data;
     }
@@ -40,10 +43,18 @@ public class StackInstruction extends Instruction {
     }
     
     public static StackInstruction Push(Reg rg) {
-        return new StackInstruction(Operation.PUSH, rg);
+        return new StackInstruction(Operation.PUSH, MemorySize.WORD, rg);
     }
+
     public static StackInstruction Pop(Reg rg) {
-        return new StackInstruction(Operation.POP, rg);
+        return new StackInstruction(Operation.POP, MemorySize.WORD, rg);
+    }
+    
+    public static StackInstruction Push(MemorySize size, Reg rg) {
+        return new StackInstruction(Operation.PUSH, size, rg);
+    }
+    public static StackInstruction Pop(MemorySize size, Reg rg) {
+        return new StackInstruction(Operation.POP, size, rg);
     }
 
     public static StackInstruction fromBytecode(int bytecode, int next) {
@@ -53,7 +64,7 @@ public class StackInstruction extends Instruction {
         Operation operation = Operation.fromBytecode(bytecode);
         switch (operation) {
             case PUSH, POP -> {
-                return new StackInstruction(operation, Reg.from(bytecode));
+                return new StackInstruction(operation, MemorySize.fromBytecode(bytecode >> 8), Reg.from(bytecode));
             }
             case DEC, INC -> {
                 return new StackInstruction(operation, bytecode & 0xffff);
@@ -64,14 +75,18 @@ public class StackInstruction extends Instruction {
 
     @Override
     public int getBytecode() {
-        return op.id | operation.id | rg.code | this.data;
+        // |   0-7 |     8-15 | 16-23 | 24-31 |
+        // | STACK | PUSH/POP |  size |    rg |
+        // |   0-7 |    8-15 |  16-31 |
+        // | STACK | INC/DEC | amount |
+        return op.id | operation.id | (size.id << 8) | rg.code | this.data;
     }
 
     @Override
     public String toString() {
         return switch (operation) {
-            case PUSH -> String.format("STACK PUSH %s", rg.string);
-            case POP -> String.format("STACK POP %s", rg.string);
+            case PUSH -> String.format("STACK PUSH %s %s", size, rg.string);
+            case POP -> String.format("STACK POP %s %s", size, rg.string);
             
             case INC -> String.format("STACK INC %d", getInc());
             case DEC -> String.format("STACK DEC %d", getInc());

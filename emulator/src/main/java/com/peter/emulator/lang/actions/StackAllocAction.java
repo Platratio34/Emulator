@@ -23,7 +23,11 @@ public class StackAllocAction extends Action {
         if (reg != null) {
             if(size > 4)
                 return String.format("%s\nSTACK PUSH %s\nSTACK INC %d", sVarStr, reg, size - 4);
-            return String.format("%s\nSTACK PUSH %s", sVarStr, reg);
+            return switch (type.sizeof()) {
+                case 1 -> String.format("%s\nSTACK PUSH BYTE %s", sVarStr, reg);
+                case 2 -> String.format("%s\nSTACK PUSH SHORT %s", sVarStr, reg);
+                default -> String.format("%s\nSTACK PUSH %s", sVarStr, reg);
+            };
         }
         return String.format("%s\nSTACK INC %d", sVarStr, size);
     }

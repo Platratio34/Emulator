@@ -108,7 +108,11 @@ public class FunctionAction extends ComplexAction {
                     tempActions.add(expA);
                     types.add(expA.getType() == null ? ELPrimitives.OBJECT : expA.getType());
                     if (onStack) {
-                        tempActions.add(new DirectAction("STACK PUSH %s", r));
+                        tempActions.add(new DirectAction(switch (expA.getType().sizeof()) {
+                            case 1 -> "STACK PUSH BYTE %s";
+                            case 2 -> "STACK PUSH SHORT %s";
+                            default -> "STACK PUSH %s";
+                        }, r));
                         // tempActions.add(r.releaseAction());
                         stackSize += 4;
                     } else {
@@ -138,7 +142,11 @@ public class FunctionAction extends ComplexAction {
                 tempActions.add(expA);
                 types.add(expA.getType() == null ? ELPrimitives.OBJECT : expA.getType());
                 if (onStack) {
-                    tempActions.add(new DirectAction("STACK PUSH %s", r));
+                    tempActions.add(new DirectAction(switch (expA.getType().sizeof()) {
+                        case 1 -> "STACK PUSH BYTE %s";
+                        case 2 -> "STACK PUSH SHORT %s";
+                        default -> "STACK PUSH %s";
+                    }, r));
                     tempActions.add(r.releaseAction());
                     stackSize += 4;
                 } else {
@@ -328,7 +336,11 @@ public class FunctionAction extends ComplexAction {
                 if (onStack) {
                     if (stackSize > 0)
                         actions.add(new DirectAction("STACK DEC %d", stackSize));
-                    actions.add(new DirectAction("STACK POP %s", targetReg));
+                    actions.add(new DirectAction(switch (retType.sizeof()) {
+                        case 1 -> "STACK POP BYTE %s";
+                        case 2 -> "STACK POP SHORT %s";
+                        default -> "STACK POP %s";
+                    }, targetReg));
                 } else {
                     actions.add(new DirectAction("COPY r1 %s", targetReg));
                 }

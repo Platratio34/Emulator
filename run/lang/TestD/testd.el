@@ -16,6 +16,10 @@ namespace TestD {
     public static const uint8* KEYBOARD_CONTROL = 0x0001_0305;
     public static const char* KEYBOARD_KEYS = 0x0001_0306;
 
+    protected static char[128] inputBuffer;
+    protected static int32 inputBufferWrite;
+    protected static int32 inputBufferRead;
+
     @Entrypoint(raw)
     public static void main() {
         asm("STORE BYTE 'T' r7\nSTORE BYTE 'e' r7\nSTORE BYTE 's' r7\nSTORE BYTE 't' r7\nSTORE BYTE 'D' r7\nSTORE BYTE '\\n' r7");
@@ -38,16 +42,16 @@ namespace TestD {
         testA(&sA);
 
         // Console.setupConsole();
-        Console.printStr("Starting EmulatorOS\n\n\0",0);
+        Console.printStr("Starting EmulatorOS\n\n\0");
 
         Console.printStr(&testStr, 5);
-        Console.printStr(&testStr2, 0);
+        Console.printStr(&testStr2);
         Console.printChar('a');
         Console.printChar('\n');
 
         char[16] str2;
         Console.intToDec(0x1000, &str2);
-        Console.printStr(&str2, 0);
+        Console.printStr(&str2);
         Console.printChar('\n');
         Console.printChar('d');
         Console.printChar('\n');
@@ -60,18 +64,18 @@ namespace TestD {
         int32 rstat;
         FS.openFile("test.txt\0", &rstat, &fh);
         if(fh == 0) {
-            Console.printStr("ERROR\n\0", 0);
+            Console.printStr("ERROR\n\0");
             Console.intToHex(rstat, &str2);
-            Console.printStr(&str2, 0);
+            Console.printStr(&str2);
         } else {
-            Console.printStr("Opened\n\0", 0);
+            Console.printStr("Opened\n\0");
             char[32] buffer;
             int32 read;
             int32 state;
             FS.readFileSync(fh, &buffer, 32, 0, &read, &state);
             // asm("#breakpoint");
             Console.intToHex(state, &str2);
-            Console.printStr(&str2, 0);
+            Console.printStr(&str2);
             // Console.printChar('\n');
             // asm("#breakpoint");
             Console.intToHex(read, &str2);
@@ -81,12 +85,12 @@ namespace TestD {
             Console.printStr(&buffer, read);
         }
 
-        // Console.printStr("\n> \0",0);
+        // Console.printStr("\n> \0");
         // char[32] buff;
         // Console.read(&buff, 32);
-        // Console.printStr(&buff, 0);
+        // Console.printStr(&buff);
 
-        @Breakpoint(noOp)
+        // @Breakpoint(noOp)
 
         Peripheral.TIMERS[15] |= 0b01 << 28;
         Peripheral.TIMERS[1] = 1000;
@@ -96,7 +100,57 @@ namespace TestD {
         // wait(testRet());
         // funcC();
 
-        asm(":main_loop\nGOTO :main_loop");
+        Console.printChar('>');
+        while(mainLoop()) {
+
+        }
+        mainLoop();
+
+        Console.printStr("Stopping...\0");
+    }
+
+    protected static char[64] tempCmd;
+    protected static int32 tempCmdI;
+    public static bool mainLoop() {
+        while(inputBufferRead != inputBufferWrite) {
+            char c = inputBuffer[inputBufferRead];
+            Console.printChar(c);
+            inputBufferRead = (inputBufferRead + 1) & 127;
+            if(c == '\n') {
+                tempCmd[tempCmdI] = 0;
+                if(!processCommand()) {
+                    return false;
+                }
+                tempCmdI = 0;
+            } else {
+                tempCmd[tempCmdI] = c;
+                tempCmdI = (tempCmdI + 1) & 63;
+            }
+        }
+        return true;
+    }
+
+    private static bool processCommand() {
+        Console.printChar(':');
+        Console.printStr(&tempCmd);
+        Console.printChar('\n');
+        if(stringEquals(&tempCmd, "STOP\0")) {
+            return false;
+        }
+        Console.printChar('>');
+        return true;
+    }
+
+    public static bool stringEquals(char* str1, char* str2) {
+        asm("COPY r15 r1\nINC r1 -16\nLOAD MEM r1 r1"); // str1
+        asm("COPY r15 r2\nINC r2 -12\nLOAD MEM r2 r2"); // str2
+        asm(":string_equals_loop");
+            asm("LOAD MEM BYTE r3 r1 INC_RA\nLOAD MEM BYTE r4 r2 INC_RA");
+            asm("SUB r4 r3 r4\nGOTO NEQ r4 :string_equals_fail");
+            asm("GOTO NEQ r3 :string_equals_loop");
+        return true;
+        asm(":string_equals_fail");
+            return false;
     }
 
     public static void funcb(int32 a) {
@@ -132,14 +186,16 @@ namespace TestD {
             return;
         }
         if((code & 0xffff_ff00) == 0x8000_0100) { // key pressed
-            int32 c = code & 0xff;
-            if(c == 10) {
-                Console.printChar('\n');
+            char c = code & 0xff;
+            if(c == '\n') {
+                inputBuffer[inputBufferWrite] = '\n';
+                inputBufferWrite = (inputBufferWrite + 1) & 0x7f;
             }
-            if(c < 32 || c > 127) {
+            if(c < ' ' || c > '~') {
                 return;
             }
-            Console.printChar(c);
+            inputBuffer[inputBufferWrite] = c;
+            inputBufferWrite = (inputBufferWrite + 1) & 0x7f;
             return;
         }
         Console.intToHex(code, &str);

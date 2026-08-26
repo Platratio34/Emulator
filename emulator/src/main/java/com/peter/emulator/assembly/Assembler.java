@@ -48,6 +48,8 @@ public class Assembler {
     private static final Pattern STRING_PATTERN = Pattern.compile("\"(.*)\"");
     private static final Pattern ALLOC_PATTERN = Pattern.compile("\\(([^\\)]+)\\)");
 
+    private static final Pattern LOAD_MEM_PATTERN = Pattern.compile("LOAD\\s+MEM\\s+(?:(SHORT|BYTE)\\s+)?(\\S+)\\s+(\\S+)(?:\\s+(INC[\\s_]RA))?");
+
     private String[] lines;
 
     public Assembler(Linker linker) {
@@ -416,26 +418,31 @@ public class Assembler {
                     }
                     case "LOAD" -> {
                         if (parts.length < 2) {
-                            errors.add(new AssemblerError("Invalid load instruction: LOAD <MEM> [rg] [ra|val]", lineN,
+                            errors.add(new AssemblerError("Invalid load instruction: LOAD <MEM> [rg] [ra|val]  (INC_RA)", lineN,
                                     line.length(), line, source));
                             continue;
                         }
                         if (parts[1].equals("MEM")) {
-                            if (parts.length < 4) {
+                            Matcher m = LOAD_MEM_PATTERN.matcher(line);
+                            if (!m.find()) {
                                 errors.add(new AssemblerError(
-                                        "Invalid load instruction: LOAD MEM <SHORT|BYTE> [rg] [ra]", lineN,
+                                        "Invalid load instruction: LOAD MEM <SHORT|BYTE> [rg] [ra]  (INC_RA)", lineN,
                                         line.length(), line, source));
                                 continue;
                             }
-                            switch (parts[2]) {
+                            boolean incRA = m.group(4) != null;
+                            Reg rg = Reg.from(m.group(2));
+                            Reg ra = Reg.from(m.group(3));
+                            String size = m.group(1);
+                            switch (size != null ? size : "") {
                                 case "SHORT" -> {
-                                    add(Load.MemShort(Reg.from(parts[3]), Reg.from(parts[4])));
+                                    add(Load.MemShort(rg, ra, incRA));
                                 }
                                 case "BYTE" -> {
-                                    add(Load.MemByte(Reg.from(parts[3]), Reg.from(parts[4])));
+                                    add(Load.MemByte(rg, ra, incRA));
                                 }
                                 default -> {
-                                    add(Load.MemWord(Reg.from(parts[2]), Reg.from(parts[3])));
+                                    add(Load.MemWord(rg, ra, incRA));
                                 }
                             }
                         } else {
@@ -799,7 +806,7 @@ public class Assembler {
                         }
                         if (parts.length < 3) {
                             errors.add(new AssemblerError(
-                                    "Invalid stack instruction: STACK (PUSH|POP) [rg] | STACK (INC|DEC) ([value])",
+                                    "Invalid stack instruction: STACK <PUSH|POP> (<WORD|SHORT|BYTE>) [rg] | STACK <INC|DEC> ([value])",
                                     lineN,
                                     line.length(), line, source));
                             continue;
@@ -810,9 +817,19 @@ public class Assembler {
                             add(StackInstruction.Dec(getVal(parts[2]).value));
                         } else {
                             if (parts[1].equals("PUSH")) {
-                                add(StackInstruction.Push(Reg.from(parts[2])));
+                                switch (parts[2]) {
+                                    case "WORD" -> add(StackInstruction.Push(Reg.from(parts[3])));
+                                    case "SHORT" -> add(StackInstruction.Push(MemorySize.SHORT, Reg.from(parts[3])));
+                                    case "BYTE" -> add(StackInstruction.Push(MemorySize.BYTE, Reg.from(parts[3])));
+                                    default -> add(StackInstruction.Push(Reg.from(parts[2])));
+                                }
                             } else {
-                                add(StackInstruction.Pop(Reg.from(parts[2])));
+                                switch (parts[2]) {
+                                    case "WORD" -> add(StackInstruction.Pop(Reg.from(parts[3])));
+                                    case "SHORT" -> add(StackInstruction.Pop(MemorySize.SHORT, Reg.from(parts[3])));
+                                    case "BYTE" -> add(StackInstruction.Pop(MemorySize.BYTE, Reg.from(parts[3])));
+                                    default -> add(StackInstruction.Pop(Reg.from(parts[2])));
+                                }
                             }
                         }
                     }

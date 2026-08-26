@@ -39,6 +39,10 @@ public class DebuggerPanel extends JPanel {
         add(varPanel);
     }
 
+    private String htmlClean(String inp) {
+        return inp.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+    }
+
     public void update() {
         boolean changed = debugger != cpu.debugger;
         if (changed) {
@@ -64,7 +68,8 @@ public class DebuggerPanel extends JPanel {
             }
             // String str = debugger.printStack()
             // lineLbl.setText();
-            funcLbl.setText(String.format("<html>%s<br/>%s</html>", debugger.getLine(cpu, ""), debugger.printStack().replace("\n","<br>")));
+            funcLbl.setText(String.format("<html>%s<br/>%s</html>",
+                    htmlClean(debugger.getLine(cpu, "")), htmlClean(debugger.printStack()).replace("\n","<br>")));
             for (VarDisplay vd : varDisplays.values()) {
                 vd.update();
             }

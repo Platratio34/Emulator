@@ -501,9 +501,9 @@ public class OperatorNode extends ExpressionNode {
             case NOT -> {
                 child1.register = register;
                 if (falseTarget != null) {
-                    return child1.toAssembly() + String.format("\nGOTO EQ %s %s", register, falseTarget);
+                    return child1.toAssembly() + String.format("\nGOTO NEQ %s %s", register, falseTarget);
                 } else if (trueTarget != null) {
-                    return child1.toAssembly() + String.format("\nGOTO NEQ %s %s", register, trueTarget);
+                    return child1.toAssembly() + String.format("\nGOTO EQ %s %s", register, trueTarget);
                 }
                 return child1.toAssembly() + String.format("\nSET FORCE EQ %s %s", register, register);
             }

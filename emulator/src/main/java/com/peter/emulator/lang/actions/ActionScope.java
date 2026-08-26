@@ -326,4 +326,18 @@ public class ActionScope {
         }
         return unit.resolveIdentifier(id);
     }
+
+    public int getReturnOffset() {
+        if (parent != null) {
+            return parent.getReturnOffset();
+        }
+        return returnOffset;
+    }
+
+    public ELType getRetType() {
+        if (parent != null) {
+            return parent.getRetType();
+        }
+        return function.ret;
+    }
 }

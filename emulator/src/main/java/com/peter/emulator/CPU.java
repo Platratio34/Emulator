@@ -350,9 +350,24 @@ public class CPU {
                     case LITERAL -> {
                         val = loadInstr.data;
                     }
-                    case MEM_WORD -> {val = readMem(getReg(loadInstr.ra));}
-                    case MEM_SHORT -> {val = readMemShort(getReg(loadInstr.ra));}
-                    case MEM_BYTE -> {val = readMemByte(getReg(loadInstr.ra));}
+                    case MEM_WORD -> {
+                        int addr = getReg(loadInstr.ra);
+                        val = readMem(addr);
+                        if(loadInstr.incRA)
+                            setReg(loadInstr.ra, addr + 4);
+                    }
+                    case MEM_SHORT -> {
+                        int addr = getReg(loadInstr.ra);
+                        val = readMemShort(addr);
+                        if(loadInstr.incRA)
+                            setReg(loadInstr.ra, addr + 2);
+                    }
+                    case MEM_BYTE -> {
+                        int addr = getReg(loadInstr.ra);
+                        val = readMemByte(addr);
+                        if(loadInstr.incRA)
+                            setReg(loadInstr.ra, addr + 1);
+                    }
                     default -> {
                         throw new RuntimeException(String.format("Unknown load mode: %20x", (op & 0xff) >> 8));
                     }
@@ -545,10 +560,21 @@ public class CPU {
                 StackInstruction stackInstr = (StackInstruction) lastInstruction;
                 switch(stackInstr.operation) {
                     case PUSH -> {
-                        stackPush(getReg(stackInstr.rg));
+                        int val = getReg(stackInstr.rg);
+                        switch (stackInstr.size) {
+                            case WORD -> writeMem(stackPtr, val);
+                            case SHORT -> writeMemShort(stackPtr, val);
+                            case BYTE -> writeMemByte(stackPtr, (byte)val);
+                        }
+                        stackPtr += 4;
                     }
                     case POP -> {
-                        setReg(stackInstr.rg, stackPop());
+                        stackPtr -= 4;
+                        setReg(stackInstr.rg, switch (stackInstr.size) {
+                            case WORD -> readMem(stackPtr);
+                            case SHORT -> readMemShort(stackPtr);
+                            case BYTE -> readMemByte(stackPtr);
+                        });
                     }
                     case INC -> {
                         stackPtr += stackInstr.getInc();

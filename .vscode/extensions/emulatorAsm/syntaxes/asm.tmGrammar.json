@@ -78,7 +78,7 @@
             }
         },
         {
-            "match": "^(LOAD\\s+MEM(?:\\s+BYTE|\\s+SHORT)?)(?:\\s+(\\S+)(?:\\s+(\\S+))?)?",
+            "match": "^(LOAD\\s+MEM(?:\\s+BYTE|\\s+SHORT)?)(?:\\s+(\\S+)(?:\\s+(\\S+))?)?(\\s+INC[ _]RA)?",
             "captures": {
                 "1": {
                     "name": "keyword.control.instruction"
@@ -92,6 +92,9 @@
                     "patterns": [
                         { "include": "#register" }
                     ]
+                },
+                "4": {
+                    "name": "keyword.control.instruction"
                 }
             }
         },
@@ -160,7 +163,7 @@
             }
         },
         {
-            "match": "^(STACK\\s+(?:PUSH|POP))(?:\\s+(\\S+))?",
+            "match": "^(STACK\\s+(?:PUSH|POP)(?:\\s+WORD|\\s+SHORT|\\s+BYTE)?)(?:\\s+(\\S+))?",
             "captures": {
                 "1": {
                     "name": "keyword.control.instruction"

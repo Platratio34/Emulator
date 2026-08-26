@@ -578,9 +578,9 @@ const asmLines = {
     "LOAD": {
         name: "Load", desc: "Load a value into a register. Equivalent to `r[rg] = [value]`", usage: "`LOAD [rg] [value]`", sub: {
             "MEM": {
-                name: "Load Memory", desc: "Load a word into a register from memory. Equivalent to `r[rg] = mem[r[ra]]`", usage: "`LOAD MEM (SHORT|BYTE) [rg] [ra]`", sub: {
-                    "SHORT": { name: "Load Memory Short", desc: "Load a short into a register from memory. Equivalent to `r[rg] = mem[r[ra]]`", usage: "LOAD MEM SHORT [rg] [ra]" },
-                    "BYTE": { name: "Load Memory Byte", desc: "Load a byte into a register from memory. Equivalent to `r[rg] = mem[r[ra]]`", usage: "LOAD MEM BYTE [rg] [ra]" }
+                name: "Load Memory", desc: "Load a word into a register from memory. Equivalent to `r[rg] = mem[r[ra]]`", usage: "`LOAD MEM (<SHORT|BYTE>) [rg] [ra] (INC RA)`", sub: {
+                    "SHORT": { name: "Load Memory Short", desc: "Load a short into a register from memory. Equivalent to `r[rg] = mem[r[ra]]`", usage: "LOAD MEM SHORT [rg] [ra] (INC RA)" },
+                    "BYTE": { name: "Load Memory Byte", desc: "Load a byte into a register from memory. Equivalent to `r[rg] = mem[r[ra]]`", usage: "LOAD MEM BYTE [rg] [ra] (INC RA)" }
                 }
             },
         }
@@ -588,7 +588,7 @@ const asmLines = {
     "COPY": {
         name: "Copy", desc: "Copy a value between registers. Equivalent to `r[rd] = r[rs]`", usage: "`COPY [rs] [rd]`", sub: {
             "MEM": {
-                name: "Copy Memory", desc: "Copy a word between memory locations. Equivalent to `mem[r[rd]] = mem[r[rs]]`", usage: "`COPY MEM (SHORT|BYTE) [rs] [rd] (INC_RS) (INC_RD)`", sub: {
+                name: "Copy Memory", desc: "Copy a word between memory locations. Equivalent to `mem[r[rd]] = mem[r[rs]]`", usage: "`COPY MEM (<SHORT|BYTE>) [rs] [rd] (INC_RS) (INC_RD)`", sub: {
                     "SHORT": { name: "Copy Memory Short", desc: "Copy a short between memory locations. Equivalent to `mem[r[rd]] = mem[r[rs]]`", usage: "`COPY MEM SHORT [rs] [rd] (INC_RS) (INC_RD)`" },
                     "BYTE": { name: "Copy Memory Byte", desc: "Copy a byte between memory locations. Equivalent to `mem[r[rd]] = mem[r[rs]]`", usage: "`COPY MEM BYTE [rs] [rd] (INC_RS) (INC_RD)`" }
                 }
@@ -596,7 +596,7 @@ const asmLines = {
         }
     },
     "STORE": {
-        name: "Store", desc: "Store a word from a register into memory. Equivalent to `mem[r[ra]] = r[rg]` or `mem[r[ra]] = [value]`", usage: "`STORE (SHORT|BYTE) <[rg]|[value]> [ra] (INC_RA)`", sub: {
+        name: "Store", desc: "Store a word from a register into memory. Equivalent to `mem[r[ra]] = r[rg]` or `mem[r[ra]] = [value]`", usage: "`STORE (<SHORT|BYTE>) <[rg]|[value]> [ra] (INC_RA)`", sub: {
             "SHORT": { name: "Store Short", desc: "Store a short from a register into memory. Equivalent to `mem[r[ra]] = r[rg]` or `mem[r[ra]] = [value]`", usage: "`STORE SHORT <[rg]|[value]> [ra] (INC_RA)`" },
             "BYTE": { name: "Store Byte", desc: "Store a byte from a register into memory. Equivalent to `mem[r[ra]] = r[rg]` or `mem[r[ra]] = [value]`", usage: "`STORE BYTE <[rg]|[value]> [ra] (INC_RA)`" }
         }
@@ -644,9 +644,15 @@ const asmLines = {
         name: "Right Rotate", desc: "Right Rotate a registers. Equivalent to `r[rd] = r[ra] >> amt`", usage: "`RSH [rd] [ra] [amt]`"
     },
     "STACK": {
-        name: "Stack", desc: "Stack operation", usage: "`STACK <PUSH|POP> [rg] | STACK <INC|DEC> ([amount])`", sub: {
-            "PUSH": { name: "Stack Push", desc: "Push the value of a register to the stack", usage: "`STACK PUSH [rg]`" },
-            "POP": { name: "Stack Pop", desc: "Pop a value from the stack into a register", usage: "`STACK POP [rg]`" },
+        name: "Stack", desc: "Stack operation", usage: "`STACK <PUSH|POP> (<SHORT|BYTE>) [rg] | STACK <INC|DEC> ([amount])`", sub: {
+            "PUSH": { name: "Stack Push", desc: "Push the value of a register to the stack", usage: "`STACK PUSH (<SHORT|BYTE>) [rg]`", sub: {
+                    "SHORT": { name: "Stack Push Short", desc: "Push the lower half of the register to the stack. Stack pointer will still increment by 4.", usage: "`STACK PUSH SHORT [rg]`" },
+                    "BYTE": { name: "Stack Push Byte", desc: "Push the lowest byte of the register to the stack. Stack pointer will still increment by 4.", usage: "`STACK PUSH BYTE [rg]`" }
+                } },
+            "POP": { name: "Stack Pop", desc: "Pop a value from the stack into a register", usage: "`STACK POP (<SHORT|BYTE>) [rg]`", sub: {
+                    "SHORT": { name: "Stack Push Short", desc: "Push the lower half of the register to the stack. Stack pointer will still increment by 4.", usage: "`STACK PUSH SHORT [rg]`" },
+                    "BYTE": { name: "Stack Push Byte", desc: "Push the lowest byte of the register to the stack. Stack pointer will still increment by 4.", usage: "`STACK PUSH BYTE [rg]`" }
+                } },
             "INC": { name: "Stack Increment", desc: "Increment the stack pointer", usage: "`STACK INC ([amount])`" },
             "DEC": { name: "Stack Decrement", desc: "Decrement the stack pointer", usage: "`STACK DEC ([amount])`" }
         }

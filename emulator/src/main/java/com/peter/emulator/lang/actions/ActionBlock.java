@@ -290,7 +290,12 @@ public class ActionBlock extends ComplexAction {
                             actions.add(eA);
                             Register r2 = newRegister();
                             addReserve(r2);
-                            actions.add(new DirectAction("COPY r15 %s\nINC %s %d\nSTORE %s %s", r2, r2, scope.returnOffset, r, r2));
+                            String sizeStr = switch(scope.getRetType().sizeof()) {
+                                case 1 -> " BYTE";
+                                case 2 -> " SHORT";
+                                default -> "";
+                            };
+                            actions.add(new DirectAction("COPY r15 %s\nINC %s %d\nSTORE%s %s %s", r2, r2, scope.getReturnOffset(), sizeStr, r, r2));
                             actions.add(new DirectAction("GOTO :func_exit_" + func.getQualifiedName(true)));
                             addRelease(r);
                             addRelease(r2);
