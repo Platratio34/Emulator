@@ -13,9 +13,11 @@ public class LanguageServer {
 
     public HashMap<String, ProgramModule> modules = new HashMap<>();
     protected boolean err = false;
+    private final ProgramModule sysD;
 
     public LanguageServer() {
-        modules.put("SysD", SysD.newSysD(this));
+        sysD = SysD.newSysD(this);
+        modules.put("SysD", sysD);
     }
 
     @Deprecated
@@ -85,8 +87,11 @@ public class LanguageServer {
 
     public ErrorSet recompile() {
         err = false;
-        for(ProgramModule pm : modules.values())
+        for (ProgramModule pm : modules.values()) {
+            if (pm == sysD)
+                continue;
             pm.onRecompile();
+        }
         ErrorSet errors = parse();
         if(errors.hadError())
             return errors;
