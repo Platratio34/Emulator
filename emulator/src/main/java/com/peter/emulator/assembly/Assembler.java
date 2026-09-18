@@ -23,6 +23,7 @@ import com.peter.emulator.machinecode.MemorySize;
 import com.peter.emulator.machinecode.Reg;
 import com.peter.emulator.machinecode.StoreInstruction;
 import com.peter.emulator.machinecode.Syscall;
+import com.peter.emulator.machinecode.TestAndSet;
 import com.peter.emulator.machinecode.Goto.Mode;
 
 public class Assembler {
@@ -940,6 +941,14 @@ public class Assembler {
                             add(Syscall.Interrupt(Reg.from(parts[1])));
                         } else {
                             add(Syscall.Interrupt(getVal(parts[1]).value));
+                        }
+                    }
+                    case "TEST" -> {
+                        Reg rg = Reg.from(parts[3]);
+                        if (parts[4].startsWith("r")) {
+                            add(new TestAndSet(rg, Reg.from(parts[4])));
+                        } else {
+                            add(new TempTestAndSet(rg, getVal(parts[4])));
                         }
                     }
                     default -> {

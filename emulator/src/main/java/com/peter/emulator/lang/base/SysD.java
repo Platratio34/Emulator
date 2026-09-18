@@ -103,6 +103,7 @@ public class SysD extends Namespace {
         ProgramModule module = new ProgramModule("SysD", languageServer);
         module.addNamespace(new SysD(module));
         module.addNamespace(new Peripheral(module));
+        module.addNamespace(new Mutex(module));
         return module;
     }
 }

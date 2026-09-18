@@ -1,117 +1,117 @@
 {
     "variables": {
         "CharacterDisplay.charColorBuffer": {
-            "address": 12520,
-            "start": 12520,
-            "end": 13479,
+            "address": 12568,
+            "start": 12568,
+            "end": 13527,
             "type": "char[960]"
         },
         "TestD.tempCmdI": {
-            "address": 13680,
-            "start": 13680,
-            "end": 13683,
+            "address": 13728,
+            "start": 13728,
+            "end": 13731,
             "type": "int32"
         },
         "Memory.allocatedBlocks": {
-            "address": 11548,
-            "start": 11548,
-            "end": 11551,
+            "address": 11596,
+            "start": 11596,
+            "end": 11599,
             "type": "MemoryBlock*"
         },
         "CharacterDisplay.charBuffer": {
-            "address": 11556,
-            "start": 11556,
-            "end": 12515,
+            "address": 11604,
+            "start": 11604,
+            "end": 12563,
             "type": "char[960]"
         },
         "CharacterDisplay.height": {
-            "address": 13480,
-            "start": 13480,
-            "end": 13483,
+            "address": 13528,
+            "start": 13528,
+            "end": 13531,
             "type": "int32"
         },
         "TestD.inputBufferRead": {
-            "address": 13696,
-            "start": 13696,
-            "end": 13699,
+            "address": 13744,
+            "start": 13744,
+            "end": 13747,
             "type": "int32"
         },
         "TestD.tempCmd": {
-            "address": 13616,
-            "start": 13616,
-            "end": 13679,
+            "address": 13664,
+            "start": 13664,
+            "end": 13727,
             "type": "char[64]"
         },
         "TestD.testStr": {
-            "address": 11384,
-            "start": 11384,
-            "end": 11391,
+            "address": 11432,
+            "start": 11432,
+            "end": 11439,
             "type": "char[5]"
         },
         "TestD.inputBuffer": {
-            "address": 13488,
-            "start": 13488,
-            "end": 13615,
+            "address": 13536,
+            "start": 13536,
+            "end": 13663,
             "type": "char[128]"
         },
         "Memory.blockFreeList": {
-            "address": 11380,
-            "start": 11380,
-            "end": 11383,
+            "address": 11428,
+            "start": 11428,
+            "end": 11431,
             "type": "MemoryBlock*"
         },
         "CharacterDisplay.width": {
-            "address": 11552,
-            "start": 11552,
-            "end": 11555,
+            "address": 11600,
+            "start": 11600,
+            "end": 11603,
             "type": "int32"
         },
         "FS.deviceId": {
-            "address": 13484,
-            "start": 13484,
-            "end": 13487,
+            "address": 13532,
+            "start": 13532,
+            "end": 13535,
             "type": "int32"
         },
         "Memory.heapStart": {
-            "address": 11376,
-            "start": 11376,
-            "end": 11379,
+            "address": 11424,
+            "start": 11424,
+            "end": 11427,
             "type": "void*"
         },
         "TestD.v": {
-            "address": 13692,
-            "start": 13692,
-            "end": 13695,
+            "address": 13740,
+            "start": 13740,
+            "end": 13743,
             "type": "int32"
         },
         "TestD.testStr2": {
-            "address": 11412,
-            "start": 11412,
-            "end": 11419,
+            "address": 11460,
+            "start": 11460,
+            "end": 11467,
             "type": "char[7]"
         },
         "TestD.path": {
-            "address": 11400,
-            "start": 11400,
-            "end": 11411,
+            "address": 11448,
+            "start": 11448,
+            "end": 11459,
             "type": "char[9]"
         },
         "TestD.tc": {
-            "address": 13684,
-            "start": 13684,
-            "end": 13687,
+            "address": 13732,
+            "start": 13732,
+            "end": 13735,
             "type": "char"
         },
         "CharacterDisplay.deviceId": {
-            "address": 12516,
-            "start": 12516,
-            "end": 12519,
+            "address": 12564,
+            "start": 12564,
+            "end": 12567,
             "type": "int32"
         },
         "TestD.inputBufferWrite": {
-            "address": 13688,
-            "start": 13688,
-            "end": 13691,
+            "address": 13736,
+            "start": 13736,
+            "end": 13739,
             "type": "int32"
         }
     },
@@ -149,6 +149,12 @@
             "rt": "void",
             "start": 11260,
             "end": 11372
+        },
+        "Mutex.release": {
+            "args": [],
+            "rt": "void",
+            "start": 11372,
+            "end": 11384
         },
         "Kernal.kfree_int32": {
             "args": ["num int32"],
@@ -231,6 +237,12 @@
             "rt": "void",
             "start": 7256,
             "end": 7324
+        },
+        "Mutex.acquire": {
+            "args": [],
+            "rt": "void",
+            "start": 11404,
+            "end": 11420
         },
         "TestD.testRet": {
             "args": [],
@@ -324,6 +336,12 @@
             "rt": "void",
             "start": 7324,
             "end": 7368
+        },
+        "Mutex.try": {
+            "args": [],
+            "rt": "bool",
+            "start": 11384,
+            "end": 11404
         },
         "TestD.mainLoop": {
             "args": [],
@@ -2760,6 +2778,24 @@
             "lineStr": "1:1",
             "start": 11260,
             "end": 11364
+        },
+        {
+            "file": "<Mutex>:release",
+            "lineStr": "1:1",
+            "start": 11372,
+            "end": 11372
+        },
+        {
+            "file": "<Mutex>:try",
+            "lineStr": "1:1",
+            "start": 11384,
+            "end": 11396
+        },
+        {
+            "file": "<Mutex>:acquire",
+            "lineStr": "1:1",
+            "start": 11404,
+            "end": 11408
         }
     ],
     "version": 1,
@@ -2801,14 +2837,14 @@
             "value": "66308"
         },
         "exp_str_inline_10": {
-            "start": 11540,
-            "end": 11547,
+            "start": 11588,
+            "end": 11595,
             "type": "char*",
             "value": "STOP\u0000"
         },
         "exp_str_inline_3": {
-            "start": 11448,
-            "end": 11463,
+            "start": 11496,
+            "end": 11511,
             "type": "\\0\"",
             "value": "\nInterrupt: \u0000"
         },
@@ -2825,14 +2861,14 @@
             "value": "66048"
         },
         "exp_str_inline_2": {
-            "start": 11440,
-            "end": 11447,
+            "start": 11488,
+            "end": 11495,
             "type": "char*",
             "value": "Timer\u0000"
         },
         "exp_str_inline_5": {
-            "start": 11488,
-            "end": 11499,
+            "start": 11536,
+            "end": 11547,
             "type": "char*",
             "value": "test.txt\u0000"
         },
@@ -2843,8 +2879,8 @@
             "value": "16777233"
         },
         "exp_str_inline_4": {
-            "start": 11464,
-            "end": 11487,
+            "start": 11512,
+            "end": 11535,
             "type": "EmulatorOS\\n\\n\\0\"",
             "value": "Starting EmulatorOS\n\n\u0000"
         },
@@ -2855,14 +2891,14 @@
             "value": "131072"
         },
         "exp_str_inline_1": {
-            "start": 11432,
-            "end": 11439,
+            "start": 11480,
+            "end": 11487,
             "type": "\\0\"",
             "value": "\nTimer \u0000"
         },
         "exp_str_inline_0": {
-            "start": 11420,
-            "end": 11431,
+            "start": 11468,
+            "end": 11479,
             "type": "char*",
             "value": "\n\nHalting\u0000"
         },
@@ -2879,20 +2915,20 @@
             "value": "65536"
         },
         "exp_str_inline_7": {
-            "start": 11508,
-            "end": 11515,
+            "start": 11556,
+            "end": 11563,
             "type": "char*",
             "value": "Opened\n\u0000"
         },
         "exp_str_inline_6": {
-            "start": 11500,
-            "end": 11507,
+            "start": 11548,
+            "end": 11555,
             "type": "char*",
             "value": "ERROR\n\u0000"
         },
         "exp_str_inline_9": {
-            "start": 11528,
-            "end": 11539,
+            "start": 11576,
+            "end": 11587,
             "type": "char*",
             "value": "Stopping...\u0000"
         },
@@ -2903,8 +2939,8 @@
             "value": "66048"
         },
         "exp_str_inline_8": {
-            "start": 11516,
-            "end": 11527,
+            "start": 11564,
+            "end": 11575,
             "type": "char*",
             "value": "EmulatorOS\u0000"
         },
@@ -2927,8 +2963,8 @@
             "value": "16777218"
         },
         "TestD.str": {
-            "start": 11392,
-            "end": 11399,
+            "start": 11440,
+            "end": 11447,
             "type": "Test\"",
             "value": "// Test"
         },

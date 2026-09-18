@@ -18,6 +18,8 @@ public enum Operator {
 
     STACK(0x10, StackInstruction::fromBytecode),
     SYSCALL(0x11, Syscall::fromBytecode),
+                    
+    TEST_AND_SET(0x20, TestAndSet::fromBytecode),
 
     HALT(0xff, Generic::fromBytecode)
     ;

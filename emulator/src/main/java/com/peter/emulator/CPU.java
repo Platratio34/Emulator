@@ -667,7 +667,7 @@ public class CPU {
                             interrupt(0x8000_0001);
                             return;
                         }
-                        int ptr = readMem((syscallI.data<<2) + sysTablePtr);
+                        int ptr = readMem((syscallI.data << 2) + sysTablePtr);
                         if (ptr == 0xffff_ffff) {
                             running = false;
                             // TODO: interrupt?
@@ -685,6 +685,16 @@ public class CPU {
                         setReg(syscallI.rg, mmu.translate(this, getReg(syscallI.rg)));
                     }
                 }
+            }
+            case TEST_AND_SET -> {
+                TestAndSet tAS = (TestAndSet) lastInstruction;
+                int addr = switch (tAS.mode) {
+                    case REG_ADDRESS -> getReg(tAS.ra);
+                    case LIT_ADDRESS -> tAS.data;
+                };
+                byte v = readMemByte(addr);
+                writeMemByte(addr, (byte)1);
+                setReg(tAS.rg, v);
             }
         }
 
