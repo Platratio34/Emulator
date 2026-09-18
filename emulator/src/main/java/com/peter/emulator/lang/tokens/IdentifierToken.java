@@ -10,10 +10,10 @@ import com.peter.emulator.lang.Span;
 public class IdentifierToken extends Token {
 
     public String value;
+    public SetToken types = null;
     public SetToken index = null;
     public SetToken params = null;
     public Location nameEnd = null;
-    protected boolean indexClosed = false;
     protected final ProgramUnit unit;
 
     public IdentifierToken(char c, Location location, ProgramUnit unit) {
@@ -38,6 +38,13 @@ public class IdentifierToken extends Token {
                 subTokens.add(nextId);
             }
             return null;
+        } else if (types != null && !types.closed) {
+            SetToken tkn = types.ingest(c, location);
+            if (tkn != null) {
+                endLocation = location;
+                types = tkn;
+                return this;
+            }
         } else if (index != null && !index.closed) {
             SetToken tkn = index.ingest(c, location);
             if (tkn != null) {
@@ -77,8 +84,14 @@ public class IdentifierToken extends Token {
             endLocation = location;
             nextIsDot = false;
             return this;
+        } else if (c == '<') {
+            if (index != null || params != null || types != null) {
+                throw new TokenizerError("Unexpected `<` in identifier");
+            }
+            types = new SetToken(SetToken.BracketType.ANGLE_BRACKETS, location, unit);
+            return this;
         } else if (c == '[') {
-            if (index != null || params != null) {
+            if (index != null || params != null || types != null) {
                 throw new TokenizerError("Unexpected `[` in identifier");
             }
             index = new SetToken(SetToken.BracketType.SQUARE_BRACKETS, location, unit);
@@ -97,6 +110,9 @@ public class IdentifierToken extends Token {
     public String toString() {
         String out = "IdentifierToken{value=\"";
         out += value + "\"";
+        if (types != null) {
+            out += ", types=" + typeString();
+        }
         if (index != null) {
             out += ", index=" + index.toString();
         } else if (params != null) {
@@ -111,6 +127,9 @@ public class IdentifierToken extends Token {
     @Override
     public String debugString() {
         String out = value;
+        if (types != null) {
+            out += types.debugString();
+        }
         if (index != null) {
             out += index.debugString();
         } else if (params != null) {

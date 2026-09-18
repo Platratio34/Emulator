@@ -426,24 +426,34 @@ public class Assembler {
                             Matcher m = LOAD_MEM_PATTERN.matcher(line);
                             if (!m.find()) {
                                 errors.add(new AssemblerError(
-                                        "Invalid load instruction: LOAD MEM <SHORT|BYTE> [rg] [ra]  (INC_RA)", lineN,
+                                        "Invalid load instruction: LOAD MEM <SHORT|BYTE> [rg] <[ra]|[address]>  (INC_RA)", lineN,
                                         line.length(), line, source));
                                 continue;
                             }
                             boolean incRA = m.group(4) != null;
                             Reg rg = Reg.from(m.group(2));
-                            Reg ra = Reg.from(m.group(3));
-                            String size = m.group(1);
-                            switch (size != null ? size : "") {
-                                case "SHORT" -> {
-                                    add(Load.MemShort(rg, ra, incRA));
+                            if (m.group(3).startsWith("r")) {
+                                Reg ra = Reg.from(m.group(3));
+                                String size = m.group(1);
+                                switch (size != null ? size : "") {
+                                    case "SHORT" -> {
+                                        add(Load.MemShort(rg, ra, incRA));
+                                    }
+                                    case "BYTE" -> {
+                                        add(Load.MemByte(rg, ra, incRA));
+                                    }
+                                    default -> {
+                                        add(Load.MemWord(rg, ra, incRA));
+                                    }
                                 }
-                                case "BYTE" -> {
-                                    add(Load.MemByte(rg, ra, incRA));
-                                }
-                                default -> {
-                                    add(Load.MemWord(rg, ra, incRA));
-                                }
+                            } else {
+                                String size = m.group(1);
+                                MemorySize memorySize = switch (size != null ? size : "") {
+                                    case "SHORT" -> MemorySize.SHORT;
+                                    case "BYTE" -> MemorySize.BYTE;
+                                    default -> MemorySize.WORD;
+                                };
+                                add(new TempLoad(memorySize, rg, getVal(m.group(3))));
                             }
                         } else {
                             if (parts.length < 3) {
@@ -483,9 +493,19 @@ public class Assembler {
                                     next++;
                                 }
                             }
-                            int rs = getReg(parts[next++]);
-                            int rd = getReg(parts[next++]);
-                            StoreInstruction instruction = add(StoreInstruction.CopyMem(size, Reg.from(rs), Reg.from(rd)));
+                            Reg rs = Reg.from(parts[next++]);
+                            if (rs == Reg.UNKNOWN) {
+                                errors.add(new AssemblerError("Unknown register `" + parts[next - 1] + "`", lineN, line.length(),
+                                        line, source));
+                                continue;
+                            }
+                            Reg rd = Reg.from(parts[next++]);
+                            if (rd == Reg.UNKNOWN) {
+                                errors.add(new AssemblerError("Unknown register `" + parts[next - 1] + "`", lineN, line.length(),
+                                        line, source));
+                                continue;
+                            }
+                            StoreInstruction instruction = add(StoreInstruction.CopyMem(size, rs, rd));
                             if (parts.length > next) {
                                 switch (parts[next++]) {
                                     case "INC_RS" -> {
@@ -512,15 +532,15 @@ public class Assembler {
                                         line.length(), line, source));
                                 continue;
                             }
-                            int rs = getReg(parts[next++]);
-                            int rd = getReg(parts[next++]);
-                            add(StoreInstruction.CopyReg(Reg.from(rs), Reg.from(rd)));
+                            Reg rs = Reg.from(parts[next++]);
+                            Reg rd = Reg.from(parts[next++]);
+                            add(Load.Copy(rs, rd));
                         }
                     }
                     case "STORE" -> {
                         if (parts.length < 2) {
                             errors.add(new AssemblerError(
-                                    "Invalid store instruction: STORE <SHORT|BYTE> VAL [ra] [val] <INC_RA> or STORE <SHORT|BYTE> [val|rg] [ra] <INC_RA>",
+                                    "Invalid store instruction: STORE <SHORT|BYTE> VAL [ra] [val] <INC_RA> or STORE <SHORT|BYTE> [val|rg] [ra] <INC_RA> or STORE (<SHORT|BYTE>) [rg] [address]",
                                     lineN,
                                     line.length(), line, source));
                             continue;
@@ -546,9 +566,9 @@ public class Assembler {
                                 continue;
                             }
                             next++;
-                            int ra = getReg(parts[next++]);
+                            Reg ra = Reg.from(parts[next++]);
                             Define val = getVal(parts[next++]);
-                            store = add(new TempStore(size, val, Reg.from(ra)));
+                            store = add(new TempStore(size, val, ra));
                         } else if (!parts[next].startsWith("r")) {
                             if (parts.length < next + 2) {
                                 errors.add(new AssemblerError(
@@ -557,8 +577,8 @@ public class Assembler {
                                 continue;
                             }
                             Define val = getVal(parts[next++]);
-                            int ra = getReg(parts[next++]);
-                            store = add(new TempStore(size, val, Reg.from(ra)));
+                            Reg ra = Reg.from(parts[next++]);
+                            store = add(new TempStore(size, val, ra));
                         } else {
                             if (parts.length < next + 2) {
                                 errors.add(new AssemblerError(
@@ -566,9 +586,13 @@ public class Assembler {
                                         line.length(), line, source));
                                 continue;
                             }
-                            int rg = getReg(parts[next++]);
-                            int ra = getReg(parts[next++]);
-                            store = add(StoreInstruction.StoreReg(size, Reg.from(rg), Reg.from(ra)));
+                            Reg rg = Reg.from(parts[next++]);
+                            if (parts[next].startsWith("r")) {
+                                Reg ra = Reg.from(parts[next++]);
+                                store = add(StoreInstruction.StoreReg(size, rg, ra));
+                            } else {
+                                store = add(new TempStore(size, rg, getVal(parts[next++])));
+                            }
                         }
                         if (parts.length > next && parts[next].equals("INC_RA")) {
                             // entry.incRA();
@@ -577,19 +601,39 @@ public class Assembler {
                     }
                     case "ADD" -> {
                         if (parts.length < 4) {
-                            errors.add(new AssemblerError("Invalid add instruction: ADD [rd] [ra] [rb]", lineN,
+                            errors.add(new AssemblerError("Invalid add instruction: ADD [rd] [ra] <[rb]|[amt]>", lineN,
                                     line.length(), line, source));
                             continue;
                         }
-                        add(MathInstruction.Add(Reg.from(parts[1]), Reg.from(parts[2]), Reg.from(parts[3])));
+                        if (!parts[3].startsWith("r")) {
+                            int v = getVal(parts[3]).value;
+                            if(v < 0 || v > 255) {
+                                errors.add(new AssemblerError("Amount for literal add must be between 0 and 255 inclusive", lineN,
+                                    line.length(), line, source));
+                                continue;
+                            }
+                            add(MathInstruction.AddLit(Reg.from(parts[1]), Reg.from(parts[2]), v));
+                        } else {
+                            add(MathInstruction.Add(Reg.from(parts[1]), Reg.from(parts[2]), Reg.from(parts[3])));
+                        }
                     }
                     case "SUB" -> {
                         if (parts.length < 4) {
-                            errors.add(new AssemblerError("Invalid sub instruction: SUB [rd] [ra] [rb]", lineN,
+                            errors.add(new AssemblerError("Invalid sub instruction: SUB [rd] [ra] <[rb]|[amt]>", lineN,
                                     line.length(), line, source));
                             continue;
                         }
-                        add(MathInstruction.Sub(Reg.from(parts[1]), Reg.from(parts[2]), Reg.from(parts[3])));
+                        if (!parts[3].startsWith("r")) {
+                            int v = getVal(parts[3]).value;
+                            if(v < 0 || v > 255) {
+                                errors.add(new AssemblerError("Amount for literal subtract must be between 0 and 255 inclusive", lineN,
+                                    line.length(), line, source));
+                                continue;
+                            }
+                            add(MathInstruction.SubLit(Reg.from(parts[1]), Reg.from(parts[2]), v));
+                        } else {
+                            add(MathInstruction.Sub(Reg.from(parts[1]), Reg.from(parts[2]), Reg.from(parts[3])));
+                        }
                     }
                     case "INC" -> {
                         if (parts.length < 2) {
@@ -600,6 +644,11 @@ public class Assembler {
                         int inc = 1;
                         if (parts.length >= 3 && !parts[2].startsWith("//")) {
                             inc = getVal(parts[2]).value;
+                        }
+                        if (!MathInstruction.inIncRange(inc)) {
+                            errors.add(new AssemblerError("Amount for increment must be between -32,767 (-0x7fff) and 32,767 (0x7fff) inclusive", lineN,
+                                    line.length(), line, source));
+                            continue;
                         }
                         add(MathInstruction.Inc(Reg.from(parts[1]), inc));
                     }
@@ -1007,79 +1056,79 @@ public class Assembler {
         return bArr;
     }
 
-    private int getReg(String reg) {
-        int r;
-        switch (reg) {
-            case "rPgm" -> {
-                r = REG_PGM_PNTR;
-            }
-            case "rStack" -> {
-                r = REG_STACK_PNTR;
-            }
-            case "rAF" -> {
-                r = REG_ARITHMETIC_FLAG;
-            }
+    // private int getReg(String reg) {
+    //     int r;
+    //     switch (reg) {
+    //         case "rPgm" -> {
+    //             r = REG_PGM_PNTR;
+    //         }
+    //         case "rStack" -> {
+    //             r = REG_STACK_PNTR;
+    //         }
+    //         case "rAF" -> {
+    //             r = REG_ARITHMETIC_FLAG;
+    //         }
 
-            case "rPID" -> {
-                r = REG_PID;
-            }
-            case "rMTbl" -> {
-                r = REG_MEM_TABLE;
-            }
+    //         case "rPID" -> {
+    //             r = REG_PID;
+    //         }
+    //         case "rMTbl" -> {
+    //             r = REG_MEM_TABLE;
+    //         }
             
-            case "rPM" -> {
-                r = REG_PRIVILEGED_MODE;
-            }
+    //         case "rPM" -> {
+    //             r = REG_PRIVILEGED_MODE;
+    //         }
             
-            case "rIC" -> {
-                r = REG_INTERRUPT;
-            }
-            case "rIH" -> {
-                r = REG_INTR_HANDLER;
-            }
+    //         case "rIC" -> {
+    //             r = REG_INTERRUPT;
+    //         }
+    //         case "rIH" -> {
+    //             r = REG_INTR_HANDLER;
+    //         }
             
-            case "rID" -> {
-                r = REG_CPU_ID;
-            }
+    //         case "rID" -> {
+    //             r = REG_CPU_ID;
+    //         }
 
-            case "rPgmI" -> {
-                r = REG_PGM_PNTR_I;
-            }
-            case "rStackI" -> {
-                r = REG_STACK_PNTR_I;
-            }
-            case "rAFI" -> {
-                r = REG_ARITHMETIC_FLAG_I;
-            }
+    //         case "rPgmI" -> {
+    //             r = REG_PGM_PNTR_I;
+    //         }
+    //         case "rStackI" -> {
+    //             r = REG_STACK_PNTR_I;
+    //         }
+    //         case "rAFI" -> {
+    //             r = REG_ARITHMETIC_FLAG_I;
+    //         }
 
-            case "rPIDI" -> {
-                r = REG_PID_I;
-            }
-            case "rMTblI" -> {
-                r = REG_MEM_TABLE_I;
-            }
+    //         case "rPIDI" -> {
+    //             r = REG_PID_I;
+    //         }
+    //         case "rMTblI" -> {
+    //             r = REG_MEM_TABLE_I;
+    //         }
             
-            case "rPMI" -> {
-                r = REG_PRIVILEGED_MODE_I;
-            }
+    //         case "rPMI" -> {
+    //             r = REG_PRIVILEGED_MODE_I;
+    //         }
         
-            default -> {
-                if (reg.charAt(0) == 'r') {
-                    if(reg.endsWith("I"))
-                        r = Integer.parseInt(reg.substring(1,reg.length()-2)) + 0x10;
-                    else
-                        r = Integer.parseInt(reg.substring(1));
-                } else {
-                    try {
-                        r = Integer.parseInt(reg);
-                    } catch(NumberFormatException e) {
-                        throw new RuntimeException("Expected register identifier, but found `"+reg+"` instead");
-                    }
-                }
-            }
-        }
-        return r;
-    }
+    //         default -> {
+    //             if (reg.charAt(0) == 'r') {
+    //                 if(reg.endsWith("I"))
+    //                     r = Integer.parseInt(reg.substring(1,reg.length()-2)) + 0x10;
+    //                 else
+    //                     r = Integer.parseInt(reg.substring(1));
+    //             } else {
+    //                 try {
+    //                     r = Integer.parseInt(reg);
+    //                 } catch(NumberFormatException e) {
+    //                     throw new RuntimeException("Expected register identifier, but found `"+reg+"` instead");
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     return r;
+    // }
 
     private Define getVal(String val) {
         int v = 0;

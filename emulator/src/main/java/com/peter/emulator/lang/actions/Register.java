@@ -1,6 +1,7 @@
 package com.peter.emulator.lang.actions;
 
 import com.peter.emulator.MachineCode;
+import com.peter.emulator.machinecode.Reg;
 
 public class Register {
 
@@ -67,7 +68,7 @@ public class Register {
     }
 
     public static Register of(ActionScope scope, String vN) {
-        return new Register(scope, ActionBlock.getSysDReg(vN));
+        return new Register(scope, Reg.from(vN).code);
     }
 
     public RegisterAction reserveAction() {

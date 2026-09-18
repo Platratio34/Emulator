@@ -13,6 +13,9 @@ public class SetToken extends Token {
         super(location);
         this.type = type;
         tk = new Tokenizer("", location, unit);
+        if (type == BracketType.ANGLE_BRACKETS) {
+            tk.blockGT = true;
+        }
         subTokens = tk.tokens;
     }
 
@@ -58,6 +61,7 @@ public class SetToken extends Token {
     public enum BracketType {
         PARENTHESES('(',')'),
         SQUARE_BRACKETS('[',']'),
+        ANGLE_BRACKETS('<','>'),
         ;
         public final char open;
         public final char close;

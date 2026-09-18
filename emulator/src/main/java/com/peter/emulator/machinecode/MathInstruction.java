@@ -35,6 +35,18 @@ public class MathInstruction extends Instruction {
         this.data = amt & 0x7f;
         this.rotate = rotate;
     }
+    protected MathInstruction(Operation operation, Reg rd, Reg ra, int amt) {
+        super(Operator.MATH);
+        if(rd.code > 0xf) {
+            throw new RuntimeException("Invalid destination register for math");
+        }
+        this.operation = operation;
+        this.rd = rd;
+        this.ra = ra;
+        this.rb = Reg.R0;
+        this.data = amt & 0xff;
+        rotate = false;
+    }
     protected MathInstruction(Operation operation, Reg rd, int val) {
         super(Operator.MATH);
         if(rd.code > 0xf) {
@@ -51,8 +63,16 @@ public class MathInstruction extends Instruction {
     public static MathInstruction Add(Reg rd, Reg ra, Reg rb) {
         return new MathInstruction(Operation.ADD, rd, ra, rb);
     }
+
     public static MathInstruction Sub(Reg rd, Reg ra, Reg rb) {
         return new MathInstruction(Operation.SUB, rd, ra, rb);
+    }
+    
+    public static MathInstruction AddLit(Reg rd, Reg ra, int rb) {
+        return new MathInstruction(Operation.ADD_LIT, rd, ra, rb);
+    }
+    public static MathInstruction SubLit(Reg rd, Reg ra, int rb) {
+        return new MathInstruction(Operation.SUB_LIT, rd, ra, rb);
     }
 
     public static MathInstruction Inc(Reg rd, int amt) {
@@ -119,6 +139,7 @@ public class MathInstruction extends Instruction {
         return switch(operation) {
             case INC -> new MathInstruction(operation, rd, bytecode);
             case LSHIFT, RSHIFT -> new MathInstruction(operation, rd, Reg.from(bytecode >> 8), bytecode, (bytecode & ROTATE_FLAG) != 0);
+            case ADD_LIT, SUB_LIT -> new MathInstruction(operation, rd, Reg.from(bytecode >> 8), bytecode);
             default -> new MathInstruction(operation, rd, Reg.from(bytecode >> 8), Reg.from(bytecode));
         };
     }
@@ -149,6 +170,9 @@ public class MathInstruction extends Instruction {
             case INC -> String.format("INC %s %d", rd.string, getInc());
 
             case NOT -> String.format("NOT %s %s", rd.string, ra.string);
+            
+            case ADD_LIT -> String.format("ADD %s %s %d", rd.string, ra.string, data);
+            case SUB_LIT -> String.format("SUB %s %s %d", rd.string, ra.string, data);
 
             case LSHIFT, RSHIFT -> String.format("%s %s %s %d", operation, rd.string, ra.string, data);
             default -> String.format("MATH UNKNOWN (0x%08x)", getBytecode());
@@ -157,21 +181,21 @@ public class MathInstruction extends Instruction {
 
     public enum Operation {
         NONE(0x0),
-        ADD(0x1),
-        SUB(0x2),
-        INC(0x3),
-        AND(0x4),
-        OR(0x5),
-        NAND(0x6),
-        NOR(0x7),
-        NOT(0x8),
-        XOR(0x9),
-        LSHIFT(0xa),
-        RSHIFT(0xb),
-        MUL(0xc),
-        DIV(0xd),
-        UNUSED_E(0xe),
-        UNUSED_F(0xf);
+        ADD(0x1), // ADD rd ra rb
+        SUB(0x2), // SUB rd ra rb
+        INC(0x3), // INC rd amt
+        AND(0x4), // AND rd ra rb
+        OR(0x5), // OR rd ra rb
+        NAND(0x6), // NAND rd ra rb
+        NOR(0x7), // NOR rd ra rb
+        NOT(0x8), // NOT rd ra
+        XOR(0x9), // XOR rd ra rb
+        LSHIFT(0xa), // LSHIFT rd ra amt
+        RSHIFT(0xb), // RSHIFT rd ra amt
+        MUL(0xc), // MUL rd ra rb
+        DIV(0xd), // DIV rd ra rb
+        ADD_LIT(0xe), // ADD_LIT rd ra amt
+        SUB_LIT(0xf); // SUB_LIT rd ra amt
         ;
 
         public final int id;

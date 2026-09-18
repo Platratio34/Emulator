@@ -204,9 +204,13 @@ namespace TestD {
         Console.printChar('\n');
     }
 
+    @/
+        Live waits for at least the specified number of clock cycles.
+    /@
     public static void wait(int32 time) {
-        while(time > 0) {
-            time--;
+        int32 end = Peripheral.TIMERS[0] + time;
+        while(Peripheral.TIMERS[0] < end) {
+            
         }
     }
 

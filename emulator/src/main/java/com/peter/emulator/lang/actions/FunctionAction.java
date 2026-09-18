@@ -28,6 +28,33 @@ public class FunctionAction extends ComplexAction {
             throw ELAnalysisError.error("Function did not have params", it);
         }
 
+        boolean forceCast = it.value.equals("force_cast");
+        if (it.value.equals("cast") || forceCast) {
+            if (forceCast) {
+                scope.addSymbol(ELSymbol.Type.KEYWORD, it.nameSpan(), "`force_cast<type>(value)`\n\nTells the compiler to treat the value to a particular type, ignoring safety. **NO CONVERSION APPLIED**");
+            } else {
+                scope.addSymbol(ELSymbol.Type.KEYWORD, it.nameSpan(), "`cast<type>(value)`\n\nTells the compiler to treat the value to a particular type. **NO CONVERSION APPLIED**");
+            }
+            if (it.types == null) {
+                throw ELAnalysisError.error("Must specify target type for cast", it);
+            }
+            ELType.Builder typeBuild = new ELType.Builder();
+            for (Token t : it.types.subTokens) {
+                typeBuild.ingest(t);
+            }
+            ELType targetType = typeBuild.build();
+            targetType.analyze(scope.unit.errors, scope.namespace, scope.unit);
+            Expression exp = new Expression(scope, it.params.subTokens, targetReg);
+            exp.validate(scope.unit.errors);
+            if (!forceCast && !exp.getType().canCastTo(targetType)) {
+                throw ELAnalysisError.errorF(it, "Can not cast %s to %s", exp.getType().typeString(),
+                        targetType.typeString());
+            }
+            add(exp);
+            retType = targetType;
+            return;
+        }
+
         boolean onStack = true;
         Identifier id = it.asId();
         if (id.starts("SysD")) {

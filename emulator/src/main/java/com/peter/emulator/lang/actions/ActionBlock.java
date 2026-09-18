@@ -11,6 +11,7 @@ import com.peter.emulator.lang.*;
 import com.peter.emulator.lang.base.ELPrimitives;
 import com.peter.emulator.lang.expresion.Expression;
 import com.peter.emulator.lang.tokens.OperatorToken.Type;
+import com.peter.emulator.machinecode.Reg;
 import com.peter.emulator.lang.tokens.*;
 
 public class ActionBlock extends ComplexAction {
@@ -57,6 +58,10 @@ public class ActionBlock extends ComplexAction {
                 addDirect("// " + (l++) + " " + tkn.startLocation.line() + ":" + tkn.startLocation.col());
                 if (withDebug) {
                     addDirect("#line %s %d:%d", tkn.startLocation.file(), tkn.startLocation.line(), tkn.startLocation.col());
+                }
+                if (tkn instanceof DocCommentToken tcT) {
+                    wI++;
+                    continue;
                 }
                 add(s -> {
                     String str = "";
@@ -295,7 +300,13 @@ public class ActionBlock extends ComplexAction {
                                 case 2 -> " SHORT";
                                 default -> "";
                             };
-                            actions.add(new DirectAction("COPY r15 %s\nINC %s %d\nSTORE%s %s %s", r2, r2, scope.getReturnOffset(), sizeStr, r, r2));
+                            int retOffset = scope.getReturnOffset();
+                            if (retOffset >= -255) {
+                                addDirect("SUB %s r15 %d", r2, -retOffset);
+                            } else {
+                                addDirect("COPY r15 %s\nINC %s %d", r2, r2, retOffset);
+                            }
+                            actions.add(new DirectAction("STORE%s %s %s", sizeStr, r, r2));
                             actions.add(new DirectAction("GOTO :func_exit_" + func.getQualifiedName(true)));
                             addRelease(r);
                             addRelease(r2);
@@ -451,16 +462,17 @@ public class ActionBlock extends ComplexAction {
                             if (vN.startsWith("r")) {
                                 regTarget = true;
                                 r.fistFree();
-                                switch (vN) {
-                                    case "rPM" -> {
+                                Reg reg = Reg.from(vN);
+                                switch (reg) {
+                                    case PRIVILEGE, PRIVILEGE_I -> {
                                         assignAction = new DirectAction("COPY %s %s", vN, r);
                                         t = ELPrimitives.BOOL;
                                     }
-                                    case "rStack", "rMemTbl" -> {
+                                    case STACK, STACK_I, SYS_TABLE, MEM_TABLE, MEM_TABLE_I -> {
                                         assignAction = new DirectAction("COPY %s %s", vN, r);
                                         t = ELPrimitives.VOID_PTR;
                                     }
-                                    case "rID" -> {
+                                    case CPU_ID -> {
                                         throw ELAnalysisError.error("Register `rID` is read-only", targetVal.span());
                                     }
                                     default -> {
@@ -469,7 +481,7 @@ public class ActionBlock extends ComplexAction {
                                     }
                                 }
                                 rT = Register.of(scope, vN);
-                                scope.addSymbol(new ELSymbol(ELSymbol.Type.VARIABLE_NAME, it.sub(0).span(), "### `%s %s`\nCPU register `%s`\n\n"+MachineCode.regDesc(vN), t.typeString(), vN, vN));
+                                scope.addSymbol(new ELSymbol(ELSymbol.Type.VARIABLE_NAME, it.sub(0).span(), "### `%s %s`\nCPU register `%s`\n\n"+reg.description, t.typeString(), vN, vN));
                             } else {
                                 throw ELAnalysisError.error("Unknown SysD variable `" + vN + "`", it);
                             }
@@ -688,52 +700,6 @@ public class ActionBlock extends ComplexAction {
         
         if(!tokens.isEmpty())
             scope.freeScopeHandles(errors, tokens.getLast().endLocation.span());
-    }
-
-    public static int getSysDReg(String id) {
-        return switch(id) {
-            case "r0" -> 0;
-            case "r1" -> 1;
-            case "r2" -> 2;
-            case "r3" -> 3;
-            case "r4" -> 4;
-            case "r5" -> 5;
-            case "r6" -> 6;
-            case "r7" -> 7;
-            case "r8" -> 8;
-            case "r9" -> 9;
-            case "r10" -> 10;
-            case "r11" -> 11;
-            case "r12" -> 12;
-            case "r13" -> 13;
-            case "r14" -> 14;
-            case "r15" -> 15;
-            case "r0I" -> 0x10;
-            case "r1I" -> 0x11;
-            case "r2I" -> 0x12;
-            case "r3I" -> 0x13;
-            case "r4I" -> 0x14;
-            case "r5I" -> 0x15;
-            case "r6I" -> 0x16;
-            case "r7I" -> 0x17;
-            case "r8I" -> 0x18;
-            case "r9I" -> 0x19;
-            case "r10I" -> 0x1a;
-            case "r11I" -> 0x1b;
-            case "r12I" -> 0x1c;
-            case "r13I" -> 0x1d;
-            case "r14I" -> 0x1e;
-            case "r15I" -> 0x1f;
-            case "rPgm" -> MachineCode.REG_PGM_PNTR;
-            case "rStack" -> MachineCode.REG_STACK_PNTR;
-            case "rPid" -> MachineCode.REG_PID;
-            case "rMemTbl" -> MachineCode.REG_MEM_TABLE;
-            case "rIC" -> MachineCode.REG_INTERRUPT;
-            case "rIH" -> MachineCode.REG_INTR_HANDLER;
-            case "rPM" -> MachineCode.REG_PRIVILEGED_MODE;
-            case "rID" -> MachineCode.REG_CPU_ID;
-            default -> -1;
-        };
     }
 
 }

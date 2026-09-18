@@ -25,8 +25,16 @@ public class ELInterruptHandlerAnnotation extends ELAnnotation {
     @Override
     public String getDescription() {
         String out = "Marks this function as the interrupt handler function. If not marked `raw`, this function will be executed **after** language level interrupts are handled.";
-        out += "\n\nRaw: `" + (raw ? "true": "false") + "`";
+        out += "\n\nRaw: `" + (raw ? "true" : "false") + "`";
         return out;
+    }
+    
+    @Override
+    public String getDefDesc() {
+        if(raw) {
+            return "Raw Interrupt Handler";
+        }
+        return "Interrupt Handler";
     }
 
 }

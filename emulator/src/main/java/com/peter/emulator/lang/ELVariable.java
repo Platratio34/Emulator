@@ -3,6 +3,7 @@ package com.peter.emulator.lang;
 import java.util.ArrayList;
 
 import com.peter.emulator.lang.annotations.ELAnnotation;
+import com.peter.emulator.lang.doc.DocComment;
 import com.peter.emulator.lang.tokens.OperatorToken;
 import com.peter.emulator.lang.tokens.Token;
 
@@ -23,6 +24,8 @@ public class ELVariable {
     public ELValue startingValue = null;
     public Location valueLocation = null;
     public ArrayList<ELAnnotation> annotations = null;
+
+    public DocComment doc = null;
 
     public ELVariable(ELProtectionLevel protection, Type varType, ELType type, String name, boolean finalVal, Namespace namespace, ProgramUnit unit, Location location) {
         this(protection, varType, type, name, finalVal, namespace, unit, location, location);

@@ -22,4 +22,12 @@ public class ELEntrypointAnnotation extends ELAnnotation {
         out += "\n\nRaw: `" + (raw ? "true": "false") + "`";
         return out;
     }
+    
+    @Override
+    public String getDefDesc() {
+        if(raw) {
+            return "Raw Entrypoint";
+        }
+        return "User Entrypoint";
+    }
 }

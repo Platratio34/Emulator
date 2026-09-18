@@ -11,6 +11,7 @@ import com.peter.emulator.lang.Namespace;
 import com.peter.emulator.lang.ProgramModule;
 import com.peter.emulator.lang.ProgramUnit;
 import com.peter.emulator.lang.actions.DirectAction;
+import com.peter.emulator.lang.doc.DocComment;
 import com.peter.emulator.peripherals.PeripheralManager;
 
 public class Peripheral extends Namespace {
@@ -37,10 +38,10 @@ public class Peripheral extends Namespace {
         addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.INT32.pointerTo(), "RSP_DATA", false, this, unit, PERIPHERAL_LOCATION).setValue(PeripheralManager.PERIPHERAL_RSP_DATA));
         
         addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.INT32.pointerTo(), "TABLE",
-                false, this, unit, PERIPHERAL_LOCATION).setValue(PeripheralManager.PERIPHERAL_TABLE));
+                false, this, unit, PERIPHERAL_LOCATION).setValue(PeripheralManager.PERIPHERAL_TABLE)).doc = new DocComment("Table of peripheral types");
                 
         addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.INT32.pointerTo(), "TIMERS",
-                false, this, unit, PERIPHERAL_LOCATION).setValue(PeripheralManager.PERIPHERAL_START + 0x200));
+                false, this, unit, PERIPHERAL_LOCATION).setValue(PeripheralManager.PERIPHERAL_START + 0x200)).doc = new DocComment("The system timers. Timer `0` is the current cycle count.");
         
         addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.INT32.pointerTo(), "TYPE_DISPLAY_CHARACTER", true, this, unit, PERIPHERAL_LOCATION).setValue(TYPE_DISPLAY_CHARACTER));
         addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.INT32.pointerTo(), "TYPE_STORAGE_VIRTUAL", true, this, unit, PERIPHERAL_LOCATION).setValue(TYPE_STORAGE_VIRTUAL));
@@ -97,6 +98,7 @@ public class Peripheral extends Namespace {
 
         command.actions.add(new DirectAction("#lineend"));
         addStaticFunction(command);
+        command.doc = new DocComment("Execute a peripheral command");
 
         /*
         struct PeripheralDescriptor {

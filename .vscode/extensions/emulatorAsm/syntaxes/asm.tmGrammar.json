@@ -90,6 +90,7 @@
                 },
                 "3": {
                     "patterns": [
+                        { "include": "#value.constant" },
                         { "include": "#register" }
                     ]
                 },
@@ -124,12 +125,13 @@
                 },
                 "2": {
                     "patterns": [
-                        { "include": "#register" },
-                        { "include": "#value.constant" }
+                        { "include": "#value.constant" },
+                        { "include": "#register" }
                     ]
                 },
                 "3": {
                     "patterns": [
+                        { "include": "#value.constant" },
                         { "include": "#register" }
                     ]
                 },
@@ -207,7 +209,31 @@
             }
         },
         {
-            "match": "^(ADD|SUB|MUL|OR|AND)(?:\\s+(\\S+)(?:\\s+(\\S+)(?:\\s+(\\S+))?)?)?",
+            "match": "^(ADD|SUB)(?:\\s+(\\S+)(?:\\s+(\\S+)(?:\\s+(\\S+))?)?)?",
+            "captures": {
+                "1": {
+                    "name": "keyword.control.instruction"
+                },
+                "2": {
+                    "patterns": [
+                        { "include": "#register" }
+                    ]
+                },
+                "3": {  
+                    "patterns": [
+                        { "include": "#register" }
+                    ]
+                },
+                "4": {
+                    "patterns": [
+                        { "include": "#value.constant" },
+                        { "include": "#register" }
+                    ]
+                }
+            }
+        },
+        {
+            "match": "^(MUL|OR|AND)(?:\\s+(\\S+)(?:\\s+(\\S+)(?:\\s+(\\S+))?)?)?",
             "captures": {
                 "1": {
                     "name": "keyword.control.instruction"
@@ -532,7 +558,7 @@
         },
         "register": {
             "name": "variable.language.register",
-            "match": "\\b(r\\d+I?|rPgm|rStack|rAF|rPM|rIC|rIH|rPID|rID|rMemTbl|rPgmI|rStackI|rAFI|rPMI|rPIDI|rMemTbl|)\\b"
+            "match": "\\b(r\\d+I?|rPgm|rStack|rAF|rPM|rIC|rIH|rSysTbl|rPID|rID|rMemTbl|rPgmI|rStackI|rAFI|rPMI|rPIDI|rMemTblI|)\\b"
         },
         "label": {
             "name": "variable.other.event",

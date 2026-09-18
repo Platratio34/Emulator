@@ -695,6 +695,8 @@ public class ELType {
     public ELType resolve(Span span) {
         if (!isResolvable())
             throw ELAnalysisError.error("Can not resolve a non-pointer, address, or array (tried to resolve `"+typeString()+"`)", span);
+        if (isVoidPtr())
+            return this;
         return subType;
     }
     

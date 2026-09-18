@@ -43,14 +43,14 @@ public class ProgramModule {
         if (!moduleInfoPath.toFile().exists()) {
             System.err.println("Missing module info file");
         }
-        json = new JSONObject(Files.readString(moduleInfoPath));
+        json = new JSONObject(languageServer.fileProvider.readFile(moduleInfoPath));
         if(!json.has("name"))
             throw new IOException("Illegal module info file");
         name = json.getString("name");
         if (json.has("ref")) {
             JSONArray jsonRef = json.getJSONArray("ref");
             for (int i = 0; i < jsonRef.length(); i++) {
-                System.out.println("Adding ref module: "+jsonRef.getString(i));
+                // System.out.println("Adding ref module: "+jsonRef.getString(i));
                 addRefModule(jsonRef.getString(i));
             }
         }
@@ -111,7 +111,7 @@ public class ProgramModule {
                     Path path = f.toPath();
                     ProgramUnit unit = new ProgramUnit(this, path.toString());
                     units.put(unit.uri, unit);
-                    String str = Files.readString(path);
+                    String str = languageServer.fileProvider.readFile(path);
                     Tokenizer tk = new Tokenizer(str, new Location(path.toString(), 1, 1), false, unit);
                     try {
                         Optional<String> err = tk.tokenize();

@@ -1,8 +1,10 @@
 package com.peter.emulator.lang.base;
 
 import com.peter.emulator.lang.ELFunction.FunctionType;
+import com.peter.emulator.lang.doc.DocComment;
 import com.peter.emulator.lang.*;
 import com.peter.emulator.lang.tokens.IdentifierToken;
+import com.peter.emulator.machinecode.Reg;
 
 public class SysD extends Namespace {
 
@@ -69,27 +71,32 @@ public class SysD extends Namespace {
         AddressSpace.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.INT32, "pid", false, this, unit, SYSD_LOCATION));
         AddressSpace.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.UINT8, "type", false, this, unit, SYSD_LOCATION));
         AddressSpace.addMember(
-                new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.UINT8, "state", false, this, unit, SYSD_LOCATION));
+                new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.UINT8, "state", false,
+                        this, unit, SYSD_LOCATION));
+                
+        for (Reg reg : Reg.values()) {
+            if(reg == Reg.UNKNOWN)
+                continue;
+            ELVariable var = addStaticVariable(
+                    new PseudoVariable(getRegType(reg), reg.string, this, unit, SYSD_LOCATION, reg));
+            var.doc = new DocComment(reg.description);
+        }
+    }
+
+    private static ELType getRegType(Reg reg) {
+        return switch (reg) {
+            case UNKNOWN -> null;
+            
+            case PGM, STACK, SYS_TABLE, MEM_TABLE, INTERRUPT_HANDLER, PGM_I, STACK_I, MEM_TABLE_I -> ELPrimitives.VOID_PTR;
+            case AF, PID, INTERRUPT_CODE, CPU_ID, AF_I, PID_I -> ELPrimitives.INT32;
+            case PRIVILEGE, PRIVILEGE_I -> ELPrimitives.BOOL;
+
+            default -> ELPrimitives.INT32;
+        };
     }
 
     public static ELType getVarType(IdentifierToken it) {
-        switch (it.value) {
-            case "rPgm", "rStack", "rMTbl", "rIH", "rPgmI", "rStackI", "rMTblI" -> {
-                return ELPrimitives.VOID_PTR;
-            }
-            case "rAF", "rPID", "rIC", "rID", "rAFI", "rPIDI" -> {
-                return ELPrimitives.INT32;
-            }
-            case "rPM", "rPMI" -> {
-                return ELPrimitives.BOOL;
-            }
-            default -> {
-                if (it.value.matches("r\\d\\d?I?")) {
-                    return ELPrimitives.INT32;
-                }
-            }
-        }
-        return null;
+        return getRegType(Reg.from(it.value));
     }
     
     public static ProgramModule newSysD(LanguageServer languageServer) {

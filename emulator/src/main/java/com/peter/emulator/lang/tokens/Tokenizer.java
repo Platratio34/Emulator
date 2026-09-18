@@ -23,6 +23,7 @@ public class Tokenizer {
     protected boolean id = false;
     protected final String fName;
     public final ProgramUnit unit;
+    protected boolean blockGT = false;
 
     // public Tokenizer(String input) {
     //     working = input;
@@ -139,7 +140,7 @@ public class Tokenizer {
         }
         if (IdentifierToken.validStart(c)) {
             workingToken = new IdentifierToken(c, location, unit);
-        } else if (OperatorToken.Type.contains(c+"") && !id) {
+        } else if (OperatorToken.Type.contains(c+"") && !id && !(blockGT && c == '>')) {
             workingToken = new OperatorToken(c, location, unit);
         } else if (Character.isDigit(c) || c == '-' || c == '+' && !id) {
             workingToken = new NumberToken(c, location);

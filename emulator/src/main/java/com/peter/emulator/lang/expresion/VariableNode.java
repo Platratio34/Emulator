@@ -45,18 +45,18 @@ public class VariableNode extends ExpressionNode {
     @Override
 
     public boolean validate(ErrorSet errors) {
-        if(token.value.equals("SysD")) {
-            switch(token.next().value) {
-                case "rPgm", "rStack", "rPID", "rMTbl", "rPM", "rIC", "rIH", "rID", "rPgmI", "rStackI", "rPIDI", "rMTblI", "rPMI" -> {return true;}
-                default -> {
-                    if(token.next().value.matches("r\\d\\d?I?")) {
-                        return true;
-                    }
-                }
-            }
-            // errors.error(String.format("Unable to resolve variable %s", token.debugString()), span());
-            // return false;
-        }
+        // if(token.value.equals("SysD")) {
+        //     switch(token.next().value) {
+        //         case "rPgm", "rStack", "rPID", "rMTbl", "rPM", "rIC", "rIH", "rID", "rPgmI", "rStackI", "rPIDI", "rMTblI", "rPMI" -> {return true;}
+        //         default -> {
+        //             if(token.next().value.matches("r\\d\\d?I?")) {
+        //                 return true;
+        //             }
+        //         }
+        //     }
+        //     // errors.error(String.format("Unable to resolve variable %s", token.debugString()), span());
+        //     // return false;
+        // }
         rA = scope.loadVar(token, register, true);
         if(rA != null) {
             variable = rA.returnVar;
@@ -71,9 +71,9 @@ public class VariableNode extends ExpressionNode {
 
     @Override
     public ELType getType() {
-        if(token.value.equals("SysD") && rA == null) {
-            return SysD.getVarType(token.next());
-        }
+        // if(token.value.equals("SysD") && rA == null) {
+        //     return SysD.getVarType(token.next());
+        // }
         if(rA == null) {
             return ELPrimitives.INT32;
         }

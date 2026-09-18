@@ -1,15 +1,20 @@
 package com.peter.emulator.machinecode;
 
 public enum MemorySize {
-    WORD(0b00),
-    SHORT(0b01),
-    BYTE(0b10)
+    /** <code>0b00</code> */
+    WORD(0b00, 4),
+    /** <code>0b01</code> */
+    SHORT(0b01, 2),
+    /** <code>0b10</code> */
+    BYTE(0b10, 1)
     ;
 
     public final int id;
+    public final int size;
 
-    private MemorySize(int id) {
+    private MemorySize(int id, int size) {
         this.id = id;
+        this.size = size;
     }
 
     public static MemorySize fromBytecode(int bytecode) {

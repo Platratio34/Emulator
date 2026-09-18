@@ -37,6 +37,8 @@ public class CPU {
     public int arithmeticFlag = 0;
     // rPgmI
     public int arithmeticFlagI = 0;
+    // rSysTbl
+    public int sysTablePtr = 0;
     // rPID
     public int pid = 0;
     // rPIDI
@@ -78,8 +80,9 @@ public class CPU {
             case REG_STACK_PNTR -> true;
             case REG_ARITHMETIC_FLAG -> true;
 
-            case REG_PID -> true;
+            case 0xf7 -> true;
             case REG_MEM_TABLE -> true;
+            case REG_PID -> true;
 
             case REG_INTERRUPT -> true;
             case REG_INTR_HANDLER -> true;
@@ -111,6 +114,7 @@ public class CPU {
             case STACK -> stackPtr;
             case AF -> arithmeticFlag;
 
+            case SYS_TABLE -> sysTablePtr;
             case PID -> pid;
             case MEM_TABLE -> memTablePtr;
 
@@ -159,6 +163,13 @@ public class CPU {
             case AF -> {
                 arithmeticFlag = val;
             }
+            case SYS_TABLE -> {
+                if (!privilegeMode) {
+                    interrupt(0x8000_0001);
+                    return;
+                }
+                sysTablePtr = val;
+            }
             case PID -> {
                 if (!privilegeMode) {
                     interrupt(0x8000_0001);
@@ -198,7 +209,7 @@ public class CPU {
             case CPU_ID -> {
                 interrupt(0x8000_0001);
             }
-            
+
             case PGM_I -> {
                 if (!privilegeMode) {
                     interrupt(0x8000_0001);
@@ -244,6 +255,14 @@ public class CPU {
         }
 
     }
+    
+    public void writeMem(MemorySize size, int addr, int val) {
+        switch (size) {
+            case WORD -> bus.writeWord(mmu.translate(this, addr), val);
+            case SHORT -> bus.writeShort(mmu.translate(this, addr), val);
+            case BYTE -> bus.writeByte(mmu.translate(this, addr), (byte)val);
+        }
+    }
 
     public void writeMem(int addr, int val) {
         bus.writeWord(mmu.translate(this, addr), val);
@@ -251,8 +270,17 @@ public class CPU {
     public void writeMemShort(int addr, int val) {
         bus.writeShort(mmu.translate(this, addr), val);
     }
+
     public void writeMemByte(int addr, byte val) {
         bus.writeByte(mmu.translate(this, addr), val);
+    }
+    
+    public int readMem(MemorySize size, int addr) {
+        return switch(size) {
+            case WORD -> bus.readWord(mmu.translate(this, addr));
+            case SHORT -> bus.readShort(mmu.translate(this, addr));
+            case BYTE -> bus.readByte(mmu.translate(this, addr));
+        };
     }
 
     public int readMem(int addr) {
@@ -350,23 +378,17 @@ public class CPU {
                     case LITERAL -> {
                         val = loadInstr.data;
                     }
-                    case MEM_WORD -> {
-                        int addr = getReg(loadInstr.ra);
-                        val = readMem(addr);
-                        if(loadInstr.incRA)
-                            setReg(loadInstr.ra, addr + 4);
+                    case COPY -> {
+                        val = getReg(loadInstr.ra);
                     }
-                    case MEM_SHORT -> {
-                        int addr = getReg(loadInstr.ra);
-                        val = readMemShort(addr);
-                        if(loadInstr.incRA)
-                            setReg(loadInstr.ra, addr + 2);
+                    case LITERAL_ADDRESS -> {
+                        val = readMem(loadInstr.size, loadInstr.data);
                     }
-                    case MEM_BYTE -> {
+                    case MEMORY -> {
                         int addr = getReg(loadInstr.ra);
-                        val = readMemByte(addr);
+                        val = readMem(loadInstr.size, addr);
                         if(loadInstr.incRA)
-                            setReg(loadInstr.ra, addr + 1);
+                            setReg(loadInstr.ra, addr + loadInstr.size.size);
                     }
                     default -> {
                         throw new RuntimeException(String.format("Unknown load mode: %20x", (op & 0xff) >> 8));
@@ -377,32 +399,19 @@ public class CPU {
             case STORE -> {
                 StoreInstruction storeI = (StoreInstruction) lastInstruction;
                 int val = switch(storeI.source) {
-                    case REG, REG_REG -> getReg(storeI.rg);
-                    case MEM -> switch(storeI.size) {
-                        case WORD -> readMem(getReg(storeI.rg));
-                        case SHORT -> readMemShort(getReg(storeI.rg));
-                        case BYTE -> readMemByte(getReg(storeI.rg));
-                    };
+                    case REG, ADDR -> getReg(storeI.rg);
+                    case MEM -> readMem(storeI.size, getReg(storeI.rg));
                     case VAL -> next;
                 };
-                if(storeI.source == Source.REG_REG) {
-                    setReg(storeI.ra, val);
+                if (storeI.source == Source.ADDR) {
+                    writeMem(storeI.size, storeI.data, val);
                 } else {
-                    switch(storeI.size) {
-                        case WORD -> writeMem(getReg(storeI.ra), val);
-                        case SHORT -> writeMemShort(getReg(storeI.ra), val);
-                        case BYTE -> writeMemByte(getReg(storeI.ra), (byte) val);
-                    }
+                    writeMem(storeI.size, getReg(storeI.ra), val);
                 }
-                int incSize = switch(storeI.size) {
-                    case WORD -> 4;
-                    case SHORT -> 2;
-                    default -> 1;
-                };
                 if(storeI.incRG)
-                    setReg(storeI.rg, getReg(storeI.rg) + incSize);
+                    setReg(storeI.rg, getReg(storeI.rg) + storeI.size.size);
                 if(storeI.incRA)
-                    setReg(storeI.ra, getReg(storeI.ra) + incSize);
+                    setReg(storeI.ra, getReg(storeI.ra) + storeI.size.size);
             }
             case MATH -> {
                 MathInstruction mathI = (MathInstruction) lastInstruction;
@@ -472,13 +481,35 @@ public class CPU {
                     }
                     case RSHIFT -> {
                         int ra = getReg(mathI.ra);
-                        if(mathI.rotate) {
+                        if (mathI.rotate) {
                             setReg(mathI.rd, Integer.rotateRight(ra, mathI.data & 0x7f));
                         } else {
                             setReg(mathI.rd, ra >>> mathI.data);
                         }
                     }
-                    case NONE, UNUSED_E, UNUSED_F -> {
+                    case ADD_LIT -> {
+                        int out;
+                        int ra = getReg(mathI.ra);
+                        try {
+                            out = Math.addExact(ra, mathI.data);
+                        } catch (ArithmeticException e) {
+                            out = ra + mathI.data;
+                            arithmeticFlag = 1;
+                        }
+                        setReg(mathI.rd, out);
+                    }
+                    case SUB_LIT -> {
+                        int out;
+                        int ra = getReg(mathI.ra);
+                        try {
+                            out = Math.subtractExact(ra, mathI.data);
+                        } catch (ArithmeticException e) {
+                            out = ra - mathI.data;
+                            arithmeticFlag = 1;
+                        }
+                        setReg(mathI.rd, out);
+                    }
+                    case NONE -> {
                     }
                 }
             }
@@ -592,7 +623,7 @@ public class CPU {
                         if (!privilegeMode) {
                             return;
                         }
-                        int ptr = readMem(SYSCALL_TABLE_START);
+                        int ptr = readMem(sysTablePtr);
                         pgmPtr = ptr;
                         privilegeMode = false;
                     }
@@ -632,13 +663,19 @@ public class CPU {
                     }
                     case FUNCTION -> {
                         privilegeMode = true;
-                        int ptr = readMem((syscallI.data<<2) + SYSCALL_TABLE_START);
+                        if (sysTablePtr == 0) {
+                            interrupt(0x8000_0001);
+                            return;
+                        }
+                        int ptr = readMem((syscallI.data<<2) + sysTablePtr);
                         if (ptr == 0xffff_ffff) {
                             running = false;
                             // TODO: interrupt?
-                            throw new RuntimeException(String.format("Unknown syscall: 0x%x", syscallI.data));
+                            // throw new RuntimeException(String.format("Unknown syscall: 0x%x", syscallI.data));
+                            interrupt(0x8000_0001);
+                            return;
                         }
-                        writeMem(SYSCALL_TABLE_START, pgmPtr);
+                        writeMem(sysTablePtr, pgmPtr);
                         pgmPtr = ptr;
                     }
                     case TRANSLATE -> {
@@ -712,6 +749,7 @@ public class CPU {
         interruptHandler = 0;
         privilegeMode = true;
         privilegeModeI = false;
+        sysTablePtr = 0;
         memTablePtr = 0;
         memTablePtrI = 1;
         stackPtr = 0x1000;

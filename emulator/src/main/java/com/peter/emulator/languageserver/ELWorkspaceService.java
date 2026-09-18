@@ -24,6 +24,7 @@ public class ELWorkspaceService implements WorkspaceService {
 
     public ELWorkspaceService(ELLanguageServer lspServer) {
         this.lspServer = lspServer;
+        ls = new LanguageServer();
     }
 
     @Override
@@ -64,7 +65,7 @@ public class ELWorkspaceService implements WorkspaceService {
 
     public void triggerRecompile() {
         lspServer.logDebug("Recompiling modules ...");
-        ls = new LanguageServer();
+        // ls = new LanguageServer();
         for (File f : moduleRoots) {
             lspServer.logDebug("- %s", f.getAbsolutePath());
             if (!f.exists()) {

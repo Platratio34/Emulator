@@ -36,6 +36,8 @@ public class AnnotationToken extends Token {
             subTokens = params.subTokens;
             endLocation = location;
             return this;
+        } else if (c == '/') {
+            return new DocCommentToken(startLocation);
         }
         return null;
     }

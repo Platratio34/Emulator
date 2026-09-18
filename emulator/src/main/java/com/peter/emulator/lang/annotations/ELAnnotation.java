@@ -19,6 +19,7 @@ public class ELAnnotation {
         types.put("Operator", ELOperatorAnnotation::new);
         types.put("Entrypoint", ELEntrypointAnnotation::new);
         types.put("InterruptHandler", ELInterruptHandlerAnnotation::new);
+        types.put("Syscall", ELSyscallAnnotation::new);
     }
 
     public final String name;
@@ -58,6 +59,22 @@ public class ELAnnotation {
 
     public String getDescription() {
         return null;
+    }
+
+    public String getDefDesc() {
+        String out = "@" + name;
+        if (tokens != null) {
+            out += "(";
+            boolean f = true;
+            for (Token t : tokens) {
+                if (!f && t.wsBefore())
+                    out += " ";
+                f = false;
+                out += "`" + t.debugString() + "`";
+            }
+            out += ")";
+        }
+        return out;
     }
 
     public Span span() {

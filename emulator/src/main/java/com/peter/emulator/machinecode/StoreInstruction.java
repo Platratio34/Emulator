@@ -21,6 +21,14 @@ public class StoreInstruction extends Instruction {
         this.rg = rg;
         this.ra = ra;
     }
+    protected StoreInstruction(MemorySize size, Reg rg, int address) {
+        super(Operator.STORE);
+        this.size = size;
+        this.source = Source.ADDR;
+        this.rg = rg;
+        this.ra = Reg.R0;
+        this.data = address;
+    }
     protected StoreInstruction(MemorySize size, int value, Reg ra) {
         super(Operator.STORE);
         this.size = size;
@@ -61,13 +69,18 @@ public class StoreInstruction extends Instruction {
     public static StoreInstruction StoreReg(MemorySize size, Reg rg, Reg ra) {
         return new StoreInstruction(size, Source.REG, rg, ra);
     }
+
     public static StoreInstruction StoreVal(MemorySize size, int val, Reg ra) {
         return new StoreInstruction(size, val, ra);
     }
-
-    public static StoreInstruction CopyReg(Reg rs, Reg rd) {
-        return new StoreInstruction(MemorySize.WORD, Source.REG_REG, rs, rd);
+    
+    public static StoreInstruction StoreAddr(MemorySize size, Reg rg, int address) {
+        return new StoreInstruction(size, rg, address);
     }
+
+    // public static StoreInstruction CopyReg(Reg rs, Reg rd) {
+    //     return new StoreInstruction(MemorySize.WORD, Source.REG_REG, rs, rd);
+    // }
     public static StoreInstruction CopyMem(MemorySize size, Reg rs, Reg rd) {
         return new StoreInstruction(size, Source.MEM, rs, rd);
     }
@@ -93,7 +106,7 @@ public class StoreInstruction extends Instruction {
 
     @Override
     public boolean hasSecond() {
-        return source == Source.VAL;
+        return source == Source.VAL || source == Source.ADDR;
     }
     @Override
     public int getSecondBytecode() {
@@ -111,7 +124,7 @@ public class StoreInstruction extends Instruction {
             case REG -> String.format("STORE%s %s -> mem[%s]", sizeStr, rg.string, ra.string);
             case MEM -> String.format("COPY%s mem[%s] -> mem[%s]", sizeStr, rg.string, ra.string);
             case VAL -> String.format("STORE%s 0x%s -> mem[%s]", sizeStr, toHex(data), ra.string);
-            case REG_REG -> String.format("COPY%s %s -> %s", sizeStr, rg.string, ra.string);
+            case ADDR -> String.format("STORE%s %s -> mem[0x%s]", sizeStr, rg.string, toHex(data));
 
             default -> String.format("STORE UNKNOWN (0x%s)", toHex(getBytecode()));
         };
@@ -128,7 +141,7 @@ public class StoreInstruction extends Instruction {
         REG(0b00),
         VAL(0b01),
         MEM(0b10),
-        REG_REG(0b11)
+        ADDR(0b11)
         ;
 
         public final int id;
@@ -142,7 +155,7 @@ public class StoreInstruction extends Instruction {
                 case 0b00 -> REG;
                 case 0b01 -> VAL;
                 case 0b10 -> MEM;
-                case 0b11 -> REG_REG;
+                case 0b11 -> ADDR;
                 default -> REG;
             };
         }

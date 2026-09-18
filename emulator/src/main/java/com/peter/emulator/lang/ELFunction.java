@@ -14,6 +14,7 @@ import com.peter.emulator.lang.actions.Action;
 import com.peter.emulator.lang.actions.ActionBlock;
 import com.peter.emulator.lang.actions.ActionScope;
 import com.peter.emulator.lang.annotations.ELAnnotation;
+import com.peter.emulator.lang.doc.DocComment;
 
 public class ELFunction {
 
@@ -39,6 +40,8 @@ public class ELFunction {
     public ArrayList<Token> body = null;
     public ArrayList<ELAnnotation> annotations = null;
     public ArrayList<Action> actions = new ArrayList<>();
+
+    public DocComment doc = null;
 
     public ELFunction(ELProtectionLevel protection, boolean extern, Namespace namespace, String name, FunctionType type, boolean constexpr, ProgramUnit unit, Location location) {
         if (namespace == null)

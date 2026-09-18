@@ -239,13 +239,15 @@ public class OperatorNode extends ExpressionNode {
                 }
             }
             case EQUALS, NEQ, LT, LEQ, GT, GEQ -> {
-                if(t1.isPointer() && t2.canCastTo(ELPrimitives.INT32)) {
+                if (t1.isPointer() && t2.canCastTo(ELPrimitives.INT32)) {
                     return true;
                 }
-                if(t2.isPointer() && t1.canCastTo(ELPrimitives.INT32)) {
+                if (t2.isPointer() && t1.canCastTo(ELPrimitives.INT32)) {
                     return true;
                 }
-            }   
+            }
+            default -> {
+            }
         }
         if(!t2.canCastTo(t1)) {
             errors.error(String.format("Can not cast %s to %s", t2.typeString(), t1.typeString()), token);

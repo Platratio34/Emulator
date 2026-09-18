@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import com.peter.emulator.lang.ELVariable.Type;
 import com.peter.emulator.lang.actions.Action;
 import com.peter.emulator.lang.annotations.ELInterruptHandlerAnnotation;
+import com.peter.emulator.lang.annotations.ELSyscallAnnotation;
 
 public class ELAssembler {
 
@@ -19,6 +20,12 @@ public class ELAssembler {
     private String assembleFunction(ELFunction f) {
         String out = "";
         out += "\n";
+        if (f.hasAnnotation(ELSyscallAnnotation.class)) {
+            ELSyscallAnnotation syscall = f.getAnnotation(ELSyscallAnnotation.class);
+            out += "\n#syscall " + syscall.index + " " + f.getQualifiedName().replaceAll("\\.", "_");
+            out += "\nGOTO PUSH :" + f.getQualifiedName(true);
+            out += "\nSYSRETURN\n";
+        }
         if (module.entrypoint == f)
             out += "\n:__start";
         out += "\n#function " + f.getQualifiedName(true);
@@ -50,6 +57,9 @@ public class ELAssembler {
             return "";
         String out = "// " + ns.getQualifiedName() + "\n";
         for (ELVariable v : ns.staticVariables.values()) {
+            if (v instanceof PseudoVariable) {
+                continue;
+            }
             out += (v.varType == Type.CONST) ? "#define" : "#var";
             if (v.type.isArray()) {
                 out += String.format(" %s %s %s\n", v.getQualifiedName(), (v.startingValue == null) ? String.format("(%d)", v.sizeof()) : v.startingValue.valueString(),

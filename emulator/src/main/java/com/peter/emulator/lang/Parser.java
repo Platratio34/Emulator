@@ -6,6 +6,7 @@ import java.util.HashMap;
 import com.peter.emulator.lang.ELSymbol.ELVarSymbol;
 import com.peter.emulator.lang.annotations.ELAnnotation;
 import com.peter.emulator.lang.annotations.ELEntrypointAnnotation;
+import com.peter.emulator.lang.doc.DocComment;
 import com.peter.emulator.lang.tokens.OperatorToken.Type;
 import com.peter.emulator.lang.tokens.*;
 
@@ -45,6 +46,20 @@ public class Parser {
             while (workingI < tokens.size()) {
                 Token t = tokens.get(workingI);
                 ArrayList<ELAnnotation> annotations = null;
+                DocCommentToken docCommentToken = null;
+                // System.out.println("Resetting doc comment");
+                if (t instanceof DocCommentToken dcT) {
+                    workingI++;
+                    docCommentToken = dcT;
+                    dcT.addSymbols(unit);
+                    if (workingI >= tokens.size()) {
+                        errors.error("Found doc comment at end of tokens", dcT.span());
+                        break;
+                    }
+                    // System.out.println("Found doc comment "+dcT.debugString());
+                    t = tokens.get(workingI);
+                    // System.out.println(t);
+                }
                 if (t instanceof AnnotationToken) {
                     annotations = new ArrayList<>();
                     while (tokens.get(workingI) instanceof AnnotationToken at2) {
@@ -52,6 +67,7 @@ public class Parser {
                         annotations.add(ELAnnotation.create(at2));
                         if (workingI >= tokens.size()) {
                             errors.error("Found annotation at end of tokens", at2.span());
+                            break;
                         }
                     }
                     t = tokens.get(workingI);
@@ -115,25 +131,32 @@ public class Parser {
                             continue;
                         }
                     } else if (idt.value.equals("static") || idt.value.equals("const") || idt.value.equals("operator") || idt.value.equals("extern") || ELProtectionLevel.valid(idt.value)) {
+                        // (<public|protected|private|internal>) (static) (<const|final>) [type] [name] (= [value]);
+                        // (<public|protected|private|internal>) (static) (constexp) <[ret]|void> [name](...) {...}
+                        // (<public|protected|private|internal>) (static) <extern|abstract> <[ret]|void> [name](...)
+                        // (<public|protected|private|internal>) (constexp) (~)[name](...) {...}
+                        // (<public|protected|private|internal>) extern (~)[name](...)
+                        // operator (constexp) [ret] [name](...)
+                        // System.err.println("Func or variable");
                         Location loc = idt.startLocation;
                         workingI++;
                         ELProtectionLevel level = ELProtectionLevel.get(idt.value, ELProtectionLevel.PROTECTED);
                         unit.addSymbol(ELSymbol.Type.KEYWORD, idt.span());
                         boolean stat = idt.value.equals("static");
                         boolean extern = idt.value.equals("extern");
-                        boolean operator = idt.value.equals("operator");
-                        boolean final_ = idt.value.equals("final");
-                        boolean const_ = idt.value.equals("const");
-                        boolean constexpr = false;
+                        Span operator = idt.value.equals("operator") ? idt.span() : null;
+                        Span final_ = idt.value.equals("final") ? idt.span() : null;
+                        Span const_ = idt.value.equals("const") ? idt.span() : null;
+                        Span constexpr = null;
                         if (!stat)
                             if (tokens.get(workingI) instanceof IdentifierToken it && it.value.equals("static")) {
                                 stat = true;
                                 workingI++;
                                 unit.addSymbol(ELSymbol.Type.KEYWORD, it.span());
                             }
-                        if (!const_)
+                        if (const_ == null)
                             if (tokens.get(workingI) instanceof IdentifierToken it && it.value.equals("const")) {
-                                const_ = true;
+                                const_ = tokens.get(workingI).span();
                                 workingI++;
                                 unit.addSymbol(ELSymbol.Type.KEYWORD, it.span());
                             }
@@ -143,26 +166,26 @@ public class Parser {
                                 workingI++;
                                 unit.addSymbol(ELSymbol.Type.KEYWORD, it.span());
                             }
-                        if (!final_)
+                        if (final_ == null)
                             if (tokens.get(workingI) instanceof IdentifierToken it && it.value.equals("final")) {
-                                final_ = true;
+                                final_ = tokens.get(workingI).span();
                                 workingI++;
                                 unit.addSymbol(ELSymbol.Type.KEYWORD, it.span());
                             }
                         if (tokens.get(workingI) instanceof IdentifierToken it && it.value.equals("constexpr")) {
-                            constexpr = true;
+                            constexpr = tokens.get(workingI).span();
                             workingI++;
                             unit.addSymbol(ELSymbol.Type.KEYWORD, it.span());
                         }
-                        if (!operator)
+                        if (operator == null)
                             if (tokens.get(workingI) instanceof IdentifierToken it && it.value.equals("operator")) {
-                                operator = true;
+                                operator = tokens.get(workingI).span();
                                 workingI++;
                                 unit.addSymbol(ELSymbol.Type.KEYWORD, it.span());
                             }
-                        boolean abs = false;
+                        Span abs = null;
                         if (tokens.get(workingI) instanceof IdentifierToken it2 && it2.value.equals("abstract")) {
-                            abs = true;
+                            abs = tokens.get(workingI).span();
                             workingI++;
                             unit.addSymbol(ELSymbol.Type.KEYWORD, it2.span());
                         }
@@ -184,6 +207,10 @@ public class Parser {
                             }
                             ELFunction function = new ELFunction(level, extern, currentClass,
                                     currentClass.cName, destructor ? ELFunction.FunctionType.DESTRUCTOR : ELFunction.FunctionType.CONSTRUCTOR, false, unit, loc);
+                            unit.addSymbol(new ELSymbol.ELFuncDefSymbol(function, it.spanFirst()));
+                            if (docCommentToken != null) {
+                                function.doc = new DocComment(docCommentToken);
+                            }
                             function.ret = currentClass.getType();
                             function.ingestParams(it.params);
                             if (annotations != null)
@@ -239,12 +266,31 @@ public class Parser {
                         }
                         
                         if (nameToken.hasParams()) { // function
+                            if (final_ != null) {
+                                errors.error("Functions can not be made final.", final_);
+                            }
+                            if (const_ != null) {
+                                errors.error("Functions can not be made constant.", const_);
+                            }
                             // workingI++;
+                            if (!(currentNamespace instanceof ELClass) && !stat) {
+                                errors.error("Functions outside of a class must be marked static.", nameToken);
+                                stat = true;
+                            }
                             ELFunction.FunctionType funcType = stat ? ELFunction.FunctionType.STATIC
                                     : ELFunction.FunctionType.INSTANCE;
-                            if(operator)
-                                funcType = ELFunction.FunctionType.OPERATOR;
-                            ELFunction function = new ELFunction(level, extern, currentNamespace, name, funcType, constexpr, unit, loc);
+                            if (operator != null) {
+                                if(currentNamespace instanceof ELClass) {
+                                    funcType = ELFunction.FunctionType.OPERATOR;
+                                } else {
+                                    errors.error("Functions outside of a class may not be operator functions.", const_);
+                                }
+                            }
+                            ELFunction function = new ELFunction(level, extern, currentNamespace, name, funcType, constexpr != null, unit, loc);
+                            unit.addSymbol(new ELSymbol.ELFuncDefSymbol(function, nameToken.spanFirst()));
+                            if (docCommentToken != null) {
+                                function.doc = new DocComment(docCommentToken);
+                            }
                             if (annotations != null)
                                 function.annotations = annotations;
                             if (currentNamespace == null) {
@@ -257,7 +303,7 @@ public class Parser {
                             else {
                                 unit.addSymbol(ELSymbol.Type.KEYWORD, type.span());
                             }
-                            function.abstractFunction = abs;
+                            function.abstractFunction = abs != null;
                             function.ingestParams(nameToken.params);
                             unit.addSymbol(ELSymbol.Type.FUNCTION_NAME, nameToken.spanFirst());
                             
@@ -288,15 +334,27 @@ public class Parser {
                                 unit.module.entrypoint = function;
                             }
                         } else { // variable
-                            Location endLocation = tokens.get(workingI-1).endLocation;
-                            if(abs) {
-                                errors.error("Variable can not be marked abstract", loc.span(endLocation));
-                                continue;
+                            if (constexpr != null) {
+                                errors.error("Variables can not be constant expression.", constexpr);
                             }
-                            ELVariable var = new ELVariable(level, const_ ? ELVariable.Type.CONST : (stat ? ELVariable.Type.STATIC : ELVariable.Type.MEMBER), type, name, final_, currentNamespace, unit, loc, endLocation);
+                            if (operator != null) {
+                                errors.error("Variables can not be operator.", operator);
+                            }
+                            Location endLocation = tokens.get(workingI-1).endLocation;
+                            if(abs != null) {
+                                errors.error("Variables can not be marked abstract", abs);
+                            }
+                            if (!(currentNamespace instanceof ELClass) && !stat) {
+                                errors.error("Variables outside of a class must be marked static.", nameToken);
+                                stat = true;
+                            }
+                            ELVariable var = new ELVariable(level, (const_ != null) ? ELVariable.Type.CONST : (stat ? ELVariable.Type.STATIC : ELVariable.Type.MEMBER), type, name, final_ != null, currentNamespace, unit, loc, endLocation);
                             if (annotations != null)
                                 var.annotations = annotations;
-                            unit.symbols.add(new ELVarSymbol(var, nameToken.span()));
+                            unit.symbols.add(new ELVarSymbol(var, nameToken.spanFirst()));
+                            if (docCommentToken != null) {
+                                var.doc = new DocComment(docCommentToken);
+                            }
                             if (currentNamespace == null) {
                                 errors.error("Can not have a variable outside of namespace or class", var.span());
                                 continue;
@@ -340,6 +398,8 @@ public class Parser {
                             unit.addSymbol(ELSymbol.Type.SEMICOLON, tokens.get(workingI).span());
                         }
                     } else if (idt.value.equals("namespace")) {
+                        // namespace [name];
+                        // namespace [name] {...}
                         unit.symbols.add(new ELSymbol(ELSymbol.Type.KEYWORD, idt.span()));
                         workingI++;
                         Namespace namespace = null;
@@ -386,6 +446,7 @@ public class Parser {
                             continue;
                         }
                     } else if (idt.value.equals("abstract") || idt.value.equals("class") || idt.value.equals("struct")) {
+                        // <struct|(abstract) class> [name] {...}
                         boolean abs = idt.value.equals("abstract");
                         unit.addSymbol(ELSymbol.Type.KEYWORD, idt.span());
                         if (abs) {

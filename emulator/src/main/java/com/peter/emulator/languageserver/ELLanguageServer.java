@@ -12,6 +12,7 @@ import org.eclipse.lsp4j.services.*;
 import com.peter.emulator.lang.ELAnalysisError;
 import com.peter.emulator.lang.ELSymbol;
 import com.peter.emulator.lang.ErrorSet;
+import com.peter.emulator.lang.FileProvider;
 import com.peter.emulator.lang.ProgramUnit;
 
 public class ELLanguageServer extends LSPServer implements LanguageServer, LanguageClientAware {
@@ -33,6 +34,10 @@ public class ELLanguageServer extends LSPServer implements LanguageServer, Langu
     public void exit() {
         super.stopServer();
         System.exit(0);
+    }
+
+    public FileProvider getFileProvider() {
+        return workspaceService.ls.fileProvider;
     }
 
     @Override
@@ -60,7 +65,7 @@ public class ELLanguageServer extends LSPServer implements LanguageServer, Langu
 
     private ServerCapabilities createServerCapabilities() {
         ServerCapabilities capabilities = new ServerCapabilities();
-        capabilities.setTextDocumentSync(TextDocumentSyncKind.None);
+        capabilities.setTextDocumentSync(TextDocumentSyncKind.Full);
         capabilities.setCompletionProvider(null);
         capabilities.setHoverProvider(true);
         capabilities.setDocumentSymbolProvider(false);
@@ -179,6 +184,7 @@ public class ELLanguageServer extends LSPServer implements LanguageServer, Langu
         for(Map.Entry<String, ArrayList<Diagnostic>> entry : fileDiagnostics.entrySet()) {
             client.publishDiagnostics(new PublishDiagnosticsParams(entry.getKey(), entry.getValue()));
         }
+        client.refreshSemanticTokens();
     }
 
     public void addFile(URI uri) {

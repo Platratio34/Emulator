@@ -14,6 +14,7 @@ public class LanguageServer {
     public HashMap<String, ProgramModule> modules = new HashMap<>();
     protected boolean err = false;
     private final ProgramModule sysD;
+    public FileProvider fileProvider = new FileProvider();
 
     public LanguageServer() {
         sysD = SysD.newSysD(this);

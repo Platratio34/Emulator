@@ -653,9 +653,9 @@ const asmLines: { [id: string]: AsmLine } = {
     "LOAD": {
         name: "Load", desc: "Load a value into a register. Equivalent to `r[rg] = [value]`", usage: "`LOAD [rg] [value]`", sub: {
             "MEM": {
-                name: "Load Memory", desc: "Load a word into a register from memory. Equivalent to `r[rg] = mem[r[ra]]`", usage: "`LOAD MEM (<SHORT|BYTE>) [rg] [ra] (INC RA)`", sub: {
-                    "SHORT": { name: "Load Memory Short", desc: "Load a short into a register from memory. Equivalent to `r[rg] = mem[r[ra]]`", usage: "LOAD MEM SHORT [rg] [ra] (INC RA)" },
-                    "BYTE": { name: "Load Memory Byte", desc: "Load a byte into a register from memory. Equivalent to `r[rg] = mem[r[ra]]`", usage: "LOAD MEM BYTE [rg] [ra] (INC RA)" }
+                name: "Load Memory", desc: "Load a word into a register from memory. Equivalent to `r[rg] = mem[r[ra]]`", usage: "`LOAD MEM (<SHORT|BYTE>) [rg] <[ra]|[address]> (INC RA)`", sub: {
+                    "SHORT": { name: "Load Memory Short", desc: "Load a short into a register from memory. Equivalent to `r[rg] = mem[r[ra]]`", usage: "LOAD MEM SHORT [rg] <[ra]|[address]> (INC RA)" },
+                    "BYTE": { name: "Load Memory Byte", desc: "Load a byte into a register from memory. Equivalent to `r[rg] = mem[r[ra]]`", usage: "LOAD MEM BYTE [rg] <[ra]|[address]> (INC RA)" }
                 }
             },
         }
@@ -671,16 +671,16 @@ const asmLines: { [id: string]: AsmLine } = {
         }
     },
     "STORE": {
-        name: "Store", desc: "Store a word from a register into memory. Equivalent to `mem[r[ra]] = r[rg]` or `mem[r[ra]] = [value]`", usage: "`STORE (<SHORT|BYTE>) <[rg]|[value]> [ra] (INC_RA)`", sub: {
-            "SHORT": { name: "Store Short", desc: "Store a short from a register into memory. Equivalent to `mem[r[ra]] = r[rg]` or `mem[r[ra]] = [value]`", usage: "`STORE SHORT <[rg]|[value]> [ra] (INC_RA)`" },
-            "BYTE": { name: "Store Byte", desc: "Store a byte from a register into memory. Equivalent to `mem[r[ra]] = r[rg]` or `mem[r[ra]] = [value]`", usage: "`STORE BYTE <[rg]|[value]> [ra] (INC_RA)`" }
+        name: "Store", desc: "Store a word from a register into memory. Equivalent to `mem[r[ra]] = r[rg]` or `mem[r[ra]] = [value]` or `mem[address] = r[rg]", usage: "`STORE (<SHORT|BYTE>) <[rg]|[value]> [ra] (INC_RA)` or `STORE (<SHORT|BYTE>) [rg] [address]`", sub: {
+            "SHORT": { name: "Store Short", desc: "Store a short from a register into memory. Equivalent to `mem[r[ra]] = r[rg]` or `mem[r[ra]] = [value]` or `mem[address] = r[rg]", usage: "`STORE SHORT <[rg]|[value]> [ra] (INC_RA)` or `STORE SHORT [rg] [address]`" },
+            "BYTE": { name: "Store Byte", desc: "Store a byte from a register into memory. Equivalent to `mem[r[ra]] = r[rg]` or `mem[r[ra]] = [value]` or `mem[address] = r[rg]", usage: "`STORE BYTE <[rg]|[value]> [ra] (INC_RA) or `STORE BYTE [rg] [address]``" }
         }
     },
     "ADD": {
-        name: "Addition", desc: "Add two registers. Equivalent to `r[rd] = r[ra] + r[rb]`", usage: "`ADD [rd] [ra] [rb]`"
+        name: "Addition", desc: "Add two registers. Equivalent to `r[rd] = r[ra] + r[rb]`. Can also be done with a literal second argument between 0 and 255.", usage: "`ADD [rd] [ra] <[rb]|[amt]>`"
     },
     "SUB": {
-        name: "Subtraction", desc: "Subtract two registers. Equivalent to `r[rd] = r[ra] - r[rb]`", usage: "`SUB [rd] [ra] [rb]`"
+        name: "Subtraction", desc: "Subtract two registers. Equivalent to `r[rd] = r[ra] - r[rb]`. Can also be done with a literal second argument between 0 and 255.", usage: "`SUB [rd] [ra] <[rb]|[amt]>`"
     },
     "MUL": {
         name: "Multiply", desc: "Multiply two registers. Equivalent to `r[rd] = r[ra] * r[rb]`", usage: "`MUL [rd] [ra] [rb]`"

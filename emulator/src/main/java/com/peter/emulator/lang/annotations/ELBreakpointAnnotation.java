@@ -20,6 +20,7 @@ public class ELBreakpointAnnotation extends ELAnnotation {
 
     @Override
     public void analyze(ProgramUnit unit) {
+        super.analyze(unit);
         throw ELAnalysisError.error("Breakpoint annotation not allowed outside code block",
                 startLocation.span(endLocation));
     }

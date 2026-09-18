@@ -9,6 +9,7 @@ import com.peter.emulator.lang.annotations.ELOperatorAnnotation;
 import com.peter.emulator.lang.annotations.ELOverrideAnnotation;
 import com.peter.emulator.lang.base.ELPrimitives;
 import com.peter.emulator.lang.tokens.OperatorToken;
+import com.peter.emulator.machinecode.Reg;
 
 public class ELClass extends Namespace {
 
@@ -444,5 +445,9 @@ public class ELClass extends Namespace {
             out += ", abstractClass";
         }
         return out + "}";
+    }
+
+    public ELVariable getThis() {
+        return new PseudoVariable(ELVariable.Type.SCOPE, getType(), "this", true, this, unit, new Location("<" + cName + ">", 0, 0), Reg.R0);
     }
 }

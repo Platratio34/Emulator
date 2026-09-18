@@ -1,6 +1,8 @@
 package com.peter.emulator.lang.annotations;
 
+import com.peter.emulator.lang.ELAnalysisError;
 import com.peter.emulator.lang.ELCompileException;
+import com.peter.emulator.lang.ProgramUnit;
 import com.peter.emulator.lang.tokens.Token;
 import com.peter.emulator.lang.tokens.AnnotationToken;
 import com.peter.emulator.lang.tokens.IdentifierToken;
@@ -13,7 +15,7 @@ public class ELOperatorAnnotation extends ELAnnotation {
 
     public ELOperatorAnnotation(AnnotationToken token) {
         super(token);
-        if(!name.equals("Operator"))
+        if (!name.equals("Operator"))
             throw new ELCompileException("Tried to create Operator annotation, but had wrong name");
         Token tkn = token.params.get(0);
         if (tkn instanceof IdentifierToken idt) {
@@ -26,8 +28,13 @@ public class ELOperatorAnnotation extends ELAnnotation {
         } else {
             type = null;
         }
+    }
+    
+    @Override
+    public void analyze(ProgramUnit unit) {
+        super.analyze(unit);
         if (cast == false && type == null) {
-            throw new ELCompileException("Missing operator type in @Operator annotation");
+            unit.errors.add(ELAnalysisError.error("Missing operator type in @Operator annotation", span()));
         }
     }
 

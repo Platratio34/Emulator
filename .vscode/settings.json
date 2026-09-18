@@ -3,7 +3,9 @@
     "cSpell.words": [
         "constexpr",
         "endfunction",
+        "kalloc",
         "kernal",
+        "kfree",
         "LSHIFT",
         "machinecode",
         "malloc",

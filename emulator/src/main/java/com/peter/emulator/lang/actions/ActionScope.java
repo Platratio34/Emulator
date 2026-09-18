@@ -7,6 +7,7 @@ import com.peter.emulator.lang.ELFunction.FunctionType;
 import com.peter.emulator.lang.*;
 import com.peter.emulator.lang.base.ELPrimitives;
 import com.peter.emulator.lang.tokens.IdentifierToken;
+import com.peter.emulator.machinecode.Reg;
 
 public class ActionScope {
 
@@ -183,10 +184,7 @@ public class ActionScope {
             ELFunction func = getFunction();
             if (ns != null && func != null) {
                 if (ns instanceof ELClass c && func.type != FunctionType.STATIC) {
-                    ELVariable v = c.memberVariables.get(id.sub(0).value);
-                    if(v == null)
-                        return null;
-                    return new ResolveAction(this, reg, v, id, byValue);
+                    return new ResolveAction(this, reg, c.getThis(), id, byValue);
                 } else {
                     throw ELAnalysisError.error("Can not use this outside of class instance function", id);
                 }

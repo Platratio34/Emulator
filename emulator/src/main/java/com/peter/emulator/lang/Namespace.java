@@ -53,10 +53,11 @@ public class Namespace {
         return function;
     }
 
-    public void addStaticVariable(ELVariable var) {
+    public ELVariable addStaticVariable(ELVariable var) {
         if (staticVariables.containsKey(var.name) || namespaces.containsKey(var.name))
             throw ELAnalysisError.error("Duplicate member name: `" + var.name + "` in namespace " + cName, var.span());
         staticVariables.put(var.name, var);
+        return var;
     }
 
     public final ELFunction findFunction(Identifier id, ArrayList<ELType> params) {

@@ -226,6 +226,7 @@ public class Main {
 
         Assembler bootAssembler = new Assembler();
         try {
+            System.out.println("Rebuilding bootloader");
             bootAssembler.setSource(ROOT_PATH.resolve("boot.asm"));
             if (!bootAssembler.assemble()) {
                 for (AssemblerError err : bootAssembler.errors) {
