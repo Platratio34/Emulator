@@ -94,7 +94,9 @@ public class ProgramUnit {
     }
 
     public ELSymbol addSymbol(ELSymbol symbol) {
-        symbols.add(symbol);
+        if (!symbol.onAdd(this)) {
+            symbols.add(symbol);
+        }
         return symbol;
     }
 

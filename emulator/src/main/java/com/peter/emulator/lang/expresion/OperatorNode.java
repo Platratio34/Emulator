@@ -1,6 +1,7 @@
 package com.peter.emulator.lang.expresion;
 
 import com.peter.emulator.MachineCode;
+import com.peter.emulator.lang.ELSymbol;
 import com.peter.emulator.lang.ELType;
 import com.peter.emulator.lang.ErrorSet;
 import com.peter.emulator.lang.Span;
@@ -21,12 +22,16 @@ public class OperatorNode extends ExpressionNode {
         super(scope);
         this.type = type;
         this.token = token;
+        if(scope.unit != null)
+            scope.unit.addSymbol(ELSymbol.Type.OPERATOR, token.span());
     }
     public OperatorNode(ActionScope scope, OperatorType type, boolean single, OperatorToken token) {
         super(scope);
         this.type = type;
         this.single = single;
         this.token = token;
+        if(scope.unit != null)
+            scope.unit.addSymbol(ELSymbol.Type.OPERATOR, token.span());
     }
     public OperatorNode single(OperatorType type) {
         return new OperatorNode(scope, type, true, token);

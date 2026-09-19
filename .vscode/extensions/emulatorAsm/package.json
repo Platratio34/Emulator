@@ -53,7 +53,8 @@
                 "scopes": {
                     "variable": ["entity.name.variable"],
                     "property": ["entity.name.variable"],
-                    "comment": ["comment.line"]
+                    "comment": ["comment.line"],
+                    "escape": ["constant.character.escape"]
                 }
             }
         ],

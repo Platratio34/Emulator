@@ -9,6 +9,7 @@ import com.peter.emulator.lang.tokens.OperatorToken;
 import com.peter.emulator.lang.tokens.StringToken;
 import com.peter.emulator.lang.tokens.Token;
 import com.peter.emulator.lang.base.ELPrimitives;
+import com.peter.emulator.lang.symbols.ELStringSymbol;
 
 public abstract class ELValue {
     public final ELType type;
@@ -94,25 +95,27 @@ public abstract class ELValue {
     }
     
     public static class ELStringValue extends ELValue {
+        public final StringToken stringToken;
         public final String value;
         public final boolean ch;
 
-        public ELStringValue(String value, Span span) {
-            super(ELPrimitives.CHAR.pointerTo(), span);
-            this.value = value;
-            ch = false;
-        }
+        // public ELStringValue(String value, Span span) {
+        //     super(ELPrimitives.CHAR.pointerTo(), span);
+        //     this.value = value;
+        //     ch = false;
+        // }
 
-        public ELStringValue(char ch, Span span) {
-            super(ELPrimitives.CHAR, span);
-            this.value = ch + "";
-            this.ch = true;
-        }
+        // public ELStringValue(char ch, Span span) {
+        //     super(ELPrimitives.CHAR, span);
+        //     this.value = ch + "";
+        //     this.ch = true;
+        // }
 
-        public ELStringValue(ELType type, String value, boolean ch, Span span) {
-            super(type, span);
-            this.value = value;
-            this.ch = ch;
+        public ELStringValue(ELType type, StringToken token) {
+            super(type, token.span());
+            this.stringToken = token;
+            this.value = token.value;
+            this.ch = token.ch;
             if (!(type.equals(ELPrimitives.CHAR) || type.equals(ELPrimitives.CHAR.pointerTo())
                     || (type.array && type.baseRef().equals(ELPrimitives.CHAR))))
                 throw new ELCompileException("Invalid type for string value: " + type);
@@ -120,7 +123,7 @@ public abstract class ELValue {
         
         @Override
         public void resolve(ErrorSet errors, ProgramUnit unit) {
-            unit.addSymbol(ELSymbol.Type.STRING_LITERAL, span);
+            unit.addSymbol(new ELStringSymbol(this));
         }
 
         @Override
@@ -131,7 +134,7 @@ public abstract class ELValue {
     }
 
     public static ELStringValue string(ELType type, StringToken st) {
-        return new ELStringValue(type, st.value, st.ch, st.span());
+        return new ELStringValue(type, st);
     }
 
     public static class ELArrayValue<T extends ELValue> extends ELValue {

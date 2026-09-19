@@ -96,8 +96,8 @@ public class Tokenizer {
             return true;
         } else if (mlc != null) {
             if(c == '\n') {
-                unit.addSymbol(ELSymbol.Type.COMMENT_BLOCK, mlc.span(new Location(location.file(), location.line()-1, lastCol)));
-                mlc = location;
+                // unit.addSymbol(ELSymbol.Type.COMMENT_BLOCK, mlc.span(new Location(location.file(), location.line()-1, lastCol)));
+                // mlc = location;
             } else if (mlcEnd == 0 && c == '*') {
                 mlcEnd = 1;
                 return true;

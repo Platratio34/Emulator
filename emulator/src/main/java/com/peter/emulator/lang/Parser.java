@@ -351,7 +351,7 @@ public class Parser {
                             ELVariable var = new ELVariable(level, (const_ != null) ? ELVariable.Type.CONST : (stat ? ELVariable.Type.STATIC : ELVariable.Type.MEMBER), type, name, final_ != null, currentNamespace, unit, loc, endLocation);
                             if (annotations != null)
                                 var.annotations = annotations;
-                            unit.symbols.add(new ELVarSymbol(var, nameToken.spanFirst()));
+                            unit.addSymbol(new ELVarSymbol(var, nameToken.spanFirst()));
                             if (docCommentToken != null) {
                                 var.doc = new DocComment(docCommentToken);
                             }

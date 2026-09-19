@@ -1,8 +1,10 @@
 package com.peter.emulator.lang.expresion;
 
+import com.peter.emulator.lang.ELSymbol;
 import com.peter.emulator.lang.ELType;
 import com.peter.emulator.lang.ErrorSet;
 import com.peter.emulator.lang.Span;
+import com.peter.emulator.lang.ELSymbol.Type;
 import com.peter.emulator.lang.actions.ActionScope;
 import com.peter.emulator.lang.base.ELPrimitives;
 import com.peter.emulator.lang.tokens.NumberToken;
@@ -18,18 +20,24 @@ public class LiteralNode extends ExpressionNode {
         super(scope);
         this.value = token.numValue;
         this.token = token;
+        if(scope.unit != null)
+            scope.unit.addSymbol(new ELSymbol(Type.NUMERIC_LITERAL, span()));
     }
     public LiteralNode(ActionScope scope, boolean value, Token token) {
         super(scope);
         this.value = value ? 1 : 0;
         type = ELPrimitives.BOOL;
         this.token = token;
+        if(scope.unit != null)
+            scope.unit.addSymbol(new ELSymbol(Type.VARIABLE_CONSTANT, span()));
     }
     public LiteralNode(ActionScope scope, int value, ELType type, Token token) {
         super(scope);
         this.value = value;
         this.type = type;
         this.token = token;
+        if(scope.unit != null)
+            scope.unit.addSymbol(new ELSymbol(Type.VARIABLE_CONSTANT, span()));
     }
 
     @Override

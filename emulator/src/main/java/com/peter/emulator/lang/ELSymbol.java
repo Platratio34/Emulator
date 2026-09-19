@@ -61,6 +61,10 @@ public class ELSymbol {
         return modifier | type.modifier;
     }
 
+    public boolean onAdd(ProgramUnit unit) {
+        return false;
+    }
+
     public enum Modifier {
         NONE("", 0x0),
         DECLARATION("declaration", 0b1),
@@ -108,6 +112,7 @@ public class ELSymbol {
 
         NUMERIC_LITERAL("constant.numeric", "number"),
         STRING_LITERAL("constant.numeric", "string"),
+        STRING_LITERAL_ESCAPE("constant.character.escape", "escape"),
 
         VARIABLE_CONSTANT("variable.other.constant", "variable", Modifier.READ_ONLY),
         VARIABLE_FINAL("variable.other.constant", "variable", Modifier.READ_ONLY),
@@ -408,30 +413,23 @@ public class ELSymbol {
 
     }
 
-    public static class ELAnnotationSymbol extends ELSymbol {
+    private final ArrayList<ELSymbol> symbols = new ArrayList<>();
 
-        public final ELAnnotation annotation;
+    public boolean isWrapper() {
+        return false;
+    }
 
-        public ELAnnotationSymbol(ELAnnotation annotation) {
-            super(Type.ANNOTATION, annotation.span());
-            this.annotation = annotation;
-        }
+    public ArrayList<ELSymbol> getSub() {
+        return symbols;
+    }
 
-        @Override
-        public boolean hasText() {
-            return true;
-        }
-
-        @Override
-        public String getText() {
-            String out = "";
-            out += String.format("`@%s`", annotation.name);
-            String desc = annotation.getDescription();
-            if (desc != null) {
-                out += "\n\n"+desc;
-            }
-            return out;
-        }
-
+    protected ELSymbol addSymbol(Type type, Span span) {
+        ELSymbol symbol = new ELSymbol(type, span);
+        symbols.add(symbol);
+        return symbol;
+    }
+    protected ELSymbol addSymbol(ELSymbol symbol) {
+        symbols.add(symbol);
+        return symbol;
     }
 }

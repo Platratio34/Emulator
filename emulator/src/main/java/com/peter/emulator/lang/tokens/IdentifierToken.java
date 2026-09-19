@@ -27,9 +27,17 @@ public class IdentifierToken extends Token {
     private IdentifierToken nextId = null;
     
     @Override
-    public IdentifierToken ingest(char c, Location location) {
+    public Token ingest(char c, Location location) {
         if (nextId != null) {
-            IdentifierToken tkn = nextId.ingest(c, location);
+            Token t = nextId.ingest(c, location);
+            IdentifierToken tkn;
+            if(t instanceof IdentifierToken it) {
+                tkn = it;
+            } else if(t == null) {
+                tkn = null;
+            } else {
+                throw new TokenizerError("Unexpected token in sub identifier, found "+t);
+            }
             if (tkn != null) {
                 endLocation = location;
                 nextId = tkn;
@@ -102,6 +110,9 @@ public class IdentifierToken extends Token {
             }
             params = new SetToken(SetToken.BracketType.PARENTHESES, location, unit);
             return this;
+        } else if (c == '{' && value.equals("asm") && params == null && index == null && types == null) {
+            // System.out.println("Entering asm token");
+            return new ASMToken(startLocation);
         }
         return null;
     }

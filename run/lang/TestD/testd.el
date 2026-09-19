@@ -22,8 +22,15 @@ namespace TestD {
 
     @Entrypoint(raw)
     public static void main() {
-        asm("STORE BYTE 'T' r7\nSTORE BYTE 'e' r7\nSTORE BYTE 's' r7\nSTORE BYTE 't' r7\nSTORE BYTE 'D' r7\nSTORE BYTE '\\n' r7");
-        asm("LOAD rIH &:TestD.onInterrupt");
+        asm("""
+            STORE BYTE 'T' r7
+            STORE BYTE 'e' r7
+            STORE BYTE 's' r7
+            STORE BYTE 't' r7
+            STORE BYTE 'D' r7
+            STORE BYTE '\n' r7
+        """);
+        asm("""LOAD rIH &:TestD.onInterrupt""");
         *KEYBOARD_CONTROL = 0x03; // Enable press interrupts
         CharacterDisplay.setup();
         int32 b;
@@ -35,7 +42,11 @@ namespace TestD {
         b = a + 1 + c;
         c = 32;
         funcb(c);
-        asm("LOAD r1 64\nLOAD r2 &TestD.v\nSTORE r1 r2");
+        asm("""
+            LOAD r1 64
+            LOAD r2 &TestD.v
+            STORE r1 r2
+        """);
         asm(str);
 
         StructA sA;
@@ -142,14 +153,28 @@ namespace TestD {
     }
 
     public static bool stringEquals(char* str1, char* str2) {
-        asm("COPY r15 r1\nINC r1 -16\nLOAD MEM r1 r1"); // str1
-        asm("COPY r15 r2\nINC r2 -12\nLOAD MEM r2 r2"); // str2
-        asm(":string_equals_loop");
-            asm("LOAD MEM BYTE r3 r1 INC_RA\nLOAD MEM BYTE r4 r2 INC_RA");
-            asm("SUB r4 r3 r4\nGOTO NEQ r4 :string_equals_fail");
-            asm("GOTO NEQ r3 :string_equals_loop");
+        asm("""
+            COPY r15 r1
+            INC r1 -16
+            LOAD MEM r1 r1
+        """); // str1
+        asm("""
+            COPY r15 r2
+            INC r2 -12
+            LOAD MEM r2 r2
+        """); // str2
+        asm(""":string_equals_loop""");
+            asm("""
+                LOAD MEM BYTE r3 r1 INC_RA
+                LOAD MEM BYTE r4 r2 INC_RA
+            """);
+            asm("""
+                SUB r4 r3 r4
+                GOTO NEQ r4 :string_equals_fail
+            """);
+            asm("""GOTO NEQ r3 :string_equals_loop""");
         return true;
-        asm(":string_equals_fail");
+        asm(""":string_equals_fail""");
             return false;
     }
 

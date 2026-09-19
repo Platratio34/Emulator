@@ -8,11 +8,17 @@ namespace Kernal {
     @/ Table of free flags for memory pages by absolute index /@
     protected static const bool* pageFreeTable = 0x8000;
 
-    @/ Allocates a new memory page to the active process /@
+    protected static Mutex kallocMutex;
+
+    @/
+        Allocates a new memory page to the active process
+    /@
     @Syscall(0x01)
     public static void* kalloc() {
+        kallocMutex.acquire();
         int32 cPages = SysD.rMemTbl[0];
         if(cPages >= MAX_BLOCKS) { // max per-process page allocation
+            kallocMutex.release();
             return nullptr;
         }
         int32 i = 0;
@@ -20,6 +26,7 @@ namespace Kernal {
             i++;
         }
         if(i == 0x1000) { // no free blocks
+            kallocMutex.release();
             return nullptr;
         }
         pageFreeTable[i] = true;
@@ -27,12 +34,15 @@ namespace Kernal {
         cPages += 1;
         SysD.rMemTbl[cPages] = 0x2_0000 + (i << 12);
         SysD.rMemTbl[0] = cPages;
+        
+        kallocMutex.release();
         return addr;
     }
 
     @/ Frees a number of pages from the active process /@
     @Syscall(0x02)
     public static void kfree(int32 num) {
+        kallocMutex.acquire();
         int32 cPages = SysD.rMemTbl[0];
         if(num > cPages) {
             num = cPages;
@@ -44,5 +54,6 @@ namespace Kernal {
         }
         int32 t = cast<int32>(0x200 + cPages);
         SysD.rMemTbl[0] = cPages;
+        kallocMutex.release();
     }
 }

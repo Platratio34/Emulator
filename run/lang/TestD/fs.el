@@ -23,12 +23,23 @@ namespace FS {
                 return;
             }
         }
-        asm("LOAD r1 Peripheral.CMD_SIZE\nSTORE 2 r1 INC_RA");
-        asm("LOAD r1 Peripheral.CMD_DATA");
-        asm("STORE 0x10 r1 INC_RA");
-        asm("COPY r15 r2\nINC r2 -20");
-        asm("COPY MEM r2 r1");
-        asm("LOAD r1 Peripheral.CMD_ADDR\nLOAD r2 &FS.deviceId\nLOAD MEM r2 r2\nLOAD r3 0x0101_0000\nOR r2 r2 r3\nSTORE r2 r1");
+        asm{
+            LOAD r1 Peripheral.CMD_SIZE
+            STORE 2 r1 INC_RA
+
+            LOAD r1 Peripheral.CMD_DATA
+            STORE 0x10 r1 INC_RA
+            COPY r15 r2
+            INC r2 -20
+            COPY MEM r2 r1
+
+            LOAD r1 Peripheral.CMD_ADDR
+            LOAD r2 &FS.deviceId
+            LOAD MEM r2 r2
+            LOAD r3 0x0101_0000
+            OR r2 r2 r3
+            STORE r2 r1
+        }
 
         status = *Peripheral.RSP_STATUS;
         handle = Peripheral.RSP_DATA[1];
@@ -41,16 +52,29 @@ namespace FS {
                 return;
             }
         }
-        asm("LOAD r1 Peripheral.CMD_SIZE\nSTORE 6 r1 INC_RA");
-        asm("LOAD r1 Peripheral.CMD_DATA");
-        asm("STORE 0x11 r1 INC_RA");
-        asm("COPY r15 r2\nINC r2 -32");
-        asm("COPY MEM r2 r1 INC_RS INC_RD");
-        asm("COPY MEM r2 r1 INC_RS INC_RD");
-        asm("COPY MEM r2 r1 INC_RS INC_RD");
-        asm("COPY MEM r2 r1 INC_RS INC_RD");
-        asm("COPY MEM r2 r1 INC_RS INC_RD");
-        asm("LOAD r1 Peripheral.CMD_ADDR\nLOAD r2 &FS.deviceId\nLOAD MEM r2 r2\nLOAD r3 0x0101_0000\nOR r2 r2 r3\nSTORE r2 r1");
+        asm{
+            LOAD r1 Peripheral.CMD_SIZE
+            STORE 6 r1 INC_RA
+       
+            LOAD r1 Peripheral.CMD_DATA
+            STORE 0x11 r1 INC_RA
+            
+            COPY r15 r2
+            INC r2 -32
+            
+            COPY MEM r2 r1 INC_RS INC_RD
+            COPY MEM r2 r1 INC_RS INC_RD
+            COPY MEM r2 r1 INC_RS INC_RD
+            COPY MEM r2 r1 INC_RS INC_RD
+            COPY MEM r2 r1 INC_RS INC_RD
+
+            LOAD r1 Peripheral.CMD_ADDR
+            LOAD r2 &FS.deviceId
+            LOAD MEM r2 r2
+            LOAD r3 0x0101_0000
+            OR r2 r2 r3
+            STORE r2 r1
+        }
 
         state = *Peripheral.RSP_DATA;
     }
@@ -62,18 +86,36 @@ namespace FS {
                 return;
             }
         }
-        asm("LOAD r1 Peripheral.CMD_SIZE\nSTORE 6 r1 INC_RA");
-        asm("STORE 0x11 r1 INC_RA");
-        asm("COPY r15 r2\nINC r2 -32");
-        asm("COPY MEM r2 r1 INC_RS INC_RD");
-        asm("COPY MEM r2 r1 INC_RS INC_RD");
-        asm("COPY MEM r2 r1 INC_RS INC_RD");
-        asm("COPY MEM r2 r1 INC_RS INC_RD");
-        asm("COPY MEM r2 r1 INC_RS INC_RD");
-        asm("LOAD r1 Peripheral.CMD_ADDR\nLOAD r2 &FS.deviceId\nLOAD MEM r2 r2\nLOAD r3 0x0101_0000\nOR r2 r2 r3\nSTORE r2 r1");
+        asm{
+            LOAD r1 Peripheral.CMD_SIZE
+            STORE 6 r1 INC_RA
+
+            STORE 0x11 r1 INC_RA
+            COPY r15 r2
+            INC r2 -32
+
+            COPY MEM r2 r1 INC_RS INC_RD
+            COPY MEM r2 r1 INC_RS INC_RD
+            COPY MEM r2 r1 INC_RS INC_RD
+            COPY MEM r2 r1 INC_RS INC_RD
+            COPY MEM r2 r1 INC_RS INC_RD
+
+            LOAD r1 Peripheral.CMD_ADDR
+            LOAD r2 &FS.deviceId
+            LOAD MEM r2 r2
+            LOAD r3 0x0101_0000
+            OR r2 r2 r3\nSTORE r2 r1
+        }
         
         state = *Peripheral.RSP_DATA;
-        asm("COPY r15 r1\nINC r1 -16\nLOAD MEM r1 r1");
-        asm(":FS.readFileSync_wait\nLOAD MEM r2 r1\nGOTO LT r2 :FS.readFileSync_wait");
+
+        asm{
+            COPY r15 r1
+            INC r1 -16
+            LOAD MEM r1 r1
+            :FS.readFileSync_wait
+            LOAD MEM r2 r1
+            GOTO LT r2 :FS.readFileSync_wait
+        };
     }
 }

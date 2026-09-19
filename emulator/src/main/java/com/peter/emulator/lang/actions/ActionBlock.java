@@ -3,13 +3,14 @@ package com.peter.emulator.lang.actions;
 import java.util.ArrayList;
 
 import com.peter.emulator.MachineCode;
-import com.peter.emulator.lang.ELSymbol.ELAnnotationSymbol;
 import com.peter.emulator.lang.ELSymbol.ELVarSymbol;
 import com.peter.emulator.lang.ELValue.ELStringValue;
 import com.peter.emulator.lang.annotations.ELBreakpointAnnotation;
 import com.peter.emulator.lang.*;
 import com.peter.emulator.lang.base.ELPrimitives;
 import com.peter.emulator.lang.expresion.Expression;
+import com.peter.emulator.lang.symbols.ELAnnotationSymbol;
+import com.peter.emulator.lang.symbols.ELStringSymbol;
 import com.peter.emulator.lang.tokens.OperatorToken.Type;
 import com.peter.emulator.machinecode.Reg;
 import com.peter.emulator.lang.tokens.*;
@@ -26,10 +27,10 @@ public class ActionBlock extends ComplexAction {
         int wI = 0;
         int l = 0;
         if(scope.function != null) {
-            actions.add(new DirectAction("STACK PUSH r15"));
-            actions.add(new DirectAction("COPY rStack r15"));
+            addDirect("STACK PUSH r15");
+            addDirect("COPY rStack r15");
             for (ELVariable var : scope.stackVars.values()) {
-                addDirect(String.format("#stackVar %s %s %d", var.type.typeString(), var.name, var.offset));
+                addDirect("#stackVar %s %s %d", var.type.typeString(), var.name, var.offset);
             }
         }
         int last = -1;
@@ -55,9 +56,10 @@ public class ActionBlock extends ComplexAction {
                     actions.add(new DirectAction("// " + line + "\n"));
                 }
                 last = wI;
-                addDirect("// " + (l++) + " " + tkn.startLocation.line() + ":" + tkn.startLocation.col());
                 if (withDebug) {
                     addDirect("#line %s %d:%d", tkn.startLocation.file(), tkn.startLocation.line(), tkn.startLocation.col());
+                } else {
+                    addDirect("// " + (l++) + " " + tkn.startLocation.line() + ":" + tkn.startLocation.col());
                 }
                 if (tkn instanceof DocCommentToken tcT) {
                     wI++;
@@ -76,6 +78,40 @@ public class ActionBlock extends ComplexAction {
                         return null;
                     return "// Still reserved: " + str;
                 });
+                if (tkn instanceof ASMToken asmT) {
+                    String file = asmT.startLocation.file();
+                    int lineN = asmT.startLocation.line();
+                    int col = asmT.startLocation.col();
+                    boolean first = true;
+                    for (String line : asmT.raw.stripTrailing().split("\n")) {
+                        line = line.replaceAll("\r", "");
+                        if (line.length() > 0) {
+                            char c = line.charAt(0);
+                            while (c == '\t' || c == ' ') {
+                                col++;
+                                if (line.length() == 1) {
+                                    line = "";
+                                    break;
+                                }
+                                line = line.substring(1);
+                                c = line.charAt(0);
+                            }
+                        }
+                        if (line.length() > 0) {
+                            if(withDebug)
+                                addDirect("#line %s %d:%d", file, lineN, col);
+                            addDirect(line);
+                        } else if (!first) {
+                            add(Action.blank());
+                        }
+                        first = false;
+                        lineN++;
+                        col = 2;
+                    }
+                    asmT.addSymbols(scope.unit);
+                    wI++;
+                    continue;
+                }
                 boolean dma = false;
                 if (tkn instanceof OperatorToken ot && ot.type == OperatorToken.Type.POINTER) {
                     dma = true;
@@ -188,7 +224,7 @@ public class ActionBlock extends ComplexAction {
 
                                     case StringToken strT -> {
                                         actions.add(new DirectAction(strT.value));
-                                        scope.addSymbol(ELSymbol.Type.STRING_LITERAL, strT.span()); 
+                                        scope.addSymbol(new ELStringSymbol(strT)); 
                                     }
 
                                     case IdentifierToken it2 -> {
@@ -292,6 +328,7 @@ public class ActionBlock extends ComplexAction {
                             if (!eA.getType().canCastTo(funcRet)) {
                                 throw ELAnalysisError.error(String.format("Invalid return type. Can not cast %s to %s", eA.getType().typeString(), funcRet.typeString()), it);
                             }
+                            eA.validate(errors);
                             actions.add(eA);
                             Register r2 = newRegister();
                             addReserve(r2);

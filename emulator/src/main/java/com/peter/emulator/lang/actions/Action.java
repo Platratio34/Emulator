@@ -15,6 +15,16 @@ public abstract class Action {
             public String toAssembly() {
                 return "\n";
             }
+
+        };
+    }
+    public static Action blank() {
+        return new Action(null) {
+
+            @Override
+            public String toAssembly() {
+                return " ";
+            }
             
         };
     }

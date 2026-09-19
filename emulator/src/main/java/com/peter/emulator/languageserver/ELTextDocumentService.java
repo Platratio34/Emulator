@@ -131,6 +131,72 @@ public class ELTextDocumentService implements TextDocumentService {
             return null;
         });
     }
+
+    private class SemanticTokenState {
+        public final List<Integer> data = new ArrayList<>();
+        public int lastLine = 0;
+        public int lastChar = 0;
+
+        public void addTokens(ArrayList<ELSymbol> symbols) {
+            symbols.sort((a, b) -> {
+                int aL = a.span.start().line();
+                int bL = b.span.start().line();
+                if (aL != bL) {
+                    return aL - bL;
+                }
+                return a.span.start().col() - b.span.start().col();
+            });
+            for (ELSymbol symbol : symbols) {
+                if (!symbol.isWrapper()) {
+                    int type = symbol.type.semanticTypeIndex();
+                    int modifier = symbol.getModifier();
+                    if (symbol instanceof ELVarSymbol vs) {
+                        if (vs.var.finalVal) {
+                            modifier |= Modifier.READ_ONLY.value;
+                        }
+                        switch (vs.var.varType) {
+                            case CONST -> modifier |= Modifier.READ_ONLY.value;
+                            case STATIC -> modifier |= Modifier.STATIC.value;
+                            case SCOPE -> {
+                                if (vs.var.offset < 0) {
+                                    type = ELSymbol.Type.PARAMETER.semanticTypeIndex();
+                                }
+                            }
+                            case MEMBER -> {
+                                type = ELSymbol.Type.PROPERTY.semanticTypeIndex();
+                            }
+
+                            default -> {
+                            }
+                        }
+                    }
+
+                    int line = symbol.span.start().line();
+                    int startCol = symbol.span.start().col();
+                    while (line <= symbol.span.end().line()) {
+                        int lineOff = (line - 1) - lastLine;
+                        int colOff = (startCol - 2) - ((lineOff != 0) ? 0 : lastChar);
+                        lastLine = line - 1;
+                        lastChar = startCol - 2;
+
+                        int length = ( (line == symbol.span.end().line()) ? symbol.span.end().col() : 9999 ) - startCol + 1;
+
+                        data.add(lineOff);
+                        data.add(colOff);
+                        data.add(length);
+                        data.add(type);
+                        data.add(modifier);
+
+                        line++;
+                        startCol = 2;
+                    }
+                }
+
+                addTokens(symbol.getSub());
+            }
+    }
+
+    }
     
     @Override
     public CompletableFuture<SemanticTokens> semanticTokensFull(SemanticTokensParams params) {
@@ -141,65 +207,11 @@ public class ELTextDocumentService implements TextDocumentService {
             return null;
         }
         return CompletableFuture.supplyAsync(() -> {
-            List<Integer> data = new ArrayList<>();
-            unit.symbols.sort((a, b) -> {
-                int aL = a.span.start().line();
-                int bL = b.span.start().line();
-                if (aL != bL) {
-                    return aL - bL;
-                }
-                return a.span.start().col() - b.span.start().col();
-            });
-            // Location last = null;
-            int lastLine = 0;
-            int lastChar = 0;
+            SemanticTokenState state = new SemanticTokenState();
+            state.addTokens(unit.symbols);
             lspServer.logDebug("Providing semantic tokens for %s (%d total symbols)", uri, unit.symbols.size());
-            for (ELSymbol symbol : unit.symbols) {
-                int lineOff = (symbol.span.start().line() - 1) - lastLine;
-                int colOff = (symbol.span.start().col() - 2) - ((lineOff != 0 ) ? 0 : lastChar);
-                lastLine = symbol.span.start().line() - 1;
-                lastChar = symbol.span.start().col() - 2;
-                // last = symbol.span.end();
 
-                int length = symbol.span.end().col() - symbol.span.start().col() + 1;
-                int type = symbol.type.semanticTypeIndex();
-                int modifier = symbol.getModifier();
-                if (symbol instanceof ELVarSymbol vs) {
-                    if (vs.var.finalVal) {
-                        modifier |= Modifier.READ_ONLY.value;
-                    }
-                    switch (vs.var.varType) {
-                        case CONST -> modifier |= Modifier.READ_ONLY.value;
-                        case STATIC -> modifier |= Modifier.STATIC.value;
-                        case SCOPE -> {
-                            if (vs.var.offset < 0) {
-                                type = ELSymbol.Type.PARAMETER.semanticTypeIndex();
-                            }
-                        }
-                        case MEMBER -> {
-                            type = ELSymbol.Type.PROPERTY.semanticTypeIndex();
-                        }
-
-                        default -> {
-                        }
-                    }
-                }
-
-                // if(symbol.span.start().line() < 5) {
-                //     lspServer.logDebug("- %d %d %d %d %d (%s, %s, %s)", lineOff, colOff, length, type, modifier, symbol.span, symbol.getClass().getName(), symbol.type.semanticType);
-                //     if (symbol instanceof ELTypeSymbol ts) {
-                //         lspServer.logDebug("- - %s %s", ts.elType.typeString(), ts.elType.toString());
-                //     }
-                // }
-
-                data.add(lineOff);
-                data.add(colOff);
-                data.add(length);
-                data.add(type);
-                data.add(modifier);
-            }
-
-            return new SemanticTokens(data);
+            return new SemanticTokens(state.data);
         });
     }
 

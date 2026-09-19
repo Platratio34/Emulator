@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.function.Function;
 
-import com.peter.emulator.lang.ELSymbol.ELAnnotationSymbol;
 import com.peter.emulator.lang.Location;
 import com.peter.emulator.lang.ProgramUnit;
 import com.peter.emulator.lang.Span;
+import com.peter.emulator.lang.symbols.ELAnnotationSymbol;
 import com.peter.emulator.lang.tokens.AnnotationToken;
 import com.peter.emulator.lang.tokens.Token;
 
@@ -25,14 +25,16 @@ public class ELAnnotation {
     public final String name;
     public final Location startLocation;
     public final Location endLocation;
-    protected ArrayList<Token> tokens;
+    public final ArrayList<Token> tokens;
 
     public ELAnnotation(AnnotationToken token) {
         name = token.name;
         startLocation = token.startLocation;
-        endLocation = token.endLocation;
+        endLocation = token.startLocation.add(token.name.length());
         if(token.params != null)
             tokens = token.params.subTokens;
+        else
+            tokens = null;
     }
 
     public static ELAnnotation create(AnnotationToken token) {

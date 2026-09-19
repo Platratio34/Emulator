@@ -254,18 +254,18 @@ public class ActionScope {
     }
 
     public ELSymbol addSymbol(ELSymbol symbol) {
-        unit.symbols.add(symbol);
+        unit.addSymbol(symbol);
         return symbol;
     }
 
     public ELSymbol addSymbol(ELSymbol.Type type, Span span, String text) {
         ELSymbol symbol = new ELSymbol(type, span, text);
-        unit.symbols.add(symbol);
+        unit.addSymbol(symbol);
         return symbol;
     }
     public ELSymbol addSymbol(ELSymbol.Type type, Span span) {
         ELSymbol symbol = new ELSymbol(type, span);
-        unit.symbols.add(symbol);
+        unit.addSymbol(symbol);
         return symbol;
     }
 
