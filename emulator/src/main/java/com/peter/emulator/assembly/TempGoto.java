@@ -9,7 +9,7 @@ public class TempGoto extends Goto implements ResolvableValue {
     public final Define target;
     protected int address = 0;
 
-	protected TempGoto(ConditionalOperator condition, Mode mode, Reg rg, Define target) {
+	public TempGoto(ConditionalOperator condition, Mode mode, Reg rg, Define target) {
         super(condition, mode, 0, rg);
         this.target = target;
         target.addListener(this);

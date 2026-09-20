@@ -22,15 +22,15 @@ namespace TestD {
 
     @Entrypoint(raw)
     public static void main() {
-        asm("""
+        asm{
             STORE BYTE 'T' r7
             STORE BYTE 'e' r7
             STORE BYTE 's' r7
             STORE BYTE 't' r7
             STORE BYTE 'D' r7
             STORE BYTE '\n' r7
-        """);
-        asm("""LOAD rIH &:TestD.onInterrupt""");
+        }
+        asm{LOAD rIH &:TestD.onInterrupt};
         *KEYBOARD_CONTROL = 0x03; // Enable press interrupts
         CharacterDisplay.setup();
         int32 b;
@@ -42,11 +42,11 @@ namespace TestD {
         b = a + 1 + c;
         c = 32;
         funcb(c);
-        asm("""
+        asm{
             LOAD r1 64
             LOAD r2 &TestD.v
             STORE r1 r2
-        """);
+        }
         asm(str);
 
         StructA sA;
@@ -153,29 +153,31 @@ namespace TestD {
     }
 
     public static bool stringEquals(char* str1, char* str2) {
-        asm("""
-            COPY r15 r1
-            INC r1 -16
+        asm{
+            SUB r15 r15 16
             LOAD MEM r1 r1
-        """); // str1
-        asm("""
-            COPY r15 r2
-            INC r2 -12
-            LOAD MEM r2 r2
-        """); // str2
-        asm(""":string_equals_loop""");
-            asm("""
+            // str1
+        
+            SUB r2 r15 12
+            LOAD MEM r2 r2 // str2
+
+            // test comment
+            /*
+            mlc test
+            */
+            
+            :string_equals_loop
                 LOAD MEM BYTE r3 r1 INC_RA
                 LOAD MEM BYTE r4 r2 INC_RA
-            """);
-            asm("""
+                
                 SUB r4 r3 r4
                 GOTO NEQ r4 :string_equals_fail
-            """);
-            asm("""GOTO NEQ r3 :string_equals_loop""");
+                
+                GOTO NEQ r3 :string_equals_loop
+        }
         return true;
-        asm(""":string_equals_fail""");
-            return false;
+        asm{:string_equals_fail};
+        return false;
     }
 
     public static void funcb(int32 a) {
@@ -189,12 +191,12 @@ namespace TestD {
     @InterruptHandler(raw)
     internal static void onInterrupt() {
         int32 code = SysD.rIC;
-        asm("LOAD rIC 0");
+        asm{LOAD rIC 0}
         char[9] str;
         str[8] = '\0';
         if(code == 0xff) {
             Console.printStr("\n\nHalting\0",0);
-            asm("HALT");
+            asm{HALT};
         }
         if((code & 0xffff_ff00) == 0x8000_0200) { // timer
             int32 i = code & 0xff;

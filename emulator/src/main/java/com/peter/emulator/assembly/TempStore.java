@@ -13,6 +13,13 @@ public class TempStore extends StoreInstruction implements ResolvableValue {
         this.valueDefine = valueDefine;
         valueDefine.addListener(this);
     }
+    public TempStore(MemorySize size, Define valueDefine, Reg ra, boolean incRA) {
+        super(size, valueDefine.value, ra);
+        this.valueDefine = valueDefine;
+        valueDefine.addListener(this);
+        if(incRA)
+            withIncRA();
+    }
 
     public TempStore(MemorySize size, Reg rg, Define addressDefine) {
         super(size, rg, addressDefine.value);

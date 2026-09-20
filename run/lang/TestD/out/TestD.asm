@@ -3209,13 +3209,19 @@ GOTO POP
 STACK PUSH r15
 COPY rStack r15
 #line run\lang\TestD\testd.el 25:10
+#line run\lang\TestD\testd.el 26:14
 STORE BYTE 'T' r7
+#line run\lang\TestD\testd.el 27:14
 STORE BYTE 'e' r7
+#line run\lang\TestD\testd.el 28:14
 STORE BYTE 's' r7
+#line run\lang\TestD\testd.el 29:14
 STORE BYTE 't' r7
+#line run\lang\TestD\testd.el 30:14
 STORE BYTE 'D' r7
+#line run\lang\TestD\testd.el 31:14
 STORE BYTE '\n' r7
-//  asm("""STORE BYTE \'T\' r7\nSTORE BYTE \'e\' r7\nSTORE BYTE \'s\' r7\nSTORE BYTE \'t\' r7\nSTORE BYTE \'D\' r7\nSTORE BYTE \'\\n\' r7""");
+//  asm{\nSTORE BYTE 'T' r7\nSTORE BYTE 'e' r7\nSTORE BYTE 's' r7\nSTORE BYTE 't' r7\nSTORE BYTE 'D' r7\nSTORE BYTE '\n' r7\n}
 
 #line run\lang\TestD\testd.el 33:10
 LOAD rIH &:TestD.onInterrupt
@@ -3329,10 +3335,13 @@ STACK DEC 4
 //  funcb(c);
 
 #line run\lang\TestD\testd.el 45:10
+#line run\lang\TestD\testd.el 46:14
 LOAD r1 64
+#line run\lang\TestD\testd.el 47:14
 LOAD r2 &TestD.v
+#line run\lang\TestD\testd.el 48:14
 STORE r1 r2
-//  asm("""LOAD r1 64\nLOAD r2 &TestD.v\nSTORE r1 r2""");
+//  asm{\nLOAD r1 64\nLOAD r2 &TestD.v\nSTORE r1 r2\n}
 
 #line run\lang\TestD\testd.el 50:10
 // Test

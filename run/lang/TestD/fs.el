@@ -27,18 +27,14 @@ namespace FS {
             LOAD r1 Peripheral.CMD_SIZE
             STORE 2 r1 INC_RA
 
-            LOAD r1 Peripheral.CMD_DATA
             STORE 0x10 r1 INC_RA
-            COPY r15 r2
-            INC r2 -20
+            SUB r2 r15 20
             COPY MEM r2 r1
 
-            LOAD r1 Peripheral.CMD_ADDR
-            LOAD r2 &FS.deviceId
-            LOAD MEM r2 r2
-            LOAD r3 0x0101_0000
-            OR r2 r2 r3
-            STORE r2 r1
+            LOAD MEM r1 &FS.deviceId
+            LOAD r2 0x0101_0000
+            OR r1 r1 r2
+            STORE r1 Peripheral.CMD_ADDR
         }
 
         status = *Peripheral.RSP_STATUS;
@@ -55,12 +51,10 @@ namespace FS {
         asm{
             LOAD r1 Peripheral.CMD_SIZE
             STORE 6 r1 INC_RA
-       
-            LOAD r1 Peripheral.CMD_DATA
+
             STORE 0x11 r1 INC_RA
             
-            COPY r15 r2
-            INC r2 -32
+            SUB r2 r15 32
             
             COPY MEM r2 r1 INC_RS INC_RD
             COPY MEM r2 r1 INC_RS INC_RD
@@ -68,12 +62,10 @@ namespace FS {
             COPY MEM r2 r1 INC_RS INC_RD
             COPY MEM r2 r1 INC_RS INC_RD
 
-            LOAD r1 Peripheral.CMD_ADDR
-            LOAD r2 &FS.deviceId
-            LOAD MEM r2 r2
-            LOAD r3 0x0101_0000
-            OR r2 r2 r3
-            STORE r2 r1
+            LOAD MEM r1 &FS.deviceId
+            LOAD r2 0x0101_0000
+            OR r1 r1 r2
+            STORE r1 Peripheral.CMD_ADDR
         }
 
         state = *Peripheral.RSP_DATA;
@@ -91,8 +83,7 @@ namespace FS {
             STORE 6 r1 INC_RA
 
             STORE 0x11 r1 INC_RA
-            COPY r15 r2
-            INC r2 -32
+            SUB r2 r15 32
 
             COPY MEM r2 r1 INC_RS INC_RD
             COPY MEM r2 r1 INC_RS INC_RD
@@ -100,18 +91,16 @@ namespace FS {
             COPY MEM r2 r1 INC_RS INC_RD
             COPY MEM r2 r1 INC_RS INC_RD
 
-            LOAD r1 Peripheral.CMD_ADDR
-            LOAD r2 &FS.deviceId
-            LOAD MEM r2 r2
-            LOAD r3 0x0101_0000
-            OR r2 r2 r3\nSTORE r2 r1
+            LOAD MEM r1 &FS.deviceId
+            LOAD r2 0x0101_0000
+            OR r1 r1 r2
+            STORE r1 Peripheral.CMD_ADDR
         }
         
         state = *Peripheral.RSP_DATA;
 
         asm{
-            COPY r15 r1
-            INC r1 -16
+            SUB r1 r15 16
             LOAD MEM r1 r1
             :FS.readFileSync_wait
             LOAD MEM r2 r1

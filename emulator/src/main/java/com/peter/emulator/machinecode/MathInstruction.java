@@ -1,7 +1,5 @@
 package com.peter.emulator.machinecode;
 
-import java.util.HashMap;
-
 public class MathInstruction extends Instruction {
 
     public final Operation operation;
@@ -12,7 +10,7 @@ public class MathInstruction extends Instruction {
 
     public static final int ROTATE_FLAG = 0x80;
 
-    protected MathInstruction(Operation operation, Reg rd, Reg ra, Reg rb) {
+    public MathInstruction(Operation operation, Reg rd, Reg ra, Reg rb) {
         super(Operator.MATH);
         if(rd.code > 0xf) {
             throw new RuntimeException("Invalid destination register for math");

@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.services.*;
@@ -23,6 +25,8 @@ public class ELLanguageServer extends LSPServer implements LanguageServer, Langu
     private ELTextDocumentService textDocumentService;
     private ELWorkspaceService workspaceService;
     protected ErrorSet errors = null;
+    
+    protected Lock lsLock = new ReentrantLock();
 
     @Override
     public void connect(LanguageClient client) {

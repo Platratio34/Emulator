@@ -10,6 +10,7 @@ public class Define {
     public int[] valueArr = null;
 
     public final boolean isAddress;
+    public boolean isLabel;
     protected boolean resolved = false;
 
     public int size = 0;

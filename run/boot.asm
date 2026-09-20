@@ -76,6 +76,7 @@ GOTO LT r1 :wait
 LOAD r0 KERNAL_START
 GOTO r0
 
+NO_OP
 
 :halt
 HALT

@@ -64,6 +64,7 @@ public class ELWorkspaceService implements WorkspaceService {
     }
 
     public void triggerRecompile() {
+        lspServer.lsLock.lock();
         lspServer.logDebug("Recompiling modules ...");
         // ls = new LanguageServer();
         for (File f : moduleRoots) {
@@ -84,13 +85,17 @@ public class ELWorkspaceService implements WorkspaceService {
         }
         lspServer.errors = ls.recompile();
         lspServer.logDebug("Modules recompiled");
+        lspServer.lsLock.unlock();
         lspServer.pushDiagnostics();
     }
 
     public ProgramUnit getUnit(URI uri) {
+        lspServer.lsLock.lock();
         if(ls == null)
             return null;
-        return ls.getUnit(Path.of(uri).toAbsolutePath().toString());
+        ProgramUnit unit = ls.getUnit(Path.of(uri).toAbsolutePath().toString());
+        lspServer.lsLock.unlock();
+        return unit;
     }
 
 }

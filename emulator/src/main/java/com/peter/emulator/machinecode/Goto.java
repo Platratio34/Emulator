@@ -10,7 +10,7 @@ public class Goto extends Instruction {
 
     public static final int REL_MASK = 0b0001_0000 << 16;
 
-    protected Goto(ConditionalOperator condition, Mode mode, Reg ra, Reg rg) {
+    public Goto(ConditionalOperator condition, Mode mode, Reg ra, Reg rg) {
         super(Operator.GOTO);
         this.condition = condition;
         this.mode = mode;

@@ -8,7 +8,6 @@ import com.peter.emulator.lang.ELProtectionLevel;
 import com.peter.emulator.lang.ELType;
 import com.peter.emulator.lang.Namespace;
 import com.peter.emulator.lang.ProgramUnit;
-import com.peter.emulator.lang.ELFunction.FunctionType;
 
 public class Method extends ELClass {
 

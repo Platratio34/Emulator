@@ -2,7 +2,8 @@ package com.peter.emulator.lang.actions;
 
 import java.util.ArrayList;
 
-import com.peter.emulator.MachineCode;
+import com.peter.emulator.assembly.ASMParser;
+import com.peter.emulator.assembly.AsmError;
 import com.peter.emulator.lang.ELSymbol.ELVarSymbol;
 import com.peter.emulator.lang.ELValue.ELStringValue;
 import com.peter.emulator.lang.annotations.ELBreakpointAnnotation;
@@ -79,6 +80,18 @@ public class ActionBlock extends ComplexAction {
                     return "// Still reserved: " + str;
                 });
                 if (tkn instanceof ASMToken asmT) {
+                    wI++;
+                    ASMParser asmParser = new ASMParser(scope.unit.module.languageServer.fileProvider, asmT.raw, asmT.startLocation.add(4), true);
+                    boolean asmError = asmParser.parse();
+                    scope.addSymbol(ELSymbol.Type.KEYWORD, asmT.startLocation.span(2));
+                    scope.unit.symbols.addAll(asmParser.getSymbols());
+                    // System.out.println("Adding "+asmParser.getSymbols().size()+" symbols from ASM");
+                    for (AsmError error : asmParser.errors) {
+                        errors.add(new ELAnalysisError(error.severity, error.message, error.span));
+                    }
+                    if (asmError) {
+                        continue;
+                    }
                     String file = asmT.startLocation.file();
                     int lineN = asmT.startLocation.line();
                     int col = asmT.startLocation.col();
@@ -108,8 +121,7 @@ public class ActionBlock extends ComplexAction {
                         lineN++;
                         col = 2;
                     }
-                    asmT.addSymbols(scope.unit);
-                    wI++;
+                    // asmT.addSymbols(scope.unit);
                     continue;
                 }
                 boolean dma = false;
@@ -224,6 +236,7 @@ public class ActionBlock extends ComplexAction {
 
                                     case StringToken strT -> {
                                         actions.add(new DirectAction(strT.value));
+                                        scope.unit.errors.info("It is recommended to use `asm{...}` for inline assembly.");
                                         scope.addSymbol(new ELStringSymbol(strT)); 
                                     }
 

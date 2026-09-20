@@ -69,6 +69,12 @@ public class StoreInstruction extends Instruction {
     public static StoreInstruction StoreReg(MemorySize size, Reg rg, Reg ra) {
         return new StoreInstruction(size, Source.REG, rg, ra);
     }
+    public static StoreInstruction StoreReg(MemorySize size, Reg rg, Reg ra, boolean incRA) {
+        StoreInstruction instr = new StoreInstruction(size, Source.REG, rg, ra);
+        if (incRA)
+            instr.withIncRA();
+        return instr;
+    }
 
     public static StoreInstruction StoreVal(MemorySize size, int val, Reg ra) {
         return new StoreInstruction(size, val, ra);

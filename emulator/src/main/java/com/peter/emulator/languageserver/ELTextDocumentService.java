@@ -109,15 +109,18 @@ public class ELTextDocumentService implements TextDocumentService {
     public CompletableFuture<Hover> hover(HoverParams params) {
         return CompletableFuture.supplyAsync(() -> {
             URI uri = URI.create(params.getTextDocument().getUri());
+            lspServer.lsLock.lock();
             ProgramUnit unit = lspServer.getUnit(uri);
             if (unit == null) {
                 lspServer.logError("Hover was requested for %s, but no program unit could be found", uri);
+                lspServer.lsLock.unlock();
                 return null;
             }
             Position hoverPos = params.getPosition();
 
             for (ELSymbol symbol : unit.symbols) {
                 if (symbol.hasText() && symbol.contains(hoverPos, null)) {
+                    lspServer.lsLock.unlock();
                     return new Hover(new MarkupContent("markdown", symbol.getText()));
                 } else {
                     // lspServer.logDebug("Hover was requested for %s, but didn't match symbol "+symbol.type+": "+symbol.text, uri);
@@ -126,8 +129,10 @@ public class ELTextDocumentService implements TextDocumentService {
 
             if (unit.variables.isEmpty() && unit.functions.isEmpty() && unit.symbols.isEmpty()) {
                 lspServer.logWarn("Hover was requested for %s, but program unit had no hover-able symbols", uri);
+                lspServer.lsLock.unlock();
                 return null;
             }
+            lspServer.lsLock.unlock();
             return null;
         });
     }
@@ -201,16 +206,19 @@ public class ELTextDocumentService implements TextDocumentService {
     @Override
     public CompletableFuture<SemanticTokens> semanticTokensFull(SemanticTokensParams params) {
         URI uri = URI.create(params.getTextDocument().getUri());
-        ProgramUnit unit = lspServer.getUnit(uri);
-        if (unit == null) {
-            lspServer.logError("Semantic tokens were requested for %s, but no program unit could be found", uri);
-            return null;
-        }
         return CompletableFuture.supplyAsync(() -> {
+            lspServer.lsLock.lock();
+            ProgramUnit unit = lspServer.getUnit(uri);
+            if (unit == null) {
+                lspServer.logError("Semantic tokens were requested for %s, but no program unit could be found", uri);
+                lspServer.lsLock.unlock();
+                return null;
+            }
+        
             SemanticTokenState state = new SemanticTokenState();
             state.addTokens(unit.symbols);
             lspServer.logDebug("Providing semantic tokens for %s (%d total symbols)", uri, unit.symbols.size());
-
+            lspServer.lsLock.unlock();
             return new SemanticTokens(state.data);
         });
     }

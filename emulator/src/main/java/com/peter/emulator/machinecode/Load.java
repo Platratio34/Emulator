@@ -68,6 +68,10 @@ public class Load extends Instruction {
         return new Load(size, rg, value);
     }
 
+    public static Load Mem(MemorySize size, Reg rg, Reg ra, boolean incRA) {
+        return new Load(size, rg, ra, incRA);
+    }
+
     public static Load MemWord(Reg rg, Reg ra, boolean incRA) {
         return new Load(MemorySize.WORD, rg, ra, incRA);
     }
