@@ -89,7 +89,7 @@ public class ActionBlock extends ComplexAction {
                     for (AsmError error : asmParser.errors) {
                         errors.add(new ELAnalysisError(error.severity, error.message, error.span));
                     }
-                    if (asmError) {
+                    if (!asmError) {
                         continue;
                     }
                     String file = asmT.startLocation.file();

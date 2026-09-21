@@ -51,6 +51,8 @@ public class GotoKeyword extends ASMKeyword {
         // GOTO (PUSH) (<EQ|LEQ|GT|NEQ|LT|GEQ> rg) <[:label]|ra>
 
         boolean push = line.hasNext("PUSH");
+        if(push)
+            line.symbolLast(Type.KEYWORD);
 
         ConditionalOperator op = ConditionalOperator.UNCONDITIONAL;
         Reg rg = Reg.R0;

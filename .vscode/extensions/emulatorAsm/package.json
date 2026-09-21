@@ -32,7 +32,7 @@
         ],
         "grammars": [
             {
-                "language": "emulatorasm",
+                "language": "emulatorasmb",
                 "scopeName": "source.asm",
                 "path": "./syntaxes/asm.tmGrammar.json"
             },
@@ -45,11 +45,23 @@
         "configurationDefaults": {
             "[emulatorlang]": {
                 "editor.semanticHighlighting.enabled": true
+            },
+            "[emulatorasm]": {
+                "editor.semanticHighlighting.enabled": true
             }
         },
         "semanticTokenScopes": [
             {
                 "language": "emulatorlang",
+                "scopes": {
+                    "variable": ["entity.name.variable"],
+                    "property": ["entity.name.variable"],
+                    "comment": ["comment.line"],
+                    "escape": ["constant.character.escape"]
+                }
+            },
+            {
+                "language": "emulatorasm",
                 "scopes": {
                     "variable": ["entity.name.variable"],
                     "property": ["entity.name.variable"],

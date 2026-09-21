@@ -43,6 +43,8 @@ public class ELWorkspaceService implements WorkspaceService {
     }
 
     public void addFile(URI uri) {
+        if(!uri.getPath().endsWith(".el"))
+            return;
         File f = new File(uri);
         boolean found = false;
         while (!found) {

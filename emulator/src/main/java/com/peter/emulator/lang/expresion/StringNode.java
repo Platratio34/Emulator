@@ -66,7 +66,7 @@ public class StringNode extends ExpressionNode {
             return String.format("LOAD %s '%s'", register, token.escapedValue());
         }
         String id = String.format("exp_str_inline_%d", stringI++);
-        return String.format("#define %s \"%s\"\nLOAD %s %s", id, token.escapedValue(), register, id);
+        return String.format("#define %s \"%s\"\nLOAD %s &%s", id, token.escapedValue(), register, id);
     }
 
 }

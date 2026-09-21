@@ -47,4 +47,8 @@ public record Span(Location start, Location end) {
     public boolean contains(Position position, ELLanguageServer lServer) {
         return contains(position.getLine() + 1, position.getCharacter()+2, lServer);
     }
+
+    public Span shorten(int chars) {
+        return start.span(end.add(-chars));
+    }
 }

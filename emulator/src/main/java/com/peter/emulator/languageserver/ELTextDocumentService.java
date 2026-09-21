@@ -1,16 +1,22 @@
 package com.peter.emulator.languageserver;
 
+import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.services.TextDocumentService;
 
+import com.peter.emulator.assembly.ASMParser;
+import com.peter.emulator.assembly.AsmError;
 import com.peter.emulator.lang.ELAnalysisError;
 import com.peter.emulator.lang.ELSymbol;
+import com.peter.emulator.lang.FileProvider;
 import com.peter.emulator.lang.ELSymbol.ELVarSymbol;
 import com.peter.emulator.lang.ELSymbol.Modifier;
 import com.peter.emulator.lang.ProgramUnit;
@@ -18,6 +24,8 @@ import com.peter.emulator.lang.ProgramUnit;
 public class ELTextDocumentService implements TextDocumentService {
 
     public final ELLanguageServer lspServer;
+
+    public final HashMap<Path, ASMParser> parsers = new HashMap<>();
 
     public ELTextDocumentService(ELLanguageServer lspServer) {
         this.lspServer = lspServer;
@@ -31,13 +39,17 @@ public class ELTextDocumentService implements TextDocumentService {
     public void didChange(DidChangeTextDocumentParams params) {
         VersionedTextDocumentIdentifier textDocument = params.getTextDocument();
         Path path = Path.of(URI.create(textDocument.getUri()));
-        lspServer.logDebug("Change for " + path);
-        lspServer.getFileProvider().addCachedFile(path, params.getContentChanges().getFirst().getText());
-        if (waitThread == null) {
-            waitThread = new Thread(this::changeLoop);
-            waitThread.run();
+        if (path.endsWith(".asm")) {
+            parsers.remove(path);
+        } else {
+            lspServer.logDebug("Change for " + path);
+            lspServer.getFileProvider().addCachedFile(path, params.getContentChanges().getFirst().getText());
+            if (waitThread == null) {
+                waitThread = new Thread(this::changeLoop);
+                waitThread.run();
+            }
+            changed = true;
         }
-        changed = true;
     }
     
     private void changeLoop() {
@@ -63,6 +75,7 @@ public class ELTextDocumentService implements TextDocumentService {
         Path path = Path.of(URI.create(textDocument.getUri()));
         lspServer.logDebug("Close for "+path);
         lspServer.getFileProvider().clearCachedFile(path);
+        parsers.remove(path);
     }
 
     @Override
@@ -77,64 +90,138 @@ public class ELTextDocumentService implements TextDocumentService {
     public void didSave(DidSaveTextDocumentParams params) {
         TextDocumentIdentifier textDocument = params.getTextDocument();
         Path path = Path.of(URI.create(textDocument.getUri()));
-        lspServer.logDebug("Save for "+params.getTextDocument().getUri());
+        lspServer.logDebug("Save for " + params.getTextDocument().getUri());
         lspServer.getFileProvider().clearCachedFile(path);
+        parsers.remove(path);
     }
-    
+   
+    private ASMParser getParser(Path path) {
+        if (parsers.containsKey(path)) {
+            ASMParser parser = parsers.get(path);
+            parser.parseLock.lock();
+            parser.parseLock.unlock();
+            return parser;
+        } else {
+            FileProvider fileProvider = lspServer.getFileProvider();
+            try {
+                ASMParser parser = new ASMParser(fileProvider, fileProvider.readFile(path),
+                        new com.peter.emulator.lang.Location(path.toAbsolutePath().toString(), 1, 2));
+                parsers.put(path, parser);
+                parser.parse();
+                lspServer.logInfo("New ASM parser for %s with %d symbols", path, parser.symbols.size());
+                
+                ArrayList<Diagnostic> diagnostics = new ArrayList<>();
+                
+                for (AsmError err : parser.errors) {
+                    if (err.span == null) {
+                        continue;
+                    }
+                    diagnostics.add(new Diagnostic(err.span.toRange(), err.message, err.severity.severity, "emulatorasm"));
+                }
+                lspServer.client.publishDiagnostics(new PublishDiagnosticsParams(path.toString(), diagnostics));
+                lspServer.client.refreshSemanticTokens();
+                return parser;
+            } catch (IOException e) {
+                lspServer.logError("Error opening %s for ASM parsing", path);
+                return null;
+            }
+        }
+    }
+
     @Override
     public CompletableFuture<DocumentDiagnosticReport> diagnostic(DocumentDiagnosticParams params) {
-        return CompletableFuture.supplyAsync(() -> {
-            URI uri = URI.create(params.getTextDocument().getUri());
-            String p = Path.of(uri).toAbsolutePath().toString();
-            lspServer.logDebug("Async diagnostics for %s", uri);
-
-            ArrayList<Diagnostic> diagnostics = new ArrayList<>();
-            lspServer.addFile(uri);
-            if (lspServer.errors == null) {
-                lspServer.triggerDiagnostics();
-            }
-            for (ELAnalysisError err : lspServer.errors) {
-                if (err.span == null) {
-                    continue;
+        URI uri = URI.create(params.getTextDocument().getUri());
+        Path path = Path.of(uri);
+        if (uri.getPath().endsWith(".asm")) {
+            return CompletableFuture.supplyAsync(() -> {
+                ASMParser parser = getParser(path);
+                if(parser == null)
+                    return null;
+                ArrayList<Diagnostic> diagnostics = new ArrayList<>();
+                
+                for (AsmError err : parser.errors) {
+                    if (err.span == null) {
+                        continue;
+                    }
+                    diagnostics.add(new Diagnostic(err.span.toRange(), err.message, err.severity.severity, "emulatorasm"));
                 }
-                if (!err.span.start().file().equals(p))
-                    continue;
-                diagnostics.add(new Diagnostic(err.span.toRange(), err.reason, err.severity.severity, "emulatorlang"));
-            }
-            return new DocumentDiagnosticReport(new RelatedFullDocumentDiagnosticReport(diagnostics));
+                return new DocumentDiagnosticReport(new RelatedFullDocumentDiagnosticReport(diagnostics));
+            });
+        } else if (uri.getPath().endsWith(".el")) {
+            return CompletableFuture.supplyAsync(() -> {
+                String p = Path.of(uri).toAbsolutePath().toString();
+                lspServer.logDebug("Async diagnostics for %s", uri);
+
+                ArrayList<Diagnostic> diagnostics = new ArrayList<>();
+                lspServer.addFile(uri);
+                if (lspServer.errors == null) {
+                    lspServer.triggerDiagnostics();
+                }
+                for (ELAnalysisError err : lspServer.errors) {
+                    if (err.span == null) {
+                        continue;
+                    }
+                    if (!err.span.start().file().equals(p))
+                        continue;
+                    diagnostics.add(new Diagnostic(err.span.toRange(), err.reason, err.severity.severity, "emulatorlang"));
+                }
+                return new DocumentDiagnosticReport(new RelatedFullDocumentDiagnosticReport(diagnostics));
+            });
+        }
+        return CompletableFuture.supplyAsync(() -> {
+            return null;
         });
     }
     
     @Override
     public CompletableFuture<Hover> hover(HoverParams params) {
-        return CompletableFuture.supplyAsync(() -> {
-            URI uri = URI.create(params.getTextDocument().getUri());
-            lspServer.lsLock.lock();
-            ProgramUnit unit = lspServer.getUnit(uri);
-            if (unit == null) {
-                lspServer.logError("Hover was requested for %s, but no program unit could be found", uri);
-                lspServer.lsLock.unlock();
-                return null;
-            }
-            Position hoverPos = params.getPosition();
+        URI uri = URI.create(params.getTextDocument().getUri());
+        Path path = Path.of(uri);
+        if (uri.getPath().endsWith(".asm")) {
+            return CompletableFuture.supplyAsync(() -> {
+                ASMParser parser = getParser(path);
+                if(parser == null)
+                    return null;
+                
+                Position hoverPos = params.getPosition();
 
-            for (ELSymbol symbol : unit.symbols) {
-                if (symbol.hasText() && symbol.contains(hoverPos, null)) {
-                    lspServer.lsLock.unlock();
-                    return new Hover(new MarkupContent("markdown", symbol.getText()));
-                } else {
-                    // lspServer.logDebug("Hover was requested for %s, but didn't match symbol "+symbol.type+": "+symbol.text, uri);
+                for (ELSymbol symbol : parser.symbols) {
+                    if (symbol.hasText() && symbol.contains(hoverPos, null)) {
+                        return new Hover(new MarkupContent("markdown", symbol.getText()));
+                    }
                 }
-            }
+                return null;
+            });
+        } else if (uri.getPath().endsWith(".el")) {
+            return CompletableFuture.supplyAsync(() -> {
+                lspServer.lsLock.lock();
+                ProgramUnit unit = lspServer.getUnit(uri);
+                if (unit == null) {
+                    lspServer.logError("Hover was requested for %s, but no program unit could be found", uri);
+                    lspServer.lsLock.unlock();
+                    return null;
+                }
+                Position hoverPos = params.getPosition();
 
-            if (unit.variables.isEmpty() && unit.functions.isEmpty() && unit.symbols.isEmpty()) {
-                lspServer.logWarn("Hover was requested for %s, but program unit had no hover-able symbols", uri);
+                for (ELSymbol symbol : unit.symbols) {
+                    if (symbol.hasText() && symbol.contains(hoverPos, null)) {
+                        lspServer.lsLock.unlock();
+                        return new Hover(new MarkupContent("markdown", symbol.getText()));
+                    } else {
+                        // lspServer.logDebug("Hover was requested for %s, but didn't match symbol "+symbol.type+": "+symbol.text, uri);
+                    }
+                }
+
+                if (unit.variables.isEmpty() && unit.functions.isEmpty() && unit.symbols.isEmpty()) {
+                    lspServer.logWarn("Hover was requested for %s, but program unit had no hover-able symbols", uri);
+                    lspServer.lsLock.unlock();
+                    return null;
+                }
                 lspServer.lsLock.unlock();
                 return null;
-            }
-            lspServer.lsLock.unlock();
-            return null;
-        });
+            });
+        }
+        return CompletableFuture.supplyAsync(() -> null);
     }
 
     private class SemanticTokenState {
@@ -206,21 +293,38 @@ public class ELTextDocumentService implements TextDocumentService {
     @Override
     public CompletableFuture<SemanticTokens> semanticTokensFull(SemanticTokensParams params) {
         URI uri = URI.create(params.getTextDocument().getUri());
-        return CompletableFuture.supplyAsync(() -> {
-            lspServer.lsLock.lock();
-            ProgramUnit unit = lspServer.getUnit(uri);
-            if (unit == null) {
-                lspServer.logError("Semantic tokens were requested for %s, but no program unit could be found", uri);
+        Path path = Path.of(uri);
+        if (uri.getPath().endsWith(".asm")) {
+            return CompletableFuture.supplyAsync(() -> {
+                ASMParser parser = getParser(path);
+                if(parser == null)
+                    return null;
+
+                SemanticTokenState state = new SemanticTokenState();
+                state.addTokens(parser.symbols);
+                lspServer.logDebug("Providing semantic tokens for %s (%d total symbols)", uri, parser.symbols.size());
+                return new SemanticTokens(state.data);
+            });
+        } else if (uri.getPath().endsWith(".el")) {
+            return CompletableFuture.supplyAsync(() -> {
+                lspServer.lsLock.lock();
+                ProgramUnit unit = lspServer.getUnit(uri);
+                if (unit == null) {
+                    lspServer.logError("Semantic tokens were requested for %s, but no program unit could be found",
+                            uri);
+                    lspServer.lsLock.unlock();
+                    return null;
+                }
+
+                SemanticTokenState state = new SemanticTokenState();
+                state.addTokens(unit.symbols);
+                lspServer.logDebug("Providing semantic tokens for %s (%d total symbols)", uri, unit.symbols.size());
                 lspServer.lsLock.unlock();
-                return null;
-            }
-        
-            SemanticTokenState state = new SemanticTokenState();
-            state.addTokens(unit.symbols);
-            lspServer.logDebug("Providing semantic tokens for %s (%d total symbols)", uri, unit.symbols.size());
-            lspServer.lsLock.unlock();
-            return new SemanticTokens(state.data);
-        });
+                return new SemanticTokens(state.data);
+            });
+        }
+        lspServer.logWarn("Semantic tokens for %s but unknown file type", uri);
+        return CompletableFuture.supplyAsync(() -> null);
     }
 
 }

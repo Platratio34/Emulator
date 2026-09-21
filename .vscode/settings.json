@@ -6,6 +6,7 @@
         "kalloc",
         "kernal",
         "kfree",
+        "lineend",
         "LSHIFT",
         "machinecode",
         "malloc",

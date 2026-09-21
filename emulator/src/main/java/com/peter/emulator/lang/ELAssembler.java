@@ -22,9 +22,20 @@ public class ELAssembler {
         out += "\n";
         if (f.hasAnnotation(ELSyscallAnnotation.class)) {
             ELSyscallAnnotation syscall = f.getAnnotation(ELSyscallAnnotation.class);
-            out += "\n#syscall " + syscall.index + " " + f.getQualifiedName().replaceAll("\\.", "_");
+            String syscallName = f.getQualifiedName().replaceAll("\\.", "_");
+            out += "\n#syscall " + syscall.index + " " + syscallName;
+            out += "\n#function syscall::" + syscallName;
+            boolean first = true;
+            for (String p : f.paramOrder) {
+                if (!first)
+                    out += ",";
+                out += String.format(" %s %s", p, f.params.get(p).typeString());
+                first = false;
+            }
             out += "\nGOTO PUSH :" + f.getQualifiedName(true);
-            out += "\nSYSRETURN\n";
+            out += "\nSYSRETURN";
+            out += "\n#endfunction " + (f.ret == null ? "void" : f.ret.typeString());
+            out += "\n";
         }
         if (module.entrypoint == f)
             out += "\n:__start";

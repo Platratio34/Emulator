@@ -25,6 +25,22 @@
         "decorator:emulatorlang": "#ffa657",
         "comment:emulatorlang": "#8b949e",
         "string:emulatorlang": "#a5d6ff",
-        "operator:emulatorlang": "#d4d4d"
+        "operator:emulatorlang": "#d4d4d",
+        
+        "keyword:emulatorasm": "#c586c0",
+        "namespace:emulatorasm": "#4ec9b0",
+        "class:emulatorasm": "#4ec9b0",
+        "number:emulatorasm": "#b5cea8",
+        "function:emulatorasm": "#d2a8ff",
+        "variable:emulatorasm": "#42bff5",
+        "variable.readonly:emulatorasm": "#79C0FF",
+        "variable.readonly.defaultLibrary:emulatorasm": "#79C0FF",
+        "variable.defaultLibrary:emulatorasm": "#79C0FF",
+        "variable.static:emulatorasm": "#42bff5",
+        "parameter:emulatorasm": "#ffa657",
+        "decorator:emulatorasm": "#ffa657",
+        "comment:emulatorasm": "#8b949e",
+        "string:emulatorasm": "#a5d6ff",
+        "operator:emulatorasm": "#d4d4d"
     }
 }
