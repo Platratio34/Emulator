@@ -32,9 +32,16 @@ public class TestAndSet extends Instruction {
 
     @Override
     public String toString() {
-        return switch(mode) {
+        return switch (mode) {
             case REG_ADDRESS -> String.format("TEST AND SET %s ? mem[%s]", rg, ra);
             case LIT_ADDRESS -> String.format("TEST AND SET %s ? mem[0x%s]", rg, toHex(data));
+        };
+    }
+    @Override
+    public String getASM() {
+        return switch (mode) {
+            case REG_ADDRESS -> String.format("TEST AND SET %s %s", rg, ra);
+            case LIT_ADDRESS -> String.format("TEST AND SET %s 0x%s", rg, toHex(data));
         };
     }
 

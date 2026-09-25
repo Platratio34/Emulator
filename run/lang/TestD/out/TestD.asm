@@ -2878,27 +2878,21 @@ STACK PUSH r15
 COPY rStack r15
 #stackVar char* str1 -16
 #stackVar char* str2 -12
-#line run\lang\TestD\testd.el 156:10
-#line run\lang\TestD\testd.el 157:14
+#line run\lang\TestD\testd.el 159:10
+#line run\lang\TestD\testd.el 160:14
 SUB r15 r15 16
-#line run\lang\TestD\testd.el 158:14
+#line run\lang\TestD\testd.el 161:14
 LOAD MEM r1 r1
-#line run\lang\TestD\testd.el 159:14
+#line run\lang\TestD\testd.el 162:14
 // str1
  
-#line run\lang\TestD\testd.el 161:14
+#line run\lang\TestD\testd.el 164:14
 SUB r2 r15 12
-#line run\lang\TestD\testd.el 162:14
+#line run\lang\TestD\testd.el 165:14
 LOAD MEM r2 r2 // str2
  
-#line run\lang\TestD\testd.el 164:14
-// test comment
-#line run\lang\TestD\testd.el 165:14
-/*
-#line run\lang\TestD\testd.el 166:14
-mlc test
 #line run\lang\TestD\testd.el 167:14
-*/
+// test comment
  
 #line run\lang\TestD\testd.el 169:14
 :string_equals_loop
@@ -2914,7 +2908,7 @@ GOTO NEQ r4 :string_equals_fail
  
 #line run\lang\TestD\testd.el 176:18
 GOTO NEQ r3 :string_equals_loop
-//  asm{\nSUB r15 r15 16\nLOAD MEM r1 r1\n// str1\n\nSUB r2 r15 12\nLOAD MEM r2 r2 // str2\n\n// test comment\n/*\nmlc test\n*/\n\n:string_equals_loop\nLOAD MEM BYTE r3 r1 INC_RA\nLOAD MEM BYTE r4 r2 INC_RA\n\nSUB r4 r3 r4\nGOTO NEQ r4 :string_equals_fail\n\nGOTO NEQ r3 :string_equals_loop\n}
+//  asm{\nSUB r15 r15 16\nLOAD MEM r1 r1\n// str1\n\nSUB r2 r15 12\nLOAD MEM r2 r2 // str2\n\n// test comment\n\n:string_equals_loop\nLOAD MEM BYTE r3 r1 INC_RA\nLOAD MEM BYTE r4 r2 INC_RA\n\nSUB r4 r3 r4\nGOTO NEQ r4 :string_equals_fail\n\nGOTO NEQ r3 :string_equals_loop\n}
 
 #line run\lang\TestD\testd.el 178:10
 // Reserving r1
@@ -2953,7 +2947,7 @@ GOTO POP
 #function TestD.mainLoop
 STACK PUSH r15
 COPY rStack r15
-#line run\lang\TestD\testd.el 126:10
+#line run\lang\TestD\testd.el 129:10
 :while_condition_39
 // Reserving r1
 // Reserving r1
@@ -2963,7 +2957,7 @@ LOAD MEM r2 &TestD.inputBufferWrite
 SUB r1 r1 r2 // inputBufferRead != inputBufferWrite
 GOTO EQ r1 :while_end_39
 // Releasing r1
-#line run\lang\TestD\testd.el 127:14
+#line run\lang\TestD\testd.el 130:14
 // Reserving r1
 // Reserving r1
 LOAD r1 &TestD.inputBuffer
@@ -2978,7 +2972,7 @@ STACK PUSH BYTE r1
 // Releasing r1
 //  char c = inputBuffer[inputBufferRead];
 
-#line run\lang\TestD\testd.el 128:14
+#line run\lang\TestD\testd.el 131:14
 // Reserving r1
 // Reserving r1
 LOAD MEM BYTE r1 r15 // c
@@ -2989,7 +2983,7 @@ STACK DEC 4
 // Releasing r1
 //  Console.printChar(c);
 
-#line run\lang\TestD\testd.el 129:14
+#line run\lang\TestD\testd.el 132:14
 // Reserving r1
 // Reserving r2
 // Reserving r2
@@ -3005,14 +2999,14 @@ STORE r1 r2
 // Releasing r1
 //  inputBufferRead = (inputBufferRead + 1) & 127;
 
-#line run\lang\TestD\testd.el 130:14
+#line run\lang\TestD\testd.el 133:14
 // Reserving r1
 // Reserving r1
 LOAD MEM BYTE r1 r15
 INC r1 -10
 GOTO NEQ r1 :if_else_40 // c == \n
 // Releasing r1
-#line run\lang\TestD\testd.el 131:18
+#line run\lang\TestD\testd.el 134:18
 // Reserving r1
 // Reserving r2
 // Reserving r2
@@ -3029,7 +3023,7 @@ STORE BYTE r1 r2
 // Releasing r1
 //  tempCmd[tempCmdI] = 0;
 
-#line run\lang\TestD\testd.el 132:18
+#line run\lang\TestD\testd.el 135:18
 // Reserving r1
 STACK INC 4
 // Reserving r2
@@ -3038,7 +3032,7 @@ STACK POP BYTE r1
 // Releasing r2
 GOTO NEQ r1 :if_end_41 // !processCommand()
 // Releasing r1
-#line run\lang\TestD\testd.el 133:22
+#line run\lang\TestD\testd.el 136:22
 // Reserving r1
 LOAD r1 0 // false
 // Reserving r2
@@ -3053,7 +3047,7 @@ GOTO :func_exit_TestD.mainLoop
 :if_end_41
 //  if(! processCommand()) {return false;}
 
-#line run\lang\TestD\testd.el 135:18
+#line run\lang\TestD\testd.el 138:18
 // Reserving r1
 // Reserving r2
 // Reserving r2
@@ -3068,7 +3062,7 @@ STORE r1 r2
 #lineend
 GOTO :if_end_40
 :if_else_40
-#line run\lang\TestD\testd.el 137:18
+#line run\lang\TestD\testd.el 140:18
 // Reserving r1
 // Reserving r2
 // Reserving r2
@@ -3086,7 +3080,7 @@ STORE BYTE r1 r2
 // Releasing r1
 //  tempCmd[tempCmdI] = c;
 
-#line run\lang\TestD\testd.el 138:18
+#line run\lang\TestD\testd.el 141:18
 // Reserving r1
 // Reserving r2
 // Reserving r2
@@ -3114,7 +3108,7 @@ GOTO :while_condition_39
 :while_end_39
 //  while(inputBufferRead != inputBufferWrite) {char c = inputBuffer[inputBufferRead]; Console.printChar(c); inputBufferRead = (inputBufferRead + 1) & 127; if(c == '\n') {tempCmd[tempCmdI] = 0; if(! processCommand()) {return false;} tempCmdI = 0;} else {tempCmd[tempCmdI] = c; tempCmdI = (tempCmdI + 1) & 63;}}
 
-#line run\lang\TestD\testd.el 141:10
+#line run\lang\TestD\testd.el 144:10
 // Reserving r1
 LOAD r1 1 // true
 // Reserving r2
@@ -3159,25 +3153,30 @@ STACK PUSH r15
 COPY rStack r15
 #line run\lang\TestD\testd.el 25:10
 #line run\lang\TestD\testd.el 26:14
-STORE BYTE 'T' r7
-#line run\lang\TestD\testd.el 27:14
-STORE BYTE 'e' r7
-#line run\lang\TestD\testd.el 28:14
-STORE BYTE 's' r7
+#var test [0x1]
+//  asm{\n#var test [0x1]\n}
+
+#line run\lang\TestD\testd.el 28:10
 #line run\lang\TestD\testd.el 29:14
-STORE BYTE 't' r7
+STORE BYTE 'T' r7
 #line run\lang\TestD\testd.el 30:14
-STORE BYTE 'D' r7
+STORE BYTE 'e' r7
 #line run\lang\TestD\testd.el 31:14
+STORE BYTE 's' r7
+#line run\lang\TestD\testd.el 32:14
+STORE BYTE 't' r7
+#line run\lang\TestD\testd.el 33:14
+STORE BYTE 'D' r7
+#line run\lang\TestD\testd.el 34:14
 STORE BYTE '\n' r7
 //  asm{\nSTORE BYTE 'T' r7\nSTORE BYTE 'e' r7\nSTORE BYTE 's' r7\nSTORE BYTE 't' r7\nSTORE BYTE 'D' r7\nSTORE BYTE '\n' r7\n}
 
-#line run\lang\TestD\testd.el 33:10
-#line run\lang\TestD\testd.el 33:10
+#line run\lang\TestD\testd.el 36:10
+#line run\lang\TestD\testd.el 36:10
 LOAD rIH &:TestD.onInterrupt
 //  asm{LOAD rIH &:TestD.onInterrupt};
 
-#line run\lang\TestD\testd.el 34:10
+#line run\lang\TestD\testd.el 37:10
 // Reserving r1
 // Reserving r2
 LOAD r2 TestD.KEYBOARD_CONTROL
@@ -3189,18 +3188,18 @@ STORE BYTE r1 r2
 // Releasing r1
 // * KEYBOARD_CONTROL = 0x03;
 
-#line run\lang\TestD\testd.el 35:10
+#line run\lang\TestD\testd.el 38:10
 // Reserving r1
 GOTO PUSH :CharacterDisplay.setup
 // Releasing r1
 //  CharacterDisplay.setup();
 
-#line run\lang\TestD\testd.el 36:10
+#line run\lang\TestD\testd.el 39:10
 #stackVar int32 b
 STACK INC 4
 //  int32 b;
 
-#line run\lang\TestD\testd.el 37:10
+#line run\lang\TestD\testd.el 40:10
 // Reserving r1
 // Reserving r1
 COPY rPgm r1 // SysD.rPgm
@@ -3209,7 +3208,7 @@ STACK PUSH r1
 // Releasing r1
 //  int32 a = SysD.rPgm;
 
-#line run\lang\TestD\testd.el 38:10
+#line run\lang\TestD\testd.el 41:10
 // Reserving r1
 // Reserving r2
 // Reserving r2
@@ -3223,12 +3222,12 @@ STORE r1 r2
 // Releasing r1
 //  v = a;
 
-#line run\lang\TestD\testd.el 39:10
+#line run\lang\TestD\testd.el 42:10
 #stackVar char c
 STACK INC 4
 //  char c;
 
-#line run\lang\TestD\testd.el 40:10
+#line run\lang\TestD\testd.el 43:10
 // Reserving r1
 // Reserving r2
 ADD r2 r15 8
@@ -3241,7 +3240,7 @@ STORE BYTE r1 r2
 // Releasing r1
 //  c = b;
 
-#line run\lang\TestD\testd.el 42:10
+#line run\lang\TestD\testd.el 45:10
 // Reserving r1
 // Reserving r2
 // Reserving r2
@@ -3260,7 +3259,7 @@ STORE r1 r2
 // Releasing r1
 //  b = a + 1 + c;
 
-#line run\lang\TestD\testd.el 43:10
+#line run\lang\TestD\testd.el 46:10
 // Reserving r1
 // Reserving r2
 ADD r2 r15 8
@@ -3272,7 +3271,7 @@ STORE BYTE r1 r2
 // Releasing r1
 //  c = 32;
 
-#line run\lang\TestD\testd.el 44:10
+#line run\lang\TestD\testd.el 47:10
 // Reserving r1
 ADD r1 r15 8
 // Reserving r1
@@ -3284,25 +3283,25 @@ STACK DEC 4
 // Releasing r1
 //  funcb(c);
 
-#line run\lang\TestD\testd.el 45:10
-#line run\lang\TestD\testd.el 46:14
+#line run\lang\TestD\testd.el 48:10
+#line run\lang\TestD\testd.el 49:14
 LOAD r1 64
-#line run\lang\TestD\testd.el 47:14
+#line run\lang\TestD\testd.el 50:14
 LOAD r2 &TestD.v
-#line run\lang\TestD\testd.el 48:14
+#line run\lang\TestD\testd.el 51:14
 STORE r1 r2
 //  asm{\nLOAD r1 64\nLOAD r2 &TestD.v\nSTORE r1 r2\n}
 
-#line run\lang\TestD\testd.el 50:10
+#line run\lang\TestD\testd.el 53:10
 // Test
 //  asm(str);
 
-#line run\lang\TestD\testd.el 52:10
+#line run\lang\TestD\testd.el 55:10
 #stackVar StructA sA
 STACK INC 8
 //  StructA sA;
 
-#line run\lang\TestD\testd.el 53:10
+#line run\lang\TestD\testd.el 56:10
 // Reserving r1
 ADD r1 r15 12
 // Reserving r1 // &sA
@@ -3313,7 +3312,7 @@ STACK DEC 4
 // Releasing r1
 //  testA(& sA);
 
-#line run\lang\TestD\testd.el 56:10
+#line run\lang\TestD\testd.el 59:10
 // Reserving r1
 #define exp_str_inline_4 "Starting EmulatorOS\n\n\0"
 LOAD r1 &exp_str_inline_4 // Starting EmulatorOS\n\n\0
@@ -3324,7 +3323,7 @@ STACK DEC 4
 // Releasing r1
 //  Console.printStr("Starting EmulatorOS\n\n\0");
 
-#line run\lang\TestD\testd.el 58:10
+#line run\lang\TestD\testd.el 61:10
 // Reserving r1
 // Reserving r1
 LOAD r1 &TestD.testStr // &testStr
@@ -3337,7 +3336,7 @@ STACK DEC 8
 // Releasing r1
 //  Console.printStr(& testStr, 5);
 
-#line run\lang\TestD\testd.el 59:10
+#line run\lang\TestD\testd.el 62:10
 // Reserving r1
 // Reserving r1
 LOAD r1 &TestD.testStr2 // &testStr2
@@ -3348,7 +3347,7 @@ STACK DEC 4
 // Releasing r1
 //  Console.printStr(& testStr2);
 
-#line run\lang\TestD\testd.el 60:10
+#line run\lang\TestD\testd.el 63:10
 // Reserving r1
 LOAD r1 'a' // a
 STACK PUSH BYTE r1
@@ -3358,7 +3357,7 @@ STACK DEC 4
 // Releasing r1
 //  Console.printChar('a');
 
-#line run\lang\TestD\testd.el 61:10
+#line run\lang\TestD\testd.el 64:10
 // Reserving r1
 LOAD r1 '\n' // \n
 STACK PUSH BYTE r1
@@ -3368,12 +3367,12 @@ STACK DEC 4
 // Releasing r1
 //  Console.printChar('\n');
 
-#line run\lang\TestD\testd.el 63:10
+#line run\lang\TestD\testd.el 66:10
 #stackVar char[16] str2
 STACK INC 16
 //  char[16] str2;
 
-#line run\lang\TestD\testd.el 64:10
+#line run\lang\TestD\testd.el 67:10
 // Reserving r1
 LOAD r1 4096 // 0x1000
 STACK PUSH r1
@@ -3386,7 +3385,7 @@ STACK DEC 8
 // Releasing r1
 //  Console.intToDec(0x1000, & str2);
 
-#line run\lang\TestD\testd.el 65:10
+#line run\lang\TestD\testd.el 68:10
 // Reserving r1
 ADD r1 r15 20
 // Reserving r1 // &str2
@@ -3397,7 +3396,7 @@ STACK DEC 4
 // Releasing r1
 //  Console.printStr(& str2);
 
-#line run\lang\TestD\testd.el 66:10
+#line run\lang\TestD\testd.el 69:10
 // Reserving r1
 LOAD r1 '\n' // \n
 STACK PUSH BYTE r1
@@ -3407,7 +3406,7 @@ STACK DEC 4
 // Releasing r1
 //  Console.printChar('\n');
 
-#line run\lang\TestD\testd.el 67:10
+#line run\lang\TestD\testd.el 70:10
 // Reserving r1
 LOAD r1 'd' // d
 STACK PUSH BYTE r1
@@ -3417,7 +3416,7 @@ STACK DEC 4
 // Releasing r1
 //  Console.printChar('d');
 
-#line run\lang\TestD\testd.el 68:10
+#line run\lang\TestD\testd.el 71:10
 // Reserving r1
 LOAD r1 '\n' // \n
 STACK PUSH BYTE r1
@@ -3427,17 +3426,17 @@ STACK DEC 4
 // Releasing r1
 //  Console.printChar('\n');
 
-#line run\lang\TestD\testd.el 74:10
+#line run\lang\TestD\testd.el 77:10
 #stackVar int32 fh
 STACK INC 4
 //  int32 fh;
 
-#line run\lang\TestD\testd.el 75:10
+#line run\lang\TestD\testd.el 78:10
 #stackVar int32 rstat
 STACK INC 4
 //  int32 rstat;
 
-#line run\lang\TestD\testd.el 76:10
+#line run\lang\TestD\testd.el 79:10
 // Reserving r1
 #define exp_str_inline_5 "test.txt\0"
 LOAD r1 &exp_str_inline_5 // test.txt\0
@@ -3454,14 +3453,14 @@ STACK DEC 12
 // Releasing r1
 //  FS.openFile("test.txt\0", & rstat, & fh);
 
-#line run\lang\TestD\testd.el 77:10
+#line run\lang\TestD\testd.el 80:10
 // Reserving r1
 ADD r1 r15 36
 // Reserving r1
 LOAD MEM r1 r1
 GOTO NEQ r1 :if_else_42 // fh == 0
 // Releasing r1
-#line run\lang\TestD\testd.el 78:14
+#line run\lang\TestD\testd.el 81:14
 // Reserving r1
 #define exp_str_inline_6 "ERROR\n\0"
 LOAD r1 &exp_str_inline_6 // ERROR\n\0
@@ -3472,7 +3471,7 @@ STACK DEC 4
 // Releasing r1
 //  Console.printStr("ERROR\n\0");
 
-#line run\lang\TestD\testd.el 79:14
+#line run\lang\TestD\testd.el 82:14
 // Reserving r1
 ADD r1 r15 40
 // Reserving r1
@@ -3487,7 +3486,7 @@ STACK DEC 8
 // Releasing r1
 //  Console.intToHex(rstat, & str2);
 
-#line run\lang\TestD\testd.el 80:14
+#line run\lang\TestD\testd.el 83:14
 // Reserving r1
 ADD r1 r15 20
 // Reserving r1 // &str2
@@ -3501,7 +3500,7 @@ STACK DEC 4
 #lineend
 GOTO :if_end_42
 :if_else_42
-#line run\lang\TestD\testd.el 82:14
+#line run\lang\TestD\testd.el 85:14
 // Reserving r1
 #define exp_str_inline_7 "Opened\n\0"
 LOAD r1 &exp_str_inline_7 // Opened\n\0
@@ -3512,22 +3511,22 @@ STACK DEC 4
 // Releasing r1
 //  Console.printStr("Opened\n\0");
 
-#line run\lang\TestD\testd.el 83:14
+#line run\lang\TestD\testd.el 86:14
 #stackVar char[32] buffer
 STACK INC 32
 //  char[32] buffer;
 
-#line run\lang\TestD\testd.el 84:14
+#line run\lang\TestD\testd.el 87:14
 #stackVar int32 read
 STACK INC 4
 //  int32 read;
 
-#line run\lang\TestD\testd.el 85:14
+#line run\lang\TestD\testd.el 88:14
 #stackVar int32 state
 STACK INC 4
 //  int32 state;
 
-#line run\lang\TestD\testd.el 86:14
+#line run\lang\TestD\testd.el 89:14
 // Reserving r1
 ADD r1 r15 36
 // Reserving r1
@@ -3552,7 +3551,7 @@ STACK DEC 24
 // Releasing r1
 //  FS.readFileSync(fh, & buffer, 32, 0, & read, & state);
 
-#line run\lang\TestD\testd.el 88:14
+#line run\lang\TestD\testd.el 91:14
 // Reserving r1
 ADD r1 r15 80
 // Reserving r1
@@ -3567,7 +3566,7 @@ STACK DEC 8
 // Releasing r1
 //  Console.intToHex(state, & str2);
 
-#line run\lang\TestD\testd.el 89:14
+#line run\lang\TestD\testd.el 92:14
 // Reserving r1
 ADD r1 r15 20
 // Reserving r1 // &str2
@@ -3578,7 +3577,7 @@ STACK DEC 4
 // Releasing r1
 //  Console.printStr(& str2);
 
-#line run\lang\TestD\testd.el 92:14
+#line run\lang\TestD\testd.el 95:14
 // Reserving r1
 ADD r1 r15 76
 // Reserving r1
@@ -3593,7 +3592,7 @@ STACK DEC 8
 // Releasing r1
 //  Console.intToHex(read, & str2);
 
-#line run\lang\TestD\testd.el 93:14
+#line run\lang\TestD\testd.el 96:14
 // Reserving r1
 ADD r1 r15 20
 // Reserving r1 // &str2
@@ -3606,7 +3605,7 @@ STACK DEC 8
 // Releasing r1
 //  Console.printStr(& str2, 0);
 
-#line run\lang\TestD\testd.el 95:14
+#line run\lang\TestD\testd.el 98:14
 // Reserving r1
 LOAD r1 '\n' // \n
 STACK PUSH BYTE r1
@@ -3616,7 +3615,7 @@ STACK DEC 4
 // Releasing r1
 //  Console.printChar('\n');
 
-#line run\lang\TestD\testd.el 96:14
+#line run\lang\TestD\testd.el 99:14
 // Reserving r1
 ADD r1 r15 44
 // Reserving r1 // &buffer
@@ -3640,7 +3639,7 @@ STACK DEC 40
 :if_end_42
 //  if(fh == 0) {Console.printStr("ERROR\n\0"); Console.intToHex(rstat, & str2); Console.printStr(& str2);} else {Console.printStr("Opened\n\0"); char[32] buffer; int32 read; int32 state; FS.readFileSync(fh, & buffer, 32, 0, & read, & state); Console.intToHex(state, & str2); Console.printStr(& str2); Console.intToHex(read, & str2); Console.printStr(& str2, 0); Console.printChar('\n'); Console.printStr(& buffer, read);}
 
-#line run\lang\TestD\testd.el 106:10
+#line run\lang\TestD\testd.el 109:10
 // Reserving r1
 // Reserving r2
 LOAD r2 Peripheral.TIMERS
@@ -3657,7 +3656,7 @@ STORE r1 r2
 // Releasing r1
 //  Peripheral.TIMERS[15] |= 0b01 << 28;
 
-#line run\lang\TestD\testd.el 107:10
+#line run\lang\TestD\testd.el 110:10
 // Reserving r1
 // Reserving r2
 LOAD r2 Peripheral.TIMERS
@@ -3672,7 +3671,7 @@ STORE r1 r2
 // Releasing r1
 //  Peripheral.TIMERS[1] = 1000;
 
-#line run\lang\TestD\testd.el 109:10
+#line run\lang\TestD\testd.el 112:10
 // Reserving r1
 LOAD r1 0 // 0
 STACK PUSH r1
@@ -3687,7 +3686,7 @@ STACK DEC 12
 // Releasing r1
 //  CharacterDisplay.write(0, 0, "EmulatorOS\0");
 
-#line run\lang\TestD\testd.el 114:10
+#line run\lang\TestD\testd.el 117:10
 // Reserving r1
 LOAD r1 '>' // >
 STACK PUSH BYTE r1
@@ -3697,7 +3696,7 @@ STACK DEC 4
 // Releasing r1
 //  Console.printChar('>');
 
-#line run\lang\TestD\testd.el 115:10
+#line run\lang\TestD\testd.el 118:10
 :while_condition_43
 // Reserving r1
 STACK INC 4
@@ -3714,7 +3713,7 @@ GOTO :while_condition_43
 :while_end_43
 //  while(mainLoop()) {}
 
-#line run\lang\TestD\testd.el 118:10
+#line run\lang\TestD\testd.el 121:10
 STACK INC 4
 // Reserving r1
 GOTO PUSH :TestD.mainLoop
@@ -3722,7 +3721,7 @@ STACK DEC 4
 // Releasing r1
 //  mainLoop();
 
-#line run\lang\TestD\testd.el 120:10
+#line run\lang\TestD\testd.el 123:10
 // Reserving r1
 #define exp_str_inline_9 "Stopping...\0"
 LOAD r1 &exp_str_inline_9 // Stopping...\0
@@ -3743,7 +3742,7 @@ HALT
 #function TestD.processCommand
 STACK PUSH r15
 COPY rStack r15
-#line run\lang\TestD\testd.el 145:10
+#line run\lang\TestD\testd.el 148:10
 // Reserving r1
 LOAD r1 ':' // :
 STACK PUSH BYTE r1
@@ -3753,7 +3752,7 @@ STACK DEC 4
 // Releasing r1
 //  Console.printChar(':');
 
-#line run\lang\TestD\testd.el 146:10
+#line run\lang\TestD\testd.el 149:10
 // Reserving r1
 // Reserving r1
 LOAD r1 &TestD.tempCmd // &tempCmd
@@ -3764,7 +3763,7 @@ STACK DEC 4
 // Releasing r1
 //  Console.printStr(& tempCmd);
 
-#line run\lang\TestD\testd.el 147:10
+#line run\lang\TestD\testd.el 150:10
 // Reserving r1
 LOAD r1 '\n' // \n
 STACK PUSH BYTE r1
@@ -3774,7 +3773,7 @@ STACK DEC 4
 // Releasing r1
 //  Console.printChar('\n');
 
-#line run\lang\TestD\testd.el 148:10
+#line run\lang\TestD\testd.el 151:10
 // Reserving r1
 STACK INC 4
 // Reserving r2
@@ -3791,7 +3790,7 @@ STACK POP BYTE r1
 // Releasing r2 // stringEquals(& tempCmd, "STOP\0")
 GOTO EQ r1 :if_end_44
 // Releasing r1
-#line run\lang\TestD\testd.el 149:14
+#line run\lang\TestD\testd.el 152:14
 // Reserving r1
 LOAD r1 0 // false
 // Reserving r2
@@ -3806,7 +3805,7 @@ GOTO :func_exit_TestD.processCommand
 :if_end_44
 //  if(stringEquals(& tempCmd, "STOP\0")) {return false;}
 
-#line run\lang\TestD\testd.el 151:10
+#line run\lang\TestD\testd.el 154:10
 // Reserving r1
 LOAD r1 '>' // >
 STACK PUSH BYTE r1
@@ -3816,7 +3815,7 @@ STACK DEC 4
 // Releasing r1
 //  Console.printChar('>');
 
-#line run\lang\TestD\testd.el 152:10
+#line run\lang\TestD\testd.el 155:10
 // Reserving r1
 LOAD r1 1 // true
 // Reserving r2

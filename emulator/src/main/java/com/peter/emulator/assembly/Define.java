@@ -12,6 +12,7 @@ public class Define {
     public final boolean isAddress;
     public boolean isLabel;
     protected boolean resolved = false;
+    protected boolean isZero = false;
 
     public int size = 0;
 

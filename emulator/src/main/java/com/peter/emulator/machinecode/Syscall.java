@@ -61,16 +61,16 @@ public class Syscall extends Instruction {
     }
 
     public static Syscall fromBytecode(int bytecode, int next) {
-        if((bytecode & 0xff00_0000) != Operator.SYSCALL.id) {
-            return null;
-        }
+        // if((bytecode & 0xff00_0000) != Operator.SYSCALL.id) {
+        //     return null;
+        // }
         Operation operation = Operation.fromBytecode(bytecode);
         switch (operation) {
             case FUNCTION -> {
                 return new Syscall(operation, bytecode & 0xffff);
             }
             case RETURN -> {
-                new Syscall(operation, 0);
+                return new Syscall(operation, 0);
             }
             case GOTO -> {
                 return new Syscall(operation, Reg.from(bytecode));
@@ -88,6 +88,7 @@ public class Syscall extends Instruction {
                 return new Syscall(operation, Reg.from(bytecode));
             }
         }
+        System.err.println("HDWGH? " + toHexLead(bytecode & 0x00ff_0000) + " " + operation);
         return null;
     }
 
@@ -98,10 +99,16 @@ public class Syscall extends Instruction {
 
     @Override
     public String toString() {
-        switch(operation) {
-            case FUNCTION -> { return String.format("SYSCALL 0x%04x", data); }
-            case RETURN -> { return "SYSCALL RET"; }
-            case GOTO -> { return String.format("SYSGOTO %s", MachineCode.translateReg(data)); }
+        switch (operation) {
+            case FUNCTION -> {
+                return String.format("SYSCALL 0x%04x", data);
+            }
+            case RETURN -> {
+                return "SYSRETURN";
+            }
+            case GOTO -> {
+                return String.format("SYSGOTO %s", MachineCode.translateReg(data));
+            }
             case INTERRUPT -> {
                 return switch (interruptOption) {
                     case REGISTER -> String.format("INTERRUPT %s", MachineCode.translateReg(data));
@@ -109,9 +116,15 @@ public class Syscall extends Instruction {
                     case RETURN -> "INTERRUPT RET";
                 };
             }
-            case TRANSLATE -> { return String.format("TRANSLATE %s", MachineCode.translateReg(data)); }
+            case TRANSLATE -> {
+                return String.format("TRANSLATE %s", MachineCode.translateReg(data));
+            }
         }
         return String.format("SYSCALL UNKNOWN (0x%s)", toHex(getBytecode()));
+    }
+    @Override
+    public String getASM() {
+        return toString();
     }
 
     public enum Operation {
@@ -138,7 +151,15 @@ public class Syscall extends Instruction {
         }
 
         public static Operation fromBytecode(int bytecode) {
-            return byId.getOrDefault(bytecode & 0x00ff_0000, FUNCTION);
+            return switch ((bytecode >> 16) & 0xff) {
+                case 0x0 -> FUNCTION;
+                case 0x1 -> RETURN;
+                case 0x2 -> GOTO;
+                case 0x3 -> INTERRUPT;
+                case 0x4 -> TRANSLATE;
+
+                default -> null;
+            };
         }
     }
 

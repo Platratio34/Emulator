@@ -51,4 +51,9 @@ public class SetInstruction extends Instruction {
             default -> String.format("UNKNOWN (0x%s)", toHex(getBytecode()));
         };
     }
+
+    @Override
+    public String getASM() {
+        return toString();
+    }
 }

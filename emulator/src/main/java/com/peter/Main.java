@@ -11,12 +11,16 @@ import org.eclipse.lsp4j.services.LanguageClient;
 import org.json.JSONException;
 
 import com.peter.emulator.Emulator;
+import com.peter.emulator.assembly.ASMParser;
+import com.peter.emulator.assembly.AsmError;
 import com.peter.emulator.assembly.Assembler;
 import com.peter.emulator.assembly.AssemblerError;
+import com.peter.emulator.assembly.Disassembler;
 import com.peter.emulator.debug.Debugger;
 import com.peter.emulator.lang.ELAnalysisError;
 import com.peter.emulator.lang.ELAnalysisError.Severity;
 import com.peter.emulator.lang.LanguageServer;
+import com.peter.emulator.lang.Location;
 import com.peter.emulator.lang.ProgramModule;
 import com.peter.emulator.languageserver.ELLanguageServer;
 
@@ -198,13 +202,23 @@ public class Main {
 
         Path p = ROOT_PATH.resolve("lang/TestD/out/TestD.asm");
 
+
+        ASMParser parser;
         Assembler assembler = new Assembler();
         assembler.setKernalOffset();
         try {
             assembler.setSource(p);
+            parser = new ASMParser(ls.fileProvider, Files.readString(p), new Location("testD.asm",1,1), 0x1000);
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
+            return;
+        }
+        if (!parser.parse()) {
+            System.err.println("Error assembling (new)");
+            for (AsmError err : parser.errors) {
+                System.err.println(err);
+            }
             return;
         }
         if (!assembler.assemble()) {
@@ -219,6 +233,12 @@ public class Main {
         }
         try {
             Files.write(ROOT_PATH.resolve("devices/vd0/kernal.bin"), Assembler.toBytes(assembler.build()), StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            Files.write(ROOT_PATH.resolve("devices/vd0/kernal2.bin"), parser.buildBytes(), StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            
+            new Disassembler(ROOT_PATH.resolve("devices/vd0/kernal.bin"),
+                    ROOT_PATH.resolve("devices/vd0/kernal.asm"));
+            new Disassembler(ROOT_PATH.resolve("devices/vd0/kernal2.bin"),
+                    ROOT_PATH.resolve("devices/vd0/kernal2.asm"));
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

@@ -63,7 +63,13 @@ public class AsmError {
     public static AsmError info(String message) {
         return new AsmError(Severity.INFO, null, message);
     }
+
     public static AsmError info(String message, Object... args) {
         return new AsmError(Severity.INFO, null, message, args);
+    }
+    
+    @Override
+    public String toString() {
+        return String.format("AsmError: %s: %s (@ %s)", severity, message, span.start());
     }
 }

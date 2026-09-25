@@ -116,12 +116,25 @@ public class Load extends Instruction {
 
     @Override
     public String toString() {
-        return switch(mode) {
+        return switch (mode) {
             case LITERAL -> String.format("LOAD %s <- 0x%s", rg.string, toHex(data));
             case COPY -> String.format("COPY %s -> %s", ra, rg);
 
             case LITERAL_ADDRESS -> String.format("LOAD MEM %s %s <- mem[0x%s]", size, rg, toHex(data));
             case MEMORY -> String.format("LOAD MEM %s %s <- mem[%s]", size, rg, ra);
+
+            default -> String.format("LOAD UNKNOWN (0x%s)", toHex(getBytecode()));
+        } + (incRA ? " INC_RA" : "");
+    }
+    
+    @Override
+    public String getASM() {
+        return switch (mode) {
+            case LITERAL -> String.format("LOAD %s 0x%s", rg.string, toHex(data));
+            case COPY -> String.format("COPY %s %s", ra, rg);
+
+            case LITERAL_ADDRESS -> String.format("LOAD MEM %s %s 0x%s", size, rg, toHex(data));
+            case MEMORY -> String.format("LOAD MEM %s %s %s", size, rg, ra);
 
             default -> String.format("LOAD UNKNOWN (0x%s)", toHex(getBytecode()));
         } + (incRA ? " INC_RA" : "");

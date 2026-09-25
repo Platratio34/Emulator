@@ -121,12 +121,12 @@ public class StoreInstruction extends Instruction {
 
     @Override
     public String toString() {
-        String sizeStr = switch(size) {
+        String sizeStr = switch (size) {
             case WORD -> "";
             case SHORT -> " SHORT";
             case BYTE -> " BYTE";
         };
-        String out =  switch(source) {
+        String out = switch (source) {
             case REG -> String.format("STORE%s %s -> mem[%s]", sizeStr, rg.string, ra.string);
             case MEM -> String.format("COPY%s mem[%s] -> mem[%s]", sizeStr, rg.string, ra.string);
             case VAL -> String.format("STORE%s 0x%s -> mem[%s]", sizeStr, toHex(data), ra.string);
@@ -134,10 +134,34 @@ public class StoreInstruction extends Instruction {
 
             default -> String.format("STORE UNKNOWN (0x%s)", toHex(getBytecode()));
         };
-        if(incRG) {
+        if (incRG) {
             out += " INC_RG";
         }
-        if(incRA) {
+        if (incRA) {
+            out += " INC_RA";
+        }
+        return out;
+    }
+    
+    @Override
+    public String getASM() {
+        String sizeStr = switch (size) {
+            case WORD -> "";
+            case SHORT -> " SHORT";
+            case BYTE -> " BYTE";
+        };
+        String out = switch (source) {
+            case REG -> String.format("STORE%s %s %s", sizeStr, rg, ra);
+            case MEM -> String.format("COPY%s %s %s", sizeStr, rg, ra);
+            case VAL -> String.format("STORE%s 0x%s %s", sizeStr, toHex(data), ra);
+            case ADDR -> String.format("STORE%s %s 0x%s", sizeStr, rg, toHex(data));
+
+            default -> String.format("STORE UNKNOWN (0x%s)", toHex(getBytecode()));
+        };
+        if (incRG) {
+            out += " INC_RG";
+        }
+        if (incRA) {
             out += " INC_RA";
         }
         return out;

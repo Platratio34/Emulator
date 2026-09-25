@@ -2,7 +2,7 @@ package com.peter.emulator.machinecode;
 
 import java.util.HashMap;
 
-public class Instruction {
+public abstract class Instruction {
 
     public final Operator op;
     public int data = 0;
@@ -21,17 +21,27 @@ public class Instruction {
 
     public static Instruction fromBytecode(int bytecode, int next) {
         Operator operator = Operator.fromBytecode(bytecode);
-        if(operator.supplier != null) {
-            return operator.supplier.apply(bytecode, next);
+        if (operator == null) {
+            return new Unknown(bytecode);
+        }
+        if (operator.supplier != null) {
+            Instruction instr = operator.supplier.apply(bytecode, next);
+            if (instr == null) {
+                System.out.println(operator);
+            }
+            return instr;
         }
         return new Generic(bytecode);
     }
     public boolean hasSecond() {
         return false;
     }
+
     public int getSecondBytecode() {
         return 0;
     }
+    
+    public abstract String getASM();
 
     public static class Unknown extends Instruction {
 
@@ -46,7 +56,13 @@ public class Instruction {
 
         @Override
         public String toString() {
-            return String.format("0x%02x %02x %02x %02x", data >> 24, (data >> 16) & 0xff, (data >> 8) & 0xff, data & 0xff);
+            return String.format("0x%02x %02x %02x %02x", data >> 24, (data >> 16) & 0xff, (data >> 8) & 0xff,
+                    data & 0xff);
+        }
+        
+        @Override
+        public String getASM() {
+            return toString();
         }
     }
 
@@ -64,13 +80,28 @@ public class Instruction {
         public String toString() {
             return String.format("%s 0x%s", op, toHex(data & 0xff_ffff, 6));
         }
+
+        @Override
+        public String getASM() {
+            return toString();
+        }
     }
 
     public static Instruction Halt() {
-        return new Instruction(Operator.HALT, 0xff_ffff);
+        return new Instruction(Operator.HALT, 0xff_ffff) {
+            @Override
+            public String getASM() {
+                return "HALT";
+            }
+        };
     }
     public static Instruction NoOp() {
-        return new Instruction(Operator.NO_OP, 0x0);
+        return new Instruction(Operator.NO_OP, 0x0) {
+            @Override
+            public String getASM() {
+                return "NO_OP";
+            }
+        };
     }
 
     public static String toHex(int num) {

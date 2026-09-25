@@ -162,9 +162,6 @@ namespace TestD {
             LOAD MEM r2 r2 // str2
 
             // test comment
-            /*
-            mlc test
-            */
             
             :string_equals_loop
                 LOAD MEM BYTE r3 r1 INC_RA

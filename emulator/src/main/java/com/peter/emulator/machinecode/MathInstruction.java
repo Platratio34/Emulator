@@ -162,19 +162,36 @@ public class MathInstruction extends Instruction {
         } else if (operation == Operation.RSHIFT && rotate) {
             return String.format("RRT %s %s %d", rd.string, ra.string, data);
         }
-        return switch(operation) {
-            case ADD, SUB, AND, OR, NAND, NOR, XOR, MUL, DIV -> String.format("%s %s %s %s", operation, rd.string, ra.string, rb.string);
+        return switch (operation) {
+            case ADD, SUB, AND, OR, NAND, NOR, XOR, MUL, DIV ->
+                String.format("%s %s %s %s", operation, rd.string, ra.string, rb.string);
 
             case INC -> String.format("INC %s %d", rd.string, getInc());
 
             case NOT -> String.format("NOT %s %s", rd.string, ra.string);
-            
+
             case ADD_LIT -> String.format("ADD %s %s %d", rd.string, ra.string, data);
             case SUB_LIT -> String.format("SUB %s %s %d", rd.string, ra.string, data);
 
             case LSHIFT, RSHIFT -> String.format("%s %s %s %d", operation, rd.string, ra.string, data);
             default -> String.format("MATH UNKNOWN (0x%08x)", getBytecode());
         };
+    }
+    
+    @Override
+    public String getASM() {
+        if (operation == Operation.LSHIFT) {
+            if (rotate) {
+                return String.format("LRT %s %s %d", rd, ra, data);
+            }
+            return String.format("LSH %s %s %d", rd, ra, data);
+        } else if (operation == Operation.RSHIFT) {
+            if (rotate) {
+                return String.format("RRT %s %s %d", rd, ra, data);
+            }
+            return String.format("RSH %s %s %d", rd, ra, data);
+        }
+        return toString();
     }
 
     public enum Operation {

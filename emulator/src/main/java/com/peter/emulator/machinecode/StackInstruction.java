@@ -87,12 +87,16 @@ public class StackInstruction extends Instruction {
         return switch (operation) {
             case PUSH -> String.format("STACK PUSH %s %s", size, rg.string);
             case POP -> String.format("STACK POP %s %s", size, rg.string);
-            
+
             case INC -> String.format("STACK INC %d", getInc());
             case DEC -> String.format("STACK DEC %d", getInc());
-            
+
             default -> String.format("STACK UNKNOWN (0x%s)", toHex(getBytecode(), 6));
         };
+    }
+    @Override
+    public String getASM() {
+        return toString();
     }
     
     public int getInc() {

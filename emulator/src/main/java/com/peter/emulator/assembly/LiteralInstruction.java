@@ -14,4 +14,9 @@ public class LiteralInstruction extends Instruction {
     public int getBytecode() {
         return data;
     }
+
+    @Override
+    public String getASM() {
+        return toHexLead(data);
+    }
 }

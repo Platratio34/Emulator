@@ -17,9 +17,11 @@ import com.peter.emulator.lang.Span;
 import com.peter.emulator.lang.ELAnalysisError.Severity;
 import com.peter.emulator.lang.ELSymbol.Type;
 import com.peter.emulator.lang.FileProvider;
+import com.peter.emulator.machinecode.ConditionalOperator;
 import com.peter.emulator.machinecode.Instruction;
 import com.peter.emulator.machinecode.MathInstruction;
 import com.peter.emulator.machinecode.Reg;
+import com.peter.emulator.machinecode.Goto.Mode;
 
 public class ASMParser {
 
@@ -81,7 +83,9 @@ public class ASMParser {
 
     public final String[] lines;
     public final Location startLoc;
+    protected final int startAddress;
     protected int address = 0;
+    protected int lastNonZeroAddress = 0;
 
     protected final FileProvider fileProvider;
     protected final ASMParser parent;
@@ -95,6 +99,7 @@ public class ASMParser {
         lines = text.split("\r?\n\r?");
         this.startLoc = startLoc;
         this.limitedLintOnly = limitedLintOnly;
+        this.startAddress = 0;
 
         parent = null;
         defines = new HashMap<>();
@@ -109,6 +114,7 @@ public class ASMParser {
         this.fileProvider = fileProvider;
         lines = text.split("\r?\n\r?");
         this.startLoc = startLoc;
+        this.startAddress = 0;
 
         parent = null;
         defines = new HashMap<>();
@@ -124,6 +130,7 @@ public class ASMParser {
         lines = text.split("\r?\n\r?");
         this.startLoc = startLoc;
         address = startAddress;
+        this.startAddress = startAddress;
 
         parent = null;
         defines = new HashMap<>();
@@ -138,6 +145,7 @@ public class ASMParser {
         this.fileProvider = parent.fileProvider;
         lines = text.split("\r?\n\r?");
         this.startLoc = startLoc;
+        this.startAddress = 0;
 
         this.parent = parent;
         this.defines = parent.defines;
@@ -221,9 +229,20 @@ public class ASMParser {
                             line.errorLast(AsmError.error("Duplicate define `%s`", name));
                         }
                         Define def = null;
-                        Define val = line.nextConst();
-                        if (val != null) {
-                            def = new Define(name, new int[] { val.value });
+                        ArrayList<Define> arr = line.nextArray();
+                        if (arr != null) {
+                            // System.out.println(arr.size());
+                            int[] wA = new int[arr.size()];
+                            for (int j = 0; j < arr.size(); j++) {
+                                wA[j] = arr.get(j).value;
+                            }
+                            def = new Define(name, wA);
+                        }
+                        if (def == null) {
+                            Define val = line.nextConst();
+                            if (val != null) {
+                                def = new Define(name, new int[] { val.value });
+                            }
                         }
                         if (def == null) {
                             String valS = line.nextStringLit();
@@ -237,6 +256,7 @@ public class ASMParser {
                                 try {
                                     int size = Integer.parseInt(valSize.substring(1, valSize.length() - 2));
                                     def = new Define(name).withSize(Math.ceilDiv(size, 4) * 4);
+                                    def.isZero = true;
                                     line.symbolLast(Type.NUMERIC_LITERAL);
                                 } catch (NumberFormatException e) {
                                     line.errorLast(AsmError.error("Malformed number"));
@@ -522,10 +542,17 @@ public class ASMParser {
                     symbols.add(new ELSymbol(Type.KEYWORD, line.lastSpan, String.format("`%s`\n\n%s\n\n**Usage**: %s", keyword, kWrd.getDef(), kWrd.getUsage())));
                     Instruction instr = kWrd.add(line);
                     if (instr == null || limitedLintOnly) {
+                        // if(instr == null)
+                        //     System.err.println("Null instruction "+kWrd);
                         continue;
+                    } else if(instr != null) {
+                        // System.out.println(kWrd);
                     }
                     instructions.add(instr);
                     address += instr.hasSecond() ? 8 : 4;
+                    if (instr instanceof TempGoto tg) {
+                        tg.setAddress(address);
+                    }
                     line.symbolRest(Type.COMMENT_LINE);
                     continue;
                 } else {
@@ -540,7 +567,40 @@ public class ASMParser {
 
     public boolean parse() {
         prepass();
+
+        if (labels.containsKey("__start")) {
+            TempGoto tg = new TempGoto(ConditionalOperator.UNCONDITIONAL, Mode.NONE, Reg.R0, labels.get("__start"));
+            tg.setAddress(startAddress + 8);
+            instructions.add(tg);
+            address += 8;
+        }
+
         mainPass();
+        ArrayList<Define> zeroDefines = new ArrayList<>();
+        for (Define def : defines.values()) {
+            if (def.isAddress) {
+                if (def.isZero) {
+                    zeroDefines.add(def);
+                    continue;
+                }
+                int sizeMod4 = Math.ceilDiv(def.size, 4) * 4;
+                def.resolveAt(address);
+                if (def.size <= 4) {
+                    instructions.add(new LiteralInstruction(def.value));
+                } else {
+                    for (int v : def.valueArr) {
+                        instructions.add(new LiteralInstruction(v));
+                    }
+                }
+                address += sizeMod4;
+            }
+        }
+        lastNonZeroAddress = address;
+        for (Define def : zeroDefines) {
+            def.resolveAt(address);
+            address += Math.ceilDiv(def.size, 4) * 4;
+        }
+
         parseLock.unlock();
 
         for (AsmError error : errors) {
@@ -549,6 +609,44 @@ public class ASMParser {
             }
         }
         return true;
+    }
+
+    public int[] build() {
+        if (limitedLintOnly) {
+            throw new IllegalStateException("Can not build from limited lint only parser");
+        }
+        int[] arr = new int[Math.ceilDiv(lastNonZeroAddress - startAddress, 4)];
+        int outI = 0;
+        for (Instruction instruction : instructions) {
+            arr[outI++] = instruction.getBytecode();
+            if (instruction.hasSecond()) {
+                arr[outI++] = instruction.getSecondBytecode();
+            }
+        }
+        return arr;
+    }
+
+    private static void addIntToBA(byte[] arr, int i, int v) {
+        arr[i] = (byte)(v >>> 24);
+        arr[i + 1] = (byte)((v >>> 16) & 0xff);
+        arr[i + 2] = (byte)((v >>> 8) & 0xff);
+        arr[i + 3] = (byte)(v & 0xff);
+    }
+    public byte[] buildBytes() {
+        if (limitedLintOnly) {
+            throw new IllegalStateException("Can not build from limited lint only parser");
+        }
+        byte[] arr = new byte[Math.ceilDiv(lastNonZeroAddress - startAddress, 4) * 4];
+        int outI = 0;
+        for (Instruction instruction : instructions) {
+            addIntToBA(arr, outI, instruction.getBytecode());
+            outI += 4;
+            if (instruction.hasSecond()) {
+                addIntToBA(arr, outI, instruction.getSecondBytecode());
+                outI += 4;
+            }
+        }
+        return arr;
     }
 
     public class ASMLine {
@@ -803,8 +901,8 @@ public class ASMParser {
 
             if (def == null) {
                 if (error != null) {
-                    errors.add(new AsmError(error.severity, lastSpan, error.message + "; `"+t+"`"));
-                }  else {
+                    errors.add(new AsmError(error.severity, lastSpan, error.message + "; `" + t + "`"));
+                } else {
                     lastSpan = tempSpan;
                     col = startCol;
                 }
@@ -813,6 +911,71 @@ public class ASMParser {
             return def;
         }
         
+        public ArrayList<Define> nextArray() {
+            return nextArray(null);
+        }
+
+        public ArrayList<Define> nextArray(AsmError error) {
+            Location startLoc = location.add(col);
+            if (col >= lineLen) {
+                if (error != null)
+                    errors.add(error.at(startLoc.span()));
+                return null;
+            }
+            if (line.charAt(col) != '[') {
+                if (error != null)
+                    errors.add(error.at(startLoc.span()));
+                return null;
+            }
+            col++;
+            ArrayList<Define> arr = new ArrayList<>();
+            String t = "";
+            Location tStartLoc = startLoc.add(1);
+            boolean closed = false;
+            while (col < lineLen) {
+                Location cLoc = location.add(col);
+                char c = line.charAt(col++);
+                if (c == ']') {
+                    lastSpan = tStartLoc.span(cLoc.add(-1));
+                    Define def = getDefine(t);
+                    if (def == null) {
+                        errorLast(AsmError.error("Invalid value in array"));
+                        return arr;
+                    }
+                    arr.add(def);
+                    closed = true;
+                    symbols.add(new ELSymbol(Type.KEYWORD, cLoc.span()));
+                    break;
+                } else if (c == ',') {
+                    symbols.add(new ELSymbol(Type.KEYWORD, cLoc.span()));
+                    lastSpan = tStartLoc.span(cLoc.add(-1));
+                    Define def = getDefine(t);
+                    if (def == null) {
+                        errorLast(AsmError.error("Invalid value in array"));
+                        return arr;
+                    }
+                    arr.add(def);
+                    t = "";
+                    tStartLoc = cLoc.add(1);
+                } else if (c == ' ') {
+                    if(t.length() == 0) {
+                        tStartLoc = cLoc.add(1);
+                        continue;
+                    }
+                    errorLast(AsmError.error("Invalid value in array"));
+                    return arr;
+                } else {
+                    t += c;
+                }
+            }
+            lastSpan = startLoc.span(location.add(col - 1));
+            if (!closed) {
+                errors.add(AsmError.error(location.add(col-1).span(), "Unclosed array"));
+                return null;
+            }
+            
+            return arr;
+        }
         
         public String nextStringLit() {
             return nextStringLit(null);

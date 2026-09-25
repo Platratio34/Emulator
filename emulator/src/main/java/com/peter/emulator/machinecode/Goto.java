@@ -76,7 +76,26 @@ public class Goto extends Instruction {
 
     @Override
     public String toString() {
-        String out = String.format("GOTO%s ", mode != Mode.NONE ? (" "+mode) : "");
+        String out = String.format("GOTO%s ", mode != Mode.NONE ? (" " + mode) : "");
+        String raStr = rel ? (((data >= 0) ? "+" : "") + data) : ra.string;
+        if (mode == Mode.POP) {
+            raStr = "";
+        }
+        return out + switch (condition) {
+            case UNCONDITIONAL -> raStr;
+            case EQ_ZERO -> String.format("EQ %s %s", rg.string, raStr);
+            case NEQ_ZERO -> String.format("NEQ %s %s", rg.string, raStr);
+            case GT_ZERO -> String.format("GT %s %s", rg.string, raStr);
+            case LT_ZERO -> String.format("LT %s %s", rg.string, raStr);
+            case GEQ_ZERO -> String.format("GEQ %s %s", rg.string, raStr);
+            case LEQ_ZERO -> String.format("LEQ %s %s", rg.string, raStr);
+            default -> String.format("UNKNOWN (0x%s)", toHex(getBytecode()));
+        };
+    }
+    
+    @Override
+    public String getASM() {
+        String out = String.format("GOTO%s ", mode != Mode.NONE ? (" " + mode) : "");
         String raStr = rel ? (((data >= 0) ? "+" : "") + data) : ra.string;
         if (mode == Mode.POP) {
             raStr = "";
