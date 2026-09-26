@@ -58,6 +58,27 @@ public class Define {
         isAddress = true;
     }
 
+    public Define(String name, ArrayList<Define> arr) {
+        this.name = name;
+        this.value = 0;
+        isAddress = true;
+        ArrayList<Integer> list = new ArrayList<>();
+        for (Define def : arr) {
+            if (def.valueArr != null) {
+                for (int v : def.valueArr) {
+                    list.add(v);
+                }
+            } else {
+                list.add(def.value);
+            }
+        }
+        size = list.size() * 4;
+        valueArr = new int[list.size()];
+        for (int i = 0; i < valueArr.length; i++) {
+            valueArr[i] = list.get(i);
+        }
+    }
+
     public Define withSize(int size) {
         this.size = size;
         return this;

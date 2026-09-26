@@ -231,12 +231,7 @@ public class ASMParser {
                         Define def = null;
                         ArrayList<Define> arr = line.nextArray();
                         if (arr != null) {
-                            // System.out.println(arr.size());
-                            int[] wA = new int[arr.size()];
-                            for (int j = 0; j < arr.size(); j++) {
-                                wA[j] = arr.get(j).value;
-                            }
-                            def = new Define(name, wA);
+                            def = new Define(name, arr);
                         }
                         if (def == null) {
                             Define val = line.nextConst();
@@ -932,29 +927,34 @@ public class ASMParser {
             String t = "";
             Location tStartLoc = startLoc.add(1);
             boolean closed = false;
+            boolean wasString = false;
             while (col < lineLen) {
                 Location cLoc = location.add(col);
                 char c = line.charAt(col++);
                 if (c == ']') {
                     lastSpan = tStartLoc.span(cLoc.add(-1));
                     Define def = getDefine(t);
-                    if (def == null) {
-                        errorLast(AsmError.error("Invalid value in array"));
-                        return arr;
+                    if (!wasString) {
+                        if (def == null) {
+                            errorLast(AsmError.error("Invalid value in array"));
+                            return arr;
+                        }
+                        arr.add(def);
                     }
-                    arr.add(def);
                     closed = true;
-                    symbols.add(new ELSymbol(Type.KEYWORD, cLoc.span()));
                     break;
                 } else if (c == ',') {
                     symbols.add(new ELSymbol(Type.KEYWORD, cLoc.span()));
                     lastSpan = tStartLoc.span(cLoc.add(-1));
-                    Define def = getDefine(t);
-                    if (def == null) {
-                        errorLast(AsmError.error("Invalid value in array"));
-                        return arr;
+                    if (!wasString) {
+                        Define def = getDefine(t);
+                        if (def == null) {
+                            errorLast(AsmError.error("Invalid value in array"));
+                            return arr;
+                        }
+                        arr.add(def);
                     }
-                    arr.add(def);
+                    wasString = false;
                     t = "";
                     tStartLoc = cLoc.add(1);
                 } else if (c == ' ') {
@@ -964,6 +964,11 @@ public class ASMParser {
                     }
                     errorLast(AsmError.error("Invalid value in array"));
                     return arr;
+                } else if (c == '"' && t.length() == 0) {
+                    col--;
+                    t = nextStringLit();
+                    arr.add(new Define("_", t));
+                    wasString = true;
                 } else {
                     t += c;
                 }
