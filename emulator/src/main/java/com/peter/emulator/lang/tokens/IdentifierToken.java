@@ -2,10 +2,12 @@ package com.peter.emulator.lang.tokens;
 
 import java.util.ArrayList;
 
+import com.peter.emulator.lang.ELType;
 import com.peter.emulator.lang.Identifier;
 import com.peter.emulator.lang.Location;
 import com.peter.emulator.lang.ProgramUnit;
 import com.peter.emulator.lang.Span;
+import com.peter.emulator.lang.ELType.Builder;
 
 public class IdentifierToken extends Token {
 
@@ -228,7 +230,28 @@ public class IdentifierToken extends Token {
             return params;
         if (subTokens == null || subTokens.isEmpty())
             return null;
-        return ((IdentifierToken)subTokens.getFirst()).getParamsSub();
+        return ((IdentifierToken) subTokens.getFirst()).getParamsSub();
+    }
+    
+    public ArrayList<ELType> getTypes() {
+        if (types == null) {
+            return null;
+        }
+        ArrayList<ELType> outTypes = new ArrayList<>();
+        if (types.subTokens.isEmpty()) {
+            return outTypes;
+        }
+        Builder builder = new Builder();
+        for (Token t : types.subTokens) {
+            if (t instanceof OperatorToken ot && ot.type == OperatorToken.Type.COMMA) {
+                outTypes.add(builder.build());
+                builder = new Builder();
+            } else {
+                builder.ingest(t);
+            }
+        }
+        outTypes.add(builder.build());
+        return outTypes;
     }
     
 }

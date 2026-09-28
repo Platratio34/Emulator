@@ -15,6 +15,7 @@ namespace Kernal {
     /@
     @Syscall(0x01)
     public static void* kalloc() {
+        bool test = kallocMutex.try();
         kallocMutex.acquire();
         int32 cPages = SysD.rMemTbl[0];
         if(cPages >= MAX_BLOCKS) { // max per-process page allocation

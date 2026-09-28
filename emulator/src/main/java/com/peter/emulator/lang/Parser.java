@@ -132,11 +132,11 @@ public class Parser {
                         }
                     } else if (idt.value.equals("static") || idt.value.equals("const") || idt.value.equals("operator") || idt.value.equals("extern") || ELProtectionLevel.valid(idt.value)) {
                         // (<public|protected|private|internal>) (static) (<const|final>) [type] [name] (= [value]);
-                        // (<public|protected|private|internal>) (static) (constexp) <[ret]|void> [name](...) {...}
+                        // (<public|protected|private|internal>) (static) (inline) <[ret]|void> [name](...) {...}
                         // (<public|protected|private|internal>) (static) <extern|abstract> <[ret]|void> [name](...)
-                        // (<public|protected|private|internal>) (constexp) (~)[name](...) {...}
+                        // (<public|protected|private|internal>) (inline) (~)[name](...) {...}
                         // (<public|protected|private|internal>) extern (~)[name](...)
-                        // operator (constexp) [ret] [name](...)
+                        // operator (inline) [ret] [name](...)
                         // System.err.println("Func or variable");
                         Location loc = idt.startLocation;
                         workingI++;
@@ -147,7 +147,7 @@ public class Parser {
                         Span operator = idt.value.equals("operator") ? idt.span() : null;
                         Span final_ = idt.value.equals("final") ? idt.span() : null;
                         Span const_ = idt.value.equals("const") ? idt.span() : null;
-                        Span constexpr = null;
+                        Span inline = null;
                         if (!stat)
                             if (tokens.get(workingI) instanceof IdentifierToken it && it.value.equals("static")) {
                                 stat = true;
@@ -172,8 +172,8 @@ public class Parser {
                                 workingI++;
                                 unit.addSymbol(ELSymbol.Type.KEYWORD, it.span());
                             }
-                        if (tokens.get(workingI) instanceof IdentifierToken it && it.value.equals("constexpr")) {
-                            constexpr = tokens.get(workingI).span();
+                        if (tokens.get(workingI) instanceof IdentifierToken it && it.value.equals("inline")) {
+                            inline = tokens.get(workingI).span();
                             workingI++;
                             unit.addSymbol(ELSymbol.Type.KEYWORD, it.span());
                         }
@@ -286,7 +286,7 @@ public class Parser {
                                     errors.error("Functions outside of a class may not be operator functions.", const_);
                                 }
                             }
-                            ELFunction function = new ELFunction(level, extern, currentNamespace, name, funcType, constexpr != null, unit, loc);
+                            ELFunction function = new ELFunction(level, extern, currentNamespace, name, funcType, inline != null, unit, loc);
                             unit.addSymbol(new ELSymbol.ELFuncDefSymbol(function, nameToken.spanFirst()));
                             if (docCommentToken != null) {
                                 function.doc = new DocComment(docCommentToken);
@@ -334,8 +334,8 @@ public class Parser {
                                 unit.module.entrypoint = function;
                             }
                         } else { // variable
-                            if (constexpr != null) {
-                                errors.error("Variables can not be constant expression.", constexpr);
+                            if (inline != null) {
+                                errors.error("Variables can not be constant expression.", inline);
                             }
                             if (operator != null) {
                                 errors.error("Variables can not be operator.", operator);

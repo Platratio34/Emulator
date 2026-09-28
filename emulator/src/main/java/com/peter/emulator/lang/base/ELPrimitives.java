@@ -123,11 +123,11 @@ public class ELPrimitives {
             }
     
             @Operator([])
-            operator constexpr T* get(int32 i) {
+            operator inline T* get(int32 i) {
                 return values + i;
             }
     
-            public constexpr T* pointer() {
+            public inline T* pointer() {
                 return values;
             }
     

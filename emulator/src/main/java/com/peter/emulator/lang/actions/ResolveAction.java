@@ -14,6 +14,8 @@ public class ResolveAction extends ComplexAction {
     public final ELVariable returnVar;
     public boolean wasConst = false;
 
+    public ConstantValue constantValue;
+
     public ResolveAction(ActionScope scope, Register reg, ELVariable var, IdentifierToken id, boolean byValue) {
         this(scope, reg, var, id, byValue, false);
     }
@@ -59,6 +61,7 @@ public class ResolveAction extends ComplexAction {
                 case CONST -> {
                     addDirect("LOAD %s %s", reg, var.getQualifiedName());
                     wasConst = true;
+                    constantValue = ConstantValue.constVar(var);
                 }
                 case STATIC -> {
                     // addDirect("LOAD %s &%s", reg, var.getQualifiedName());
@@ -159,6 +162,8 @@ public class ResolveAction extends ComplexAction {
                     }
                     addRelease(rIndex);
                     t = resolvedType;
+                    if (wasConst)
+                        constantValue = null;
                     wasConst = false;
                 }
                 
@@ -185,6 +190,8 @@ public class ResolveAction extends ComplexAction {
                     }
                     t = t.resolve(it.span());
                 }
+                if (wasConst)
+                    constantValue = null;
                 wasConst = false;
 
                 ELClass clazz = t.getELClass();
@@ -234,6 +241,7 @@ public class ResolveAction extends ComplexAction {
                 } else {
                     addDirect("LOAD MEM%s %s %s", size, reg, sourceReg);
                 }
+                sourceReg = null;
             } else if (constAddr != null) {
                 addDirect("LOAD MEM%s %s &%s", size, reg, constAddr);
                 constAddr = null;
@@ -244,7 +252,11 @@ public class ResolveAction extends ComplexAction {
         if (sourceReg != null && !byValue && regIsValue) {
             throw ELAnalysisError.errorF("Can not get register based variable %s by address", it.value, it.span());
         }
-        if (constAddr != null) {
+        if (sourceReg != null) {
+            addDirect("COPY %s %s", sourceReg, reg);
+            sourceReg = null;
+        } else if (constAddr != null) {
+            constantValue = ConstantValue.staticVar(constAddr);
             addDirect("LOAD %s &%s", reg, constAddr);
             constAddr = null;
         }

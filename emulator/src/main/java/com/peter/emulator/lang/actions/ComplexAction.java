@@ -11,16 +11,42 @@ public class ComplexAction extends Action {
         super(scope);
     }
 
+    protected static int globalIndex = 0;
+
     @Override
     public String toAssembly() {
         String out = "";
         boolean f = true;
         for (Action action : actions) {
             String asm = action.toAssembly();
-            if(asm == null || asm.length() == 0)
+            if (asm == null || asm.length() == 0)
                 continue;
             out += (f ? "" : "\n") + asm;
             f = false;
+        }
+        if (out.contains("$i")) {
+            for (int i = 0; i < 256; i++) {
+                String id = "$i" + i;
+                if (out.contains(id)) {
+                    out = out.replace(id, ""+(globalIndex++));
+                }
+            }
+        }
+        if (out.contains("$r")) {
+            boolean[] rs = new boolean[16];
+            for (int i = 0; i < 16; i++) {
+                String id = "$r" + i;
+                if (out.contains(id)) {
+                    int reg = scope.firstFreeR();
+                    scope.reserve(reg);
+                    rs[reg] = true;
+                    out = out.replace(id, "r"+reg);
+                }
+            }
+            for (int i = 1; i < 15; i++) {
+                if(rs[i])
+                    scope.release(i);
+            }
         }
         return out;
     }
@@ -50,4 +76,7 @@ public class ComplexAction extends Action {
         actions.add(new CompilerAction(scope, onCompile));
     }
 
+    public boolean isEmpty() {
+        return actions.isEmpty();
+    }
 }

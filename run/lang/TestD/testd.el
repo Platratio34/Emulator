@@ -22,6 +22,8 @@ namespace TestD {
 
     @Entrypoint(raw)
     public static void main() {
+        // SysD.memCopy(&path, 0, 1, &inputBuffer, 0);
+        
         asm{
             STORE BYTE 'T' r7
             STORE BYTE 'e' r7
@@ -90,7 +92,7 @@ namespace TestD {
             // Console.printChar('\n');
             // asm("#breakpoint");
             Console.intToHex(read, &str2);
-            Console.printStr(&str2, 0);
+            Console.printStr(&str2);
             
             Console.printChar('\n');
             Console.printStr(&buffer, read);
@@ -145,6 +147,7 @@ namespace TestD {
         Console.printChar(':');
         Console.printStr(&tempCmd);
         Console.printChar('\n');
+        @Breakpoint()
         if(stringEquals(&tempCmd, "STOP\0")) {
             return false;
         }
@@ -154,7 +157,7 @@ namespace TestD {
 
     public static bool stringEquals(char* str1, char* str2) {
         asm{
-            SUB r15 r15 16
+            SUB r1 r15 16
             LOAD MEM r1 r1
             // str1
         
@@ -192,7 +195,7 @@ namespace TestD {
         char[9] str;
         str[8] = '\0';
         if(code == 0xff) {
-            Console.printStr("\n\nHalting\0",0);
+            Console.printStr("\n\nHalting\0");
             asm{HALT};
         }
         if((code & 0xffff_ff00) == 0x8000_0200) { // timer
@@ -202,10 +205,10 @@ namespace TestD {
                 return;
             }
             
-            Console.printStr("\nTimer \0", 0);
+            Console.printStr("\nTimer \0");
             char[3] str;
             Console.intToDec(i, &str);
-            Console.printStr(&str, 0);
+            Console.printStr(&str);
             CharacterDisplay.write(0,23,"Timer\0");
             return;
         }
@@ -223,7 +226,7 @@ namespace TestD {
             return;
         }
         Console.intToHex(code, &str);
-        Console.printStr("\nInterrupt: \0", 0);
+        Console.printStr("\nInterrupt: \0");
         Console.printStr(&str, 8);
         Console.printChar('\n');
     }

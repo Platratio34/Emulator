@@ -154,6 +154,9 @@ public class ActionBlock extends ComplexAction {
                                         && it3.value.equals("else");
                                 // actions.add(new ConditionalAction(scope, ":if_true_" + index, elsePresent ? (":if_false_" + index) : (":if_end_" + index),
                                 //         it.params.subTokens));
+                                if (elsePresent) {
+                                    scope.addSymbol(ELSymbol.Type.KEYWORD, tokens.get(wI).span());
+                                }
 
                                 Register r = newRegister();
                                 addReserve(r);

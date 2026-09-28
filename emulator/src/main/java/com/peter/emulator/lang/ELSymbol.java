@@ -306,8 +306,8 @@ public class ELSymbol {
                 out += "static ";
             if (func.extern)
                 out += "extern ";
-            if (func.constexpr)
-                out += "constexpr ";
+            if (func.inline)
+                out += "inline ";
             if (func.ret != null)
                 out += func.ret.typeString() + " ";
             else
@@ -373,8 +373,8 @@ public class ELSymbol {
                 out += "static ";
             if (func.extern)
                 out += "extern ";
-            if (func.constexpr)
-                out += "constexpr ";
+            if (func.inline)
+                out += "inline ";
             if (func.ret != null)
                 out += func.ret.typeString() + " ";
             else

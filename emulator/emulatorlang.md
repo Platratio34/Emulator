@@ -36,15 +36,15 @@ import [namespace] (as [alias]);
 
 ## Static functions
 ```
-(<public|protected|private|internal>) static (constexp) <void|[ret]> [name](...) {...}
+(<public|protected|private|internal>) static (inline) <void|[ret]> [name](...) {...}
 (<public|protected|private|internal>) static extern <void|[ret]> [name](...);
 ```
 ## Instance functions
 ```
-(<public|protected|private|internal>) (constexp) <void|[ret]> [name](...) {...}
+(<public|protected|private|internal>) (inline) <void|[ret]> [name](...) {...}
 (<public|protected|private|internal>) <abstract|extern> <void|[ret]> [name](...);
 
-operator (constexp) [ret] [name](...) {...}
+operator (inline) [ret] [name](...) {...}
 operator extern [ret] [name](...);
 ```
 ## Constructors/Deconstructors

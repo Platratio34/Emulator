@@ -16,6 +16,9 @@ public class FunctionAction extends ComplexAction {
 
     public final Register targetReg;
     public ELType retType = null;
+    public boolean isConst = false;
+    public boolean isStaticCast = false;
+    public int constVal = 0;
 
     private Register r = null;
     private boolean[] pushed = new boolean[16];
@@ -52,6 +55,35 @@ public class FunctionAction extends ComplexAction {
             }
             add(exp);
             retType = targetType;
+            isStaticCast = true;
+            return;
+        } else if (it.value.equals("sizeof")) {
+            scope.addSymbol(ELSymbol.Type.KEYWORD, it.nameSpan(), "`sizeof<type?>(variable?)`\n\nReturns the size of a given type. Only type or variable may be provided");
+            ELType type;
+            if (it.types != null) {
+                if (!it.params.subTokens.isEmpty()) {
+                    scope.unit.errors.warning("Can not provide both type and variable to sizeof, ignoring variable type.", it.params.span());
+                }
+                ArrayList<ELType> types = it.getTypes();
+                if(types.size() < 1) {
+                    throw ELAnalysisError.warning("Must provide target type", it.nameSpan());
+                } else if(types.size() > 1) {
+                    scope.unit.errors.warning("Must only provide 1 type", types.get(1).location.span(types.getLast().endLocation));
+                }
+                type = types.getFirst();
+                type.analyze(scope.unit.errors, scope.namespace, scope.unit);
+            } else {
+                if (it.params.subTokens.isEmpty()) {
+                    throw ELAnalysisError.warning("Must provide target type", it.nameSpan());
+                }
+                Expression exp = new Expression(scope, it.params.subTokens, targetReg);
+                exp.validate(scope.unit.errors);
+                type = exp.getType();
+            }
+            isConst = true;
+            constVal = type.sizeof();
+            retType = ELPrimitives.INT32;
+            addDirect("LOAD %s %d", r, constVal);
             return;
         }
 
@@ -78,6 +110,40 @@ public class FunctionAction extends ComplexAction {
                 }
             }
         }
+        
+        boolean isMethodType = false;
+        ResolveResult rr = scope.resolveIdentifier(it.value);
+        if (rr == null) {
+            throw ELAnalysisError.errorF(it.spanFirst(), "Unable to resolve identifier `%s`", it.value);
+        }
+        IdentifierToken it2 = it;
+        while (it2.hasSub()) {
+            IdentifierToken itt = it2;
+            it2 = it2.next();
+            if (rr.namespace != null) {
+                scope.addSymbol(new ELSymbol.ELNamespaceSymbol(rr.namespace, itt.spanFirst()));
+                rr = rr.namespace.resolveIdentifier(it2.value);
+            } else if (rr.variable != null) {
+                scope.addSymbol(new ELSymbol.ELVarSymbol(rr.variable, itt.spanFirst()));
+                ELClass clazz = rr.variable.type.getELClass();
+                if (clazz == null) {
+                    throw ELAnalysisError.errorF(it2.spanFirst(), "Encountered variable without class (Type was `%s`)",
+                            rr.variable.type.typeString());
+                }
+                rr = clazz.resolveIdentifier(it2.value, false);
+            } else if (rr.function != null) {
+                throw ELAnalysisError.errorF(it2.spanFirst(), "Unable to resolve identifier `%s` from function",
+                        it2.value);
+            }
+            if (rr == null) {
+                throw ELAnalysisError.errorF(it2.spanFirst(), "Unable to resolve identifier `%s`", it2.value);
+            }
+        }
+
+        if (rr.function.inline) {
+            onStack = false;
+        }
+
         // function call; set is parameters
         ArrayList<ELType> types = new ArrayList<>();
         Location endOfParams = null;
@@ -199,7 +265,7 @@ public class FunctionAction extends ComplexAction {
                     actions.addAll(tempActions);
                     scope.addSymbol(new ELSymbol.ELNamespaceSymbol("SysD", it.spanFirst()));
                     scope.addSymbol(new ELSymbol(ELSymbol.Type.FUNCTION_NAME, it.next().spanFirst(),
-                            "`constexp void SysD.memSet(void* addr, int32 value)`\n\nSets the memory at `addr` to `value`"));
+                            "`inline void SysD.memSet(void* addr, int32 value)`\n\nSets the memory at `addr` to `value`"));
                     // void SysD.memSet(int32 addr, int32 value);
                     if (types.size() != 2 || !((types.get(0).canCastTo(ELPrimitives.INT32)
                             || types.get(0).canCastTo(ELPrimitives.VOID_PTR))
@@ -218,7 +284,7 @@ public class FunctionAction extends ComplexAction {
                     actions.addAll(tempActions);
                     scope.addSymbol(new ELSymbol.ELNamespaceSymbol("SysD", it.spanFirst()));
                     scope.addSymbol(new ELSymbol(ELSymbol.Type.FUNCTION_NAME, it.next().spanFirst(),
-                            "`constexp int32 SysD.memGet(void* addr)`\n\nGets the memory at `addr`"));
+                            "`inline int32 SysD.memGet(void* addr)`\n\nGets the memory at `addr`"));
                     // int32 SysD.memGet(int32 addr);
                     if (types.size() != 1 || !(types.get(0).canCastTo(ELPrimitives.INT32))) {
 
@@ -235,7 +301,7 @@ public class FunctionAction extends ComplexAction {
                     actions.addAll(tempActions);
                     scope.addSymbol(new ELSymbol.ELNamespaceSymbol("SysD", it.spanFirst()));
                     scope.addSymbol(new ELSymbol(ELSymbol.Type.FUNCTION_NAME, it.next().spanFirst(),
-                            "`constexp void SysD.memCopy(void* src, int32 start, int32 end, void* dest, int32 destStart)`\n\nCopies the memory from `src + start` through `src + end` to memory starting at `dest + destStart`"));
+                            "`inline void SysD.memCopy(void* src, int32 start, int32 end, void* dest, int32 destStart)`\n\nCopies the memory from `src + start` through `src + end` to memory starting at `dest + destStart`"));
                     // errors.warning("SysD.copy is not currently implemented", it);
 
                     /*
@@ -264,7 +330,7 @@ public class FunctionAction extends ComplexAction {
                 case "halt" -> {
                     scope.addSymbol(new ELSymbol.ELNamespaceSymbol("SysD", it.spanFirst()));
                     scope.addSymbol(new ELSymbol(ELSymbol.Type.FUNCTION_NAME, it.next().spanFirst(),
-                            "`constexp void SysD.halt()`\n\nHalts execution of the CPU. **MUST BE IN PRIVILEGED MODE TO WORK**"));
+                            "`inline void SysD.halt()`\n\nHalts execution of the CPU. **MUST BE IN PRIVILEGED MODE TO WORK**"));
                     actions.add(new DirectAction("HALT"));
                     return;
                 }
@@ -274,34 +340,6 @@ public class FunctionAction extends ComplexAction {
             }
         }
 
-        boolean isMethodType = false;
-        ResolveResult rr = scope.resolveIdentifier(it.value);
-        if (rr == null) {
-            throw ELAnalysisError.errorF(it.spanFirst(), "Unable to resolve identifier `%s`", it.value);
-        }
-        IdentifierToken it2 = it;
-        while (it2.hasSub()) {
-            IdentifierToken itt = it2;
-            it2 = it2.next();
-            if (rr.namespace != null) {
-                scope.addSymbol(new ELSymbol.ELNamespaceSymbol(rr.namespace, itt.spanFirst()));
-                rr = rr.namespace.resolveIdentifier(it2.value);
-            } else if (rr.variable != null) {
-                scope.addSymbol(new ELSymbol.ELVarSymbol(rr.variable, itt.spanFirst()));
-                ELClass clazz = rr.variable.type.getELClass();
-                if (clazz == null) {
-                    throw ELAnalysisError.errorF(it2.spanFirst(), "Encountered variable without class (Type was `%s`)",
-                            rr.variable.type.typeString());
-                }
-                rr = clazz.resolveIdentifier(it2.value, false);
-            } else if (rr.function != null) {
-                throw ELAnalysisError.errorF(it2.spanFirst(), "Unable to resolve identifier `%s` from function",
-                        it2.value);
-            }
-            if (rr == null) {
-                throw ELAnalysisError.errorF(it2.spanFirst(), "Unable to resolve identifier `%s`", it2.value);
-            }
-        }
         ELFunction f = null;
         if (rr.function != null) {
             f = rr.function.getFunction(types);
@@ -338,11 +376,15 @@ public class FunctionAction extends ComplexAction {
         actions.addAll(tempActions);
         if (f.type == FunctionType.INSTANCE) {
             Register r0T = newRegister();
-            addReserve(r0T);
             ResolveAction rA = scope.loadVarF(it, r0T, false);
-            actions.add(rA);
-            addDirect("COPY %s r0", r0T);
-            addRelease(r0T);
+            if (rA.constantValue != null) {
+                addDirect("LOAD r0 %s", rA.constantValue);
+            } else {
+                addReserve(r0T);
+                actions.add(rA);
+                addDirect("COPY %s r0", r0T);
+                addRelease(r0T);
+            }
         }
         if (isMethodType) {
             Register fP = newRegister();
@@ -351,6 +393,10 @@ public class FunctionAction extends ComplexAction {
             actions.add(rA);
             addDirect("GOTO PUSH %s", fP);
             addRelease(fP);
+        } else if (f.inline) {
+            addDirect("// INLINE START %s", f.getQualifiedName());
+            actions.add(f.actions);
+            addDirect("// INLINE END");
         } else {
             actions.add(new DirectAction("GOTO PUSH :%s", f.getQualifiedName(true)));
         }
@@ -369,7 +415,11 @@ public class FunctionAction extends ComplexAction {
                         default -> "STACK POP %s";
                     }, targetReg));
                 } else {
-                    actions.add(new DirectAction("COPY r1 %s", targetReg));
+                    actions.add(new CompilerAction(scope, s -> {
+                        if(targetReg.reg != 1)
+                            return "COPY r1 " + targetReg;
+                        return null;
+                    }));
                 }
             } else if (onStack && (stackSize + retSize) > 0) {
                 actions.add(new DirectAction("STACK DEC %d", stackSize + retSize));
@@ -398,7 +448,6 @@ public class FunctionAction extends ComplexAction {
         }
     }
 
-    
     private String constRelease(ActionScope s) {
         String out = "";
         for (int i = r.reg; i > 0; i--) {

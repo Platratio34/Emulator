@@ -170,7 +170,7 @@ public class Debugger {
     private String readVar(CPU cpu, String type, int address, int start, int end) {
         Matcher m = TYPE_PATTERN.matcher(type);
         if (!m.matches()) {
-            return "??";
+            return "?? ("+type+")";
         }
         String baseType = m.group(1);
         boolean pointer = m.group(2).length() > 0;

@@ -47,9 +47,7 @@ public class ELAssembler {
             first = false;
             out += String.format(" %s %s", p, f.params.get(p).typeString());
         }
-        for (Action action : f.actions) {
-            out += "\n" + action.toAssembly();
-        }
+        out += "\n" + f.actions.toAssembly();
         if (module.entrypoint == f)
             out += "\nHALT";
         else if (f.hasAnnotation(ELInterruptHandlerAnnotation.class))
@@ -92,7 +90,7 @@ public class ELAssembler {
     private String assembleFunctions(Namespace ns) {
         String out = "\n\n// " + ns.getQualifiedName();
         for (ELFunction f : ns.staticFunctions.values()) {
-            if (f.extern || f.constexpr)
+            if (f.extern || f.inline)
                 continue;
             out += assembleFunction(f);
         }
@@ -102,7 +100,7 @@ public class ELAssembler {
             if (c.destructor != null)
                 out += assembleFunction(c.destructor);
             for (ELFunction f : c.memberFunctions.values()) {
-                if (f.extern || f.constexpr)
+                if (f.extern || f.inline)
                     continue;
                 out += assembleFunction(f);
             }

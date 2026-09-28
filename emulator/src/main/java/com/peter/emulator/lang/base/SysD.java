@@ -28,12 +28,20 @@ public class SysD extends Namespace {
         memGet.addParameter(ELPrimitives.INT32, "address");
         memGet.ret = ELPrimitives.INT32;
         // void memCopy(void* src, int32 start, int32 end, void* dest, int32 destStart);
-        ELFunction memCopy = addStaticFunction(new ELFunction(ELProtectionLevel.PUBLIC, true, this, "memCopy", FunctionType.STATIC, true, unit, SYSD_LOCATION));
+        ELFunction memCopy = addStaticFunction(new ELFunction(ELProtectionLevel.PUBLIC, false, this, "memCopy", FunctionType.STATIC, true, unit, SYSD_LOCATION));
         memCopy.addParameter(ELPrimitives.VOID_PTR, "src");
         memCopy.addParameter(ELPrimitives.INT32, "start");
         memCopy.addParameter(ELPrimitives.INT32, "end");
         memCopy.addParameter(ELPrimitives.VOID_PTR, "dest");
         memCopy.addParameter(ELPrimitives.INT32, "destStart");
+        memCopy.actions.addDirect("ADD r1 r1 r2");
+        memCopy.actions.addDirect("ADD r4 r4 r5");
+        memCopy.actions.addDirect("SUB r3 r3 r2");
+        memCopy.actions.addDirect(":SysD.memCopy_loop_$i1");
+        memCopy.actions.addDirect("COPY MEM r1 r4 INC_RS INC_RD");
+        memCopy.actions.addDirect("INC r3 -1");
+        memCopy.actions.addDirect("GOTO GT r3 :loop_$i1");
+
         // void <T> memCopy(T* src, int32 start, int32 end, T* dest, int32 start);
         // boolean <T> memEquals(T* a, T* b, int32 length);
         ELFunction memEquals = addStaticFunction(new ELFunction(ELProtectionLevel.PUBLIC, true, this, "memEquals", FunctionType.STATIC, true, unit, SYSD_LOCATION));

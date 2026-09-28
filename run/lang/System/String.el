@@ -28,7 +28,7 @@ class String {
     }
 
     @Operator([])
-    operator constexpr char get(int32 i) {
+    operator inline char get(int32 i) {
         return chars[i];
     }
 

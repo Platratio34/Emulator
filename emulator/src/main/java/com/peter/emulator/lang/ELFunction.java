@@ -13,6 +13,7 @@ import com.peter.emulator.lang.ELSymbol.Modifier;
 import com.peter.emulator.lang.actions.Action;
 import com.peter.emulator.lang.actions.ActionBlock;
 import com.peter.emulator.lang.actions.ActionScope;
+import com.peter.emulator.lang.actions.ComplexAction;
 import com.peter.emulator.lang.annotations.ELAnnotation;
 import com.peter.emulator.lang.doc.DocComment;
 
@@ -24,7 +25,7 @@ public class ELFunction {
     public final String cName;
     public final Location startLocation;
     public final FunctionType type;
-    public final boolean constexpr;
+    public final boolean inline;
     public Location bodyLocation;
     public Location bodyEndLocation;
     public final ProgramUnit unit;
@@ -39,11 +40,11 @@ public class ELFunction {
     public ArrayList<ELFunction> overloads = new ArrayList<>();
     public ArrayList<Token> body = null;
     public ArrayList<ELAnnotation> annotations = null;
-    public ArrayList<Action> actions = new ArrayList<>();
+    public ComplexAction actions;
 
     public DocComment doc = null;
 
-    public ELFunction(ELProtectionLevel protection, boolean extern, Namespace namespace, String name, FunctionType type, boolean constexpr, ProgramUnit unit, Location location) {
+    public ELFunction(ELProtectionLevel protection, boolean extern, Namespace namespace, String name, FunctionType type, boolean inline, ProgramUnit unit, Location location) {
         if (namespace == null)
             throw new NullPointerException("Namespace must be non-null");
         this.protection = protection;
@@ -51,12 +52,13 @@ public class ELFunction {
         this.namespace = namespace;
         cName = name;
         this.type = type;
-        this.constexpr = constexpr;
+        this.inline = inline;
         this.unit = unit;
         this.startLocation = location;
         if (location == null)
             throw new NullPointerException("Start location must be non-null");
         unit.functions.add(this);
+        actions = new ComplexAction(new ActionScope(namespace, unit, this));
     }
 
     public void addParameter(ELType type, String name) {
@@ -208,8 +210,8 @@ public class ELFunction {
             out += "operator ";
         else
             out += protection.value + " ";
-        if (constexpr)
-            out += "constexpr ";
+        if (inline)
+            out += "inline ";
         switch (type) {
             case CONSTRUCTOR -> out += ret.typeString() + "(";
             case DESTRUCTOR -> out += "~" + ret.typeString() + "(";

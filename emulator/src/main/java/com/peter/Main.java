@@ -13,8 +13,6 @@ import org.json.JSONException;
 import com.peter.emulator.Emulator;
 import com.peter.emulator.assembly.ASMParser;
 import com.peter.emulator.assembly.AsmError;
-import com.peter.emulator.assembly.Assembler;
-import com.peter.emulator.assembly.AssemblerError;
 import com.peter.emulator.assembly.Disassembler;
 import com.peter.emulator.debug.Debugger;
 import com.peter.emulator.lang.ELAnalysisError;
@@ -204,10 +202,7 @@ public class Main {
 
 
         ASMParser parser;
-        Assembler assembler = new Assembler();
-        assembler.setKernalOffset();
         try {
-            assembler.setSource(p);
             parser = new ASMParser(ls.fileProvider, Files.readString(p), new Location("testD.asm",1,1), 0x1000);
         } catch (IOException e) {
             // TODO Auto-generated catch block
@@ -215,53 +210,46 @@ public class Main {
             return;
         }
         if (!parser.parse()) {
-            System.err.println("Error assembling (new)");
+            System.err.println("Error assembling");
             for (AsmError err : parser.errors) {
                 System.err.println(err);
             }
             return;
         }
-        if (!assembler.assemble()) {
-            System.err.println("Error assembling");
-            return;
-        }
         try {
-            Files.writeString(ROOT_PATH.resolve("lang/TestD/out/obj/testd.obj"), assembler.symbols.toFile(), StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            Files.writeString(ROOT_PATH.resolve("lang/TestD/out/obj/testd.obj"), parser.symbolFile.toFile(), StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
         try {
-            Files.write(ROOT_PATH.resolve("devices/vd0/kernal.bin"), Assembler.toBytes(assembler.build()), StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-            Files.write(ROOT_PATH.resolve("devices/vd0/kernal2.bin"), parser.buildBytes(), StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            Files.write(ROOT_PATH.resolve("devices/vd0/kernal.bin"), parser.buildBytes(), StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
             
-            new Disassembler(ROOT_PATH.resolve("devices/vd0/kernal.bin"),
-                    ROOT_PATH.resolve("devices/vd0/kernal.asm"));
-            new Disassembler(ROOT_PATH.resolve("devices/vd0/kernal2.bin"),
-                    ROOT_PATH.resolve("devices/vd0/kernal2.asm"));
+            // new Disassembler(ROOT_PATH.resolve("devices/vd0/kernal.bin"),
+            //         ROOT_PATH.resolve("devices/vd0/kernal.asm"));
         } catch (IOException e) {
-            // TODO Auto-generated catch block
+            // TODO Auto-generated catch block 
             e.printStackTrace();
         }
 
-        Assembler bootAssembler = new Assembler();
+        ASMParser bootParser;
         try {
             System.out.println("Rebuilding bootloader");
-            bootAssembler.setSource(ROOT_PATH.resolve("boot.asm"));
-            if (!bootAssembler.assemble()) {
-                for (AssemblerError err : bootAssembler.errors) {
+
+            bootParser = new ASMParser(ls.fileProvider, Files.readString(ROOT_PATH.resolve("boot.asm")), new Location("boot.asm",1,1));
+            if (!bootParser.parse()) {
+                for (AsmError err : bootParser.errors) {
                     System.err.println(err);
                 }
                 return;
             }
 
-            Files.write(ROOT_PATH.resolve("boot.bin"), Assembler.toBytes(bootAssembler.build()), StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            Files.write(ROOT_PATH.resolve("boot.bin"), bootParser.buildBytes(), StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         } catch (IOException e) {
             e.printStackTrace();
             return;
         }
-        // emulator.mainRam.copyWords(bootAssembler.build());
-        emulator.kernalRam.fill(bootAssembler.build());
+        emulator.kernalRam.fill(bootParser.build());
         // try {
         //     emulator.ram.copy(Files.readAllBytes(ROOT_PATH.resolve("boot.bin")));
         // } catch (IOException e) {
@@ -269,7 +257,7 @@ public class Main {
         //     return;
         // }
 
-        emulator.cores[0].debugger = new Debugger(assembler.symbols, assembler.symbols, emulator);
+        emulator.cores[0].debugger = new Debugger(parser.symbolFile, parser.symbolFile, emulator);
         
         // Assembler assembler = new Assembler();
         // try {

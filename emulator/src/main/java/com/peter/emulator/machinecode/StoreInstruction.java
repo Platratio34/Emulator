@@ -101,6 +101,8 @@ public class StoreInstruction extends Instruction {
         boolean incRA = (bytecode & INC_RA_FLAG) != 0;
         if (source == Source.VAL) {
             return new StoreInstruction(size, next, Reg.from(bytecode), incRG, incRA);
+        } else if (source == Source.ADDR) {
+            return new StoreInstruction(size, Reg.from(bytecode >> 16), next);
         }
         return new StoreInstruction(size, source, Reg.from(bytecode >> 16), Reg.from(bytecode), incRG, incRA);
     }
