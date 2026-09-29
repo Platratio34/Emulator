@@ -975,14 +975,14 @@ public class ASMParser {
             } else if (t.startsWith("0x")) {
                 symbolLast(Type.NUMERIC_LITERAL);
                 try {
-                    return new Define("_", Integer.parseInt(t.substring(2).replaceAll("_",""), 16));
+                    return new Define("_", Integer.parseUnsignedInt(t.substring(2).replaceAll("_",""), 16));
                 } catch (NumberFormatException e) {
                     errors.add(AsmError.error(lastSpan, "Malformed hex `%s`", t));
                 }
             } else if (t.startsWith("0b")) {
                 symbolLast(Type.NUMERIC_LITERAL);
                 try {
-                    return new Define("_", Integer.parseInt(t.substring(2).replaceAll("_",""), 2));
+                    return new Define("_", Integer.parseUnsignedInt(t.substring(2).replaceAll("_",""), 2));
                 } catch (NumberFormatException e) {
                     errors.add(AsmError.error(lastSpan, "Malformed binary `%s`", t));
                 }

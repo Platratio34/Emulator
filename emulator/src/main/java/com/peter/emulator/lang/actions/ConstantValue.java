@@ -2,6 +2,8 @@ package com.peter.emulator.lang.actions;
 
 import com.peter.emulator.lang.ELValue;
 import com.peter.emulator.lang.ELVariable;
+import com.peter.emulator.lang.ELValue.ELNumberValue;
+import com.peter.emulator.lang.ELValue.ELStringValue;
 import com.peter.emulator.machinecode.Instruction;
 
 public class ConstantValue {
@@ -28,7 +30,11 @@ public class ConstantValue {
     }
     
     public static ConstantValue constVar(ELVariable var) {
-        return new ConstantValue(((ELValue.ELNumberValue) var.startingValue).value, var.getQualifiedName());
+        return switch (var.startingValue) {
+            case ELNumberValue nv -> new ConstantValue(nv.value, var.getQualifiedName());
+            default -> new ConstantValue(var.getQualifiedName());
+        };
+        
     }
 
     public static ConstantValue staticVar(ELVariable var) {

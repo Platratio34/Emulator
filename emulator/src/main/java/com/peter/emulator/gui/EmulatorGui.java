@@ -79,9 +79,9 @@ public class EmulatorGui {
                 int c;
                 String cStr = interruptCode.getText();
                 if(cStr.startsWith("0x"))
-                    c = Integer.parseInt(cStr.substring(2), 16);
+                    c = Integer.parseUnsignedInt(cStr.substring(2), 16);
                 else if(cStr.startsWith("0b"))
-                    c = Integer.parseInt(cStr.substring(2), 2);
+                    c = Integer.parseUnsignedInt(cStr.substring(2), 2);
                 else
                     c = Integer.parseInt(cStr);
                 emulator.cores[0].interrupt(c);

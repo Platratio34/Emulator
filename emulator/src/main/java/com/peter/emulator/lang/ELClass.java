@@ -37,9 +37,12 @@ public class ELClass extends Namespace {
     protected int size = 4;
     protected int lastOffset = 0;
 
-    public ELClass(String name, Namespace namespace, ProgramUnit unit) {
+    public final Span nameSpan;
+
+    public ELClass(String name, Span nameSpan, Namespace namespace, ProgramUnit unit) {
         super(name, namespace);
         this.unit = unit;
+        this.nameSpan = nameSpan;
         unit.classes.add(this);
     }
 

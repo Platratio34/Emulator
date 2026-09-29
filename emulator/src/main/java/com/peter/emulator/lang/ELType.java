@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import com.peter.emulator.lang.ELSymbol.ELTypeSymbol;
 import com.peter.emulator.lang.base.ELPrimitives;
+import com.peter.emulator.lang.base.Method;
 import com.peter.emulator.lang.tokens.IdentifierToken;
 import com.peter.emulator.lang.tokens.NumberToken;
 import com.peter.emulator.lang.tokens.OperatorToken;
@@ -613,7 +614,7 @@ public class ELType {
 
     public boolean canCastTo(ELType target) {
         // check modifiers
-        if (((isVoidPtr()) && target.equals(ELPrimitives.INT32)) || (target.isVoidPtr() && equals(ELPrimitives.INT32)))
+        if ((isVoidPtr() && target.equals(ELPrimitives.INT32)) || (target.isVoidPtr() && equals(ELPrimitives.INT32)) || (isVoidPtr() && target.clazz instanceof Method))
             return true;
         if (subType == null && target.subType == null) {
             

@@ -383,7 +383,7 @@ public class SymbolFile {
 
         public int getValue() {
             if (type.equals("const int32")) {
-                return Integer.parseInt(value);
+                return Integer.parseUnsignedInt(value);
             }
             throw new RuntimeException("Can't get value of non `const int32`");
         }

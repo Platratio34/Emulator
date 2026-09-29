@@ -8,7 +8,7 @@ namespace Kernal {
     @/ Table of free flags for memory pages by absolute index /@
     protected static const bool* pageFreeTable = 0x8000;
 
-    protected static Mutex kallocMutex;
+    protected static final Mutex kallocMutex;
 
     @/
         Allocates a new memory page to the active process

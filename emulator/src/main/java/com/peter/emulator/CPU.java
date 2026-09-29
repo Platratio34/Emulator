@@ -639,7 +639,7 @@ public class CPU {
                         // int iOp = op & MASK_SYSCALL_INTERRUPT_OP;
                         switch (syscallI.interruptOption) {
                             case RETURN -> {
-                                if (!privilegeMode)
+                                if (!inInterrupt)
                                     return;
                                 for (int i = 0; i <= 0xf; i++) {
                                     registers[i] = registersI[i];

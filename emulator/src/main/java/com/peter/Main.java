@@ -44,16 +44,16 @@ public class Main {
         LanguageServer ls = new LanguageServer();
 
         ProgramModule kernal = null;
-        // try {
-        //     kernal = ls.addModule(ROOT_PATH.resolve("lang/Kernal").toFile());
-        //     kernal.addRefModule("SysD");
-        // } catch (JSONException e) {
-        //     // TODO Auto-generated catch block
-        //     e.printStackTrace();
-        // } catch (IOException e) {
-        //     // TODO Auto-generated catch block
-        //     e.printStackTrace();
-        // }
+        try {
+            kernal = ls.addModule(ROOT_PATH.resolve("lang/Kernal").toFile());
+            kernal.addRefModule("SysD");
+        } catch (JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
 
         // ProgramModule system;
         // try {

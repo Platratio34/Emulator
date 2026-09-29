@@ -12,7 +12,7 @@ import com.peter.emulator.lang.ELFunction.FunctionType;
 public class Mutex extends ELClass {
 
     public Mutex(ProgramModule module) {
-        super("Mutex", null, new ProgramUnit(module, "<Mutex>"));
+        super("Mutex", new Location("<Mutex>",1,1).span(), null, new ProgramUnit(module, "<Mutex>"));
 
         ELFunction acquireFunction = new ELFunction(ELProtectionLevel.PUBLIC, false, this, "acquire",
                 FunctionType.INSTANCE,

@@ -461,9 +461,9 @@ public class Parser {
                         ELClass clazz;
                         if (tokens.get(workingI) instanceof IdentifierToken it) {
                             if (struct)
-                                clazz = new ELStruct(it.value, currentNamespace, unit);
+                                clazz = new ELStruct(it.value, it.span(), currentNamespace, unit);
                             else
-                                clazz = new ELClass(it.value, currentNamespace, unit);
+                                clazz = new ELClass(it.value, it.span(), currentNamespace, unit);
                             namespaces.add(clazz);
                             unit.addSymbol(new ELSymbol.ELNamespaceSymbol(clazz, it.span()));
                         } else {
@@ -553,6 +553,27 @@ public class Parser {
                             new Parser(unit, clazz).parse(bt.subTokens, errors);
                         } else {
                             errors.error("Unknown token found (expected `extends` or block)", tokens.get(workingI));
+                            continue;
+                        }
+                    } else if (idt.value.equals("enum")) {
+                        unit.addSymbol(ELSymbol.Type.KEYWORD, idt.span());
+                        workingI++;
+                        ELEnum clazz;
+                        if (tokens.get(workingI) instanceof IdentifierToken it) {
+                            clazz = new ELEnum(it.value, it.span(), currentNamespace, unit);
+                            namespaces.add(clazz);
+                            unit.addSymbol(new ELSymbol.ELNamespaceSymbol(clazz, it.span()));
+                        } else {
+                            errors.error("Unknown token found (expected identifier)", tokens.get(workingI));
+                            continue;
+                        }
+                        if (annotations != null)
+                            clazz.annotations = annotations;
+                        workingI++;
+                        if (tokens.get(workingI) instanceof BlockToken bt) {
+                            clazz.parse(bt);
+                        } else {
+                            errors.error("Unknown token found (block)", tokens.get(workingI));
                             continue;
                         }
                     }

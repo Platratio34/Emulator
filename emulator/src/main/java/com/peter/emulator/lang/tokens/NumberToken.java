@@ -11,7 +11,7 @@ public class NumberToken extends Token {
     public NumberToken(char c, Location location) {
         super(location);
         value = c + "";
-        numValue = (int)Long.parseLong(value, 10);
+        numValue = Integer.parseInt(value, 10);
     }
 
     @Override
@@ -47,7 +47,11 @@ public class NumberToken extends Token {
         }
         value += c;
         endLocation = location;
-        numValue = (int)Long.parseLong(value.replace("_",""), bin ? 2 : (hex ? 16 : 10));
+        if (hex || bin) {
+            numValue = Integer.parseUnsignedInt(value.replace("_", ""), bin ? 2 : 16);
+        } else {
+            numValue = Integer.parseInt(value.replace("_",""), 10);
+        }
         return this;
     }
     @Override

@@ -10,7 +10,7 @@ public class ELPrimitives {
     protected static final Location INTERNAL_LOCATION = new Location("<Base>", 0, 0);
     protected static final Namespace INTERNAL_NAMESPACE = new Namespace("<Base>");
 
-    public static final ELClass OBJECT_CLASS = new ELClass("object", INTERNAL_NAMESPACE, INTERNAL_UNIT) {
+    public static final ELClass OBJECT_CLASS = new ELClass("object", INTERNAL_LOCATION.span(), INTERNAL_NAMESPACE, INTERNAL_UNIT) {
         
         public boolean canStaticCast(ELType target) {
             return true;
@@ -24,7 +24,7 @@ public class ELPrimitives {
     public static final ELType OBJECT = new ELType("object", OBJECT_CLASS, INTERNAL_LOCATION);
 
     // bool
-    public static final ELClass BOOL_CLASS = new ELClass("bool", INTERNAL_NAMESPACE, INTERNAL_UNIT) {
+    public static final ELClass BOOL_CLASS = new ELClass("bool", INTERNAL_LOCATION.span(), INTERNAL_NAMESPACE, INTERNAL_UNIT) {
         @Override
         public int getSize() {
             return 1;
@@ -32,7 +32,7 @@ public class ELPrimitives {
     };
     public static final ELType BOOL = new ELType("bool", BOOL_CLASS, INTERNAL_LOCATION);
     // uint8
-    public static final ELClass UINT8_CLASS = new ELClass("uint8", INTERNAL_NAMESPACE, INTERNAL_UNIT) {
+    public static final ELClass UINT8_CLASS = new ELClass("uint8", INTERNAL_LOCATION.span(), INTERNAL_NAMESPACE, INTERNAL_UNIT) {
         @Override
         public boolean canStaticCast(ELType target) {
             return target.equals(CHAR) || target.equals(UINT16) || target.equals(INT32);
@@ -45,7 +45,7 @@ public class ELPrimitives {
     };
     public static final ELType UINT8 = new ELType("uint8", UINT8_CLASS, INTERNAL_LOCATION);
     // char
-    public static final ELClass CHAR_CLASS = new ELClass("char", INTERNAL_NAMESPACE, INTERNAL_UNIT) {
+    public static final ELClass CHAR_CLASS = new ELClass("char", INTERNAL_LOCATION.span(), INTERNAL_NAMESPACE, INTERNAL_UNIT) {
         @Override
         public boolean canStaticCast(ELType target) {
             return target.equals(UINT8) || target.equals(UINT16) || target.equals(INT32);
@@ -63,7 +63,7 @@ public class ELPrimitives {
     }.withParent(OBJECT_CLASS, OBJECT);
     public static final ELType CHAR = new ELType("char", CHAR_CLASS, INTERNAL_LOCATION);
     // uint16
-    public static final ELClass UINT16_CLASS = new ELClass("uint16", INTERNAL_NAMESPACE, INTERNAL_UNIT) {
+    public static final ELClass UINT16_CLASS = new ELClass("uint16", INTERNAL_LOCATION.span(), INTERNAL_NAMESPACE, INTERNAL_UNIT) {
         @Override
         public boolean canStaticCast(ELType target) {
             return target.equals(INT32);
@@ -75,7 +75,7 @@ public class ELPrimitives {
     }.withParent(OBJECT_CLASS, OBJECT);
     public static final ELType UINT16 = new ELType("uint16", UINT16_CLASS, INTERNAL_LOCATION);
     // int32
-    public static final ELClass INT32_CLASS = new ELClass("int32", INTERNAL_NAMESPACE, INTERNAL_UNIT) {
+    public static final ELClass INT32_CLASS = new ELClass("int32", INTERNAL_LOCATION.span(), INTERNAL_NAMESPACE, INTERNAL_UNIT) {
         @Override
         public boolean canStaticCast(ELType target) {
             return target.equals(VOID_PTR);

@@ -74,7 +74,7 @@ public class SysD extends Namespace {
             public uint8 state;
         }
          */
-        ELStruct AddressSpace = new ELStruct("AddressSpace", this, unit);
+        ELStruct AddressSpace = new ELStruct("AddressSpace", SYSD_LOCATION.span(), this, unit);
         AddressSpace.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.INT32, "addressOffset", false, this, unit, SYSD_LOCATION));
         AddressSpace.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.INT32, "pid", false, this, unit, SYSD_LOCATION));
         AddressSpace.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.UINT8, "type", false, this, unit, SYSD_LOCATION));

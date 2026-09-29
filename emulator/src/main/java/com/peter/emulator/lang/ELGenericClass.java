@@ -10,7 +10,7 @@ public class ELGenericClass extends ELClass {
     public final ELType[] types;
 
     public ELGenericClass(ELClass clazz, ELType... types) {
-        super(clazz.cName, clazz.namespace, clazz.unit);
+        super(clazz.cName, clazz.nameSpan, clazz.namespace, clazz.unit);
         baseClass = clazz;
         this.types = types;
     }

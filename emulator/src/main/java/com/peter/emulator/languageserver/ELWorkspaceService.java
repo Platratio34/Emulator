@@ -52,10 +52,12 @@ public class ELWorkspaceService implements WorkspaceService {
             for (File f2 : f.listFiles()) {
                 if (f2.isFile() && f2.getName().equals("module-info.json")) {
                     found = true;
+                    lspServer.lsLock.lock();
                     if (!moduleRoots.contains(f)) {
                         lspServer.logInfo("Added new module %s to diagnostics", f.getAbsolutePath());
                         moduleRoots.add(f);
                     }
+                    lspServer.lsLock.unlock();
                     break;
                 }
             }

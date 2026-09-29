@@ -2,8 +2,8 @@ package com.peter.emulator.lang;
 
 public class ELStruct extends ELClass {
 
-    public ELStruct(String name, Namespace namespace, ProgramUnit unit) {
-        super(name, namespace, unit);
+    public ELStruct(String name, Span nameSpan, Namespace namespace, ProgramUnit unit) {
+        super(name, nameSpan, namespace, unit);
     }
 
     @Override

@@ -139,8 +139,7 @@ public class FunctionAction extends ComplexAction {
                 throw ELAnalysisError.errorF(it2.spanFirst(), "Unable to resolve identifier `%s`", it2.value);
             }
         }
-
-        if (rr.function.inline) {
+        if (rr != null && rr.function != null && rr.function.inline) {
             onStack = false;
         }
 

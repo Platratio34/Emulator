@@ -20,6 +20,8 @@ namespace Kernal {
 
     static final char* SYS_NAME = "EmulatorOS\0";
     static final ProcessState[1024] processStates;
+    static ProcessState*[32] processReadyQueue;
+    static final Mutex processReadyQueueLock;
 
     static const int32* TIMER_UNIT;
     // static Console console;
@@ -32,108 +34,165 @@ namespace Kernal {
     @Entrypoint(raw)
     internal static void _main() {
         // SysD.rIH = &Kernal::_interrupt;
-        asm("LOAD rIH &:Kernal._interrupt");
+        asm{
+            LOAD rIH &:Kernal._interrupt
+            LOAD rPID 0
+        }
         // Memory._setup();
         // console.address = 0x1_0000;
         // console.
-        print("Starting \0");
-        print(SYS_NAME);
-        print('\n');
+        printStr("Starting \0");
+        printStr(SYS_NAME);
+        printChar('\n');
         // System.console = new Console(0x1_0000);
         // Probably should't be referencing System module in the kernal
+
+        // Now setup the kernal process
+        // We immediately mark it running because it is, this is really just boilerplate for multi-process
+        ProcessState& kernalProcess = processStates[1];
+        kernalProcess.status = ProcessStatus.RUNNING;
+        kernalProcess.parent = 0;
+        kernalProcess.pid = 1;
+        kernalProcess.interruptHandler = nullptr;
+
+        int32 pI = 2
+        while(pI < 1024) {
+            processStates[pI].status = ProcessStatus.NONE;
+        }
+
+        // do stuff here? Maybe, or we could just drop into the main process
+
+        // Wait loop
+        asm{
+            :kLoop
+            LOAD MEM r1 &Kernal.processReadyQueue
+            GOTO EQ r1 :kLoop
+            INTERRUPT 0x9000_0000
+            GOTO :kLoop
+        }
     }
 
     @InterruptHandler(raw)
     internal static void _interrupt() {
-        // stack: [...pgmPtr,rPM,r0...r15 [HEAD]]
-        // void* stack = SysD.rStack; // stack: [...pgmPtr,rPM,r0...r15,var(stack) [HEAD], [stack*]]
-        // stack -= 2; // now points to r15; stack: [...pgmPtr,rPM,r0...r15 [stack*],var(stack,+17) [HEAD]]
-        ProcessState& oldState = &processStates[SysD.rPID];
-        oldState.pid = 0;
-        oldState.updateInterrupt();
-
         int32 code = SysD.rIC;
         if((code & 0x8000_0000) == 0) { // system interrupt in the active process
+            ProcessState& cProc = &processStates[SysD.rPID];
             SysD.rPM = false;
             // System.onInterrupt(code);
             // need to get interrupt handler for the current process here
-            oldState.interruptHandler(code);
+            if(cProc.interruptHandler) {
+                cProc.interruptHandler(code);
+            }
             SysD.interruptReturn();
             return; // only including this for clarity, it is technically unreachable
-        } else {
-            if(code == 0x8000_0001) { // privileged mode failure
-                SysD.halt(); // this is a breaking instruct, we just don't know it
-            }
-            if(code == 0x8000_0002) { // Timer interrupt
-                int32 timerIndex = 1;
-                while(TIMER_UNIT[timerIndex] != 0xffff_ffff) {
-                    timerIndex++;
-                }
-                TIMER_UNIT[timerIndex] = 0x0;
-            }
-            if((code & 0x0001_0000) != 0) { // peripheral interrupt
-
-            }
         }
-        // SysD.rMemTblI = oldState.memTablePtr;
-        // stack: [...pgmPtr,rPM,r0...r15 [oldState.stackPtr*],var(stack,+1)...]
-        // SysD.rStackI = oldState.stackPtr;
-        // stack: [...pgmPtr [stack*],rPM,r0...r15 [HEAD,oldState.stackPtr*] ,var(stack,+0)...]
+        
+        if(code == 0x8000_0001) { // privileged mode failure
+            SysD.halt(); // this is a breaking instruct, we just don't know it
+        }
+        if((code & 0xffff_ff00) == 0x8000_0200) { // Timer interrupt
+            int32 i = code & 0xff;
+        }
+        if(code & 0xffff_fff0 == 0x9000_0000) { // process flow
+            ProcessState& oldState = &processStates[SysD.rPIDI];
+            oldState.updateInterrupt();
+            if(code == 0x9000_0001) { // yield
+                if(oldState.status == ProcessStatus.RUNNING) {
+                    oldState.status = ProcessStatus.READY;
+                }
+            }
+            if(code == 0x9000_0002) { // exit
+                oldState.status = ProcessStatus.DEAD;
+                // TODO might do something here w/ exit code, TBD
+            }
+            // get next process
+            // Check if there is a process in the ready queue
+            processReadyQueueLock.acquire();
+            if(processReadyQueue[0] == nullptr) { // no processes in the ready queue
+                processReadyQueueLock.release();
+                // Go back to kernal root process to wait so interrupts can happen
+                ProcessState& kProc = processStates[1];
+                kProc.setInterrupt();
+                kProc.status = ProcessStatus.RUNNING;
+                SysD.interruptReturn();
+                return; // only including this for clarity, it is technically unreachable
+            }
+            ProcessState* newProc = processReadyQueue[0];
+            asm{
+                LOAD r1 $Kernal.processReadyQueue
+                ADD r2 r1 4
+                COPY MEM WORD r2 r1 INC_RS INC_RD // 1 -> 0
+                COPY MEM WORD r2 r1 INC_RS INC_RD // 2 -> 1
+                COPY MEM WORD r2 r1 INC_RS INC_RD // 3 -> 2
+                COPY MEM WORD r2 r1 INC_RS INC_RD // 4 -> 3
+                COPY MEM WORD r2 r1 INC_RS INC_RD // 5 -> 4
+                COPY MEM WORD r2 r1 INC_RS INC_RD // 6 -> 5
+                COPY MEM WORD r2 r1 INC_RS INC_RD // 7 -> 6
+                COPY MEM WORD r2 r1 INC_RS INC_RD // 8 -> 7
+                COPY MEM WORD r2 r1 INC_RS INC_RD // 9 -> 8
+                COPY MEM WORD r2 r1 INC_RS INC_RD // 10 -> 9
+                COPY MEM WORD r2 r1 INC_RS INC_RD // 11 -> 10
+                COPY MEM WORD r2 r1 INC_RS INC_RD // 12 -> 11
+                COPY MEM WORD r2 r1 INC_RS INC_RD // 13 -> 12
+                COPY MEM WORD r2 r1 INC_RS INC_RD // 14 -> 13
+                COPY MEM WORD r2 r1 INC_RS INC_RD // 15 -> 14
+                COPY MEM WORD r2 r1 INC_RS INC_RD // 16 -> 15
+                COPY MEM WORD r2 r1 INC_RS INC_RD // 17 -> 16
+                COPY MEM WORD r2 r1 INC_RS INC_RD // 18 -> 17
+                COPY MEM WORD r2 r1 INC_RS INC_RD // 19 -> 18
+                COPY MEM WORD r2 r1 INC_RS INC_RD // 20 -> 19
+                COPY MEM WORD r2 r1 INC_RS INC_RD // 21 -> 20
+                COPY MEM WORD r2 r1 INC_RS INC_RD // 22 -> 21
+                COPY MEM WORD r2 r1 INC_RS INC_RD // 23 -> 22
+                COPY MEM WORD r2 r1 INC_RS INC_RD // 24 -> 23
+                COPY MEM WORD r2 r1 INC_RS INC_RD // 25 -> 24
+                COPY MEM WORD r2 r1 INC_RS INC_RD // 26 -> 25
+                COPY MEM WORD r2 r1 INC_RS INC_RD // 27 -> 26
+                COPY MEM WORD r2 r1 INC_RS INC_RD // 28 -> 27
+                COPY MEM WORD r2 r1 INC_RS INC_RD // 29 -> 28
+                COPY MEM WORD r2 r1 INC_RS INC_RD // 30 -> 29
+                COPY MEM WORD r2 r1 INC_RS INC_RD // 31 -> 30
+                STORE WORD r1 0 // 31
+            }
+            processReadyQueueLock.release();
+
+            newProc.setInterrupt();
+            newProc.status = ProcessStatus.RUNNING;
+
+            SysD.interruptReturn();
+            return; // only including this for clarity, it is technically unreachable
+        }
+        
         SysD.interruptReturn();
     }
 
-    @Syscall
-    public static void interruptExit() {
-
-    }
-
-    @Syscall
-    public static void exit() {
-        SysD.halt(); // this is a breaking instruct, we just don't know it
-    }
-
-    public static void peripheralCmd(int32 deviceId, int32 cmdSize, int32* cmd) {
-        *CMD_SIZE = cmdSize;
-        *CMD_DEVICE = deviceId;
-        SysD.memCopy(cmd, 0, cmdSize, CMD_START, 0);
-        *CMD_STATUS = 0x1;
-    }
-
-    // public static int32 getPeripheral(int32 type) {
-    //     int32[1] cmd = {0x1};
-    //     peripheralCmd(0, 0x1, &cmd);
-    //     while(SysD.memGet(0x8080) != 0x1) {
-    //         asm("NO OP");
-    //     }
-    //     int32 numDevices = SysD.memGet(0x8082);
-    //     for(int i = 0; i < numDevices; i++) {
-    //         int32 addr = 0x8083 + ( i * 2 );
-    //         int32 deviceType = SysD.memGet(addr+1);
-    //         if(deviceType == type) {
-    //             return SysD.memGet(addr);
-    //         }
-    //     }
-    //     return 0;
-    // }
-
-    static int32 lastPID = 0;
+    static int32 lastPID = 1;
 
     public static ProcessState* createProcess() {
         int32 nextPID = lastPID + 1;
         if(nextPID == 1024) {
-            nextPID = 1;
-            while(processStates[nextPID].status != 0) {
-                nextPID++;
-                if(nextPID == 1024) {
-                    nextPID = 1;
-                }
-                if(nextPID == lastPID) {
-                    return nullptr;
-                }
+            nextPID = 2;
+        }
+        while(processStates[nextPID].status != ProcessStatus.NONE) {
+            nextPID++;
+            if(nextPID == 1024) {
+                nextPID = 2;
+            }
+            if(nextPID == lastPID) {
+                return nullptr;
             }
         }
         lastPID = nextPID;
         return &processStates[nextPID];
+    }
+
+    enum ProcessStatus {
+        NONE,
+        SETUP,
+        READY,
+        RUNNING,
+        WAITING,
+        DEAD;
     }
 
     struct ProcessState {
@@ -144,71 +203,69 @@ namespace Kernal {
         public bool privileged;
         public int32[16] registers;
 
-        public int32 status;
+        public ProcessStatus status;
         public method<int32> interruptHandler;
-
-        public void update() {
-            pgmPtr = SysD.rPgm;
-            stackPtr = SysD.rStack;
-            memTablePtr = SysD.rMemTbl;
-            privileged = SysD.rPM;
-        }
+        public int32 parent;
 
         public void updateInterrupt() {
-            stackPtr = SysD.rStackI;
-            privileged = SysD.rPMI;
-            pgmPtr = SysD.rPgmI;
-            memTablePtr = SysD.rMemTblI;
-            registers[0] = SysD.r0I;
-            registers[1] = SysD.r1I;
-            registers[2] = SysD.r2I;
-            registers[3] = SysD.r3I;
-            registers[4] = SysD.r4I;
-            registers[5] = SysD.r5I;
-            registers[6] = SysD.r6I;
-            registers[7] = SysD.r7I;
-            registers[8] = SysD.r8I;
-            registers[9] = SysD.r9I;
-            registers[10] = SysD.r10I;
-            registers[11] = SysD.r11I;
-            registers[12] = SysD.r12I;
-            registers[13] = SysD.r13I;
-            registers[14] = SysD.r14I;
-            registers[15] = SysD.r15I;
+            asm{
+                ADD r1 r0 4 // Offset to pgmPtr instead of PID
+                STORE WORD rPgmI r0 INC_RA
+                STORE WORD rStackI r0 INC_RA
+                STORE WORD rMemTblI r0 INC_RA
+                STORE WORD rPMI r0 INC_RA
+
+                STORE WORD r0I r0 INC_RA
+                STORE WORD r1I r0 INC_RA
+                STORE WORD r2I r0 INC_RA
+                STORE WORD r3I r0 INC_RA
+                STORE WORD r4I r0 INC_RA
+                STORE WORD r5I r0 INC_RA
+                STORE WORD r6I r0 INC_RA
+                STORE WORD r7I r0 INC_RA
+                STORE WORD r8I r0 INC_RA
+                STORE WORD r9I r0 INC_RA
+                STORE WORD r10I r0 INC_RA
+                STORE WORD r11I r0 INC_RA
+                STORE WORD r12I r0 INC_RA
+                STORE WORD r13I r0 INC_RA
+                STORE WORD r14I r0 INC_RA
+                STORE WORD r15I r0 INC_RA
+            }
         }
         public void setInterrupt() {
-            SysD.rStackI = stackPtr;
-            SysD.rPMI = privileged;
-            SysD.rPgmI = pgmPtr;
-            SysD.rMemTblI = memTablePtr;
-            SysD.r0I = registers[0];
-            SysD.r1I = registers[1];
-            SysD.r2I = registers[2];
-            SysD.r3I = registers[3];
-            SysD.r4I = registers[4];
-            SysD.r5I = registers[5];
-            SysD.r6I = registers[6];
-            SysD.r7I = registers[7];
-            SysD.r8I = registers[8];
-            SysD.r9I = registers[9];
-            SysD.r10I = registers[10];
-            SysD.r11I = registers[11];
-            SysD.r12I = registers[12];
-            SysD.r13I = registers[13];
-            SysD.r14I = registers[14];
-            SysD.r15I = registers[15];
+            asm{
+                COPY r0 r1
+                LOAD MEM WORD rPIDI r0 INC_RA
+                LOAD MEM WORD rPgmI r0 INC_RA
+                LOAD MEM WORD rStackI r0 INC_RA
+                LOAD MEM WORD rMemTblI r0 INC_RA
+                LOAD MEM WORD rPMI r0 INC_RA
+
+                LOAD MEM WORD r0I r0 INC_RA
+                LOAD MEM WORD r1I r0 INC_RA
+                LOAD MEM WORD r2I r0 INC_RA
+                LOAD MEM WORD r3I r0 INC_RA
+                LOAD MEM WORD r4I r0 INC_RA
+                LOAD MEM WORD r5I r0 INC_RA
+                LOAD MEM WORD r6I r0 INC_RA
+                LOAD MEM WORD r7I r0 INC_RA
+                LOAD MEM WORD r8I r0 INC_RA
+                LOAD MEM WORD r9I r0 INC_RA
+                LOAD MEM WORD r10I r0 INC_RA
+                LOAD MEM WORD r11I r0 INC_RA
+                LOAD MEM WORD r12I r0 INC_RA
+                LOAD MEM WORD r13I r0 INC_RA
+                LOAD MEM WORD r14I r0 INC_RA
+                LOAD MEM WORD r15I r0 INC_RA
+            }
         }
 
-        public void applyNoPgm() {
-            SysD.rMemTbl = memTablePtr;
-            SysD.rStack = stackPtr;
-            SysD.rPM = privileged;
-        }
-
-        public static ProcessState* create(ProcessState& state) {
-            state.pid = SysD.rPID;
-            state.update();
-            status = 1;
+        public static ProcessState* create(ProcessState& state, int32 pid, int32 parent) {
+            state.pid = pid;
+            state.status = ProcessStatus.SETUP;
+            state.parent = parent;
+            state.interruptHandler = nullptr;
             return state;
         }
     }

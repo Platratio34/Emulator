@@ -14,7 +14,7 @@ public class Method extends ELClass {
     // public final ELFunction callFunction;
 
     public Method(String name, Namespace namespace, ProgramUnit unit, String... params) {
-        super(name, namespace, unit);
+        super(name, ELPrimitives.INTERNAL_LOCATION.span(), namespace, unit);
         // callFunction = new ELFunction(ELProtectionLevel.PUBLIC, false, this, "call", FunctionType.INSTANCE, false, unit, ELPrimitives.INTERNAL_LOCATION);
         // for (String p : params) {
         //     genericsOrder.add(p);

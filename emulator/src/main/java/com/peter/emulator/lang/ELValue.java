@@ -60,6 +60,8 @@ public abstract class ELValue {
                 size = 4;
             } else if (type.pointer) {
                 size = 4;
+            } else if (type.canCastTo(ELPrimitives.INT32)) {
+                size = 4;
             } else {
                 throw new ELCompileException("Incorrect type for number value: "+type.toString());
             }
@@ -85,13 +87,16 @@ public abstract class ELValue {
         int v;
         String vS = nt.value.replace("_", "");
         if (nt.hex) {
-            v = Integer.parseInt(vS, 16);
+            v = Integer.parseUnsignedInt(vS, 16);
         } else if (nt.bin) {
-            v = Integer.parseInt(vS, 2);
+            v = Integer.parseUnsignedInt(vS, 2);
         } else {
             v = Integer.parseInt(vS);
         }
         return new ELNumberValue(type, v, nt.span());
+    }
+    public static ELNumberValue number(ELType type, int v, Span span) {
+        return new ELNumberValue(type, v, span);
     }
     
     public static class ELStringValue extends ELValue {

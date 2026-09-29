@@ -103,7 +103,7 @@ public class Peripheral extends Namespace {
             const int32[6] data;
         }
          */
-        ELStruct PeripheralDescriptor = new ELStruct("PeripheralDescriptor", this, unit);
+        ELStruct PeripheralDescriptor = new ELStruct("PeripheralDescriptor", PERIPHERAL_LOCATION.span(), this, unit);
         PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.INT32, "id", true, this, unit, PERIPHERAL_LOCATION));
         PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.INT32, "type", true, this, unit, PERIPHERAL_LOCATION));
         PeripheralDescriptor.addMember(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.MEMBER, ELPrimitives.CHAR.builder().array(16).location(PERIPHERAL_LOCATION).build(), "manufacturer", true, this, unit, PERIPHERAL_LOCATION));
