@@ -23,6 +23,7 @@ namespace TestD {
     @Entrypoint(raw)
     public static void main() {
         // SysD.memCopy(&path, 0, 1, &inputBuffer, 0);
+        // SysD.memEquals(&path, &inputBuffer, 12);
         
         asm{
             STORE BYTE 'T' r7
@@ -157,23 +158,28 @@ namespace TestD {
 
     public static bool stringEquals(char* str1, char* str2) {
         asm{
-            SUB r1 r15 16
-            LOAD MEM r1 r1
-            // str1
+            #alias r1 str1
+            SUB str1 r15 16
+            LOAD MEM str1 str1
         
-            SUB r2 r15 12
-            LOAD MEM r2 r2 // str2
+            #alias r2 str2
+            SUB str2 r15 12
+            LOAD MEM str2 str2
 
             // test comment
             
+            #alias r3 c1
+            #alias r4 c2
             :string_equals_loop
-                LOAD MEM BYTE r3 r1 INC_RA
-                LOAD MEM BYTE r4 r2 INC_RA
+                LOAD MEM BYTE c1 str1 INC_RA
+                LOAD MEM BYTE c2 str2 INC_RA
                 
-                SUB r4 r3 r4
+                SUB r4 c1 c2
                 GOTO NEQ r4 :string_equals_fail
                 
-                GOTO NEQ r3 :string_equals_loop
+                GOTO NEQ c1 :string_equals_loop
+            #alias clear str1
+            #alias clear str2
         }
         return true;
         asm{:string_equals_fail};

@@ -1,6 +1,5 @@
 package com.peter.emulator.lang.actions;
 
-import com.peter.emulator.MachineCode;
 import com.peter.emulator.machinecode.Reg;
 
 public class Register {
@@ -8,6 +7,7 @@ public class Register {
     protected int reg = -1;
     protected String regStr = null;
     protected boolean reserved = false;
+    public final String alias;
 
     public final ActionScope scope;
 
@@ -15,6 +15,7 @@ public class Register {
         if(scope == null)
             throw new NullPointerException();
         this.scope = scope;
+        alias = null;
     }
 
     public Register(ActionScope scope, int reg) {
@@ -22,14 +23,24 @@ public class Register {
             throw new NullPointerException();
         this.scope = scope;
         this.reg = reg;
-        regStr = MachineCode.translateReg(reg);
+        regStr = Reg.from(reg).string;
+        alias = null;
+    }
+
+    public Register(ActionScope scope, String alias) {
+        if(scope == null)
+            throw new NullPointerException();
+        this.scope = scope;
+        regStr = alias;
+        this.alias = alias;
     }
 
     public boolean fistFree() {
         if(reg != -1)
             return true;
         reg = scope.firstFreeR();
-        regStr = MachineCode.translateReg(reg);
+        if(alias == null)
+            regStr = Reg.from(reg).string;
         return reg >= 0;
     }
 
@@ -76,5 +87,10 @@ public class Register {
     }
     public RegisterAction releaseAction() {
         return new RegisterAction(scope, this, true);
+    }
+    public RegisterAction findAction() {
+        RegisterAction ra = new RegisterAction(scope, this, false);
+        ra.findOnly = true;
+        return ra;
     }
 }

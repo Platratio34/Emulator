@@ -6,6 +6,7 @@ import com.peter.emulator.lang.ELProtectionLevel;
 import com.peter.emulator.lang.ELStruct;
 import com.peter.emulator.lang.ELVariable;
 import com.peter.emulator.lang.ELVariable.Type;
+import com.peter.emulator.lang.InlineType;
 import com.peter.emulator.lang.Location;
 import com.peter.emulator.lang.Namespace;
 import com.peter.emulator.lang.ProgramModule;
@@ -48,7 +49,7 @@ public class Peripheral extends Namespace {
         addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.INT32.pointerTo(), "TYPE_STORAGE_BLOCK", true, this, unit, PERIPHERAL_LOCATION).setValue(TYPE_STORAGE_BLOCK));
 
         ELFunction command = new ELFunction(ELProtectionLevel.PUBLIC, false, this, "command", FunctionType.STATIC,
-                false, unit, PERIPHERAL_LOCATION);
+                InlineType.OUTLINE, unit, PERIPHERAL_LOCATION);
         command.addParameter(ELPrimitives.INT32, "deviceId");
         command.addParameter(ELPrimitives.INT32, "cmdSize");
         command.addParameter(ELPrimitives.INT32.pointerTo(), "cmd");

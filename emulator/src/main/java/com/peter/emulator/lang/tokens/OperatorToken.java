@@ -204,5 +204,12 @@ public class OperatorToken extends Token {
         public static Type get(String c) {
             return values.get(c);
         }
+
+        public boolean isAssign() {
+            return switch(this) {
+                case ASSIGN, ADD_ASSIGN, SUB_ASSIGN, BITWISE_OR_ASSIGN -> true;
+                default -> false;
+            };
+        }
     }
 }

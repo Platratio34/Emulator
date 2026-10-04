@@ -6,6 +6,7 @@ import com.peter.emulator.lang.ELClass;
 import com.peter.emulator.lang.ELFunction;
 import com.peter.emulator.lang.ELProtectionLevel;
 import com.peter.emulator.lang.ELType;
+import com.peter.emulator.lang.InlineType;
 import com.peter.emulator.lang.Namespace;
 import com.peter.emulator.lang.ProgramUnit;
 
@@ -36,7 +37,7 @@ public class Method extends ELClass {
     };
 
     public ELFunction function(ELType type) {
-        ELFunction f = new ELFunction(ELProtectionLevel.PUBLIC, true, this, "", ELFunction.FunctionType.STATIC, false, unit, ELPrimitives.INTERNAL_LOCATION);
+        ELFunction f = new ELFunction(ELProtectionLevel.PUBLIC, true, this, "", ELFunction.FunctionType.STATIC, InlineType.OUTLINE, unit, ELPrimitives.INTERNAL_LOCATION);
         f.paramOrder = genericsOrder;
         ArrayList<ELType> generics = type.getGenerics();
         for (int i = 0; i < genericsOrder.size(); i++) {

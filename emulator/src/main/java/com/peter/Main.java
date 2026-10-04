@@ -20,6 +20,7 @@ import com.peter.emulator.lang.ELAnalysisError.Severity;
 import com.peter.emulator.lang.LanguageServer;
 import com.peter.emulator.lang.Location;
 import com.peter.emulator.lang.ProgramModule;
+import com.peter.emulator.lang.expresion.Expression;
 import com.peter.emulator.languageserver.ELLanguageServer;
 
 public class Main {
@@ -40,6 +41,8 @@ public class Main {
             launcher.startListening();
             return;
         }
+        
+        // Expression.test();
 
         LanguageServer ls = new LanguageServer();
 
@@ -307,8 +310,6 @@ public class Main {
         System.out.println(emulator.kernalRam.debugPrint(0x9000, 8));
          
         emulator.stop();
-
-        // Expression.test();
         
     }
     

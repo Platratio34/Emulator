@@ -25,7 +25,7 @@ public class ELFunction {
     public final String cName;
     public final Location startLocation;
     public final FunctionType type;
-    public final boolean inline;
+    public final InlineType inline;
     public Location bodyLocation;
     public Location bodyEndLocation;
     public final ProgramUnit unit;
@@ -44,7 +44,7 @@ public class ELFunction {
 
     public DocComment doc = null;
 
-    public ELFunction(ELProtectionLevel protection, boolean extern, Namespace namespace, String name, FunctionType type, boolean inline, ProgramUnit unit, Location location) {
+    public ELFunction(ELProtectionLevel protection, boolean extern, Namespace namespace, String name, FunctionType type, InlineType inline, ProgramUnit unit, Location location) {
         if (namespace == null)
             throw new NullPointerException("Namespace must be non-null");
         this.protection = protection;
@@ -210,7 +210,7 @@ public class ELFunction {
             out += "operator ";
         else
             out += protection.value + " ";
-        if (inline)
+        if (inline != InlineType.OUTLINE)
             out += "inline ";
         switch (type) {
             case CONSTRUCTOR -> out += ret.typeString() + "(";

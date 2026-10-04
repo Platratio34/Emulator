@@ -1,5 +1,7 @@
 package com.peter.emulator.lang.actions;
 
+import com.peter.emulator.machinecode.Reg;
+
 public class RegisterAction extends Action {
 
     public Register register;
@@ -20,17 +22,26 @@ public class RegisterAction extends Action {
 
     @Override
     public String toAssembly() {
-        if(release) {
+        if (register == null) {
+            return "";
+        }
+        if (release) {
             register.release();
-            return "// Releasing "+register;
+            if (register.alias != null)
+                return "#alias clear " + register.alias + " // Releasing " + Reg.from(register.reg);
+            return "// Releasing " + register;
         } else {
-            if(!register.fistFree()) {
+            if (!register.fistFree()) {
                 return "// !!Out of registers!!";
             }
-            if(findOnly)
-                return "// Found Free register "+register;
+            if (findOnly)
+                return "// Found Free register " + register;
+            if (register.reserved)
+                return "// Register " + register + " already reserved";
             register.reserve();
-            return "// Reserving "+register;
+            if (register.alias != null)
+                return "#alias " + Reg.from(register.reg) + " " + register.alias + " // Reserving " + Reg.from(register.reg);
+            return "// Reserving " + register;
         }
         // return "";
     }

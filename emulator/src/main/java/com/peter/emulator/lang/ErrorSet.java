@@ -60,11 +60,11 @@ public class ErrorSet extends ArrayList<ELAnalysisError> {
     
     public void errorF(Span span, String reason, Object... args) {
         hadError = true;
-        super.add(ELAnalysisError.errorF(span, reason, span));
+        super.add(ELAnalysisError.errorF(span, reason, args));
     }
     public void errorF(Token token, String reason, Object... args) {
         hadError = true;
-        super.add(ELAnalysisError.errorF(token, reason, token));
+        super.add(ELAnalysisError.errorF(token, reason, args));
     }
     
     public void fatal(String reason, Span span) {

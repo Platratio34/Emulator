@@ -709,7 +709,7 @@ public class CPU {
         String out = "";
         String vl = "";
         for (int i = 0; i <= 0xf; i++) {
-            out += String.format("%-11s", MachineCode.translateReg(i));
+            out += String.format("%-11s", Reg.from(i));
             vl += toHex(getReg(Reg.from(i))) + "  ";
         }
         out += "\n" + vl;
@@ -722,7 +722,7 @@ public class CPU {
                 vl += "           ";
                 continue;
             }
-            out += String.format("%-11s", MachineCode.translateReg(i));
+            out += String.format("%-11s", Reg.from(i));
             vl += toHex(getReg(Reg.from(i))) + "  ";
         }
         out += "\n" + vl;
@@ -730,7 +730,7 @@ public class CPU {
         out += "\n";
         vl = "";
         for (int i = 0x10; i <= 0x1f; i++) {
-            out += String.format("%-11s", MachineCode.translateReg(i));
+            out += String.format("%-11s", Reg.from(i));
             vl += toHex(getReg(Reg.from(i))) + "  ";
         }
         out += "\n" + vl;
@@ -744,7 +744,7 @@ public class CPU {
                 vl += "           ";
                 continue;
             }
-            out += String.format("%-11s", MachineCode.translateReg(i));
+            out += String.format("%-11s", Reg.from(i));
             vl += toHex(getReg(Reg.from(i))) + "  ";
         }
         out += "\n" + vl;

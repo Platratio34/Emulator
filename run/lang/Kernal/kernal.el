@@ -38,29 +38,28 @@ namespace Kernal {
             LOAD rIH &:Kernal._interrupt
             LOAD rPID 0
         }
-        // Memory._setup();
-        // console.address = 0x1_0000;
-        // console.
+
         printStr("Starting \0");
         printStr(SYS_NAME);
         printChar('\n');
-        // System.console = new Console(0x1_0000);
-        // Probably should't be referencing System module in the kernal
+        
+        setupFS();
 
         // Now setup the kernal process
         // We immediately mark it running because it is, this is really just boilerplate for multi-process
-        ProcessState& kernalProcess = processStates[1];
+        ProcessState& kernalProcess = &processStates[1];
         kernalProcess.status = ProcessStatus.RUNNING;
         kernalProcess.parent = 0;
         kernalProcess.pid = 1;
+        SysD.rPID = 1;
         kernalProcess.interruptHandler = nullptr;
 
-        int32 pI = 2
+        int32 pI = 2;
         while(pI < 1024) {
             processStates[pI].status = ProcessStatus.NONE;
         }
 
-        // do stuff here? Maybe, or we could just drop into the main process
+        
 
         // Wait loop
         asm{
@@ -111,7 +110,7 @@ namespace Kernal {
             if(processReadyQueue[0] == nullptr) { // no processes in the ready queue
                 processReadyQueueLock.release();
                 // Go back to kernal root process to wait so interrupts can happen
-                ProcessState& kProc = processStates[1];
+                ProcessState& kProc = &processStates[1];
                 kProc.setInterrupt();
                 kProc.status = ProcessStatus.RUNNING;
                 SysD.interruptReturn();
@@ -207,57 +206,61 @@ namespace Kernal {
         public method<int32> interruptHandler;
         public int32 parent;
 
+        public ProcessFiles* files;
+
+        public int32[7] _padding;
+
         public void updateInterrupt() {
             asm{
                 ADD r1 r0 4 // Offset to pgmPtr instead of PID
-                STORE WORD rPgmI r0 INC_RA
-                STORE WORD rStackI r0 INC_RA
-                STORE WORD rMemTblI r0 INC_RA
-                STORE WORD rPMI r0 INC_RA
+                STORE WORD rPgmI r1 INC_RA
+                STORE WORD rStackI r1 INC_RA
+                STORE WORD rMemTblI r1 INC_RA
+                STORE WORD rPMI r1 INC_RA
 
-                STORE WORD r0I r0 INC_RA
-                STORE WORD r1I r0 INC_RA
-                STORE WORD r2I r0 INC_RA
-                STORE WORD r3I r0 INC_RA
-                STORE WORD r4I r0 INC_RA
-                STORE WORD r5I r0 INC_RA
-                STORE WORD r6I r0 INC_RA
-                STORE WORD r7I r0 INC_RA
-                STORE WORD r8I r0 INC_RA
-                STORE WORD r9I r0 INC_RA
-                STORE WORD r10I r0 INC_RA
-                STORE WORD r11I r0 INC_RA
-                STORE WORD r12I r0 INC_RA
-                STORE WORD r13I r0 INC_RA
-                STORE WORD r14I r0 INC_RA
-                STORE WORD r15I r0 INC_RA
+                STORE WORD r0I r1 INC_RA
+                STORE WORD r1I r1 INC_RA
+                STORE WORD r2I r1 INC_RA
+                STORE WORD r3I r1 INC_RA
+                STORE WORD r4I r1 INC_RA
+                STORE WORD r5I r1 INC_RA
+                STORE WORD r6I r1 INC_RA
+                STORE WORD r7I r1 INC_RA
+                STORE WORD r8I r1 INC_RA
+                STORE WORD r9I r1 INC_RA
+                STORE WORD r10I r1 INC_RA
+                STORE WORD r11I r1 INC_RA
+                STORE WORD r12I r1 INC_RA
+                STORE WORD r13I r1 INC_RA
+                STORE WORD r14I r1 INC_RA
+                STORE WORD r15I r1 INC_RA
             }
         }
         public void setInterrupt() {
             asm{
                 COPY r0 r1
-                LOAD MEM WORD rPIDI r0 INC_RA
-                LOAD MEM WORD rPgmI r0 INC_RA
-                LOAD MEM WORD rStackI r0 INC_RA
-                LOAD MEM WORD rMemTblI r0 INC_RA
-                LOAD MEM WORD rPMI r0 INC_RA
+                LOAD MEM WORD rPIDI r1 INC_RA
+                LOAD MEM WORD rPgmI r1 INC_RA
+                LOAD MEM WORD rStackI r1 INC_RA
+                LOAD MEM WORD rMemTblI r1 INC_RA
+                LOAD MEM WORD rPMI r1 INC_RA
 
-                LOAD MEM WORD r0I r0 INC_RA
-                LOAD MEM WORD r1I r0 INC_RA
-                LOAD MEM WORD r2I r0 INC_RA
-                LOAD MEM WORD r3I r0 INC_RA
-                LOAD MEM WORD r4I r0 INC_RA
-                LOAD MEM WORD r5I r0 INC_RA
-                LOAD MEM WORD r6I r0 INC_RA
-                LOAD MEM WORD r7I r0 INC_RA
-                LOAD MEM WORD r8I r0 INC_RA
-                LOAD MEM WORD r9I r0 INC_RA
-                LOAD MEM WORD r10I r0 INC_RA
-                LOAD MEM WORD r11I r0 INC_RA
-                LOAD MEM WORD r12I r0 INC_RA
-                LOAD MEM WORD r13I r0 INC_RA
-                LOAD MEM WORD r14I r0 INC_RA
-                LOAD MEM WORD r15I r0 INC_RA
+                LOAD MEM WORD r0I r1 INC_RA
+                LOAD MEM WORD r1I r1 INC_RA
+                LOAD MEM WORD r2I r1 INC_RA
+                LOAD MEM WORD r3I r1 INC_RA
+                LOAD MEM WORD r4I r1 INC_RA
+                LOAD MEM WORD r5I r1 INC_RA
+                LOAD MEM WORD r6I r1 INC_RA
+                LOAD MEM WORD r7I r1 INC_RA
+                LOAD MEM WORD r8I r1 INC_RA
+                LOAD MEM WORD r9I r1 INC_RA
+                LOAD MEM WORD r10I r1 INC_RA
+                LOAD MEM WORD r11I r1 INC_RA
+                LOAD MEM WORD r12I r1 INC_RA
+                LOAD MEM WORD r13I r1 INC_RA
+                LOAD MEM WORD r14I r1 INC_RA
+                LOAD MEM WORD r15I r1 INC_RA
             }
         }
 

@@ -2,7 +2,7 @@ import SysD;
 
 namespace System.Collections;
 
-class LinkedListQueue<T> extends Collection<T> {
+class LinkedListQueue<T> extends Queue<T> {
     protected QueueEntry<T>* head;
     protected QueueEntry<T>* tail;
 
@@ -11,7 +11,7 @@ class LinkedListQueue<T> extends Collection<T> {
     }
 
     public bool enqueue(T el) {
-        QueueEntry<E>* entry = new QueueEntry<E>(el)
+        QueueEntry<T>* entry = new QueueEntry<T>(el)
         if(tail != nullptr) {
             tail.next = entry;
         } else if(head == nullptr) {

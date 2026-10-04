@@ -105,7 +105,7 @@ public class ELEnum extends ELClass {
 
     @Override
     public ELType getType() {
-        return new ELType(cName, this, null);
+        return new ELType(cName, this, nameSpan.start());
     }
 
     public void parse(BlockToken body) {

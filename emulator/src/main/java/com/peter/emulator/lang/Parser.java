@@ -206,7 +206,7 @@ public class Parser {
                                 throw ELAnalysisError.error("Invalid function definition", it);
                             }
                             ELFunction function = new ELFunction(level, extern, currentClass,
-                                    currentClass.cName, destructor ? ELFunction.FunctionType.DESTRUCTOR : ELFunction.FunctionType.CONSTRUCTOR, false, unit, loc);
+                                    currentClass.cName, destructor ? ELFunction.FunctionType.DESTRUCTOR : ELFunction.FunctionType.CONSTRUCTOR, InlineType.OUTLINE, unit, loc);
                             unit.addSymbol(new ELSymbol.ELFuncDefSymbol(function, it.spanFirst()));
                             if (docCommentToken != null) {
                                 function.doc = new DocComment(docCommentToken);
@@ -286,7 +286,7 @@ public class Parser {
                                     errors.error("Functions outside of a class may not be operator functions.", const_);
                                 }
                             }
-                            ELFunction function = new ELFunction(level, extern, currentNamespace, name, funcType, inline != null, unit, loc);
+                            ELFunction function = new ELFunction(level, extern, currentNamespace, name, funcType, inline != null ? InlineType.INLINE : InlineType.OUTLINE, unit, loc);
                             unit.addSymbol(new ELSymbol.ELFuncDefSymbol(function, nameToken.spanFirst()));
                             if (docCommentToken != null) {
                                 function.doc = new DocComment(docCommentToken);

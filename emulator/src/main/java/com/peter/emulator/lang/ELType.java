@@ -36,6 +36,9 @@ public class ELType {
 
     public ELType(ELType subType) {
         this.subType = subType;
+        location = new Location("", 0, 0);
+        endLocation = location;
+        nameSpan = location.span();
     }
 
     public ELType(String base) {
@@ -46,6 +49,7 @@ public class ELType {
         }
         location = new Location("", 0, 0);
         endLocation = location;
+        nameSpan = location.span();
         if (ELPrimitives.PRIMITIVE_TYPES.containsKey(this)) {
             clazz = ELPrimitives.PRIMITIVE_TYPES.get(this);
             return;
@@ -61,6 +65,7 @@ public class ELType {
         }
         this.location = location;
         endLocation = location;
+        nameSpan = location.span();
     }
 
     // public ELType(String base, boolean pointer, boolean array) {
@@ -324,6 +329,9 @@ public class ELType {
 
         public Builder(ELType base) {
             type.baseClass = base.baseClass;
+            type.location = base.location;
+            type.endLocation = base.endLocation;
+            type.nameSpan = base.nameSpan;
             baseSet = true;
         }
 
@@ -540,7 +548,8 @@ public class ELType {
             if (location == null)
                 return;
         }
-        unit.symbols.add(new ELTypeSymbol(this, pointer || address));
+        if(baseRef().nameSpan != null)
+            unit.symbols.add(new ELTypeSymbol(this, pointer || address));
         if(hasGenerics()) {
             unit.addSymbol(ELSymbol.Type.KEYWORD, genericLocation.span(genericLocation));
             unit.addSymbol(ELSymbol.Type.KEYWORD, endLocation.span(endLocation));
@@ -703,7 +712,7 @@ public class ELType {
     
     public int sizeof() {
         // System.out.println(toString());
-        if(pointer || address)
+        if (pointer || address)
             return 4;
         if (array) {
             return arraySize * subType.sizeof();
@@ -715,8 +724,13 @@ public class ELType {
         if (clazz != null)
             return clazz.getSize();
         // System.out.println("no class");
-        throw new RuntimeException("No class for type "+typeString());
+        return 4;
+        // throw ELAnalysisError.error("No class for type "+typeString(), location.span());
         // return 4;
+    }
+
+    public int sizeofWA() {
+        return Math.ceilDiv(sizeof(), 4) * 4;
     }
 
     public int stepSize() {

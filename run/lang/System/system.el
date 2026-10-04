@@ -1,13 +1,14 @@
 import SysD;
-import Kernal.Console;
+import Kernal;
+// import Kernal.Console;
 
 namespace System {
     
-    private static Console* console;
+    // private static Console* console;
     
     private static const int32 initialHeapSize = 0x1000;
     private static const int32 maxHeapSize = 0x1_0000;
-    private static const int32 MALLOC_BLOCK_SIZE = 0x0800;
+    private static const int32 MALLOC_BLOCK_SIZE = 0x1000;
 
     private static int32 heapSize;
     private static void* heapStart;
@@ -32,10 +33,10 @@ namespace System {
     */
 
     internal static void main() {
-        heapStart = Kernal.Memory.mallocBlock();
+        heapStart = Kernal.kalloc();
         heapSize = MALLOC_BLOCK_SIZE;
         while(heapSize < initialHeapSize) {
-            Kernal.Memory.mallocBlock();
+            Kernal.kalloc();
             heapSize += MALLOC_BLOCK_SIZE;
         }
     }
@@ -45,12 +46,12 @@ namespace System {
     }
 
     public static void exit() {
-        Kernal.exit();
+        asm{INTERRUPT 0x9000_0002}
     }
 
     public static void* malloc(int32 words) {
         void* ptr = heapStart;
-        int32 heapEnd = heapStart + heapSize
+        int32 heapEnd = heapStart + heapSize;
         while(ptr < heapEnd - 1) {
             int32 wordsAllocated = *ptr;
             if(wordsAllocated > 0x8000_0000) {
@@ -70,7 +71,7 @@ namespace System {
             }
         }
         if(heapSize < maxHeapSize) {
-            Kernal.Memory.mallocBlock();
+            Kernal.kalloc();
             heapSize += MALLOC_BLOCK_SIZE;
         }
         ptr[0] = words | 0x8000_0000;
@@ -79,7 +80,7 @@ namespace System {
     }
 
     public static void* free(void* ptr) {
-        int32 heapEnd = heapStart + heapSize
+        int32 heapEnd = heapStart + heapSize;
         if(ptr < heapStart || ptr > heapEnd) {
             return;
         }

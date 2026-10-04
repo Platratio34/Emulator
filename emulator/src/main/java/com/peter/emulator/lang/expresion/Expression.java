@@ -14,6 +14,7 @@ public class Expression extends Action {
     protected ExpressionNode head = null;
     protected ArrayList<ExpressionNode> nodes = new ArrayList<>();
     protected boolean lastWasOperator = true;
+    protected boolean leftHand = false;
 
     public Expression(ActionScope scope) {
         super(scope);
@@ -26,49 +27,96 @@ public class Expression extends Action {
     @SuppressWarnings("OverridableMethodCallInConstructor")
     public Expression(ActionScope scope, ArrayList<Token> tokens) {
         super(scope);
-        for(Token token : tokens) {
+        if (tokens.isEmpty()) {
+            throw new IllegalArgumentException("Tokens must contain at least 1 token");
+        }
+        for (Token token : tokens) {
             switch (token) {
                 case OperatorToken ot -> {
-                    switch(ot.type) {
-                        case ADD -> { add(new OperatorNode(scope, OperatorType.ADD, ot)); }
-                        case SUB -> { add(new OperatorNode(scope, OperatorType.SUB, ot)); }
-                        case POINTER -> { add(new OperatorNode(scope, OperatorType.MUL, ot)); }
-                        case DIV -> { add(new OperatorNode(scope, OperatorType.DIV, ot)); }
-                        
-                        case BITWISE_AND -> { add(new OperatorNode(scope, OperatorType.BIT_AND, ot)); }
-                        case BITWISE_OR -> { add(new OperatorNode(scope, OperatorType.BIT_OR, ot)); }
-                        case BITWISE_XOR -> { add(new OperatorNode(scope, OperatorType.BIT_XOR, ot)); }
-                        case DESTRUCTOR -> { add(new OperatorNode(scope, OperatorType.BIT_NOT, ot)); }
-                        
-                        case LEFT_SHIFT -> { add(new OperatorNode(scope, OperatorType.SHIFT_LEFT, ot)); }
-                        case RIGHT_SHIFT -> { add(new OperatorNode(scope, OperatorType.SHIFT_RIGHT, ot)); }
-                        
-                        case AND -> { add(new OperatorNode(scope, OperatorType.AND, ot)); }
-                        case OR -> { add(new OperatorNode(scope, OperatorType.OR, ot)); }
-                        
-                        case EQ2 -> { add(new OperatorNode(scope, OperatorType.EQUALS, ot)); }
-                        case ANGLE_LEFT -> { add(new OperatorNode(scope, OperatorType.LT, ot)); }
-                        case LEQ -> { add(new OperatorNode(scope, OperatorType.LEQ, ot)); }
-                        case ANGLE_RIGHT -> { add(new OperatorNode(scope, OperatorType.GT, ot)); }
-                        case GEQ -> { add(new OperatorNode(scope, OperatorType.GEQ, ot)); }
-                        case NEQ -> { add(new OperatorNode(scope, OperatorType.NEQ, ot)); }
-                        
-                        case NOT -> { add(new OperatorNode(scope, OperatorType.NOT, ot)); }
-                        
-                        // case INC -> {
-                        // }
-                        // case DEC -> {
-                        // }
-                        
+                    switch (ot.type) {
+                        case ADD -> {
+                            add(new OperatorNode(scope, OperatorType.ADD, ot));
+                        }
+                        case SUB -> {
+                            add(new OperatorNode(scope, OperatorType.SUB, ot));
+                        }
+                        case POINTER -> {
+                            add(new OperatorNode(scope, OperatorType.MUL, ot));
+                        }
+                        case DIV -> {
+                            add(new OperatorNode(scope, OperatorType.DIV, ot));
+                        }
+
+                        case BITWISE_AND -> {
+                            add(new OperatorNode(scope, OperatorType.BIT_AND, ot));
+                        }
+                        case BITWISE_OR -> {
+                            add(new OperatorNode(scope, OperatorType.BIT_OR, ot));
+                        }
+                        case BITWISE_XOR -> {
+                            add(new OperatorNode(scope, OperatorType.BIT_XOR, ot));
+                        }
+                        case DESTRUCTOR -> {
+                            add(new OperatorNode(scope, OperatorType.BIT_NOT, ot));
+                        }
+
+                        case LEFT_SHIFT -> {
+                            add(new OperatorNode(scope, OperatorType.SHIFT_LEFT, ot));
+                        }
+                        case RIGHT_SHIFT -> {
+                            add(new OperatorNode(scope, OperatorType.SHIFT_RIGHT, ot));
+                        }
+
+                        case AND -> {
+                            add(new OperatorNode(scope, OperatorType.AND, ot));
+                        }
+                        case OR -> {
+                            add(new OperatorNode(scope, OperatorType.OR, ot));
+                        }
+
+                        case EQ2 -> {
+                            add(new OperatorNode(scope, OperatorType.EQUALS, ot));
+                        }
+                        case ANGLE_LEFT -> {
+                            add(new OperatorNode(scope, OperatorType.LT, ot));
+                        }
+                        case LEQ -> {
+                            add(new OperatorNode(scope, OperatorType.LEQ, ot));
+                        }
+                        case ANGLE_RIGHT -> {
+                            add(new OperatorNode(scope, OperatorType.GT, ot));
+                        }
+                        case GEQ -> {
+                            add(new OperatorNode(scope, OperatorType.GEQ, ot));
+                        }
+                        case NEQ -> {
+                            add(new OperatorNode(scope, OperatorType.NEQ, ot));
+                        }
+
+                        case NOT -> {
+                            add(new OperatorNode(scope, OperatorType.NOT, ot));
+                        }
+
+                        case INC -> {
+                            add(new OperatorNode(scope, OperatorType.INC, ot));
+                        }
+                        case DEC -> {
+                            add(new OperatorNode(scope, OperatorType.DEC, ot));
+                        }
+
                         // case TERNARY -> {
                         // }
                         // case COLON -> {
                         // }
-                        
+
                         // case ASSIGN -> {
                         // }
-                        
-                        
+
+                        // case SUB_ASSIGN -> {
+                        // }
+                        // case ADD_ASSIGN -> {
+                        // }
+
                         // case ARRAY -> {
                         // }
                         // case COMMA -> {
@@ -79,21 +127,16 @@ public class Expression extends Action {
                         // }
                         // case INDEX -> {
                         // }
-                        
+
                         // case COMMENT -> {
                         // }
                         // case COMMENT_MULTILINE -> {
                         // }
-                        
-                        // case SUB_ASSIGN -> {
-                        // }
-                        // case ADD_ASSIGN -> {
-                        // }
-                        
+
                         default -> {
                             throw ELAnalysisError.errorF(ot, "Unexpected operator in expression: %s", ot.type.value);
                         }
-                        
+
                     }
                 }
                 case NumberToken nt -> add(new LiteralNode(scope, nt));
@@ -104,7 +147,7 @@ public class Expression extends Action {
                         case "false" -> add(new LiteralNode(scope, false, it));
                         case "nullptr" -> add(new LiteralNode(scope, 0, ELPrimitives.VOID_PTR, it));
                         default -> {
-                            if(it.hasParamsSub()) {
+                            if (it.hasParamsSub()) {
                                 add(new FunctionNode(scope, it));
                             } else {
                                 add(new VariableNode(scope, it));
@@ -124,27 +167,33 @@ public class Expression extends Action {
     }
 
     protected void add(ExpressionNode node) {
-        if(node instanceof OperatorNode opNode) {
+        if (node instanceof OperatorNode opNode) {
+            boolean tLastWasOperator = lastWasOperator;
+            lastWasOperator = true;
             if(!opNode.single) {
-                if(lastWasOperator) {
+                if(tLastWasOperator) {
                     switch(opNode.type) {
                         case OperatorType.MUL -> node = opNode.single(OperatorType.DEREF);
                         case OperatorType.BIT_AND -> node = opNode.single(OperatorType.ADDRESS);
-                        case OperatorType.NOT -> node = opNode.single(OperatorType.NOT);
-                        case OperatorType.BIT_NOT -> node = opNode.single(OperatorType.BIT_NOT);
-                        case OperatorType.SUB -> node = opNode.single(OperatorType.SUB);
+                        case OperatorType.NOT, OperatorType.BIT_NOT, OperatorType.SUB -> node = opNode.single();
+                        case OperatorType.INC, OperatorType.DEC -> {
+                            throw new RuntimeException("Found `"+opNode.type.str+"` not after variable");
+                        }
                         default -> throw new RuntimeException("Found invalid node type for singe operator: `"+opNode.type.str+"`");
                     }
                 } else {
-                    if(opNode.type == OperatorType.NOT) {
-                        throw new RuntimeException("Found `!` but was not single operator");
-                    }
-                    if(opNode.type == OperatorType.BIT_NOT) {
-                        throw new RuntimeException("Found `~` but was not single operator");
+                    switch(opNode.type) {
+                        case OperatorType.NOT, OperatorType.BIT_NOT -> {
+                            throw new RuntimeException("Found `"+opNode.type.str+"` but was not single operator");
+                        }
+                        case OperatorType.INC, OperatorType.DEC -> {
+                            node = opNode.single();
+                            lastWasOperator = false; // Lie about this b/c INC/DEC return the value;
+                        }
+                        default -> {}
                     }
                 }
             }
-            lastWasOperator = true;
         } else {
             lastWasOperator = false;
         }
@@ -164,16 +213,17 @@ public class Expression extends Action {
         OperatorNode headOp = (OperatorNode)head;
         if(node instanceof OperatorNode opNode) {
             int lvlOff = headOp.type.level - opNode.type.level;
-            if(lvlOff >= 0) { // if we have a lower presidence than the current head, so swap the new node into the head
+            if (lvlOff >= 0) { // if we have a lower precedence than the current head, so swap the new node into the head
                 opNode.child1 = head;
                 head = opNode;
                 // System.out.println("\t"+printTree());
                 return;
             }
-            if(!opNode.single) {
+            // System.out.println("\t"+printTree()+" \t "+opNode.printNode());
+            if(!opNode.single || opNode.after) {
                 ExpressionNode cNode = head;
                 ExpressionNode parent = head;
-                while(cNode instanceof OperatorNode opNode2 && opNode.single == opNode2.single && (opNode2.type.level - opNode.type.level) < 0) {
+                while(cNode instanceof OperatorNode opNode2 && (opNode.single && !opNode.after) == opNode2.single && (opNode2.type.level - opNode.type.level) < 0) {
                     parent = cNode;
                     if(cNode.child2 != null)
                         cNode = cNode.child2;
@@ -237,7 +287,7 @@ public class Expression extends Action {
 
     public boolean validate(ErrorSet errors) {
         if(head == null) {
-            errors.error("Expresion was empty");
+            errors.error("Expression was empty");
             return false;
         }
         return head.validate(errors);
@@ -284,7 +334,7 @@ public class Expression extends Action {
     }
 
     public static void test() {
-        String exp1Str = "1 + 2 / SysD.rID + 4";
+        String exp1Str = "1 + 2 / SysD.rID++ + 4";
         ProgramUnit unit = new ProgramUnit(null, "");
         Tokenizer tokenizer = new Tokenizer(exp1Str, new Location("temp",0,0), unit);
         tokenizer.tokenize();

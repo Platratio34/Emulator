@@ -3,8 +3,8 @@ import SysD;
 namespace System.Collections;
 
 class LinkedList<T> extends List<T> {
-    protected ListEntry<T>* head = nullptr;
-    protected ListEntry<T>* tail = nullptr;
+    protected ListEntry<T>* head = 0;
+    protected ListEntry<T>* tail = 0;
 
     public LinkedList<T>() {
 

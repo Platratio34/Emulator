@@ -1,6 +1,8 @@
 package com.peter.emulator.lang.base;
 
 import com.peter.emulator.lang.ELFunction.FunctionType;
+import com.peter.emulator.lang.actions.ActionScope;
+import com.peter.emulator.lang.actions.Register;
 import com.peter.emulator.lang.doc.DocComment;
 import com.peter.emulator.lang.*;
 import com.peter.emulator.lang.tokens.IdentifierToken;
@@ -15,49 +17,43 @@ public class SysD extends Namespace {
     public SysD(ProgramModule module) {
         super("SysD");
         unit = new ProgramUnit(module, "<SysD>");
-        // void memSet(int32 address, int32 value)
-        ELFunction memSet = addStaticFunction(new ELFunction(ELProtectionLevel.PUBLIC, true, this, "memSet", FunctionType.STATIC, true, unit, SYSD_LOCATION));
-        memSet.addParameter(ELPrimitives.INT32, "address");
-        memSet.addParameter(ELPrimitives.INT32, "value");
-        // void memSet(int32 address, char value)
-        ELFunction memSet2 = addStaticFunction(new ELFunction(ELProtectionLevel.PUBLIC, true, this, "memSet", FunctionType.STATIC, true, unit, SYSD_LOCATION));
-        memSet2.addParameter(ELPrimitives.INT32, "address");
-        memSet2.addParameter(ELPrimitives.CHAR, "value");
-        // int32 memGet(int32 address)
-        ELFunction memGet = addStaticFunction(new ELFunction(ELProtectionLevel.PUBLIC, true, this, "memGet", FunctionType.STATIC, true, unit, SYSD_LOCATION));
-        memGet.addParameter(ELPrimitives.INT32, "address");
-        memGet.ret = ELPrimitives.INT32;
         // void memCopy(void* src, int32 start, int32 end, void* dest, int32 destStart);
-        ELFunction memCopy = addStaticFunction(new ELFunction(ELProtectionLevel.PUBLIC, false, this, "memCopy", FunctionType.STATIC, true, unit, SYSD_LOCATION));
+        ELFunction memCopy = addStaticFunction(new ELFunction(ELProtectionLevel.PUBLIC, false, this, "memCopy", FunctionType.STATIC, InlineType.INLINE_RAW, unit, SYSD_LOCATION));
         memCopy.addParameter(ELPrimitives.VOID_PTR, "src");
         memCopy.addParameter(ELPrimitives.INT32, "start");
         memCopy.addParameter(ELPrimitives.INT32, "end");
         memCopy.addParameter(ELPrimitives.VOID_PTR, "dest");
         memCopy.addParameter(ELPrimitives.INT32, "destStart");
-        memCopy.actions.addDirect("ADD r1 r1 r2");
-        memCopy.actions.addDirect("ADD r4 r4 r5");
-        memCopy.actions.addDirect("SUB r3 r3 r2");
+        memCopy.actions.addDirect("ADD src src start");
+        memCopy.actions.addDirect("ADD dest dest destStart");
+        memCopy.actions.addDirect("SUB end end start");
         memCopy.actions.addDirect(":SysD.memCopy_loop_$i1");
-        memCopy.actions.addDirect("COPY MEM r1 r4 INC_RS INC_RD");
-        memCopy.actions.addDirect("INC r3 -1");
-        memCopy.actions.addDirect("GOTO GT r3 :loop_$i1");
+        memCopy.actions.addDirect("COPY MEM src dest INC_RS INC_RD");
+        memCopy.actions.addDirect("INC end -1");
+        memCopy.actions.addDirect("GOTO GT end :SysD.memCopy_loop_$i1");
 
         // void <T> memCopy(T* src, int32 start, int32 end, T* dest, int32 start);
         // boolean <T> memEquals(T* a, T* b, int32 length);
-        ELFunction memEquals = addStaticFunction(new ELFunction(ELProtectionLevel.PUBLIC, true, this, "memEquals", FunctionType.STATIC, true, unit, SYSD_LOCATION));
+        ELFunction memEquals = addStaticFunction(new ELFunction(ELProtectionLevel.PUBLIC, true, this, "memEquals", FunctionType.STATIC, InlineType.INLINE_RAW, unit, SYSD_LOCATION));
         memEquals.addParameter(ELPrimitives.VOID_PTR, "a");
         memEquals.addParameter(ELPrimitives.VOID_PTR, "b");
         memEquals.addParameter(ELPrimitives.INT32, "length");
         memEquals.ret = ELPrimitives.BOOL;
+        memEquals.actions.addDirect("LOAD ret 0x1");
+        memEquals.actions.addDirect(":SysD.memEquals_loop_$i1");
+        memEquals.actions.addDirect("GOTO LEQ length :SysD.memEquals_exit_$i1");
+        memEquals.actions.addDirect("INC length -1");
+        memEquals.actions.addDirect("LOAD MEM $r1 a INC_RA");
+        memEquals.actions.addDirect("LOAD MEM $r2 b INC_RA");
+        memEquals.actions.addDirect("SUB $r1 $r1 $r2");
+        memEquals.actions.addDirect("GOTO EQ $r1 :SysD.memEquals_loop_$i1");
+        memEquals.actions.addDirect("LOAD ret 0x0");
+        memEquals.actions.addDirect(":SysD.memEquals_exit_$i1");
 
         // void* sysCall(int32 call)
-        ELFunction sysCall = addStaticFunction(new ELFunction(ELProtectionLevel.PUBLIC, true, this, "sysCall", FunctionType.STATIC, true, unit, SYSD_LOCATION));
-        sysCall.addParameter(ELPrimitives.INT32, "call");
-        sysCall.ret = ELPrimitives.VOID_PTR;
-
-        // int32 getPID()
-        ELFunction getPID = addStaticFunction(new ELFunction(ELProtectionLevel.PUBLIC, true, this, "getPID", FunctionType.STATIC, true, unit, SYSD_LOCATION));
-        getPID.ret = ELPrimitives.INT32;
+        // ELFunction sysCall = addStaticFunction(new ELFunction(ELProtectionLevel.PUBLIC, true, this, "sysCall", FunctionType.STATIC, InlineType.INLINE_RAW, unit, SYSD_LOCATION));
+        // sysCall.addParameter(ELPrimitives.INT32, "call");
+        // sysCall.ret = ELPrimitives.VOID_PTR;
 
         // const int32 MEMORY_DEVICE_START = 0x1_0000;
         addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.CONST, ELPrimitives.INT32, "MEMORY_DEVICE_START", true, this, unit, SYSD_LOCATION).setValue(0x1_0000));
@@ -86,7 +82,7 @@ public class SysD extends Namespace {
             if(reg == Reg.UNKNOWN)
                 continue;
             ELVariable var = addStaticVariable(
-                    new PseudoVariable(getRegType(reg), reg.string, this, unit, SYSD_LOCATION, reg));
+                    new PseudoVariable(getRegType(reg), reg.string, this, unit, SYSD_LOCATION, new Register(new ActionScope(this,unit, null), reg.code)));
             var.doc = new DocComment(reg.description);
         }
     }

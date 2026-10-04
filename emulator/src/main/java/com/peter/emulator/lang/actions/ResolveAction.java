@@ -5,7 +5,6 @@ import com.peter.emulator.lang.*;
 import com.peter.emulator.lang.base.ELPrimitives;
 import com.peter.emulator.lang.expresion.Expression;
 import com.peter.emulator.lang.tokens.IdentifierToken;
-import com.peter.emulator.machinecode.Reg;
 
 public class ResolveAction extends ComplexAction {
 
@@ -15,12 +14,14 @@ public class ResolveAction extends ComplexAction {
     public boolean wasConst = false;
 
     public ConstantValue constantValue;
+    public Register sourceReg = null;
+    public boolean regIsValue = false;
 
     public ResolveAction(ActionScope scope, Register reg, ELVariable var, IdentifierToken id, boolean byValue) {
-        this(scope, reg, var, id, byValue, false);
+        this(scope, reg, var, id, byValue, false, false);
     }
 
-    public ResolveAction(ActionScope scope, Register reg, ELVariable var, IdentifierToken id, boolean byValue, boolean dropLast) {
+    public ResolveAction(ActionScope scope, Register reg, ELVariable var, IdentifierToken id, boolean byValue, boolean dropLast, boolean forAssign) {
         super(scope);
         this.reg = reg;
 
@@ -50,8 +51,7 @@ public class ResolveAction extends ComplexAction {
         }
         
         wasConst = false;
-        Reg sourceReg = null;
-        boolean regIsValue = false;
+        regIsValue = false;
         String constAddr = null;
         if (var instanceof PseudoVariable psV) {
             sourceReg = psV.register;
@@ -78,7 +78,7 @@ public class ResolveAction extends ComplexAction {
                             addDirect("INC %s %d", reg, var.offset);
                         }
                     } else {
-                        sourceReg = Reg.R0;
+                        sourceReg = new Register(scope, 0);
                     }
                 }
                 case SCOPE -> {
@@ -92,7 +92,7 @@ public class ResolveAction extends ComplexAction {
                             addDirect("INC %s %d", reg, var.offset);
                         }
                     } else {
-                        sourceReg = Reg.R15;
+                        sourceReg = new Register(scope, 15);
                     }
                 }
             }
@@ -143,6 +143,8 @@ public class ResolveAction extends ComplexAction {
                             } else {
                                 addDirect("INC %s %d", reg, amt);
                             }
+                        } else {
+                            regIsValue = false;
                         }
                     } else {
                         actions.add(indexExp);
@@ -203,28 +205,41 @@ public class ResolveAction extends ComplexAction {
                 }
                 if (clazz == null)
                     throw ELAnalysisError.fatal("Type was missing class (type was `" + t.typeString()+"`; "+t.toString()+")", it);
-                if (!clazz.memberVariables.containsKey(it.value))
-                    throw ELAnalysisError.fatal("Unknown member " + it.value + " in type" + clazz.getQualifiedName(), it);
-                v = clazz.memberVariables.get(it.value);
-                if (v.offset != 0) {
-                    if (sourceReg != null) {
-                        if (v.offset > 0 && v.offset <= 255) {
-                            addDirect("ADD %s %s %d", reg, sourceReg, v.offset);
-                        } else if(v.offset < 0 && v.offset >= -255) {
-                            addDirect("SUB %s %s %d", reg, sourceReg, -v.offset);
+                if (it.value.equals("length") && t.isArray()) {
+                    scope.addSymbol(ELSymbol.Type.VARIABLE_FINAL, it.span());
+                    constantValue = new ConstantValue(t.arraySize());
+                    wasConst = true;
+                    if (!byValue)
+                        throw ELAnalysisError.errorF(it, "Can not get address of array length");
+                    returnType = ELPrimitives.INT32;
+                    returnVar = new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.CONST, ELPrimitives.INT32,
+                            "length", true, clazz, clazz.unit, t.location);
+                    returnVar.startingValue = ELValue.number(ELPrimitives.INT32, t.arraySize(), t.location.span());
+                    return;
+                } else {
+                    if (!clazz.memberVariables.containsKey(it.value))
+                        throw ELAnalysisError.fatal("Unknown member " + it.value + " in type" + clazz.getQualifiedName(), it);
+                    v = clazz.memberVariables.get(it.value);
+                    if (v.offset != 0) {
+                        if (sourceReg != null) {
+                            if (v.offset > 0 && v.offset <= 255) {
+                                addDirect("ADD %s %s %d", reg, sourceReg, v.offset);
+                            } else if(v.offset < 0 && v.offset >= -255) {
+                                addDirect("SUB %s %s %d", reg, sourceReg, -v.offset);
+                            } else {
+                                addDirect("COPY %s %s", sourceReg, reg);
+                                addDirect("INC %s %d", reg, v.offset);
+                            }
+                        } else if (constAddr != null) {
+                            addDirect("LOAD %s &%s", reg, constAddr);
+                            constAddr = null;
+                            addDirect("INC %s %d", reg, v.offset);
                         } else {
-                            addDirect("COPY %s %s", sourceReg, reg);
                             addDirect("INC %s %d", reg, v.offset);
                         }
-                    } else if (constAddr != null) {
-                        addDirect("LOAD %s &%s", reg, constAddr);
-                        constAddr = null;
-                        addDirect("INC %s %d", reg, v.offset);
-                    } else {
-                        addDirect("INC %s %d", reg, v.offset);
                     }
+                    t = v.type;
                 }
-                t = v.type;
             }
 
         // }
@@ -249,12 +264,11 @@ public class ResolveAction extends ComplexAction {
                 addDirect("LOAD MEM%s %s %s", size, reg, reg);
             }
         }
-        if (sourceReg != null && !byValue && regIsValue) {
+        if (sourceReg != null && !byValue && regIsValue && !forAssign) {
             throw ELAnalysisError.errorF("Can not get register based variable %s by address", it.value, it.span());
         }
         if (sourceReg != null) {
             addDirect("COPY %s %s", sourceReg, reg);
-            sourceReg = null;
         } else if (constAddr != null) {
             constantValue = ConstantValue.staticVar(constAddr);
             addDirect("LOAD %s &%s", reg, constAddr);

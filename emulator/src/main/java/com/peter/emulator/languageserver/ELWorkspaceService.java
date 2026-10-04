@@ -65,6 +65,7 @@ public class ELWorkspaceService implements WorkspaceService {
         if (!found) {
             lspServer.logError("Found .el file outside of module, no diagnostics available for it");
         }
+        triggerRecompile();
     }
 
     public void triggerRecompile() {

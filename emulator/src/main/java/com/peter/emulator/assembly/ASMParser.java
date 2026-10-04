@@ -76,6 +76,7 @@ public class ASMParser {
 
     private final HashMap<String, Define> defines;
     private final HashMap<String, Define> labels;
+    private final HashMap<String, Reg> aliases = new HashMap<>();
 
     public final ArrayList<ELSymbol> symbols;
 
@@ -411,7 +412,8 @@ public class ASMParser {
                     }
                     
                     case "syscall" -> {
-                        symbols.add(new ELSymbol(Type.KEYWORD, line.lastSpan, "## `#syscall`\n\nMaps a syscall name to index.\n\nUsage: `#syscall [index] [name]`"));
+                        symbols.add(new ELSymbol(Type.KEYWORD, line.lastSpan,
+                                "## `#syscall`\n\nMaps a syscall name to index.\n\nUsage: `#syscall [index] [name]`"));
                         Define index = line.nextConst(AsmError.error("Expected syscall index"));
                         if (index == null)
                             return;
@@ -427,6 +429,11 @@ public class ASMParser {
                         line.symbolLast(Type.FUNCTION_NAME);
 
                         symbolFile.mapSyscall(name, index.value);
+                    }
+                    
+                    case "alias" -> {
+                        symbols.add(new ELSymbol(Type.KEYWORD, line.lastSpan,
+                                "## `#alias`\n\nAlias a register.\n\nUsage: `#alias [register] [name]` or `#alias clear [name]`"));
                     }
                     
                     default -> {
@@ -631,6 +638,39 @@ public class ASMParser {
                             } else {
                                 symbolFile.endLine(address - 4);
                             }
+                        }
+                        case "alias" -> {
+                            if (line.hasNext("clear")) {
+                                line.symbolLast(Type.KEYWORD);
+                                String name = line.nextString(AsmError.error("Expected alias name"));
+                                if (name == null)
+                                    continue;
+                                line.symbolLast(Type.PARAMETER);
+                                if (aliases.containsKey(name)) {
+                                    aliases.remove(name);
+                                } else {
+                                    line.errorLast(AsmError.warning("Unknown alias"));
+                                }
+                                continue;
+                            }
+                            String register = line.nextString(AsmError.error("Expected register"));
+                            Reg reg = Reg.from(register);
+                            if (reg == Reg.UNKNOWN) {
+                                line.errorLast(AsmError.error("Unknown register"));
+                            } else {
+                                line.symbolLast(Type.PARAMETER);
+                            }
+                            String name = line.nextString(AsmError.error("Expected alias name"));
+                            if (name == null)
+                                continue;
+                            line.symbolLast(Type.PARAMETER);
+                            if (aliases.containsKey(name)) {
+                                line.errorLast(AsmError.error("Duplicate alias"));
+                                continue;
+                            }
+                            if(reg != Reg.UNKNOWN)
+                                aliases.put(name, reg);
+                            continue;
                         }
 
                         default -> {}
@@ -888,7 +928,7 @@ public class ASMParser {
             }
             Span tempSpan = lastSpan;
             lastSpan = startLoc.span(location.add(col - 1));
-            Reg reg = Reg.from(t);
+            Reg reg = aliases.getOrDefault(t, Reg.from(t));
             if (reg == Reg.UNKNOWN) {
                 if (error != null)
                     errors.add(error.at(lastSpan));

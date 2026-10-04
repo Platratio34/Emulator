@@ -90,7 +90,7 @@ public class ELAssembler {
     private String assembleFunctions(Namespace ns) {
         String out = "\n\n// " + ns.getQualifiedName();
         for (ELFunction f : ns.staticFunctions.values()) {
-            if (f.extern || f.inline)
+            if (f.extern || f.inline != InlineType.OUTLINE)
                 continue;
             out += assembleFunction(f);
         }
@@ -100,7 +100,7 @@ public class ELAssembler {
             if (c.destructor != null)
                 out += assembleFunction(c.destructor);
             for (ELFunction f : c.memberFunctions.values()) {
-                if (f.extern || f.inline)
+                if (f.extern || f.inline != InlineType.OUTLINE)
                     continue;
                 out += assembleFunction(f);
             }

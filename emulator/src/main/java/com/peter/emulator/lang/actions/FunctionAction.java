@@ -11,10 +11,11 @@ import com.peter.emulator.lang.tokens.IdentifierToken;
 import com.peter.emulator.lang.tokens.OperatorToken;
 import com.peter.emulator.lang.tokens.SetToken;
 import com.peter.emulator.lang.tokens.Token;
+import com.peter.emulator.machinecode.Reg;
 
 public class FunctionAction extends ComplexAction {
 
-    public final Register targetReg;
+    public Register targetReg;
     public ELType retType = null;
     public boolean isConst = false;
     public boolean isStaticCast = false;
@@ -22,11 +23,16 @@ public class FunctionAction extends ComplexAction {
 
     private Register r = null;
     private boolean[] pushed = new boolean[16];
-    private boolean[] reserved = new boolean[16];
+    private ArrayList<Register> aliasedRegisters = new ArrayList<>();
+    private boolean retReserved = false;
 
     public FunctionAction(ActionScope scope, Register targetReg, IdentifierToken it) {
+        this(scope, targetReg, it, null);
+    }
+
+    public FunctionAction(ActionScope scope, Register target, IdentifierToken it, Register conReg) {
         super(scope);
-        this.targetReg = targetReg;
+        targetReg = target;
         if (!it.hasParamsSub()) {
             throw ELAnalysisError.error("Function did not have params", it);
         }
@@ -50,8 +56,9 @@ public class FunctionAction extends ComplexAction {
             Expression exp = new Expression(scope, it.params.subTokens, targetReg);
             exp.validate(scope.unit.errors);
             if (!forceCast && !exp.getType().canCastTo(targetType)) {
-                throw ELAnalysisError.errorF(it, "Can not cast %s to %s", exp.getType().typeString(),
-                        targetType.typeString());
+                if(!(targetType.equals(ELPrimitives.INT32) && (exp.getType().isPointer() || exp.getType().isAddress())))
+                    throw ELAnalysisError.errorF(it, "Can not cast %s to %s", exp.getType().typeString(),
+                            targetType.typeString());
             }
             add(exp);
             retType = targetType;
@@ -139,7 +146,7 @@ public class FunctionAction extends ComplexAction {
                 throw ELAnalysisError.errorF(it2.spanFirst(), "Unable to resolve identifier `%s`", it2.value);
             }
         }
-        if (rr != null && rr.function != null && rr.function.inline) {
+        if (rr != null && rr.function != null && rr.function.inline != InlineType.OUTLINE) {
             onStack = false;
         }
 
@@ -158,7 +165,7 @@ public class FunctionAction extends ComplexAction {
         // boolean vNext = true;
         // boolean addr = false;
         ArrayList<Token> exp = new ArrayList<>();
-        r = onStack ? newRegister() : scope.makeHandle(1);
+        r = onStack ? newRegister() : null;
         ArrayList<Action> tempActions = new ArrayList<>();
         int stackSize = 0;
         if (onStack) {
@@ -169,7 +176,7 @@ public class FunctionAction extends ComplexAction {
                         continue;
                     }
                     if (scope.isReserved(i)) {
-                        if(str.length() > 0)
+                        if (str.length() > 0)
                             str += "\n";
                         str += "STACK PUSH r" + i;
                         pushed[i] = true;
@@ -180,21 +187,17 @@ public class FunctionAction extends ComplexAction {
             tempActions.add(r.reserveAction());
         }
         if (params.hasSub()) {
+            int pI = 0;
             for (int i = 0; i < params.subTokens.size(); i++) {
                 Token t2 = params.subTokens.get(i);
                 endOfParams = t2.endLocation;
                 if (t2 instanceof OperatorToken ot && ot.type == OperatorToken.Type.COMMA) {
                     if (exp.isEmpty())
                         throw ELAnalysisError.error("Empty expression", t2);
-                    
                     if (!onStack) {
-                        tempActions.add(new CompilerAction(scope, s -> {
-                            if(r.isReserved()) {
-                                pushed[r.reg] = true;
-                                return "STACK PUSH "+r;
-                            }
-                            return null;
-                        }));
+                        r = newRegister(rr.function.paramOrder.get(pI++));
+                        aliasedRegisters.add(r);
+                        tempActions.add(r.reserveAction());
                     }
                     Expression expA = new Expression(scope, exp, r);
                     tempActions.add(expA);
@@ -207,13 +210,6 @@ public class FunctionAction extends ComplexAction {
                         }, r));
                         // tempActions.add(r.releaseAction());
                         stackSize += 4;
-                    } else {
-                        // actions.add(new DirectAction("COPY %s %s", MachineCode.translateReg(r),
-                        //         MachineCode.translateReg(r++)));
-                        tempActions.add(r.reserveAction());
-                        // tempActions.add(new DirectAction("// reserving %s", r));
-                        reserved[r.reg] = true;
-                        r = r.next();
                     }
                     exp = new ArrayList<>();
                 } else {
@@ -222,13 +218,9 @@ public class FunctionAction extends ComplexAction {
             }
             if (!exp.isEmpty()) {
                 if (!onStack) {
-                    tempActions.add(new CompilerAction(scope, s -> {
-                        if(r.isReserved()) {
-                            pushed[r.reg] = true;
-                            return "STACK PUSH "+r;
-                        }
-                        return null;
-                    }));
+                    r = newRegister(rr.function.paramOrder.get(pI++));
+                    aliasedRegisters.add(r);
+                    tempActions.add(r.reserveAction());
                 }
                 Expression expA = new Expression(scope, exp, r);
                 tempActions.add(expA);
@@ -241,11 +233,6 @@ public class FunctionAction extends ComplexAction {
                     }, r));
                     tempActions.add(r.releaseAction());
                     stackSize += 4;
-                } else {
-                    // tempActions.add(new DirectAction("COPY %s %s", r, r));
-                    tempActions.add(r.reserveAction());
-                    // tempActions.add(new DirectAction("// reserving %s", r));
-                    reserved[r.reg] = true;
                 }
             }
         }
@@ -260,72 +247,6 @@ public class FunctionAction extends ComplexAction {
 
         if (id.starts("SysD")) {
             switch (id.parts[1]) {
-                case "memSet" -> {
-                    actions.addAll(tempActions);
-                    scope.addSymbol(new ELSymbol.ELNamespaceSymbol("SysD", it.spanFirst()));
-                    scope.addSymbol(new ELSymbol(ELSymbol.Type.FUNCTION_NAME, it.next().spanFirst(),
-                            "`inline void SysD.memSet(void* addr, int32 value)`\n\nSets the memory at `addr` to `value`"));
-                    // void SysD.memSet(int32 addr, int32 value);
-                    if (types.size() != 2 || !((types.get(0).canCastTo(ELPrimitives.INT32)
-                            || types.get(0).canCastTo(ELPrimitives.VOID_PTR))
-                            && types.get(1).canCastTo(ELPrimitives.INT32))) {
-
-                        throw ELAnalysisError.error(String.format(
-                                "Found no overload of SysD.memSet matching %s; Found SysD.memSet(int32 addr, int32 value)",
-                                tStr), startOfParams.span(endOfParams));
-                    }
-                    actions.add(new DirectAction("STORE r1 r2"));
-
-                    add(this::constRelease);
-                    return;
-                }
-                case "memGet" -> {
-                    actions.addAll(tempActions);
-                    scope.addSymbol(new ELSymbol.ELNamespaceSymbol("SysD", it.spanFirst()));
-                    scope.addSymbol(new ELSymbol(ELSymbol.Type.FUNCTION_NAME, it.next().spanFirst(),
-                            "`inline int32 SysD.memGet(void* addr)`\n\nGets the memory at `addr`"));
-                    // int32 SysD.memGet(int32 addr);
-                    if (types.size() != 1 || !(types.get(0).canCastTo(ELPrimitives.INT32))) {
-
-                        throw ELAnalysisError.error(String.format(
-                                "Found no overload of SysD.memSet matching %s; Found SysD.memSet(int32 addr, int32 value)",
-                                tStr), startOfParams.span(endOfParams));
-                    }
-                    actions.add(new DirectAction("LOAD r1 %s", targetReg));
-
-                    add(this::constRelease);
-                    return;
-                }
-                case "memCopy" -> {
-                    actions.addAll(tempActions);
-                    scope.addSymbol(new ELSymbol.ELNamespaceSymbol("SysD", it.spanFirst()));
-                    scope.addSymbol(new ELSymbol(ELSymbol.Type.FUNCTION_NAME, it.next().spanFirst(),
-                            "`inline void SysD.memCopy(void* src, int32 start, int32 end, void* dest, int32 destStart)`\n\nCopies the memory from `src + start` through `src + end` to memory starting at `dest + destStart`"));
-                    // errors.warning("SysD.copy is not currently implemented", it);
-
-                    /*
-                    [r1 = void* src, r2 = int32 start, r3 = int32 end, r4 = void* dest, r5 = int32 destStart]
-                    
-                    ADD r1 r1 r2 // src += start
-                    ADD r4 r4 r5 // dest += destStart
-                    SUB r3 r3 r2 // end -= start // end = num elements
-                    
-                    // r2 = int32 temp
-                    :loopStart
-                    COPY MEM r1 r4 // mem[dest] = msm[src]
-                    DEC r3 // end--
-                    GOTO GT r3 :loopStart // if(end > 0) goto :loopStart
-                    
-                    */
-                    String loopLabel = String.format("loop_%d", ActionBlock.subIndex++);
-
-                    actions.add(new DirectAction(
-                            "ADD r1 r1 r2\nADD r4 r4 r5\nSUB r3 r3 r2\n:%s\nCOPY MEM r1 r4 INC_RS INC_RD\nINC r3 -1\nGOTO GT r3 :%s",
-                            loopLabel, loopLabel));
-
-                    add(this::constRelease);
-                    return;
-                }
                 case "halt" -> {
                     scope.addSymbol(new ELSymbol.ELNamespaceSymbol("SysD", it.spanFirst()));
                     scope.addSymbol(new ELSymbol(ELSymbol.Type.FUNCTION_NAME, it.next().spanFirst(),
@@ -365,25 +286,61 @@ public class FunctionAction extends ComplexAction {
         } else {
             scope.unit.symbols.add(new ELSymbol.ELFuncCallSymbol(f, it2.spanFirst()));
         }
-        if (f.type == FunctionType.INSTANCE)
-            addDirect("STACK PUSH r0");
+
+        Register rT = null;
         int retSize = 0;
-        if (f.ret != null && onStack) {
-            retSize = Math.ceilDiv(f.ret.sizeof(), 4) * 4;
-            addDirect("STACK INC %d", retSize);
+        if (onStack) {
+            if (f.type == FunctionType.INSTANCE || f.type == FunctionType.CONSTRUCTOR)
+                addDirect("STACK PUSH r0");
+            if (f.ret != null) {
+                retSize = Math.ceilDiv(f.ret.sizeof(), 4) * 4;
+                addDirect("STACK INC %d", retSize);
+            }
+        } else {
+            if (f.type == FunctionType.INSTANCE) {
+                rT = newRegister("this");
+                addReserve(rT);
+                aliasedRegisters.add(rT);
+            }
+            if (f.ret != null) {
+                if (targetReg == null) {
+                    targetReg = newRegister("ret");
+                    addReserve(targetReg);
+                    retReserved = true;
+                }
+                add(new CompilerAction(scope, (s) -> {
+                    if (!targetReg.reserved) {
+                        targetReg.reserve();
+                        retReserved = true;
+                        return String.format("#alias %s ret", targetReg);
+                    }
+                    return "";
+                }));
+            }
         }
         actions.addAll(tempActions);
         if (f.type == FunctionType.INSTANCE) {
-            Register r0T = newRegister();
+            Register r0T = (rT != null) ? rT : newRegister();
             ResolveAction rA = scope.loadVarF(it, r0T, false);
             if (rA.constantValue != null) {
-                addDirect("LOAD r0 %s", rA.constantValue);
+                if (rT == null)
+                    rT = new Register(scope, 0);
+                addDirect("LOAD %s %s", rT, rA.constantValue);
             } else {
-                addReserve(r0T);
-                actions.add(rA);
-                addDirect("COPY %s r0", r0T);
-                addRelease(r0T);
+                if (rT == null) {
+                    addReserve(r0T);
+                    actions.add(rA);
+                    addDirect("COPY r0 %s", r0T);
+                    addRelease(r0T);
+                } else {
+                    actions.add(rA);
+                }
             }
+        } else if (f.type == FunctionType.CONSTRUCTOR) {
+            if (conReg == null) {
+                throw ELAnalysisError.errorF(it, "Unexpected constructor call");
+            }
+            addDirect("COPY %s r0", conReg);
         }
         if (isMethodType) {
             Register fP = newRegister();
@@ -392,8 +349,13 @@ public class FunctionAction extends ComplexAction {
             actions.add(rA);
             addDirect("GOTO PUSH %s", fP);
             addRelease(fP);
-        } else if (f.inline) {
+        } else if (f.inline != InlineType.OUTLINE) {
             addDirect("// INLINE START %s", f.getQualifiedName());
+            final ELFunction func = f;
+            add((s) -> {
+                func.actions.scope.copyReserve(s);
+                return "";
+            });
             actions.add(f.actions);
             addDirect("// INLINE END");
         } else {
@@ -414,10 +376,11 @@ public class FunctionAction extends ComplexAction {
                         default -> "STACK POP %s";
                     }, targetReg));
                 } else {
-                    actions.add(new CompilerAction(scope, s -> {
-                        if(targetReg.reg != 1)
-                            return "COPY r1 " + targetReg;
-                        return null;
+                    add(new CompilerAction(scope, (s) -> {
+                        if (retReserved) {
+                            targetReg.release();
+                        }
+                        return "#alias clear ret";
                     }));
                 }
             } else if (onStack && (stackSize + retSize) > 0) {
@@ -427,7 +390,7 @@ public class FunctionAction extends ComplexAction {
         if (f.type == FunctionType.INSTANCE)
             actions.add(new DirectAction("STACK POP r0"));
         if (!onStack) {
-            add(this::constRelease);
+            add(constRelease());
         } else {
             add(new CompilerAction(scope, s -> {
                 String str = "";
@@ -447,13 +410,10 @@ public class FunctionAction extends ComplexAction {
         }
     }
 
-    private String constRelease(ActionScope s) {
-        String out = "";
-        for (int i = r.reg; i > 0; i--) {
-            if (pushed[i])
-                out += "STACK POP "+MachineCode.translateReg(i);
-            else if (reserved[i])
-                scope.release(i);
+    private ComplexAction constRelease() {
+        ComplexAction out = new ComplexAction(scope);
+        for (Register r : aliasedRegisters) {
+            out.add(r.releaseAction());
         }
         return out;
     }

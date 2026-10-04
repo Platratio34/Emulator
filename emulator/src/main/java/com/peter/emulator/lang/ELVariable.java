@@ -118,7 +118,7 @@ public class ELVariable {
     }
 
     public ELVariable setValue(int i) {
-        startingValue = new ELValue.ELNumberValue(type, i, null);
+        startingValue = new ELValue.ELNumberValue(type, i, span());
         return this;
     }
 
@@ -129,7 +129,7 @@ public class ELVariable {
     }
 
     public Span span() {
-        return startLocation.span(null);
+        return startLocation.span();
     }
 
     public static enum Type {

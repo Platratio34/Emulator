@@ -240,6 +240,8 @@ public class ELTextDocumentService implements TextDocumentService {
             });
             for (ELSymbol symbol : symbols) {
                 if (!symbol.isWrapper()) {
+                    if(symbol.span.end() == null)
+                        continue;
                     int type = symbol.type.semanticTypeIndex();
                     int modifier = symbol.getModifier();
                     if (symbol instanceof ELVarSymbol vs) {

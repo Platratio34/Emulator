@@ -32,4 +32,7 @@ public abstract class Action {
     public Register newRegister() {
         return new Register(scope);
     }
+    public Register newRegister(String alias) {
+        return new Register(scope, alias);
+    }
 }

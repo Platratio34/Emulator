@@ -107,17 +107,17 @@ public class Syscall extends Instruction {
                 return "SYSRETURN";
             }
             case GOTO -> {
-                return String.format("SYSGOTO %s", MachineCode.translateReg(data));
+                return String.format("SYSGOTO %s", rg);
             }
             case INTERRUPT -> {
                 return switch (interruptOption) {
-                    case REGISTER -> String.format("INTERRUPT %s", MachineCode.translateReg(data));
+                    case REGISTER -> String.format("INTERRUPT %s", rg);
                     case VALUE -> String.format("INTERRUPT %d", data);
                     case RETURN -> "INTERRUPT RET";
                 };
             }
             case TRANSLATE -> {
-                return String.format("TRANSLATE %s", MachineCode.translateReg(data));
+                return String.format("TRANSLATE %s", rg);
             }
         }
         return String.format("SYSCALL UNKNOWN (0x%s)", toHex(getBytecode()));

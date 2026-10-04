@@ -4,11 +4,13 @@ import com.peter.emulator.MachineCode;
 import com.peter.emulator.lang.ELSymbol;
 import com.peter.emulator.lang.ELType;
 import com.peter.emulator.lang.ErrorSet;
+import com.peter.emulator.lang.PseudoVariable;
 import com.peter.emulator.lang.Span;
 import com.peter.emulator.lang.actions.ActionScope;
 import com.peter.emulator.lang.actions.Register;
 import com.peter.emulator.lang.base.ELPrimitives;
 import com.peter.emulator.lang.tokens.OperatorToken;
+import com.peter.emulator.machinecode.MathInstruction;
 
 public class OperatorNode extends ExpressionNode {
     public final OperatorType type;
@@ -17,6 +19,7 @@ public class OperatorNode extends ExpressionNode {
     private static int earlyExitI = 0;
     private String falseTarget = null;
     private String trueTarget = null;
+    public final boolean after;
 
     public OperatorNode(ActionScope scope, OperatorType type, OperatorToken token) {
         super(scope);
@@ -24,6 +27,7 @@ public class OperatorNode extends ExpressionNode {
         this.token = token;
         if(scope.unit != null)
             scope.unit.addSymbol(ELSymbol.Type.OPERATOR, token.span());
+        after = false;
     }
     public OperatorNode(ActionScope scope, OperatorType type, boolean single, OperatorToken token) {
         super(scope);
@@ -32,8 +36,12 @@ public class OperatorNode extends ExpressionNode {
         this.token = token;
         if(scope.unit != null)
             scope.unit.addSymbol(ELSymbol.Type.OPERATOR, token.span());
+        after = type == OperatorType.INC || type == OperatorType.DEC;
     }
     public OperatorNode single(OperatorType type) {
+        return new OperatorNode(scope, type, true, token);
+    }
+    public OperatorNode single() {
         return new OperatorNode(scope, type, true, token);
     }
 
@@ -196,8 +204,26 @@ public class OperatorNode extends ExpressionNode {
                     }
                 }
                 case SUB -> {
-                    if(!t.canCastTo(ELPrimitives.INT32)) {
+                    if (!t.canCastTo(ELPrimitives.INT32)) {
                         errors.error(String.format("Can not cast %s to int32", t.typeString()), span());
+                        return false;
+                    }
+                }
+                case INC, DEC -> {
+                    if (!t.canCastTo(ELPrimitives.INT32) && !t.isPointer()) {
+                        errors.error(String.format("Can not cast %s to int32", t.typeString()), span());
+                        return false;
+                    }
+                    if (child1 instanceof VariableNode vn) {
+                        if (vn.isConstant()) {
+                            errors.errorF(span(), "Can not %s constant variable", type == OperatorType.INC ? "increment" : "decrement");
+                            return false;
+                        } else if (vn.variable != null && vn.variable.finalVal) {
+                            errors.errorF(span(), "Can not %s final variable", type == OperatorType.INC ? "increment" : "decrement");
+                            return false;
+                        }
+                    } else {
+                        errors.errorF(span(), "Can only %s variable", type == OperatorType.INC ? "increment" : "decrement");
                         return false;
                     }
                 }
@@ -298,10 +324,26 @@ public class OperatorNode extends ExpressionNode {
     }
     @Override
     public String toAssembly() {
-        if(isConstant()) {
+        if (isConstant()) {
             return String.format("LOAD %s %d", register, getConstant());
         }
-        
+
+        boolean selfRef = false;
+        if (register == null) {
+            register = newRegister();
+            register.fistFree();
+            register.reserve();
+            selfRef = true;
+        }
+
+        String out = toAsmInt();
+        if (selfRef) {
+            register.release();
+        }
+        return out;
+    }
+
+    private String toAsmInt() {
         ELType t1 = child1.getType();
         ELType t2 = child2 != null ? child2.getType() : null;
         switch(type) {
@@ -309,7 +351,7 @@ public class OperatorNode extends ExpressionNode {
                 if(t1.isPointer() && !t2.isPointer()) {
                     child1.register = register;
                     int stepSize = t1.stepSize();
-                    if(child2.isConstant() && MachineCode.inIncRange(child2.getConstant())) {
+                    if(child2.isConstant() && MathInstruction.inIncRange(child2.getConstant())) {
                         return child1.toAssembly() + String.format("\nINC %s %d", register, child2.getConstant() * stepSize);
                     }
                     String str = child1.toAssembly();
@@ -333,7 +375,7 @@ public class OperatorNode extends ExpressionNode {
                 if(child1.isConstant()) {
                     int v = child1.getConstant();
                     child2.register = register;
-                    if(MachineCode.inIncRange(v)) {
+                    if(MathInstruction.inIncRange(v)) {
                         return child2.toAssembly() + String.format("\nINC %s %d", register, v);
                     }
                     String str = child2.toAssembly();
@@ -344,7 +386,7 @@ public class OperatorNode extends ExpressionNode {
                 } else if(child2.isConstant()) {
                     int v = child2.getConstant();
                     child1.register = register;
-                    if(MachineCode.inIncRange(v)) {
+                    if(MathInstruction.inIncRange(v)) {
                         return child1.toAssembly() + String.format("\nINC %s %d", register, v);
                     }
                     String str = child1.toAssembly();
@@ -377,7 +419,7 @@ public class OperatorNode extends ExpressionNode {
                 if(t1.isPointer() && !t2.isPointer()) {
                     child1.register = register;
                     int stepSize = t1.stepSize();
-                    if(child2.isConstant() && MachineCode.inIncRange(-child2.getConstant())) {
+                    if(child2.isConstant() && MathInstruction.inIncRange(-child2.getConstant())) {
                         return child1.toAssembly() + String.format("\nINC %s %d", register, -child2.getConstant() * stepSize);
                     }
                     String str = child1.toAssembly() + "\n";
@@ -398,7 +440,7 @@ public class OperatorNode extends ExpressionNode {
                 if(child2.isConstant()) {
                     int v = child2.getConstant();
                     child1.register = register;
-                    if(MachineCode.inIncRange(v)) {
+                    if(MathInstruction.inIncRange(v)) {
                         return child1.toAssembly() + String.format("\nINC %s %d", register, -v);
                     }
                     String str = child1.toAssembly();
@@ -527,7 +569,7 @@ public class OperatorNode extends ExpressionNode {
                     String str = child2.toAssembly();
                     if(c1 == 0) {
                         return str + String.format("\n%s", setString);
-                    } else if (MachineCode.inIncRange(c1)) {
+                    } else if (MathInstruction.inIncRange(c1)) {
                         return str + String.format("\nINC %s %d\n%s", register, -c1, setString);
                     }
                     Register r1 = newRegister();
@@ -539,7 +581,7 @@ public class OperatorNode extends ExpressionNode {
                     String str = child1.toAssembly();
                     if(c2 == 0) {
                         return str + String.format("\n%s", setString);
-                    } else if (MachineCode.inIncRange(c2)) {
+                    } else if (MathInstruction.inIncRange(c2)) {
                         return str + String.format("\nINC %s %d\n%s", register, -c2, setString);
                     }
                     Register r2 = newRegister();
@@ -571,7 +613,7 @@ public class OperatorNode extends ExpressionNode {
                     String str = child2.toAssembly();
                     if(c1 == 0) {
                         return str + String.format("\n%s", setInvString);
-                    } else if (MachineCode.inIncRange(c1)) {
+                    } else if (MathInstruction.inIncRange(c1)) {
                         return str + String.format("\nINC %s %d\n%s", register, -c1, setInvString);
                     }
                     Register r1 = newRegister();
@@ -583,7 +625,7 @@ public class OperatorNode extends ExpressionNode {
                     String str = child1.toAssembly();
                     if(c2 == 0) {
                         return str + String.format("\n%s", setString);
-                    } else if (MachineCode.inIncRange(c2)) {
+                    } else if (MathInstruction.inIncRange(c2)) {
                         return str + String.format("\nINC %s %d\n%s", register, -c2, setString);
                     }
                     Register r1 = newRegister();
@@ -615,7 +657,7 @@ public class OperatorNode extends ExpressionNode {
                     String str = child2.toAssembly();
                     if(c1 == 0) {
                         return str + String.format("\n%s", setInvString);
-                    } else if (MachineCode.inIncRange(c1)) {
+                    } else if (MathInstruction.inIncRange(c1)) {
                         return str + String.format("\nINC %s %d\n%s", register, -c1, setInvString);
                     }
                     Register r1 = newRegister();
@@ -627,7 +669,7 @@ public class OperatorNode extends ExpressionNode {
                     String str = child1.toAssembly();
                     if(c2 == 0) {
                         return str + String.format("\n%s", setString);
-                    } else if (MachineCode.inIncRange(c2)) {
+                    } else if (MathInstruction.inIncRange(c2)) {
                         return str + String.format("\nINC %s %d\n%s", register, -c2, setString);
                     }
                     Register r1 = newRegister();
@@ -659,7 +701,7 @@ public class OperatorNode extends ExpressionNode {
                     String str = child2.toAssembly();
                     if(c1 == 0) {
                         return str + String.format("\n%s", setInvString);
-                    } else if (MachineCode.inIncRange(c1)) {
+                    } else if (MathInstruction.inIncRange(c1)) {
                         return str + String.format("\nINC %s %d\n%s", register, -c1, setInvString);
                     }
                     Register r1 = newRegister();
@@ -671,7 +713,7 @@ public class OperatorNode extends ExpressionNode {
                     String str = child1.toAssembly();
                     if(c2 == 0) {
                         return str + String.format("\n%s", setString);
-                    } else if (MachineCode.inIncRange(c2)) {
+                    } else if (MathInstruction.inIncRange(c2)) {
                         return str + String.format("\nINC %s %d\n%s", register, -c2, setString);
                     }
                     Register r1 = newRegister();
@@ -703,7 +745,7 @@ public class OperatorNode extends ExpressionNode {
                     String str = child2.toAssembly();
                     if(c1 == 0) {
                         return str + String.format("\n%s", setInvString);
-                    } else if (MachineCode.inIncRange(c1)) {
+                    } else if (MathInstruction.inIncRange(c1)) {
                         return str + String.format("\nINC %s %d\n%s", register, -c1, setInvString);
                     }
                     Register r1 = newRegister();
@@ -715,7 +757,7 @@ public class OperatorNode extends ExpressionNode {
                     String str = child1.toAssembly();
                     if(c2 == 0) {
                         return str + String.format("\n%s", setString);
-                    } else if (MachineCode.inIncRange(c2)) {
+                    } else if (MathInstruction.inIncRange(c2)) {
                         return str + String.format("\nINC %s %d\n%s", register, -c2, setString);
                     }
                     Register r1 = newRegister();
@@ -740,7 +782,7 @@ public class OperatorNode extends ExpressionNode {
                     if (c1 == 0) {
                         return str;
                         // return str + String.format("\nSET FORCE NEQ %s %s", register, register);
-                    } else if (MachineCode.inIncRange(c1)) {
+                    } else if (MathInstruction.inIncRange(c1)) {
                         return str + String.format("\nINC %s %d", register, -c1);
                         // return str + String.format("\nINC %s %d\nSET FORCE NEQ %s %s", register, -c1, register, register);
                     }
@@ -755,7 +797,7 @@ public class OperatorNode extends ExpressionNode {
                     if (c2 == 0) {
                         return str;
                         // return str + String.format("\nSET FORCE NEQ %s %s", register, register);
-                    } else if (MachineCode.inIncRange(c2)) {
+                    } else if (MathInstruction.inIncRange(c2)) {
                         return str + String.format("\nINC %s %d", register, -c2);
                         // return str + String.format("\nINC %s %d\nSET FORCE NEQ %s %s", register, -c2, register, register);
                     }
@@ -854,7 +896,53 @@ public class OperatorNode extends ExpressionNode {
             }
             case SHIFT_LEFT, SHIFT_RIGHT -> {
                 child1.register = register;
-                return child1.toAssembly() + String.format("\n%s %s %s %d", (type == OperatorType.SHIFT_LEFT) ? "LSH" : "RSH", register, register, child2.getConstant());
+                return child1.toAssembly() + String.format("\n%s %s %s %d",
+                        (type == OperatorType.SHIFT_LEFT) ? "LSH" : "RSH", register, register, child2.getConstant());
+            }
+            
+            case INC, DEC -> {
+                boolean inc = type == OperatorType.INC;
+
+                VariableNode vn = (VariableNode) child1;
+                if (vn.variable instanceof PseudoVariable pv) {
+                    if(vn.rA.returnType.isPointer() || vn.rA.returnType.isArray())
+                        return String.format("INC %s %d", pv.register, (inc ? 1 : -1) * vn.rA.returnType.stepSize());
+                    else
+                        return String.format("INC %s %d", pv.register, inc ? 1 : -1);
+                }
+                vn.addressOf = true;
+                Register ra = newRegister();
+                ra.fistFree();
+                ra.reserve();
+                vn.register = ra;
+
+                String out = vn.toAssembly();
+                
+
+                Register rb = newRegister();
+                rb.fistFree();
+                switch (vn.rA.returnType.sizeof()) {
+                    case 1 -> {
+                        out += String.format("\nLOAD MEM BYTE %s %s", register, ra);
+                        out += String.format("\n%s %s %s 1", inc ? "ADD" : "SUB", rb, register);
+                        out += String.format("\nSTORE BYTE %s %s", rb, ra);
+                    }
+                    case 2 -> {
+                        out += String.format("\nLOAD MEM SHORT %s %s", register, ra);
+                        out += String.format("\n%s %s %s 1", inc ? "ADD" : "SUB", rb, register);
+                        out += String.format("\nSTORE SHORT %s %s", rb, ra);
+                    }
+                    default -> {
+                        out += String.format("\nLOAD MEM %s %s", register, ra);
+                        out += String.format("\n%s %s %s %d", inc ? "ADD" : "SUB", rb, register, vn.rA.returnType.isIndexable() ? vn.rA.returnType.stepSize() : 1);
+                        out += String.format("\nSTORE %s %s", rb, ra);
+                    }
+                }
+
+                rb.release();
+                ra.release();
+
+                return out;
             }
             
             // default -> {}

@@ -7,7 +7,6 @@ import com.peter.emulator.lang.ELFunction.FunctionType;
 import com.peter.emulator.lang.*;
 import com.peter.emulator.lang.base.ELPrimitives;
 import com.peter.emulator.lang.tokens.IdentifierToken;
-import com.peter.emulator.machinecode.Reg;
 
 public class ActionScope {
 
@@ -22,6 +21,9 @@ public class ActionScope {
     public final ELFunction function;
     public final boolean[] reservedRegisters = new boolean[16];
     private final ArrayList<Register> registerHandles = new ArrayList<>();
+
+    public String loopExit = null;
+    public String loopContinue = null;
 
     public ActionScope(Namespace namespace, ProgramUnit unit, ELFunction function) {
         this.parent = null;
@@ -55,6 +57,7 @@ public class ActionScope {
             }
         }
     }
+
     public ActionScope(Namespace namespace, ProgramUnit unit, ActionScope parent, int stackOffset, int returnOffset) {
         this.parent = parent;
         this.unit = unit;
@@ -79,7 +82,16 @@ public class ActionScope {
         stackVars.put(name, var);
         return var;
     }
-    
+
+    public ELVariable addVariable(ELVariable var, ErrorSet errors) {
+        if (stackVars.containsKey(var.name)) {
+            errors.warning("Duplicate variable name `" + var.name + "`");
+            return var;
+        }
+        stackVars.put(var.name, var);
+        return var;
+    }
+
     // public void addParams(ArrayList<String> names, ArrayList<ELType> types, ErrorSet errors, ELType retType) {
     //     int o = - 2;
     //     for (int i = names.size() - 1; i >= 0; i--) {
@@ -97,28 +109,41 @@ public class ActionScope {
     //         stackVars.put(name, var);
     //     }
     //     if (retType != null) {
-            
+
     //     }
     // }
-
+    
+    public String getLoopExit() {
+        return loopExit != null ? loopExit : (parent != null ? parent.getLoopExit() : null);
+    }
+    public String getLoopContinue() {
+        return loopContinue != null ? loopContinue : (parent != null ? parent.getLoopContinue() : null);
+    }
+    
     public int getStackOffDif() {
         return stackOff - stackOffStart;
     }
 
-    public DirectAction getStackResetAction() {
-        String sVarStr = "// End of scope";
-        for (ELVariable var : stackVars.values()) {
-            // if (var.offset < 0)
-            //     continue;
-            sVarStr += String.format("\n#stackVarClear %s", var.name);
+    public ComplexAction getStackResetAction() {
+        ComplexAction action = new ComplexAction(this);
+        if (stackOff - stackOffStart > 0) {
+            action.addDirect("STACK DEC %d", stackOff - stackOffStart);
         }
-        return new DirectAction("STACK DEC %d\n%s", stackOff - stackOffStart, sVarStr);
+        action.addDirect("// End of scope");
+        for (ELVariable var : stackVars.values()) {
+            if (var instanceof PseudoVariable pv) {
+                action.add(pv.register.releaseAction());
+            } else {
+                action.addDirect("#stackVarClear %s", var.name);
+            }
+        }
+        return action;
     }
-    
+
     public Namespace getNamespace() {
         return (parent != null) ? parent.getNamespace() : namespace;
     }
-    
+
     public boolean hasVariable(Identifier id) {
         if (id.first().equals("this"))
             return true;
@@ -128,10 +153,11 @@ public class ActionScope {
             return parent.hasVariable(id);
         return !namespace.getVarStack(id, new ArrayList<>()).isEmpty();
     }
+
     public boolean hasType(IdentifierToken it) {
-        if(parent != null)
+        if (parent != null)
             return parent.hasType(it);
-        if(it.value.equals("void"))
+        if (it.value.equals("void"))
             return true;
         ELType baseType = new ELType(it.typeString());
         if (ELPrimitives.PRIMITIVE_TYPES.containsKey(baseType))
@@ -157,10 +183,11 @@ public class ActionScope {
         ELType t = v.type;
         for (int i = 1; i < id.parts.length; i++) {
             ELClass clazz = t.getELClass();
-            if(clazz == null)
-                throw ELAnalysisError.fatal("Type was missing class (type was `" + t.typeString()+"`)");
-            if(!clazz.memberVariables.containsKey(id.parts[i]))
-                throw ELAnalysisError.fatal("Class " + clazz.getQualifiedName() + " does not contain member variable "+id.parts[i]);
+            if (clazz == null)
+                throw ELAnalysisError.fatal("Type was missing class (type was `" + t.typeString() + "`)");
+            if (!clazz.memberVariables.containsKey(id.parts[i]))
+                throw ELAnalysisError.fatal(
+                        "Class " + clazz.getQualifiedName() + " does not contain member variable " + id.parts[i]);
             ELVariable v2 = clazz.memberVariables.get(id.parts[i]);
             vars.add(v2);
             t = v2.type;
@@ -172,19 +199,25 @@ public class ActionScope {
      * @return the resolve action
      */
     public ResolveAction loadVar(IdentifierToken id, Register reg, boolean byValue) {
-        return loadVar(this, id, reg, byValue, false);
-    }
-    public ResolveAction loadVarF(IdentifierToken id, Register reg, boolean byValue) {
-        return loadVar(this, id, reg, byValue, true);
+        return loadVar(this, id, reg, byValue, false, false);
     }
 
-    protected ResolveAction loadVar(ActionScope scope, IdentifierToken id, Register reg, boolean byValue, boolean dropLast) {
+    public ResolveAction loadVarF(IdentifierToken id, Register reg, boolean byValue) {
+        return loadVar(this, id, reg, byValue, true, false);
+    }
+    
+    public ResolveAction loadVarAssign(IdentifierToken id, Register reg, boolean byValue) {
+        return loadVar(this, id, reg, byValue, false, true);
+    }
+
+    protected ResolveAction loadVar(ActionScope scope, IdentifierToken id, Register reg, boolean byValue,
+            boolean dropLast, boolean forAssign) {
         if (id.value.equals("this")) {
             Namespace ns = getNamespace();
             ELFunction func = getFunction();
             if (ns != null && func != null) {
                 if (ns instanceof ELClass c && func.type != FunctionType.STATIC) {
-                    return new ResolveAction(this, reg, c.getThis(), id, byValue);
+                    return new ResolveAction(this, reg, c.getThis(scope), id, byValue);
                 } else {
                     throw ELAnalysisError.error("Can not use this outside of class instance function", id);
                 }
@@ -192,17 +225,17 @@ public class ActionScope {
                 throw ELAnalysisError.error("Can not use this outside of class instance function", id);
             }
         }
-        if(stackVars.containsKey(id.value)) {
+        if (stackVars.containsKey(id.value)) {
             ELVariable v = stackVars.get(id.value);
-            return new ResolveAction(scope, reg, v, id, byValue, dropLast);
+            return new ResolveAction(scope, reg, v, id, byValue, dropLast, forAssign);
         }
-        if(parent != null)
-            return parent.loadVar(scope, id, reg, byValue, dropLast);
+        if (parent != null)
+            return parent.loadVar(scope, id, reg, byValue, dropLast, forAssign);
         ELVariable v = namespace.getFirstVar(id, unit);
-        if(v == null)
+        if (v == null)
             return null;
         try {
-            return new ResolveAction(scope, reg, v, id, byValue, dropLast);
+            return new ResolveAction(scope, reg, v, id, byValue, dropLast, forAssign);
         } catch (RuntimeException e) {
             throw ELAnalysisError.errorF(id, "Exception encountered in Resolve Action: %s", e.toString());
         }
@@ -218,12 +251,13 @@ public class ActionScope {
     // public boolean isReserved(Register reg) {
     //     return reservedRegisters[reg.reg];
     // }
-    
+
     public void reserve(int reg) {
         if (parent != null)
             parent.reserve(reg);
         reservedRegisters[reg] = true;
     }
+
     public void release(int reg) {
         if (parent != null)
             parent.release(reg);
@@ -235,7 +269,7 @@ public class ActionScope {
             return parent.isReserved(reg);
         return reservedRegisters[reg];
     }
-    
+
     public Register makeHandle(int reg) {
         if (parent != null)
             return parent.makeHandle(reg);
@@ -247,8 +281,8 @@ public class ActionScope {
     public int firstFreeR() {
         if (parent != null)
             return parent.firstFreeR();
-        for(int i = 1; i < 15; i++)
-            if(!reservedRegisters[i])
+        for (int i = 1; i < 15; i++)
+            if (!reservedRegisters[i])
                 return i;
         return -1;
     }
@@ -263,6 +297,7 @@ public class ActionScope {
         unit.addSymbol(symbol);
         return symbol;
     }
+
     public ELSymbol addSymbol(ELSymbol.Type type, Span span) {
         ELSymbol symbol = new ELSymbol(type, span);
         unit.addSymbol(symbol);
@@ -272,6 +307,7 @@ public class ActionScope {
     public ELFunction getFunction() {
         return (parent != null) ? parent.getFunction() : function;
     }
+
     public void freeScopeHandles(ErrorSet errors, Span span) {
         for (Register r : registerHandles) {
             if (r.reserved) {
@@ -310,7 +346,7 @@ public class ActionScope {
         }
         return null;
     }
-    
+
     public ResolveResult resolveIdentifier(String id) {
         if (stackVars.containsKey(id)) {
             return ResolveResult.of(stackVars.get(id));
@@ -337,5 +373,12 @@ public class ActionScope {
             return parent.getRetType();
         }
         return function.ret;
+    }
+
+    public void copyReserve(ActionScope scope) {
+        for (int i = 1; i < 15; i++) {
+            if (scope.reservedRegisters[i])
+                reservedRegisters[i] = true;
+        }
     }
 }

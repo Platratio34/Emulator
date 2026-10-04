@@ -31,8 +31,13 @@ public abstract class Token {
     public Token subFirst() {
         return (subTokens == null) ? null : subTokens.getFirst();
     }
+
     public Token subLast() {
         return (subTokens == null) ? null : subTokens.getLast();
+    }
+
+    public Token sub(int index) {
+        return (subTokens == null) ? null : subTokens.get(index);
     }
 
     public abstract String debugString();

@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
+import com.peter.emulator.lang.actions.ActionScope;
+import com.peter.emulator.lang.actions.Register;
 import com.peter.emulator.lang.annotations.ELAnnotation;
 import com.peter.emulator.lang.annotations.ELOperatorAnnotation;
 import com.peter.emulator.lang.annotations.ELOverrideAnnotation;
@@ -269,6 +271,9 @@ public class ELClass extends Namespace {
         if (memberFunctions.containsKey(id)) {
             return ResolveResult.of(memberFunctions.get(id));
         }
+        if (id.equals(cName) && constructor != null) {
+            return ResolveResult.of(constructor);
+        }
         return super.resolveIdentifier(id, allowNamespace);
     }
 
@@ -450,7 +455,7 @@ public class ELClass extends Namespace {
         return out + "}";
     }
 
-    public ELVariable getThis() {
-        return new PseudoVariable(ELVariable.Type.SCOPE, getType(), "this", true, this, unit, new Location("<" + cName + ">", 0, 0), Reg.R0);
+    public ELVariable getThis(ActionScope scope) {
+        return new PseudoVariable(ELVariable.Type.SCOPE, getType(), "this", true, this, unit, new Location("<" + cName + ">", 0, 0), new Register(scope, 0));
     }
 }

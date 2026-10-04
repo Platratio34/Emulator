@@ -24,7 +24,10 @@ public enum OperatorType {
     SHIFT_LEFT(5,"<<"),
     SHIFT_RIGHT(5,">>"),
 
-    NOT(8,"!"),
+    NOT(8, "!"),
+            
+    INC(8,"++"),
+    DEC(8,"--"),
 
     DEREF(9,"*"),
     ADDRESS(9,"&")

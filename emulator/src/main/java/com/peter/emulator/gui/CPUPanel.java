@@ -59,7 +59,7 @@ public class CPUPanel extends JPanel {
         setSize(d);
         regPanelOuter.add(regPanel);
         for(int i = 0; i < 8; i++) {
-            JLabel l0 = new JLabel(MachineCode.translateReg(i));
+            JLabel l0 = new JLabel(Reg.from(i).string);
             regPanel.add(l0);
             l0.setFont(EmulatorGui.monFont);
         }
@@ -68,7 +68,7 @@ public class CPUPanel extends JPanel {
             regPanel.add(regLabels[i]).setFont(EmulatorGui.monFont);
         }
         for(int i = 0; i < 8; i++) {
-            JLabel l0 = new JLabel(MachineCode.translateReg(i+8));
+            JLabel l0 = new JLabel(Reg.from(i+8).string);
             regPanel.add(l0);
             l0.setFont(EmulatorGui.monFont);
         }
@@ -77,17 +77,17 @@ public class CPUPanel extends JPanel {
             regPanel.add(regLabels[i + 8]).setFont(EmulatorGui.monFont);
         }
         
-        regPanel.add(new JLabel(MachineCode.translateReg(MachineCode.REG_PGM_PNTR))).setFont(EmulatorGui.monFont);
-        regPanel.add(new JLabel(MachineCode.translateReg(MachineCode.REG_STACK_PNTR))).setFont(EmulatorGui.monFont);
+        regPanel.add(new JLabel(Reg.PGM.string)).setFont(EmulatorGui.monFont);
+        regPanel.add(new JLabel(Reg.STACK.string)).setFont(EmulatorGui.monFont);
         regPanel.add(new JLabel(Reg.AF.string)).setFont(EmulatorGui.monFont);
 
-        regPanel.add(new JLabel(MachineCode.translateReg(MachineCode.REG_PID))).setFont(EmulatorGui.monFont);
-        regPanel.add(new JLabel(MachineCode.translateReg(MachineCode.REG_MEM_TABLE))).setFont(EmulatorGui.monFont);
+        regPanel.add(new JLabel(Reg.PID.string)).setFont(EmulatorGui.monFont);
+        regPanel.add(new JLabel(Reg.MEM_TABLE.string)).setFont(EmulatorGui.monFont);
 
-        regPanel.add(new JLabel(MachineCode.translateReg(MachineCode.REG_INTERRUPT))).setFont(EmulatorGui.monFont);
-        regPanel.add(new JLabel(MachineCode.translateReg(MachineCode.REG_INTR_HANDLER))).setFont(EmulatorGui.monFont);
+        regPanel.add(new JLabel(Reg.INTERRUPT_CODE.string)).setFont(EmulatorGui.monFont);
+        regPanel.add(new JLabel(Reg.INTERRUPT_HANDLER.string)).setFont(EmulatorGui.monFont);
 
-        regPanel.add(new JLabel(MachineCode.translateReg(MachineCode.REG_PRIVILEGED_MODE))).setFont(EmulatorGui.monFont);
+        regPanel.add(new JLabel(Reg.PRIVILEGE.string)).setFont(EmulatorGui.monFont);
 
         pgmPtrLbl = new JLabel(EmulatorGui.toHex(cpu.pgmPtr));
         pgmPtrLbl.setFont(EmulatorGui.monFont);
@@ -112,7 +112,7 @@ public class CPUPanel extends JPanel {
         
         
         for(int i = 0; i < 8; i++) {
-            JLabel l0 = new JLabel(MachineCode.translateReg(i+16));
+            JLabel l0 = new JLabel(Reg.from(i+16).string);
             regPanel.add(l0);
             l0.setFont(EmulatorGui.monFont);
         }
@@ -121,7 +121,7 @@ public class CPUPanel extends JPanel {
             regPanel.add(regLabels[i + 16]).setFont(EmulatorGui.monFont);
         }
         for(int i = 0; i < 8; i++) {
-            JLabel l0 = new JLabel(MachineCode.translateReg(i+24));
+            JLabel l0 = new JLabel(Reg.from(i+24).string);
             regPanel.add(l0);
             l0.setFont(EmulatorGui.monFont);
         }
@@ -130,13 +130,13 @@ public class CPUPanel extends JPanel {
             regPanel.add(regLabels[i + 24]).setFont(EmulatorGui.monFont);
         }
         
-        regPanel.add(new JLabel(MachineCode.translateReg(MachineCode.REG_PGM_PNTR_I))).setFont(EmulatorGui.monFont);
-        regPanel.add(new JLabel(MachineCode.translateReg(MachineCode.REG_STACK_PNTR_I))).setFont(EmulatorGui.monFont);
+        regPanel.add(new JLabel(Reg.PGM_I.string)).setFont(EmulatorGui.monFont);
+        regPanel.add(new JLabel(Reg.STACK_I.string)).setFont(EmulatorGui.monFont);
 
-        regPanel.add(new JLabel(MachineCode.translateReg(MachineCode.REG_PID_I))).setFont(EmulatorGui.monFont);
-        regPanel.add(new JLabel(MachineCode.translateReg(MachineCode.REG_MEM_TABLE_I))).setFont(EmulatorGui.monFont);
+        regPanel.add(new JLabel(Reg.PID_I.string)).setFont(EmulatorGui.monFont);
+        regPanel.add(new JLabel(Reg.MEM_TABLE_I.string)).setFont(EmulatorGui.monFont);
 
-        regPanel.add(new JLabel(MachineCode.translateReg(MachineCode.REG_PRIVILEGED_MODE_I))).setFont(EmulatorGui.monFont);
+        regPanel.add(new JLabel(Reg.PRIVILEGE_I.string)).setFont(EmulatorGui.monFont);
         regPanel.add(new JLabel("")).setFont(EmulatorGui.monFont);
         regPanel.add(new JLabel("")).setFont(EmulatorGui.monFont);
         regPanel.add(new JLabel("")).setFont(EmulatorGui.monFont);
@@ -159,7 +159,7 @@ public class CPUPanel extends JPanel {
         regPanel.add(new JLabel("")).setFont(EmulatorGui.monFont);
         regPanel.add(new JLabel("")).setFont(EmulatorGui.monFont);
 
-        instrLbl = new JLabel(MachineCode.translate(cpu.readMem(cpu.pgmPtr), cpu.readMem(cpu.pgmPtr+1)));
+        instrLbl = new JLabel(Instruction.fromBytecode(cpu.readMem(cpu.pgmPtr), cpu.readMem(cpu.pgmPtr+1)).toString());
         instrLbl.setFont(EmulatorGui.monFont);
         panel.add(instrLbl);
 

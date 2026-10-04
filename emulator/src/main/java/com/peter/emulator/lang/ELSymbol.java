@@ -20,17 +20,26 @@ public class ELSymbol {
     public ELSymbol(Type type, Span span) {
         this.type = type;
         this.span = span;
+        if(span == null) {
+            throw new IllegalArgumentException("Span must be non-null");
+        }
         this.text = null;
     }
     public ELSymbol(Type type, Span span, String text) {
         this.type = type;
         this.span = span;
+        if(span == null) {
+            throw new IllegalArgumentException("Span must be non-null");
+        }
         this.text = text;
     }
 
     public ELSymbol(Type type, Span span, String text, Object... args) {
         this.type = type;
         this.span = span;
+        if(span == null) {
+            throw new IllegalArgumentException("Span must be non-null");
+        }
         this.text = String.format(text, args);
     }
 
@@ -306,7 +315,7 @@ public class ELSymbol {
                 out += "static ";
             if (func.extern)
                 out += "extern ";
-            if (func.inline)
+            if (func.inline != InlineType.OUTLINE)
                 out += "inline ";
             if (func.ret != null)
                 out += func.ret.typeString() + " ";
@@ -373,7 +382,7 @@ public class ELSymbol {
                 out += "static ";
             if (func.extern)
                 out += "extern ";
-            if (func.inline)
+            if (func.inline != InlineType.OUTLINE)
                 out += "inline ";
             if (func.ret != null)
                 out += func.ret.typeString() + " ";
