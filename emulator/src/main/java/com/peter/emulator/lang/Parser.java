@@ -207,7 +207,7 @@ public class Parser {
                             }
                             ELFunction function = new ELFunction(level, extern, currentClass,
                                     currentClass.cName, destructor ? ELFunction.FunctionType.DESTRUCTOR : ELFunction.FunctionType.CONSTRUCTOR, InlineType.OUTLINE, unit, loc);
-                            unit.addSymbol(new ELSymbol.ELFuncDefSymbol(function, it.spanFirst()));
+                            function.defSymbol = unit.addSymbol(new ELSymbol.ELFuncDefSymbol(function, it.spanFirst()));
                             if (docCommentToken != null) {
                                 function.doc = new DocComment(docCommentToken);
                             }
@@ -305,7 +305,7 @@ public class Parser {
                             }
                             function.abstractFunction = abs != null;
                             function.ingestParams(nameToken.params);
-                            unit.addSymbol(ELSymbol.Type.FUNCTION_NAME, nameToken.spanFirst());
+                            function.defSymbol = unit.addSymbol(new ELSymbol.ELFuncDefSymbol(function, nameToken.spanFirst()));
                             
                             if (stat) {
                                 currentNamespace.addStaticFunction(function);
@@ -351,7 +351,7 @@ public class Parser {
                             ELVariable var = new ELVariable(level, (const_ != null) ? ELVariable.Type.CONST : (stat ? ELVariable.Type.STATIC : ELVariable.Type.MEMBER), type, name, final_ != null, currentNamespace, unit, loc, endLocation);
                             if (annotations != null)
                                 var.annotations = annotations;
-                            unit.addSymbol(new ELVarSymbol(var, nameToken.spanFirst()));
+                            var.defSymbol = unit.addSymbol(new ELVarSymbol(var, nameToken.spanFirst()));
                             if (docCommentToken != null) {
                                 var.doc = new DocComment(docCommentToken);
                             }
@@ -465,7 +465,7 @@ public class Parser {
                             else
                                 clazz = new ELClass(it.value, it.span(), currentNamespace, unit);
                             namespaces.add(clazz);
-                            unit.addSymbol(new ELSymbol.ELNamespaceSymbol(clazz, it.span()));
+                            clazz.defSymbol = unit.addSymbol(new ELSymbol.ELNamespaceSymbol(clazz, it.span()));
                         } else {
                             errors.error("Unknown token found (expected identifier)", tokens.get(workingI));
                             continue;
@@ -562,7 +562,7 @@ public class Parser {
                         if (tokens.get(workingI) instanceof IdentifierToken it) {
                             clazz = new ELEnum(it.value, it.span(), currentNamespace, unit);
                             namespaces.add(clazz);
-                            unit.addSymbol(new ELSymbol.ELNamespaceSymbol(clazz, it.span()));
+                            clazz.defSymbol = unit.addSymbol(new ELSymbol.ELNamespaceSymbol(clazz, it.span()));
                         } else {
                             errors.error("Unknown token found (expected identifier)", tokens.get(workingI));
                             continue;

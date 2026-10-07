@@ -93,7 +93,7 @@ public class ProgramUnit {
         return symbol;
     }
 
-    public ELSymbol addSymbol(ELSymbol symbol) {
+    public <T extends ELSymbol> T addSymbol(T symbol) {
         if (!symbol.onAdd(this)) {
             symbols.add(symbol);
         }

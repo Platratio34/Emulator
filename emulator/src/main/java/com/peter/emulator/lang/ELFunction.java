@@ -9,6 +9,7 @@ import com.peter.emulator.lang.tokens.IdentifierToken;
 import com.peter.emulator.lang.tokens.OperatorToken;
 import com.peter.emulator.lang.tokens.SetToken;
 import com.peter.emulator.lang.tokens.Token;
+import com.peter.emulator.lang.ELSymbol.ELFuncDefSymbol;
 import com.peter.emulator.lang.ELSymbol.Modifier;
 import com.peter.emulator.lang.actions.Action;
 import com.peter.emulator.lang.actions.ActionBlock;
@@ -28,6 +29,7 @@ public class ELFunction {
     public final InlineType inline;
     public Location bodyLocation;
     public Location bodyEndLocation;
+    public ELFuncDefSymbol defSymbol = null;
     public final ProgramUnit unit;
     public ELFunction parent = null;
 

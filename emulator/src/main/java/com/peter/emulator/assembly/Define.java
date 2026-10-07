@@ -2,6 +2,8 @@ package com.peter.emulator.assembly;
 
 import java.util.ArrayList;
 
+import com.peter.emulator.assembly.symbols.DefinitionSymbol;
+
 public class Define {
 
     public String name;
@@ -13,6 +15,8 @@ public class Define {
     public boolean isLabel;
     protected boolean resolved = false;
     protected boolean isZero = false;
+
+    public DefinitionSymbol defSymbol = null;
 
     public int size = 0;
 

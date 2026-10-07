@@ -74,7 +74,7 @@ public class ELLanguageServer extends LSPServer implements LanguageServer, Langu
         capabilities.setHoverProvider(true);
         capabilities.setDocumentSymbolProvider(false);
         capabilities.setReferencesProvider(false);
-        capabilities.setDefinitionProvider(false);
+        capabilities.setDefinitionProvider(true);
         capabilities.setCodeActionProvider(false);
         capabilities.setFoldingRangeProvider(false);
 
@@ -175,7 +175,7 @@ public class ELLanguageServer extends LSPServer implements LanguageServer, Langu
             if (err.span == null) {
                 continue;
             }
-            String f = err.span.start().file();
+            String f = err.span.getURI();
             ArrayList<Diagnostic> diagnostics;
             if(fileDiagnostics.containsKey(f))
                 diagnostics = fileDiagnostics.get(f);

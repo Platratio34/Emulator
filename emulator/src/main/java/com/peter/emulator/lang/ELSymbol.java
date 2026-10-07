@@ -17,6 +17,8 @@ public class ELSymbol {
     public final String text;
     protected int modifier = 0;
 
+    public ELSymbol definition = null;
+
     public ELSymbol(Type type, Span span) {
         this.type = type;
         this.span = span;
@@ -183,12 +185,20 @@ public class ELSymbol {
             super(Type.CLASS_NAME, type.span());
             elType = type;
             operator = false;
+            ELClass clazz = type.getELClass();
+            if(clazz != null)
+                definition = clazz.defSymbol;
         }
 
         public ELTypeSymbol(ELType type, boolean operator) {
             super(operator ? Type.OPERATOR : Type.CLASS_NAME, type.baseRef().nameSpan);
             elType = type;
             this.operator = operator;
+            if (!operator) {
+                ELClass clazz = type.getELClass();
+                if (clazz != null)
+                    definition = clazz.defSymbol;
+            }
         }
 
         @Override
@@ -250,6 +260,7 @@ public class ELSymbol {
         public ELVarSymbol(ELVariable var, Span span) {
             super((var.finalVal ? Type.VARIABLE_FINAL : Type.VARIABLE_NAME), span);
             this.var = var;
+            this.definition = var.defSymbol;
         }
 
         @Override
@@ -289,6 +300,7 @@ public class ELSymbol {
         public ELFuncCallSymbol(ELFunction func, Span span) {
             super(Type.FUNCTION_NAME, span);
             this.func = func;
+            this.definition = func.defSymbol;
         }
 
         @Override

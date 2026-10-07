@@ -14,6 +14,8 @@ import com.peter.emulator.assembly.SymbolFile.FunctionSymbol;
 import com.peter.emulator.assembly.SymbolFile.ValueSymbol;
 import com.peter.emulator.assembly.SymbolFile.VariableSymbol;
 import com.peter.emulator.assembly.keywords.*;
+import com.peter.emulator.assembly.symbols.AliasSymbol;
+import com.peter.emulator.assembly.symbols.DefinitionSymbol;
 import com.peter.emulator.lang.ELSymbol;
 import com.peter.emulator.lang.Location;
 import com.peter.emulator.lang.Span;
@@ -76,7 +78,7 @@ public class ASMParser {
 
     private final HashMap<String, Define> defines;
     private final HashMap<String, Define> labels;
-    private final HashMap<String, Reg> aliases = new HashMap<>();
+    private final HashMap<String, AliasSymbol> aliases = new HashMap<>();
 
     public final ArrayList<ELSymbol> symbols;
 
@@ -210,7 +212,7 @@ public class ASMParser {
                     case "define" -> {
                         symbols.add(new ELSymbol(Type.KEYWORD, line.lastSpan, "## `#define`\n\nCreate a new define.\n\nUsage: `#define [name] <[value]|\"[str]\"> ([type])`"));
                         String name = line.nextString(AsmError.error("Expected define name"));
-                        line.symbolLast(Type.VARIABLE_CONSTANT);
+                        Span defSpan = line.lastSpan;
                         if (defines.containsKey(name)) {
                             line.errorLast(AsmError.error("Duplicate define `%s`", name));
                         }
@@ -220,6 +222,7 @@ public class ASMParser {
                         String defType;
                         if (strLit != null) {
                             def = new Define(name, strLit);
+                            def.defSymbol = new DefinitionSymbol(defSpan, def);
                             valueStr = strLit;
                             defType = "char["+strLit.length()+"]";
                         } else {
@@ -227,9 +230,11 @@ public class ASMParser {
                             if (val == null)
                                 continue;
                             def = new Define(name, val.value);
+                            def.defSymbol = new DefinitionSymbol(defSpan, def);
                             valueStr = Instruction.toHexLead(val.value);
                             defType = "const int32";
                         }
+                        symbols.add(def.defSymbol);
                         if (!defines.containsKey(name)) {
                             defines.put(name, def);
                         }
@@ -248,7 +253,7 @@ public class ASMParser {
                     case "var" -> {
                         symbols.add(new ELSymbol(Type.KEYWORD, line.lastSpan, "## `#var`\n\nCreate a new variable.\n\nUsage: `#var [name] <[value]|\"[str]\"|\\[ [val](, ...) \\]|\\( [size] \\)> ([type])`"));
                         String name = line.nextString(AsmError.error("Expected variable name"));
-                        line.symbolLast(Type.VARIABLE_NAME);
+                        Span defSpan = line.lastSpan;
                         if (defines.containsKey(name)) {
                             line.errorLast(AsmError.error("Duplicate define `%s`", name));
                         }
@@ -258,6 +263,7 @@ public class ASMParser {
                         String defType = null;
                         if (arr != null) {
                             def = new Define(name, arr);
+                            def.defSymbol = new DefinitionSymbol(defSpan, def);
                             valueStr = "[...]";
                             defType = "int32[" + Math.ceilDiv(def.size, 4) + "]";
                         }
@@ -265,6 +271,7 @@ public class ASMParser {
                             Define val = line.nextConst();
                             if (val != null) {
                                 def = new Define(name, new int[] { val.value });
+                                def.defSymbol = new DefinitionSymbol(defSpan, def);
                                 valueStr = Instruction.toHexLead(val.value);
                                 defType = "const int32";
                             }
@@ -273,6 +280,7 @@ public class ASMParser {
                             String valS = line.nextStringLit();
                             if (valS != null) {
                                 def = new Define(name, valS);
+                                def.defSymbol = new DefinitionSymbol(defSpan, def);
                                 valueStr = valS;
                                 defType = "char["+valS.length()+"]";
                             }
@@ -283,6 +291,7 @@ public class ASMParser {
                                 try {
                                     int size = Integer.parseInt(valSize.substring(1, valSize.length() - 1));
                                     def = new Define(name).withSize(Math.ceilDiv(size, 4) * 4);
+                                    def.defSymbol = new DefinitionSymbol(defSpan, def);
                                     def.isZero = true;
                                     line.symbolLast(Type.NUMERIC_LITERAL);
                                     valueStr = valSize;
@@ -300,6 +309,7 @@ public class ASMParser {
                             line.errorLast(AsmError.error("Expected variable value"));
                             continue;
                         }
+                        symbols.add(def.defSymbol);
                         if (!defines.containsKey(name)) {
                             defines.put(name, def);
                         }
@@ -645,10 +655,11 @@ public class ASMParser {
                                 String name = line.nextString(AsmError.error("Expected alias name"));
                                 if (name == null)
                                     continue;
-                                line.symbolLast(Type.PARAMETER);
                                 if (aliases.containsKey(name)) {
+                                    symbols.add(aliases.get(name).use(line.lastSpan));
                                     aliases.remove(name);
                                 } else {
+                                    line.symbolLast(Type.PARAMETER);
                                     line.errorLast(AsmError.warning("Unknown alias"));
                                 }
                                 continue;
@@ -663,13 +674,17 @@ public class ASMParser {
                             String name = line.nextString(AsmError.error("Expected alias name"));
                             if (name == null)
                                 continue;
-                            line.symbolLast(Type.PARAMETER);
                             if (aliases.containsKey(name)) {
                                 line.errorLast(AsmError.error("Duplicate alias"));
                                 continue;
                             }
-                            if(reg != Reg.UNKNOWN)
-                                aliases.put(name, reg);
+                            if(reg != Reg.UNKNOWN) {
+                                AliasSymbol symbol = new AliasSymbol(line.lastSpan, reg);
+                                aliases.put(name, symbol);
+                                symbols.add(symbol);
+                            } else {
+                                line.symbolLast(Type.PARAMETER);
+                            }
                             continue;
                         }
 
@@ -928,7 +943,15 @@ public class ASMParser {
             }
             Span tempSpan = lastSpan;
             lastSpan = startLoc.span(location.add(col - 1));
-            Reg reg = aliases.getOrDefault(t, Reg.from(t));
+            AliasSymbol alias = aliases.getOrDefault(t, null);
+            Reg reg;
+            if (alias != null) {
+                reg = alias.reg;
+                symbols.add(alias.use(lastSpan));
+            } else {
+                reg = Reg.from(t);
+                symbolLast(Type.PARAMETER);
+            }
             if (reg == Reg.UNKNOWN) {
                 if (error != null)
                     errors.add(error.at(lastSpan));
@@ -938,7 +961,6 @@ public class ASMParser {
                 }
                 return null;
             }
-            symbolLast(Type.PARAMETER);
             return reg;
         }
         
@@ -976,19 +998,15 @@ public class ASMParser {
                 }
                 if (!def.isAddress) {
                     errors.add(AsmError.error(lastSpan, "Define `%s` does not have an address", defName));
-                    symbolLast(Type.VARIABLE_CONSTANT);
-                } else {
-                    symbolLast(Type.VARIABLE_NAME);
                 }
+                symbols.add(new DefinitionSymbol(lastSpan, def));
                 return def;
             } else if (defines.containsKey(t)) { // address of
                 Define def = defines.get(t);
                 if (def.isAddress) {
                     errors.add(AsmError.warning(lastSpan, "Define is an address, but is accessed like a value"));
-                    symbolLast(Type.VARIABLE_NAME);
-                } else {
-                    symbolLast(Type.VARIABLE_CONSTANT);
                 }
+                symbols.add(new DefinitionSymbol(lastSpan, def));
                 return def;
             } else if (t.startsWith("'")) {
                 symbolLast(Type.STRING_LITERAL);

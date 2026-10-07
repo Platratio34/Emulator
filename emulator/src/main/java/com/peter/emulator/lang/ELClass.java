@@ -40,6 +40,7 @@ public class ELClass extends Namespace {
     protected int lastOffset = 0;
 
     public final Span nameSpan;
+    public ELSymbol defSymbol = null;
 
     public ELClass(String name, Span nameSpan, Namespace namespace, ProgramUnit unit) {
         super(name, namespace);

@@ -17,6 +17,7 @@ public class ELVariable {
     public final boolean finalVal;
     public final Location startLocation;
     public final Location endLocation;
+    public ELSymbol defSymbol = null;
     public final Namespace namespace;
     public final ProgramUnit unit;
 

@@ -174,7 +174,7 @@ public class LineAction extends ComplexAction {
                     var = scope.addStackVar(name, type, token.startLocation, scope.unit.errors);
                 }
                 var.analyze(scope.unit.errors, scope.namespace);
-                scope.addSymbol(new ELVarSymbol(var, token.span()));
+                var.defSymbol = scope.addSymbol(new ELVarSymbol(var, token.span()));
 
                 if (i2 >= tokens.size()) {
                     addDirect(String.format("#stackVar %s %s", type.typeString(), var.name));

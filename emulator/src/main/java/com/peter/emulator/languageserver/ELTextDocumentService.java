@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.lsp4j.*;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.TextDocumentService;
 
 import com.peter.emulator.assembly.ASMParser;
@@ -109,14 +110,15 @@ public class ELTextDocumentService implements TextDocumentService {
                 parsers.put(path, parser);
                 parser.parse();
                 lspServer.logInfo("New ASM parser for %s with %d symbols", path, parser.symbols.size());
-                
+
                 ArrayList<Diagnostic> diagnostics = new ArrayList<>();
-                
+
                 for (AsmError err : parser.errors) {
                     if (err.span == null) {
                         continue;
                     }
-                    diagnostics.add(new Diagnostic(err.span.toRange(), err.message, err.severity.severity, "emulatorasm"));
+                    diagnostics
+                            .add(new Diagnostic(err.span.toRange(), err.message, err.severity.severity, "emulatorasm"));
                 }
                 lspServer.client.publishDiagnostics(new PublishDiagnosticsParams(path.toString(), diagnostics));
                 lspServer.client.refreshSemanticTokens();
@@ -173,55 +175,41 @@ public class ELTextDocumentService implements TextDocumentService {
         });
     }
     
+    private ArrayList<ELSymbol> getSymbols(URI uri) {
+        if (uri.getPath().endsWith(".asm")) {
+            ASMParser parser = getParser(Path.of(uri));
+                if(parser == null)
+                    return null;
+            return parser.symbols;
+        } else if (uri.getPath().endsWith(".el")) {
+            lspServer.lsLock.lock();
+            ProgramUnit unit = lspServer.getUnit(uri);
+            lspServer.lsLock.unlock();
+            if (unit == null) {
+                return null;
+            }
+            return unit.symbols;
+        }
+        return null;
+    }
+    
     @Override
     public CompletableFuture<Hover> hover(HoverParams params) {
         URI uri = URI.create(params.getTextDocument().getUri());
-        Path path = Path.of(uri);
-        if (uri.getPath().endsWith(".asm")) {
-            return CompletableFuture.supplyAsync(() -> {
-                ASMParser parser = getParser(path);
-                if(parser == null)
-                    return null;
-                
-                Position hoverPos = params.getPosition();
-
-                for (ELSymbol symbol : parser.symbols) {
-                    if (symbol.hasText() && symbol.contains(hoverPos, null)) {
-                        return new Hover(new MarkupContent("markdown", symbol.getText()));
-                    }
-                }
+        return CompletableFuture.supplyAsync(() -> {
+            ArrayList<ELSymbol> symbols = getSymbols(uri);
+            if(symbols == null) {
+                lspServer.logError("Hover was requested for %s, but no symbols could be found", uri);
                 return null;
-            });
-        } else if (uri.getPath().endsWith(".el")) {
-            return CompletableFuture.supplyAsync(() -> {
-                lspServer.lsLock.lock();
-                ProgramUnit unit = lspServer.getUnit(uri);
-                if (unit == null) {
-                    lspServer.logError("Hover was requested for %s, but no program unit could be found", uri);
-                    lspServer.lsLock.unlock();
-                    return null;
+            }
+            Position hoverPos = params.getPosition();
+            for (ELSymbol symbol : symbols) {
+                if (symbol.hasText() && symbol.contains(hoverPos, null)) {
+                    return new Hover(new MarkupContent("markdown", symbol.getText()));
                 }
-                Position hoverPos = params.getPosition();
-
-                for (ELSymbol symbol : unit.symbols) {
-                    if (symbol.hasText() && symbol.contains(hoverPos, null)) {
-                        lspServer.lsLock.unlock();
-                        return new Hover(new MarkupContent("markdown", symbol.getText()));
-                    } else {
-                        // lspServer.logDebug("Hover was requested for %s, but didn't match symbol "+symbol.type+": "+symbol.text, uri);
-                    }
-                }
-
-                if (unit.variables.isEmpty() && unit.functions.isEmpty() && unit.symbols.isEmpty()) {
-                    lspServer.logWarn("Hover was requested for %s, but program unit had no hover-able symbols", uri);
-                    lspServer.lsLock.unlock();
-                    return null;
-                }
-                lspServer.lsLock.unlock();
-                return null;
-            });
-        }
-        return CompletableFuture.supplyAsync(() -> null);
+            }
+            return null;
+        });
     }
 
     private class SemanticTokenState {
@@ -295,38 +283,44 @@ public class ELTextDocumentService implements TextDocumentService {
     @Override
     public CompletableFuture<SemanticTokens> semanticTokensFull(SemanticTokensParams params) {
         URI uri = URI.create(params.getTextDocument().getUri());
-        Path path = Path.of(uri);
-        if (uri.getPath().endsWith(".asm")) {
-            return CompletableFuture.supplyAsync(() -> {
-                ASMParser parser = getParser(path);
-                if(parser == null)
-                    return null;
 
-                SemanticTokenState state = new SemanticTokenState();
-                state.addTokens(parser.symbols);
-                lspServer.logDebug("Providing semantic tokens for %s (%d total symbols)", uri, parser.symbols.size());
-                return new SemanticTokens(state.data);
-            });
-        } else if (uri.getPath().endsWith(".el")) {
-            return CompletableFuture.supplyAsync(() -> {
-                lspServer.lsLock.lock();
-                ProgramUnit unit = lspServer.getUnit(uri);
-                if (unit == null) {
-                    lspServer.logError("Semantic tokens were requested for %s, but no program unit could be found",
-                            uri);
-                    lspServer.lsLock.unlock();
-                    return null;
+        return CompletableFuture.supplyAsync(() -> {
+            ArrayList<ELSymbol> symbols = getSymbols(uri);
+            if (symbols == null) {
+                lspServer.logError("Semantic tokens were requested for %s, but no symbols could be found",
+                        uri);
+                return null;
+            }
+            SemanticTokenState state = new SemanticTokenState();
+            state.addTokens(symbols);
+            lspServer.logDebug("Providing semantic tokens for %s (%d total symbols)", uri, symbols.size());
+            return new SemanticTokens(state.data);
+        });
+    }
+    
+    @Override
+    public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> definition(
+            DefinitionParams params) {
+        URI uri = URI.create(params.getTextDocument().getUri());
+
+        return CompletableFuture.supplyAsync(() -> {
+            ArrayList<ELSymbol> symbols = getSymbols(uri);
+            if (symbols == null) {
+                lspServer.logError("Semantic tokens were requested for %s, but no symbols could be found",
+                        uri);
+                return null;
+            }
+            Position hoverPos = params.getPosition();
+            for (ELSymbol symbol : symbols) {
+                if (symbol.definition != null && symbol.contains(hoverPos, null)) {
+                    // return new Hover(new MarkupContent("markdown", symbol.getText()));
+                    ArrayList<LocationLink> locations = new ArrayList<>();
+                    locations.add(symbol.definition.span.locationLink());
+                    return Either.forRight(locations);
                 }
-
-                SemanticTokenState state = new SemanticTokenState();
-                state.addTokens(unit.symbols);
-                lspServer.logDebug("Providing semantic tokens for %s (%d total symbols)", uri, unit.symbols.size());
-                lspServer.lsLock.unlock();
-                return new SemanticTokens(state.data);
-            });
-        }
-        lspServer.logWarn("Semantic tokens for %s but unknown file type", uri);
-        return CompletableFuture.supplyAsync(() -> null);
+            }
+            return null;
+        });
     }
 
 }

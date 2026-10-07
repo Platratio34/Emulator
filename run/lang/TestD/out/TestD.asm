@@ -251,7 +251,7 @@ STACK POP r0
 #line run\lang\TestD\kalloc.el 22:14
 // Reserving r1
 LOAD r1 0 // nullptr
-// Reserving r2
+// Reserving
 SUB r2 r15 12
 STORE r1 r2
 // Releasing r1
