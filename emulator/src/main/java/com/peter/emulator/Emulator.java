@@ -47,6 +47,7 @@ public class Emulator {
             stop();
         }));
         gui = new EmulatorGui(this);
+        gui.update();
     }
 
     protected void tick() {
@@ -55,7 +56,7 @@ public class Emulator {
             cpu.tick();
         }
         peripheralManager.tick();
-        gui.update();
+        // gui.update();
     }
 
     protected boolean running = false;
@@ -86,8 +87,8 @@ public class Emulator {
                     if (lastTime != 0) {
                         long t = System.nanoTime() - lastTime;
                         if (t > maxRunTime) {
-                            // System.out.println("Took " + t + "ns (" + (((t - maxRunTime) / 1e6) + "ms over)"));
-                            // System.out.println(cores[0].lastInstruction.toString());
+                            System.out.println("Took " + t + "ns (" + (((t - maxRunTime) / 1e6) + "ms over)"));
+                            System.out.println(cores[0].lastInstruction.toString());
                         } else {
                             long ms = (long)((maxRunTime - t) / 1e6);
                             try {

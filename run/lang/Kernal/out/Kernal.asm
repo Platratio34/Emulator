@@ -17,6 +17,7 @@
 #define Kernal.CMD_STATUS 0x0001_0001 uint8*
 #define Kernal.CONSOLE_IN 0x0001_0301 char*
 #define Kernal.CONSOLE_IN_COUNT 0x0001_0302 uint8*
+#var Kernal.firstFree 0x00 ProcessFiles*
 #define Kernal.CMD_START 0x0001_0008 int32*
 #define Kernal.CMD_SIZE 0x0001_0004 int32*
 // Kernal.ProcessStatus
@@ -49,6 +50,72 @@
 // text
 
 // Kernal
+
+#function Kernal.getNew
+STACK PUSH r15
+COPY rStack r15
+#line run\lang\Kernal\fs.el 17:10
+// Reserving r1
+// Register r1 already reserved
+LOAD MEM r1 &Kernal.firstFree
+GOTO NEQ r1 :if_end_0 // firstFree == nullptr
+// Releasing r1
+#line run\lang\Kernal\fs.el 18:14
+// Reserving r1
+LOAD r1 0 // nullptr
+// Reserving r2
+SUB r2 r15 12
+STORE r1 r2
+// Releasing r1
+// Releasing r2
+GOTO :func_exit_Kernal.getNew
+//  return nullptr;
+
+#lineend
+:if_end_0
+//  if(firstFree == nullptr) {return nullptr;}
+
+#line run\lang\Kernal\fs.el 20:10
+// Reserving r1
+// Releasing r1
+// Reserving r1
+LOAD MEM r1 &Kernal.firstFree // firstFree
+#stackVar ProcessFiles* next
+STACK PUSH r1
+// Releasing r1
+//  ProcessFiles* next = firstFree;
+
+#line run\lang\Kernal\fs.el 21:10
+// Reserving r1
+// Register r1 already reserved
+LOAD r1 &Kernal.firstFree
+// Reserving r2
+// Register r2 already reserved
+LOAD MEM r2 &Kernal.firstFree
+LOAD MEM r2 r2 // firstFree.numOpen // force_cast<ProcessFiles*>(firstFree.numOpen)
+STORE r2 r1
+// Releasing r1
+// Releasing r2
+//  firstFree = force_cast<ProcessFiles*>(firstFree.numOpen);
+
+#line run\lang\Kernal\fs.el 22:10
+// Reserving r1
+// Register r1 already reserved
+LOAD MEM r1 r15 // next
+// Reserving r2
+SUB r2 r15 12
+STORE r1 r2
+// Releasing r1
+// Releasing r2
+GOTO :func_exit_Kernal.getNew
+//  return next;
+
+#lineend
+:func_exit_Kernal.getNew
+COPY r15 rStack
+STACK POP r15
+GOTO POP
+#endfunction ProcessFiles*
 
 #function Kernal.read_char*_int32 buffer char*, bufferSize int32
 STACK PUSH r15
@@ -86,7 +153,7 @@ LOAD MEM r1 r1
 // Register r2 already reserved
 LOAD MEM r2 r15
 SUB r1 r1 r2
-GOTO GEQ r1 :if_end_0 // bufferSize < inCount
+GOTO GEQ r1 :if_end_1 // bufferSize < inCount
 // Releasing r1
 #line run\lang\Kernal\console.el 110:14
 // Reserving r1
@@ -98,7 +165,7 @@ STORE r1 r15
 //  inCount = bufferSize;
 
 #lineend
-:if_end_0
+:if_end_1
 //  if(bufferSize < inCount) {inCount = bufferSize;}
 
 #line run\lang\Kernal\console.el 112:10
@@ -111,7 +178,7 @@ STACK PUSH r1
 //  int32 i = 0;
 
 #line run\lang\Kernal\console.el 113:10
-:while_condition_1
+:while_condition_2
 // Reserving r1
 ADD r1 r15 4
 // Register r1 already reserved
@@ -119,7 +186,7 @@ LOAD MEM r1 r1
 // Register r2 already reserved
 LOAD MEM r2 r15
 SUB r1 r1 r2
-GOTO GEQ r1 :while_end_1 // i < inCount
+GOTO GEQ r1 :while_end_2 // i < inCount
 // Releasing r1
 #line run\lang\Kernal\console.el 114:14
 // Reserving r1
@@ -151,8 +218,8 @@ STORE r3 r2 // i++
 //  i++;
 
 #lineend
-GOTO :while_condition_1
-:while_end_1
+GOTO :while_condition_2
+:while_end_2
 //  while(i < inCount) {buffer[i] =* CONSOLE_IN; i++;}
 
 #line run\lang\Kernal\console.el 118:10
@@ -164,7 +231,7 @@ SUB r2 r15 12
 // Register r2 already reserved
 LOAD MEM r2 r2
 SUB r1 r1 r2
-GOTO GEQ r1 :if_end_2 // i < bufferSize
+GOTO GEQ r1 :if_end_3 // i < bufferSize
 // Releasing r1
 #line run\lang\Kernal\console.el 119:14
 // Reserving r1
@@ -182,7 +249,7 @@ STORE BYTE 0 r1
 //  buffer[i] = '\0';
 
 #lineend
-:if_end_2
+:if_end_3
 //  if(i < bufferSize) {buffer[i] = '\0';}
 
 #lineend
@@ -235,7 +302,7 @@ LOAD MEM r1 r1
 // Register r2 already reserved
 LOAD MEM r2 r15
 SUB r1 r1 r2
-GOTO LEQ r1 :if_end_3 // num > cPages
+GOTO LEQ r1 :if_end_4 // num > cPages
 // Releasing r1
 #line run\lang\Kernal\kalloc.el 48:14
 // Reserving r1
@@ -250,16 +317,16 @@ STORE r2 r1
 //  num = cPages;
 
 #lineend
-:if_end_3
+:if_end_4
 //  if(num > cPages) {num = cPages;}
 
 #line run\lang\Kernal\kalloc.el 50:10
-:while_condition_4
+:while_condition_5
 // Reserving r1
 SUB r1 r15 12
 // Register r1 already reserved
 LOAD MEM r1 r1
-GOTO LEQ r1 :while_end_4 // num > 0
+GOTO LEQ r1 :while_end_5 // num > 0
 // Releasing r1
 #line run\lang\Kernal\kalloc.el 51:14
 // Register r2 already reserved
@@ -300,8 +367,8 @@ STORE r3 r2 // num--
 //  num--;
 
 #lineend
-GOTO :while_condition_4
-:while_end_4
+GOTO :while_condition_5
+:while_end_5
 //  while(num > 0) {cPages--; pageFreeTable[(cast<int32>(SysD.rMemTbl[cPages]) & 0x7fff_ffff) >> 12] = false; num--;}
 
 #line run\lang\Kernal\kalloc.el 55:10
@@ -329,10 +396,427 @@ STACK POP r15
 GOTO POP
 #endfunction void
 
+#function Kernal.release_ProcessFiles* files ProcessFiles*
+STACK PUSH r15
+COPY rStack r15
+#stackVar ProcessFiles* files -12
+#line run\lang\Kernal\fs.el 26:10
+// Reserving r1
+SUB r1 r15 12
+// Register r1 already reserved
+LOAD MEM r1 r1
+// Reserving r2
+// Register r2 already reserved
+LOAD MEM r2 &Kernal.firstFree // firstFree // cast<int32>(firstFree)
+STORE r2 r1
+// Releasing r1
+// Releasing r2
+//  files.numOpen = cast<int32>(firstFree);
+
+#line run\lang\Kernal\fs.el 27:10
+// Reserving r1
+// Register r1 already reserved
+LOAD r1 &Kernal.firstFree
+// Reserving r2
+SUB r2 r15 12
+// Register r2 already reserved
+LOAD MEM r2 r2 // files
+STORE r2 r1
+// Releasing r1
+// Releasing r2
+//  firstFree = files;
+
+#lineend
+:func_exit_Kernal.release_ProcessFiles*
+COPY r15 rStack
+STACK POP r15
+GOTO POP
+#endfunction void
+
+#function Kernal.createProcess
+STACK PUSH r15
+COPY rStack r15
+#line run\lang\Kernal\kernal.el 171:10
+// Reserving r1
+// Releasing r1
+// Reserving r1
+LOAD MEM r1 &Kernal.lastPID
+INC r1 1 // lastPID + 1
+#stackVar int32 nextPID
+STACK PUSH r1
+// Releasing r1
+//  int32 nextPID = lastPID + 1;
+
+#line run\lang\Kernal\kernal.el 172:10
+// Reserving r1
+// Register r1 already reserved
+LOAD MEM r1 r15
+INC r1 -1024
+GOTO NEQ r1 :if_end_6 // nextPID == 1024
+// Releasing r1
+#line run\lang\Kernal\kernal.el 173:14
+STORE 2 r15
+//  nextPID = 2;
+
+#lineend
+:if_end_6
+//  if(nextPID == 1024) {nextPID = 2;}
+
+#line run\lang\Kernal\kernal.el 175:10
+:while_condition_7
+// Reserving r1
+// Register r1 already reserved
+LOAD r1 &Kernal.processStates
+// Reserving r2
+// Register r2 already reserved
+LOAD MEM r2 r15 // nextPID
+LSH r2 r2 7
+ADD r1 r1 r2
+// Releasing r2
+INC r1 84
+LOAD MEM BYTE r1 r1 // processStates[nextPID].status != ProcessStatus.NONE
+GOTO EQ r1 :while_end_7
+// Releasing r1
+#line run\lang\Kernal\kernal.el 176:14
+// Register r2 already reserved
+COPY r15 r2
+LOAD MEM r1 r2
+ADD r3 r1 1
+STORE r3 r2 // nextPID++
+//  nextPID++;
+
+#line run\lang\Kernal\kernal.el 177:14
+// Reserving r1
+// Register r1 already reserved
+LOAD MEM r1 r15
+INC r1 -1024
+GOTO NEQ r1 :if_end_8 // nextPID == 1024
+// Releasing r1
+#line run\lang\Kernal\kernal.el 178:18
+STORE 2 r15
+//  nextPID = 2;
+
+#lineend
+:if_end_8
+//  if(nextPID == 1024) {nextPID = 2;}
+
+#line run\lang\Kernal\kernal.el 180:14
+// Reserving r1
+// Register r1 already reserved
+LOAD MEM r1 r15
+// Register r2 already reserved
+LOAD MEM r2 &Kernal.lastPID
+SUB r1 r1 r2
+GOTO NEQ r1 :if_end_9 // nextPID == lastPID
+// Releasing r1
+#line run\lang\Kernal\kernal.el 181:18
+// Reserving r1
+LOAD r1 0 // nullptr
+// Reserving r2
+SUB r2 r15 12
+STORE r1 r2
+// Releasing r1
+// Releasing r2
+GOTO :func_exit_Kernal.createProcess
+//  return nullptr;
+
+#lineend
+:if_end_9
+//  if(nextPID == lastPID) {return nullptr;}
+
+#lineend
+GOTO :while_condition_7
+:while_end_7
+//  while(processStates[nextPID].status != ProcessStatus.NONE) {nextPID++; if(nextPID == 1024) {nextPID = 2;} if(nextPID == lastPID) {return nullptr;}}
+
+#line run\lang\Kernal\kernal.el 184:10
+// Reserving r1
+// Register r1 already reserved
+LOAD r1 &Kernal.lastPID
+// Reserving r2
+// Register r2 already reserved
+LOAD MEM r2 r15 // nextPID
+STORE r2 r1
+// Releasing r1
+// Releasing r2
+//  lastPID = nextPID;
+
+#line run\lang\Kernal\kernal.el 185:10
+// Reserving r1
+// Register r1 already reserved
+LOAD r1 &Kernal.processStates
+// Reserving r2
+// Register r2 already reserved
+LOAD MEM r2 r15 // nextPID
+LSH r2 r2 7
+ADD r1 r1 r2
+// Releasing r2 // &processStates[nextPID]
+// Reserving r2
+SUB r2 r15 12
+STORE r1 r2
+// Releasing r1
+// Releasing r2
+GOTO :func_exit_Kernal.createProcess
+//  return & processStates[nextPID];
+
+#lineend
+:func_exit_Kernal.createProcess
+COPY r15 rStack
+STACK POP r15
+GOTO POP
+#endfunction ProcessState*
+
+#syscall 1 Kernal_kalloc
+#function syscall::Kernal_kalloc
+GOTO PUSH :Kernal.kalloc
+SYSRETURN
+#endfunction void*
+
+#function Kernal.kalloc
+STACK PUSH r15
+COPY rStack r15
+#line run\lang\Kernal\kalloc.el 18:10
+#alias r1 this // Reserving r1
+LOAD this &Kernal.kallocMutex
+// INLINE START Mutex.acquire
+:Mutex.acquire_loop_3
+// Resolving placeholder 1 to r2
+TEST AND SET r2 this
+GOTO NEQ r2 :Mutex.acquire_loop_3
+// INLINE END
+STACK POP r0
+#alias clear this // Releasing r1 // kallocMutex.acquire()
+//  kallocMutex.acquire();
+
+#line run\lang\Kernal\kalloc.el 19:10
+// Reserving r1
+// Releasing r1
+// Reserving r1
+// Reserving r2
+// Releasing r2
+LOAD MEM r1 rMemTbl // SysD.rMemTbl[0]
+#stackVar int32 cPages
+STACK PUSH r1
+// Releasing r1
+//  int32 cPages = SysD.rMemTbl[0];
+
+#line run\lang\Kernal\kalloc.el 20:10
+// Reserving r1
+// Register r1 already reserved
+LOAD MEM r1 r15
+INC r1 -32
+GOTO LT r1 :if_end_10 // cPages >= MAX_BLOCKS
+// Releasing r1
+#line run\lang\Kernal\kalloc.el 21:14
+#alias r1 this // Reserving r1
+LOAD this &Kernal.kallocMutex
+// INLINE START Mutex.release
+STORE BYTE 0x0 this
+// INLINE END
+STACK POP r0
+#alias clear this // Releasing r1 // kallocMutex.release()
+//  kallocMutex.release();
+
+#line run\lang\Kernal\kalloc.el 22:14
+// Reserving r1
+LOAD r1 0 // nullptr
+// Reserving r2
+SUB r2 r15 12
+STORE r1 r2
+// Releasing r1
+// Releasing r2
+GOTO :func_exit_Kernal.kalloc
+//  return nullptr;
+
+#lineend
+:if_end_10
+//  if(cPages >= MAX_BLOCKS) {kallocMutex.release(); return nullptr;}
+
+#line run\lang\Kernal\kalloc.el 24:10
+// Reserving r1
+// Releasing r1
+LOAD r1 0 // 0
+#stackVar int32 i
+STACK PUSH r1
+// Releasing r1
+//  int32 i = 0;
+
+#line run\lang\Kernal\kalloc.el 25:10
+:while_condition_11
+// Reserving r1
+LOAD r1 Kernal.pageFreeTable
+// Register r1 already reserved
+// Reserving r2
+ADD r2 r15 4
+// Register r2 already reserved
+LOAD MEM r2 r2 // i
+ADD r1 r1 r2
+// Releasing r2
+LOAD MEM BYTE r1 r1
+GOTO EQ r1 :while_end_11
+ADD r1 r15 4
+// Register r1 already reserved
+LOAD MEM r1 r1
+INC r1 -4096
+GOTO GEQ r1 :while_end_11 // i < 0x1000 // pageFreeTable[i] && ( i < 0x1000 )
+// Releasing r1
+#line run\lang\Kernal\kalloc.el 26:14
+ADD r2 r15 4
+// Register r2 already reserved
+LOAD MEM r1 r2
+ADD r3 r1 1
+STORE r3 r2 // i++
+//  i++;
+
+#lineend
+GOTO :while_condition_11
+:while_end_11
+//  while(pageFreeTable[i] && (i < 0x1000)) {i++;}
+
+#line run\lang\Kernal\kalloc.el 28:10
+// Reserving r1
+ADD r1 r15 4
+// Register r1 already reserved
+LOAD MEM r1 r1
+INC r1 -4096
+GOTO NEQ r1 :if_end_12 // i == 0x1000
+// Releasing r1
+#line run\lang\Kernal\kalloc.el 29:14
+#alias r1 this // Reserving r1
+LOAD this &Kernal.kallocMutex
+// INLINE START Mutex.release
+STORE BYTE 0x0 this
+// INLINE END
+STACK POP r0
+#alias clear this // Releasing r1 // kallocMutex.release()
+//  kallocMutex.release();
+
+#line run\lang\Kernal\kalloc.el 30:14
+// Reserving r1
+LOAD r1 0 // nullptr
+// Reserving r2
+SUB r2 r15 12
+STORE r1 r2
+// Releasing r1
+// Releasing r2
+GOTO :func_exit_Kernal.kalloc
+//  return nullptr;
+
+#lineend
+:if_end_12
+//  if(i == 0x1000) {kallocMutex.release(); return nullptr;}
+
+#line run\lang\Kernal\kalloc.el 32:10
+// Reserving r1
+LOAD r1 Kernal.pageFreeTable
+// Register r1 already reserved
+// Reserving r2
+ADD r2 r15 4
+// Register r2 already reserved
+LOAD MEM r2 r2 // i
+ADD r1 r1 r2
+// Releasing r2
+STORE BYTE 1 r1
+// Releasing r1
+//  pageFreeTable[i] = true;
+
+#line run\lang\Kernal\kalloc.el 33:10
+// Reserving r1
+// Releasing r1
+// Reserving r1
+LOAD MEM r1 r15
+LSH r1 r1 12 // cPages << 12
+LOAD r2 -2147483648
+ADD r1 r1 r2 // 0x8000_0000 + ( cPages << 12 )
+#stackVar void* addr
+STACK PUSH r1
+// Releasing r1
+//  void* addr = 0x8000_0000 + (cPages << 12);
+
+#line run\lang\Kernal\kalloc.el 34:10
+// Reserving r1
+LOAD MEM BYTE r1 r15
+ADD r1 r1 1
+STORE r1 r15
+// Releasing r1
+// Releasing r1
+//  cPages += 1;
+
+#line run\lang\Kernal\kalloc.el 35:10
+// Reserving r1
+// Register r1 already reserved
+// Reserving r2
+// Register r2 already reserved
+LOAD MEM r2 r15 // cPages
+LSH r2 r2 2
+ADD r1 rMemTbl r2
+// Releasing r2
+// Reserving r2
+ADD r2 r15 4
+// Register r2 already reserved
+LOAD MEM r2 r2
+LSH r2 r2 12 // i << 12
+LOAD r3 -2147483648
+ADD r2 r2 r3 // 0x8000_0000 + ( i << 12 )
+STORE r2 r1
+// Releasing r1
+// Releasing r2
+//  SysD.rMemTbl[cPages] = 0x8000_0000 + (i << 12);
+
+#line run\lang\Kernal\kalloc.el 36:10
+// Reserving r1
+// Register r1 already reserved
+LOAD MEM r1 r15 // cPages
+STORE r1 rMemTbl
+// Releasing r1
+//  SysD.rMemTbl[0] = cPages;
+
+#line run\lang\Kernal\kalloc.el 38:10
+#alias r1 this // Reserving r1
+LOAD this &Kernal.kallocMutex
+// INLINE START Mutex.release
+STORE BYTE 0x0 this
+// INLINE END
+STACK POP r0
+#alias clear this // Releasing r1 // kallocMutex.release()
+//  kallocMutex.release();
+
+#line run\lang\Kernal\kalloc.el 39:10
+// Reserving r1
+ADD r1 r15 8
+// Register r1 already reserved
+LOAD MEM r1 r1 // addr
+// Reserving r2
+SUB r2 r15 12
+STORE r1 r2
+// Releasing r1
+// Releasing r2
+GOTO :func_exit_Kernal.kalloc
+//  return addr;
+
+#lineend
+:func_exit_Kernal.kalloc
+COPY r15 rStack
+STACK POP r15
+GOTO POP
+#endfunction void*
+
 #function Kernal.setupFS
 STACK PUSH r15
 COPY rStack r15
-#line run\lang\Kernal\fs.el 8:10
+#line run\lang\Kernal\fs.el 9:10
+// Reserving r1
+// Register r1 already reserved
+LOAD r1 &Kernal.firstFree
+// Reserving r2
+// Register r2 already reserved
+LOAD r2 &Kernal._pool // &_pool
+STORE r2 r1
+// Releasing r1
+// Releasing r2
+//  firstFree = & _pool;
+
+#line run\lang\Kernal\fs.el 10:10
 // For Loop:
 // Initializer
 // Reserving r1
@@ -342,14 +826,14 @@ LOAD r2 0 // 0
 #stackVar int32 i
 STACK PUSH r2
 // Releasing r2
-:for_condition_5
+:for_condition_13
 // Reserving r2
 // Register r3 already reserved
 COPY r1 r3
 INC r3 -32
-GOTO GEQ r3 :for_end_5 // i < 32
+GOTO GEQ r3 :for_end_13 // i < _pool.length
 // Releasing r2
-#line run\lang\Kernal\fs.el 9:14
+#line run\lang\Kernal\fs.el 11:14
 // Still reserved: r1
 // Reserving r2
 // Register r2 already reserved
@@ -360,19 +844,41 @@ COPY r1 r3 // i
 LSH r3 r3 2
 ADD r2 r2 r3
 // Releasing r3
-STORE BYTE 1 r2
+// Reserving r3
+// Register r3 already reserved
+LOAD r3 &Kernal._pool
+// Reserving r4
+// Register r4 already reserved
+COPY r1 r4
+INC r4 1 // i + 1
+LSH r4 r4 2
+ADD r3 r3 r4
+// Releasing r4 // &_pool[i + 1] // cast<int32>(& _pool[i + 1])
+STORE r3 r2
 // Releasing r2
-//  _pool[i].free = true;
+// Releasing r3
+//  _pool[i].numOpen = cast<int32>(& _pool[i + 1]);
 
 #lineend
 // Reserved: r1
 // Iterator
 INC r1 1 // i++
-GOTO :for_condition_5
-:for_end_5
+GOTO :for_condition_13
+:for_end_13
 // End of scope
 // Releasing r1
-//  for(int32 i = 0; i < 32; i++) {_pool[i].free = true;}
+//  for(int32 i = 0; i < _pool.length; i++) {_pool[i].numOpen = cast<int32>(& _pool[i + 1]);}
+
+#line run\lang\Kernal\fs.el 13:10
+// Reserving r1
+// Register r1 already reserved
+LOAD r1 &Kernal._pool
+// Reserving r2
+INC r1 124
+// Releasing r2
+STORE 0 r1
+// Releasing r1
+//  _pool[_pool.length - 1].numOpen = 0;
 
 #lineend
 :func_exit_Kernal.setupFS
@@ -493,13 +999,13 @@ STACK PUSH r1
 //  int32 pI = 2;
 
 #line run\lang\Kernal\kernal.el 58:10
-:while_condition_6
+:while_condition_14
 // Reserving r1
 ADD r1 r15 4
 // Register r1 already reserved
 LOAD MEM r1 r1
 INC r1 -1024
-GOTO GEQ r1 :while_end_6 // pI < 1024
+GOTO GEQ r1 :while_end_14 // pI < 1024
 // Releasing r1
 #line run\lang\Kernal\kernal.el 59:14
 // Reserving r1
@@ -518,8 +1024,8 @@ STORE BYTE 0 r1
 //  processStates[pI].status = ProcessStatus.NONE;
 
 #lineend
-GOTO :while_condition_6
-:while_end_6
+GOTO :while_condition_14
+:while_end_14
 //  while(pI < 1024) {processStates[pI].status = ProcessStatus.NONE;}
 
 #line run\lang\Kernal\kernal.el 65:10
@@ -605,139 +1111,6 @@ STACK POP r15
 GOTO POP
 #endfunction void
 
-#function Kernal.createProcess
-STACK PUSH r15
-COPY rStack r15
-#line run\lang\Kernal\kernal.el 171:10
-// Reserving r1
-// Releasing r1
-// Reserving r1
-LOAD MEM r1 &Kernal.lastPID
-INC r1 1 // lastPID + 1
-#stackVar int32 nextPID
-STACK PUSH r1
-// Releasing r1
-//  int32 nextPID = lastPID + 1;
-
-#line run\lang\Kernal\kernal.el 172:10
-// Reserving r1
-// Register r1 already reserved
-LOAD MEM r1 r15
-INC r1 -1024
-GOTO NEQ r1 :if_end_7 // nextPID == 1024
-// Releasing r1
-#line run\lang\Kernal\kernal.el 173:14
-STORE 2 r15
-//  nextPID = 2;
-
-#lineend
-:if_end_7
-//  if(nextPID == 1024) {nextPID = 2;}
-
-#line run\lang\Kernal\kernal.el 175:10
-:while_condition_8
-// Reserving r1
-// Register r1 already reserved
-LOAD r1 &Kernal.processStates
-// Reserving r2
-// Register r2 already reserved
-LOAD MEM r2 r15 // nextPID
-LSH r2 r2 7
-ADD r1 r1 r2
-// Releasing r2
-INC r1 84
-LOAD MEM BYTE r1 r1 // processStates[nextPID].status != ProcessStatus.NONE
-GOTO EQ r1 :while_end_8
-// Releasing r1
-#line run\lang\Kernal\kernal.el 176:14
-// Register r2 already reserved
-COPY r15 r2
-LOAD MEM r1 r2
-ADD r3 r1 1
-STORE r3 r2 // nextPID++
-//  nextPID++;
-
-#line run\lang\Kernal\kernal.el 177:14
-// Reserving r1
-// Register r1 already reserved
-LOAD MEM r1 r15
-INC r1 -1024
-GOTO NEQ r1 :if_end_9 // nextPID == 1024
-// Releasing r1
-#line run\lang\Kernal\kernal.el 178:18
-STORE 2 r15
-//  nextPID = 2;
-
-#lineend
-:if_end_9
-//  if(nextPID == 1024) {nextPID = 2;}
-
-#line run\lang\Kernal\kernal.el 180:14
-// Reserving r1
-// Register r1 already reserved
-LOAD MEM r1 r15
-// Register r2 already reserved
-LOAD MEM r2 &Kernal.lastPID
-SUB r1 r1 r2
-GOTO NEQ r1 :if_end_10 // nextPID == lastPID
-// Releasing r1
-#line run\lang\Kernal\kernal.el 181:18
-// Reserving r1
-LOAD r1 0 // nullptr
-// Reserving r2
-SUB r2 r15 12
-STORE r1 r2
-// Releasing r1
-// Releasing r2
-GOTO :func_exit_Kernal.createProcess
-//  return nullptr;
-
-#lineend
-:if_end_10
-//  if(nextPID == lastPID) {return nullptr;}
-
-#lineend
-GOTO :while_condition_8
-:while_end_8
-//  while(processStates[nextPID].status != ProcessStatus.NONE) {nextPID++; if(nextPID == 1024) {nextPID = 2;} if(nextPID == lastPID) {return nullptr;}}
-
-#line run\lang\Kernal\kernal.el 184:10
-// Reserving r1
-// Register r1 already reserved
-LOAD r1 &Kernal.lastPID
-// Reserving r2
-// Register r2 already reserved
-LOAD MEM r2 r15 // nextPID
-STORE r2 r1
-// Releasing r1
-// Releasing r2
-//  lastPID = nextPID;
-
-#line run\lang\Kernal\kernal.el 185:10
-// Reserving r1
-// Register r1 already reserved
-LOAD r1 &Kernal.processStates
-// Reserving r2
-// Register r2 already reserved
-LOAD MEM r2 r15 // nextPID
-LSH r2 r2 7
-ADD r1 r1 r2
-// Releasing r2 // &processStates[nextPID]
-// Reserving r2
-SUB r2 r15 12
-STORE r1 r2
-// Releasing r1
-// Releasing r2
-GOTO :func_exit_Kernal.createProcess
-//  return & processStates[nextPID];
-
-#lineend
-:func_exit_Kernal.createProcess
-COPY r15 rStack
-STACK POP r15
-GOTO POP
-#endfunction ProcessState*
-
 #function Kernal._interrupt
 STACK PUSH r15
 COPY rStack r15
@@ -757,7 +1130,7 @@ STACK PUSH r1
 LOAD MEM r1 r15
 LOAD r2 -2147483648
 AND r1 r1 r2 // code & 0x8000_0000
-GOTO NEQ r1 :if_end_11 // ( code & 0x8000_0000 ) == 0
+GOTO NEQ r1 :if_end_15 // ( code & 0x8000_0000 ) == 0
 // Releasing r1
 #line run\lang\Kernal\kernal.el 78:14
 // Reserving r1
@@ -787,7 +1160,7 @@ ADD r1 r15 4
 LOAD MEM r1 r1
 INC r1 88
 LOAD MEM r1 r1 // cProc.interruptHandler
-GOTO EQ r1 :if_end_12
+GOTO EQ r1 :if_end_16
 // Releasing r1
 #line run\lang\Kernal\kernal.el 83:18
 // Reserving r1
@@ -807,7 +1180,7 @@ STACK DEC 4
 //  cProc.interruptHandler(code);
 
 #lineend
-:if_end_12
+:if_end_16
 //  if(cProc.interruptHandler) {cProc.interruptHandler(code);}
 
 #line run\lang\Kernal\kernal.el 85:14
@@ -822,7 +1195,7 @@ GOTO :func_exit_Kernal._interrupt
 STACK DEC 4
 // End of scope
 #stackVarClear cProc
-:if_end_11
+:if_end_15
 //  if((code & 0x8000_0000) == 0) {ProcessState & cProc = & processStates[SysD.rPID]; SysD.rPM = false; if(cProc.interruptHandler) {cProc.interruptHandler(code);} SysD.interruptReturn(); return;}
 
 #line run\lang\Kernal\kernal.el 89:10
@@ -831,14 +1204,14 @@ STACK DEC 4
 LOAD MEM r1 r15
 LOAD r2 -2147483647
 SUB r1 r1 r2
-GOTO NEQ r1 :if_end_13 // code == 0x8000_0001
+GOTO NEQ r1 :if_end_17 // code == 0x8000_0001
 // Releasing r1
 #line run\lang\Kernal\kernal.el 90:14
 HALT // SysD.halt()
 //  SysD.halt();
 
 #lineend
-:if_end_13
+:if_end_17
 //  if(code == 0x8000_0001) {SysD.halt();}
 
 #line run\lang\Kernal\kernal.el 92:10
@@ -849,7 +1222,7 @@ LOAD r2 -256
 AND r1 r1 r2 // code & 0xffff_ff00
 LOAD r2 -2147483136
 SUB r1 r1 r2
-GOTO NEQ r1 :if_end_14 // ( code & 0xffff_ff00 ) == 0x8000_0200
+GOTO NEQ r1 :if_end_18 // ( code & 0xffff_ff00 ) == 0x8000_0200
 // Releasing r1
 #line run\lang\Kernal\kernal.el 93:14
 // Reserving r1
@@ -867,7 +1240,7 @@ STACK PUSH r1
 STACK DEC 4
 // End of scope
 #stackVarClear i
-:if_end_14
+:if_end_18
 //  if((code & 0xffff_ff00) == 0x8000_0200) {int32 i = code & 0xff;}
 
 #line run\lang\Kernal\kernal.el 95:10
@@ -878,7 +1251,7 @@ LOAD r2 -16
 AND r1 r1 r2
 LOAD r2 -1879048192
 SUB r1 r1 r2
-GOTO NEQ r1 :if_end_15 // code & 0xffff_fff0 == 0x9000_0000
+GOTO NEQ r1 :if_end_19 // code & 0xffff_fff0 == 0x9000_0000
 // Releasing r1
 #line run\lang\Kernal\kernal.el 96:14
 // Reserving r1
@@ -915,7 +1288,7 @@ STACK POP r0
 LOAD MEM r1 r15
 LOAD r2 -1879048191
 SUB r1 r1 r2
-GOTO NEQ r1 :if_end_16 // code == 0x9000_0001
+GOTO NEQ r1 :if_end_20 // code == 0x9000_0001
 // Releasing r1
 #line run\lang\Kernal\kernal.el 99:18
 // Reserving r1
@@ -925,7 +1298,7 @@ LOAD MEM r1 r1
 INC r1 84
 LOAD MEM BYTE r1 r1
 INC r1 -3
-GOTO NEQ r1 :if_end_17 // oldState.status == ProcessStatus.RUNNING
+GOTO NEQ r1 :if_end_21 // oldState.status == ProcessStatus.RUNNING
 // Releasing r1
 #line run\lang\Kernal\kernal.el 100:22
 // Reserving r1
@@ -938,11 +1311,11 @@ STORE BYTE 2 r1
 //  oldState.status = ProcessStatus.READY;
 
 #lineend
-:if_end_17
+:if_end_21
 //  if(oldState.status == ProcessStatus.RUNNING) {oldState.status = ProcessStatus.READY;}
 
 #lineend
-:if_end_16
+:if_end_20
 //  if(code == 0x9000_0001) {if(oldState.status == ProcessStatus.RUNNING) {oldState.status = ProcessStatus.READY;}}
 
 #line run\lang\Kernal\kernal.el 103:14
@@ -951,7 +1324,7 @@ STORE BYTE 2 r1
 LOAD MEM r1 r15
 LOAD r2 -1879048190
 SUB r1 r1 r2
-GOTO NEQ r1 :if_end_18 // code == 0x9000_0002
+GOTO NEQ r1 :if_end_22 // code == 0x9000_0002
 // Releasing r1
 #line run\lang\Kernal\kernal.el 104:18
 // Reserving r1
@@ -964,17 +1337,17 @@ STORE BYTE 5 r1
 //  oldState.status = ProcessStatus.DEAD;
 
 #lineend
-:if_end_18
+:if_end_22
 //  if(code == 0x9000_0002) {oldState.status = ProcessStatus.DEAD;}
 
 #line run\lang\Kernal\kernal.el 109:14
 #alias r1 this // Reserving r1
 LOAD this &Kernal.processReadyQueueLock
 // INLINE START Mutex.acquire
-:Mutex.acquire_loop_3
+:Mutex.acquire_loop_4
 // Resolving placeholder 1 to r2
 TEST AND SET r2 this
-GOTO NEQ r2 :Mutex.acquire_loop_3
+GOTO NEQ r2 :Mutex.acquire_loop_4
 // INLINE END
 STACK POP r0
 #alias clear this // Releasing r1 // processReadyQueueLock.acquire()
@@ -987,7 +1360,7 @@ LOAD r1 &Kernal.processReadyQueue
 // Reserving r2
 // Releasing r2
 LOAD MEM r1 r1
-GOTO NEQ r1 :if_end_19 // processReadyQueue[0] == nullptr
+GOTO NEQ r1 :if_end_23 // processReadyQueue[0] == nullptr
 // Releasing r1
 #line run\lang\Kernal\kernal.el 111:18
 #alias r1 this // Reserving r1
@@ -1047,7 +1420,7 @@ GOTO :func_exit_Kernal._interrupt
 STACK DEC 4
 // End of scope
 #stackVarClear kProc
-:if_end_19
+:if_end_23
 //  if(processReadyQueue[0] == nullptr) {processReadyQueueLock.release(); ProcessState & kProc = & processStates[1]; kProc.setInterrupt(); kProc.status = ProcessStatus.RUNNING; SysD.interruptReturn(); return;}
 
 #line run\lang\Kernal\kernal.el 119:14
@@ -1180,7 +1553,7 @@ STACK DEC 8
 // End of scope
 #stackVarClear oldState
 #stackVarClear newProc
-:if_end_15
+:if_end_19
 //  if(code & 0xffff_fff0 == 0x9000_0000) {ProcessState & oldState = & processStates[SysD.rPIDI]; oldState.updateInterrupt(); if(code == 0x9000_0001) {if(oldState.status == ProcessStatus.RUNNING) {oldState.status = ProcessStatus.READY;}} if(code == 0x9000_0002) {oldState.status = ProcessStatus.DEAD;} processReadyQueueLock.acquire(); if(processReadyQueue[0] == nullptr) {processReadyQueueLock.release(); ProcessState & kProc = & processStates[1]; kProc.setInterrupt(); kProc.status = ProcessStatus.RUNNING; SysD.interruptReturn(); return;} ProcessState* newProc = processReadyQueue[0]; asm{\nLOAD r1 $Kernal.processReadyQueue\nADD r2 r1 4\nCOPY MEM WORD r2 r1 INC_RS INC_RD // 1 -> 0\nCOPY MEM WORD r2 r1 INC_RS INC_RD // 2 -> 1\nCOPY MEM WORD r2 r1 INC_RS INC_RD // 3 -> 2\nCOPY MEM WORD r2 r1 INC_RS INC_RD // 4 -> 3\nCOPY MEM WORD r2 r1 INC_RS INC_RD // 5 -> 4\nCOPY MEM WORD r2 r1 INC_RS INC_RD // 6 -> 5\nCOPY MEM WORD r2 r1 INC_RS INC_RD // 7 -> 6\nCOPY MEM WORD r2 r1 INC_RS INC_RD // 8 -> 7\nCOPY MEM WORD r2 r1 INC_RS INC_RD // 9 -> 8\nCOPY MEM WORD r2 r1 INC_RS INC_RD // 10 -> 9\nCOPY MEM WORD r2 r1 INC_RS INC_RD // 11 -> 10\nCOPY MEM WORD r2 r1 INC_RS INC_RD // 12 -> 11\nCOPY MEM WORD r2 r1 INC_RS INC_RD // 13 -> 12\nCOPY MEM WORD r2 r1 INC_RS INC_RD // 14 -> 13\nCOPY MEM WORD r2 r1 INC_RS INC_RD // 15 -> 14\nCOPY MEM WORD r2 r1 INC_RS INC_RD // 16 -> 15\nCOPY MEM WORD r2 r1 INC_RS INC_RD // 17 -> 16\nCOPY MEM WORD r2 r1 INC_RS INC_RD // 18 -> 17\nCOPY MEM WORD r2 r1 INC_RS INC_RD // 19 -> 18\nCOPY MEM WORD r2 r1 INC_RS INC_RD // 20 -> 19\nCOPY MEM WORD r2 r1 INC_RS INC_RD // 21 -> 20\nCOPY MEM WORD r2 r1 INC_RS INC_RD // 22 -> 21\nCOPY MEM WORD r2 r1 INC_RS INC_RD // 23 -> 22\nCOPY MEM WORD r2 r1 INC_RS INC_RD // 24 -> 23\nCOPY MEM WORD r2 r1 INC_RS INC_RD // 25 -> 24\nCOPY MEM WORD r2 r1 INC_RS INC_RD // 26 -> 25\nCOPY MEM WORD r2 r1 INC_RS INC_RD // 27 -> 26\nCOPY MEM WORD r2 r1 INC_RS INC_RD // 28 -> 27\nCOPY MEM WORD r2 r1 INC_RS INC_RD // 29 -> 28\nCOPY MEM WORD r2 r1 INC_RS INC_RD // 30 -> 29\nCOPY MEM WORD r2 r1 INC_RS INC_RD // 31 -> 30\nSTORE WORD r1 0 // 31\n} processReadyQueueLock.release(); newProc.setInterrupt(); newProc.status = ProcessStatus.RUNNING; SysD.interruptReturn(); return;}
 
 #line run\lang\Kernal\kernal.el 165:10
@@ -1193,241 +1566,6 @@ COPY r15 rStack
 STACK POP r15
 INTERRUPT RET
 #endfunction void
-
-#syscall 1 Kernal_kalloc
-#function syscall::Kernal_kalloc
-GOTO PUSH :Kernal.kalloc
-SYSRETURN
-#endfunction void*
-
-#function Kernal.kalloc
-STACK PUSH r15
-COPY rStack r15
-#line run\lang\Kernal\kalloc.el 18:10
-#alias r1 this // Reserving r1
-LOAD this &Kernal.kallocMutex
-// INLINE START Mutex.acquire
-:Mutex.acquire_loop_4
-// Resolving placeholder 1 to r2
-TEST AND SET r2 this
-GOTO NEQ r2 :Mutex.acquire_loop_4
-// INLINE END
-STACK POP r0
-#alias clear this // Releasing r1 // kallocMutex.acquire()
-//  kallocMutex.acquire();
-
-#line run\lang\Kernal\kalloc.el 19:10
-// Reserving r1
-// Releasing r1
-// Reserving r1
-// Reserving r2
-// Releasing r2
-LOAD MEM r1 rMemTbl // SysD.rMemTbl[0]
-#stackVar int32 cPages
-STACK PUSH r1
-// Releasing r1
-//  int32 cPages = SysD.rMemTbl[0];
-
-#line run\lang\Kernal\kalloc.el 20:10
-// Reserving r1
-// Register r1 already reserved
-LOAD MEM r1 r15
-INC r1 -32
-GOTO LT r1 :if_end_20 // cPages >= MAX_BLOCKS
-// Releasing r1
-#line run\lang\Kernal\kalloc.el 21:14
-#alias r1 this // Reserving r1
-LOAD this &Kernal.kallocMutex
-// INLINE START Mutex.release
-STORE BYTE 0x0 this
-// INLINE END
-STACK POP r0
-#alias clear this // Releasing r1 // kallocMutex.release()
-//  kallocMutex.release();
-
-#line run\lang\Kernal\kalloc.el 22:14
-// Reserving r1
-LOAD r1 0 // nullptr
-// Reserving r2
-SUB r2 r15 12
-STORE r1 r2
-// Releasing r1
-// Releasing r2
-GOTO :func_exit_Kernal.kalloc
-//  return nullptr;
-
-#lineend
-:if_end_20
-//  if(cPages >= MAX_BLOCKS) {kallocMutex.release(); return nullptr;}
-
-#line run\lang\Kernal\kalloc.el 24:10
-// Reserving r1
-// Releasing r1
-LOAD r1 0 // 0
-#stackVar int32 i
-STACK PUSH r1
-// Releasing r1
-//  int32 i = 0;
-
-#line run\lang\Kernal\kalloc.el 25:10
-:while_condition_21
-// Reserving r1
-LOAD r1 Kernal.pageFreeTable
-// Register r1 already reserved
-// Reserving r2
-ADD r2 r15 4
-// Register r2 already reserved
-LOAD MEM r2 r2 // i
-ADD r1 r1 r2
-// Releasing r2
-LOAD MEM BYTE r1 r1
-GOTO EQ r1 :while_end_21
-ADD r1 r15 4
-// Register r1 already reserved
-LOAD MEM r1 r1
-INC r1 -4096
-GOTO GEQ r1 :while_end_21 // i < 0x1000 // pageFreeTable[i] && ( i < 0x1000 )
-// Releasing r1
-#line run\lang\Kernal\kalloc.el 26:14
-ADD r2 r15 4
-// Register r2 already reserved
-LOAD MEM r1 r2
-ADD r3 r1 1
-STORE r3 r2 // i++
-//  i++;
-
-#lineend
-GOTO :while_condition_21
-:while_end_21
-//  while(pageFreeTable[i] && (i < 0x1000)) {i++;}
-
-#line run\lang\Kernal\kalloc.el 28:10
-// Reserving r1
-ADD r1 r15 4
-// Register r1 already reserved
-LOAD MEM r1 r1
-INC r1 -4096
-GOTO NEQ r1 :if_end_22 // i == 0x1000
-// Releasing r1
-#line run\lang\Kernal\kalloc.el 29:14
-#alias r1 this // Reserving r1
-LOAD this &Kernal.kallocMutex
-// INLINE START Mutex.release
-STORE BYTE 0x0 this
-// INLINE END
-STACK POP r0
-#alias clear this // Releasing r1 // kallocMutex.release()
-//  kallocMutex.release();
-
-#line run\lang\Kernal\kalloc.el 30:14
-// Reserving r1
-LOAD r1 0 // nullptr
-// Reserving r2
-SUB r2 r15 12
-STORE r1 r2
-// Releasing r1
-// Releasing r2
-GOTO :func_exit_Kernal.kalloc
-//  return nullptr;
-
-#lineend
-:if_end_22
-//  if(i == 0x1000) {kallocMutex.release(); return nullptr;}
-
-#line run\lang\Kernal\kalloc.el 32:10
-// Reserving r1
-LOAD r1 Kernal.pageFreeTable
-// Register r1 already reserved
-// Reserving r2
-ADD r2 r15 4
-// Register r2 already reserved
-LOAD MEM r2 r2 // i
-ADD r1 r1 r2
-// Releasing r2
-STORE BYTE 1 r1
-// Releasing r1
-//  pageFreeTable[i] = true;
-
-#line run\lang\Kernal\kalloc.el 33:10
-// Reserving r1
-// Releasing r1
-// Reserving r1
-LOAD MEM r1 r15
-LSH r1 r1 12 // cPages << 12
-LOAD r2 -2147483648
-ADD r1 r1 r2 // 0x8000_0000 + ( cPages << 12 )
-#stackVar void* addr
-STACK PUSH r1
-// Releasing r1
-//  void* addr = 0x8000_0000 + (cPages << 12);
-
-#line run\lang\Kernal\kalloc.el 34:10
-// Reserving r1
-LOAD MEM BYTE r1 r15
-ADD r1 r1 1
-STORE r1 r15
-// Releasing r1
-// Releasing r1
-//  cPages += 1;
-
-#line run\lang\Kernal\kalloc.el 35:10
-// Reserving r1
-// Register r1 already reserved
-// Reserving r2
-// Register r2 already reserved
-LOAD MEM r2 r15 // cPages
-LSH r2 r2 2
-ADD r1 rMemTbl r2
-// Releasing r2
-// Reserving r2
-ADD r2 r15 4
-// Register r2 already reserved
-LOAD MEM r2 r2
-LSH r2 r2 12 // i << 12
-LOAD r3 -2147483648
-ADD r2 r2 r3 // 0x8000_0000 + ( i << 12 )
-STORE r2 r1
-// Releasing r1
-// Releasing r2
-//  SysD.rMemTbl[cPages] = 0x8000_0000 + (i << 12);
-
-#line run\lang\Kernal\kalloc.el 36:10
-// Reserving r1
-// Register r1 already reserved
-LOAD MEM r1 r15 // cPages
-STORE r1 rMemTbl
-// Releasing r1
-//  SysD.rMemTbl[0] = cPages;
-
-#line run\lang\Kernal\kalloc.el 38:10
-#alias r1 this // Reserving r1
-LOAD this &Kernal.kallocMutex
-// INLINE START Mutex.release
-STORE BYTE 0x0 this
-// INLINE END
-STACK POP r0
-#alias clear this // Releasing r1 // kallocMutex.release()
-//  kallocMutex.release();
-
-#line run\lang\Kernal\kalloc.el 39:10
-// Reserving r1
-ADD r1 r15 8
-// Register r1 already reserved
-LOAD MEM r1 r1 // addr
-// Reserving r2
-SUB r2 r15 12
-STORE r1 r2
-// Releasing r1
-// Releasing r2
-GOTO :func_exit_Kernal.kalloc
-//  return addr;
-
-#lineend
-:func_exit_Kernal.kalloc
-COPY r15 rStack
-STACK POP r15
-GOTO POP
-#endfunction void*
 
 #function Kernal.printStr_char* str char*
 STACK PUSH r15
@@ -1655,49 +1793,49 @@ COPY rStack r15
 #line run\lang\Kernal\kernal.el 241:18
 COPY r0 r1
 #line run\lang\Kernal\kernal.el 242:18
-LOAD MEM WORD rPIDI r0 INC_RA
+LOAD MEM WORD rPIDI r1 INC_RA
 #line run\lang\Kernal\kernal.el 243:18
-LOAD MEM WORD rPgmI r0 INC_RA
+LOAD MEM WORD rPgmI r1 INC_RA
 #line run\lang\Kernal\kernal.el 244:18
-LOAD MEM WORD rStackI r0 INC_RA
+LOAD MEM WORD rStackI r1 INC_RA
 #line run\lang\Kernal\kernal.el 245:18
-LOAD MEM WORD rMemTblI r0 INC_RA
+LOAD MEM WORD rMemTblI r1 INC_RA
 #line run\lang\Kernal\kernal.el 246:18
-LOAD MEM WORD rPMI r0 INC_RA
+LOAD MEM WORD rPMI r1 INC_RA
  
 #line run\lang\Kernal\kernal.el 248:18
-LOAD MEM WORD r0I r0 INC_RA
+LOAD MEM WORD r0I r1 INC_RA
 #line run\lang\Kernal\kernal.el 249:18
-LOAD MEM WORD r1I r0 INC_RA
+LOAD MEM WORD r1I r1 INC_RA
 #line run\lang\Kernal\kernal.el 250:18
-LOAD MEM WORD r2I r0 INC_RA
+LOAD MEM WORD r2I r1 INC_RA
 #line run\lang\Kernal\kernal.el 251:18
-LOAD MEM WORD r3I r0 INC_RA
+LOAD MEM WORD r3I r1 INC_RA
 #line run\lang\Kernal\kernal.el 252:18
-LOAD MEM WORD r4I r0 INC_RA
+LOAD MEM WORD r4I r1 INC_RA
 #line run\lang\Kernal\kernal.el 253:18
-LOAD MEM WORD r5I r0 INC_RA
+LOAD MEM WORD r5I r1 INC_RA
 #line run\lang\Kernal\kernal.el 254:18
-LOAD MEM WORD r6I r0 INC_RA
+LOAD MEM WORD r6I r1 INC_RA
 #line run\lang\Kernal\kernal.el 255:18
-LOAD MEM WORD r7I r0 INC_RA
+LOAD MEM WORD r7I r1 INC_RA
 #line run\lang\Kernal\kernal.el 256:18
-LOAD MEM WORD r8I r0 INC_RA
+LOAD MEM WORD r8I r1 INC_RA
 #line run\lang\Kernal\kernal.el 257:18
-LOAD MEM WORD r9I r0 INC_RA
+LOAD MEM WORD r9I r1 INC_RA
 #line run\lang\Kernal\kernal.el 258:18
-LOAD MEM WORD r10I r0 INC_RA
+LOAD MEM WORD r10I r1 INC_RA
 #line run\lang\Kernal\kernal.el 259:18
-LOAD MEM WORD r11I r0 INC_RA
+LOAD MEM WORD r11I r1 INC_RA
 #line run\lang\Kernal\kernal.el 260:18
-LOAD MEM WORD r12I r0 INC_RA
+LOAD MEM WORD r12I r1 INC_RA
 #line run\lang\Kernal\kernal.el 261:18
-LOAD MEM WORD r13I r0 INC_RA
+LOAD MEM WORD r13I r1 INC_RA
 #line run\lang\Kernal\kernal.el 262:18
-LOAD MEM WORD r14I r0 INC_RA
+LOAD MEM WORD r14I r1 INC_RA
 #line run\lang\Kernal\kernal.el 263:18
-LOAD MEM WORD r15I r0 INC_RA
-//  asm{\nCOPY r0 r1\nLOAD MEM WORD rPIDI r0 INC_RA\nLOAD MEM WORD rPgmI r0 INC_RA\nLOAD MEM WORD rStackI r0 INC_RA\nLOAD MEM WORD rMemTblI r0 INC_RA\nLOAD MEM WORD rPMI r0 INC_RA\n\nLOAD MEM WORD r0I r0 INC_RA\nLOAD MEM WORD r1I r0 INC_RA\nLOAD MEM WORD r2I r0 INC_RA\nLOAD MEM WORD r3I r0 INC_RA\nLOAD MEM WORD r4I r0 INC_RA\nLOAD MEM WORD r5I r0 INC_RA\nLOAD MEM WORD r6I r0 INC_RA\nLOAD MEM WORD r7I r0 INC_RA\nLOAD MEM WORD r8I r0 INC_RA\nLOAD MEM WORD r9I r0 INC_RA\nLOAD MEM WORD r10I r0 INC_RA\nLOAD MEM WORD r11I r0 INC_RA\nLOAD MEM WORD r12I r0 INC_RA\nLOAD MEM WORD r13I r0 INC_RA\nLOAD MEM WORD r14I r0 INC_RA\nLOAD MEM WORD r15I r0 INC_RA\n}
+LOAD MEM WORD r15I r1 INC_RA
+//  asm{\nCOPY r0 r1\nLOAD MEM WORD rPIDI r1 INC_RA\nLOAD MEM WORD rPgmI r1 INC_RA\nLOAD MEM WORD rStackI r1 INC_RA\nLOAD MEM WORD rMemTblI r1 INC_RA\nLOAD MEM WORD rPMI r1 INC_RA\n\nLOAD MEM WORD r0I r1 INC_RA\nLOAD MEM WORD r1I r1 INC_RA\nLOAD MEM WORD r2I r1 INC_RA\nLOAD MEM WORD r3I r1 INC_RA\nLOAD MEM WORD r4I r1 INC_RA\nLOAD MEM WORD r5I r1 INC_RA\nLOAD MEM WORD r6I r1 INC_RA\nLOAD MEM WORD r7I r1 INC_RA\nLOAD MEM WORD r8I r1 INC_RA\nLOAD MEM WORD r9I r1 INC_RA\nLOAD MEM WORD r10I r1 INC_RA\nLOAD MEM WORD r11I r1 INC_RA\nLOAD MEM WORD r12I r1 INC_RA\nLOAD MEM WORD r13I r1 INC_RA\nLOAD MEM WORD r14I r1 INC_RA\nLOAD MEM WORD r15I r1 INC_RA\n}
 
 #lineend
 :func_exit_Kernal.ProcessState.setInterrupt
@@ -1713,47 +1851,47 @@ COPY rStack r15
 #line run\lang\Kernal\kernal.el 215:18
 ADD r1 r0 4 // Offset to pgmPtr instead of PID
 #line run\lang\Kernal\kernal.el 216:18
-STORE WORD rPgmI r0 INC_RA
+STORE WORD rPgmI r1 INC_RA
 #line run\lang\Kernal\kernal.el 217:18
-STORE WORD rStackI r0 INC_RA
+STORE WORD rStackI r1 INC_RA
 #line run\lang\Kernal\kernal.el 218:18
-STORE WORD rMemTblI r0 INC_RA
+STORE WORD rMemTblI r1 INC_RA
 #line run\lang\Kernal\kernal.el 219:18
-STORE WORD rPMI r0 INC_RA
+STORE WORD rPMI r1 INC_RA
  
 #line run\lang\Kernal\kernal.el 221:18
-STORE WORD r0I r0 INC_RA
+STORE WORD r0I r1 INC_RA
 #line run\lang\Kernal\kernal.el 222:18
-STORE WORD r1I r0 INC_RA
+STORE WORD r1I r1 INC_RA
 #line run\lang\Kernal\kernal.el 223:18
-STORE WORD r2I r0 INC_RA
+STORE WORD r2I r1 INC_RA
 #line run\lang\Kernal\kernal.el 224:18
-STORE WORD r3I r0 INC_RA
+STORE WORD r3I r1 INC_RA
 #line run\lang\Kernal\kernal.el 225:18
-STORE WORD r4I r0 INC_RA
+STORE WORD r4I r1 INC_RA
 #line run\lang\Kernal\kernal.el 226:18
-STORE WORD r5I r0 INC_RA
+STORE WORD r5I r1 INC_RA
 #line run\lang\Kernal\kernal.el 227:18
-STORE WORD r6I r0 INC_RA
+STORE WORD r6I r1 INC_RA
 #line run\lang\Kernal\kernal.el 228:18
-STORE WORD r7I r0 INC_RA
+STORE WORD r7I r1 INC_RA
 #line run\lang\Kernal\kernal.el 229:18
-STORE WORD r8I r0 INC_RA
+STORE WORD r8I r1 INC_RA
 #line run\lang\Kernal\kernal.el 230:18
-STORE WORD r9I r0 INC_RA
+STORE WORD r9I r1 INC_RA
 #line run\lang\Kernal\kernal.el 231:18
-STORE WORD r10I r0 INC_RA
+STORE WORD r10I r1 INC_RA
 #line run\lang\Kernal\kernal.el 232:18
-STORE WORD r11I r0 INC_RA
+STORE WORD r11I r1 INC_RA
 #line run\lang\Kernal\kernal.el 233:18
-STORE WORD r12I r0 INC_RA
+STORE WORD r12I r1 INC_RA
 #line run\lang\Kernal\kernal.el 234:18
-STORE WORD r13I r0 INC_RA
+STORE WORD r13I r1 INC_RA
 #line run\lang\Kernal\kernal.el 235:18
-STORE WORD r14I r0 INC_RA
+STORE WORD r14I r1 INC_RA
 #line run\lang\Kernal\kernal.el 236:18
-STORE WORD r15I r0 INC_RA
-//  asm{\nADD r1 r0 4 // Offset to pgmPtr instead of PID\nSTORE WORD rPgmI r0 INC_RA\nSTORE WORD rStackI r0 INC_RA\nSTORE WORD rMemTblI r0 INC_RA\nSTORE WORD rPMI r0 INC_RA\n\nSTORE WORD r0I r0 INC_RA\nSTORE WORD r1I r0 INC_RA\nSTORE WORD r2I r0 INC_RA\nSTORE WORD r3I r0 INC_RA\nSTORE WORD r4I r0 INC_RA\nSTORE WORD r5I r0 INC_RA\nSTORE WORD r6I r0 INC_RA\nSTORE WORD r7I r0 INC_RA\nSTORE WORD r8I r0 INC_RA\nSTORE WORD r9I r0 INC_RA\nSTORE WORD r10I r0 INC_RA\nSTORE WORD r11I r0 INC_RA\nSTORE WORD r12I r0 INC_RA\nSTORE WORD r13I r0 INC_RA\nSTORE WORD r14I r0 INC_RA\nSTORE WORD r15I r0 INC_RA\n}
+STORE WORD r15I r1 INC_RA
+//  asm{\nADD r1 r0 4 // Offset to pgmPtr instead of PID\nSTORE WORD rPgmI r1 INC_RA\nSTORE WORD rStackI r1 INC_RA\nSTORE WORD rMemTblI r1 INC_RA\nSTORE WORD rPMI r1 INC_RA\n\nSTORE WORD r0I r1 INC_RA\nSTORE WORD r1I r1 INC_RA\nSTORE WORD r2I r1 INC_RA\nSTORE WORD r3I r1 INC_RA\nSTORE WORD r4I r1 INC_RA\nSTORE WORD r5I r1 INC_RA\nSTORE WORD r6I r1 INC_RA\nSTORE WORD r7I r1 INC_RA\nSTORE WORD r8I r1 INC_RA\nSTORE WORD r9I r1 INC_RA\nSTORE WORD r10I r1 INC_RA\nSTORE WORD r11I r1 INC_RA\nSTORE WORD r12I r1 INC_RA\nSTORE WORD r13I r1 INC_RA\nSTORE WORD r14I r1 INC_RA\nSTORE WORD r15I r1 INC_RA\n}
 
 #lineend
 :func_exit_Kernal.ProcessState.updateInterrupt

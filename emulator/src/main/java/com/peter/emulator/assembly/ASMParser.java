@@ -389,7 +389,7 @@ public class ASMParser {
                                         .getResourceAsStream("/asm/" + path.replaceAll("\\.", "/") + "/init.asm");
                             }
                             if (is == null) {
-                                line.errorLast(AsmError.error("Unknown internal include"));
+                                line.errorLast(AsmError.error("Unknown internal include <%s>", path));
                                 continue;
                             }
                             line.symbolRest(Type.COMMENT_LINE);
