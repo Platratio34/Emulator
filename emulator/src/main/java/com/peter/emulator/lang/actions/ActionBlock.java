@@ -236,7 +236,7 @@ public class ActionBlock extends ComplexAction {
                                         if (token instanceof OperatorToken ot) {
                                             if (ot.type == OperatorToken.Type.SEMICOLON) {
                                                 condition = new ComplexAction(loopScope);
-                                                if(!expArr.isEmpty())
+                                                if (!expArr.isEmpty())
                                                     initializer.parse(expArr);
                                                 expArr.clear();
                                                 continue;
@@ -244,9 +244,6 @@ public class ActionBlock extends ComplexAction {
                                         }
                                         expArr.add(token);
                                     }
-                                }
-                                if (!expArr.isEmpty()) {
-                                    iterator.parse(expArr);
                                 }
                                 if (condition == null) {
                                     scope.unit.errors.error("Missing condition and iterator", it.endLocation.span());
@@ -256,6 +253,9 @@ public class ActionBlock extends ComplexAction {
                                     scope.unit.errors.error("Missing iterator", it.endLocation.span());
                                     wI++;
                                     continue;
+                                }
+                                if (!expArr.isEmpty()) {
+                                    iterator.parse(expArr);
                                 }
 
                                 // also block

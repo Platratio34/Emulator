@@ -127,6 +127,7 @@ public class ELClass extends Namespace {
         ELType t = new ELType(cName);
         for(String g : genericsOrder)
             t.genericTypes.add(new ELType(g));
+        t.analyze(unit.errors, namespace, unit);
         return t;
     }
 

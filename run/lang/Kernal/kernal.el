@@ -8,14 +8,6 @@ namespace Kernal {
     static const int32* CMD_SIZE = 0x1_0004;
     static const int32* CMD_START = 0x1_0008;
 
-    // static const int32 CMD_STATUS = 0x8001;
-    // static const int32 CMD_DEVICE = 0x8002;
-    // static const int32 CMD_SIZE = 0x8003;
-    // static const int32 CMD_0 = 0x8004;
-    // static const int32 CMD_1 = 0x8005;
-    // static const int32 CMD_2 = 0x8006;
-    // static const int32 CMD_3 = 0x8007;
-    // static const int32 CMD_4 = 0x8008;
     static const int32 CMD_WRITTEN = 0x0001;
 
     static final char* SYS_NAME = "EmulatorOS\0";
@@ -42,8 +34,6 @@ namespace Kernal {
         printStr("Starting \0");
         printStr(SYS_NAME);
         printChar('\n');
-        
-        setupFS();
 
         // Now setup the kernal process
         // We immediately mark it running because it is, this is really just boilerplate for multi-process
@@ -54,8 +44,7 @@ namespace Kernal {
         SysD.rPID = 1;
         kernalProcess.interruptHandler = nullptr;
 
-        int32 pI = 2;
-        while(pI < 1024) {
+        for(int32 pI = 2; pI < 1024; pI++) {
             processStates[pI].status = ProcessStatus.NONE;
         }
 

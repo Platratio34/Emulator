@@ -529,7 +529,7 @@ public class LineAction extends ComplexAction {
                                 case 2 -> addDirect("STORE SHORT %d %s", c, ra);
                                 default -> addDirect("STORE %d %s", c, ra);
                             }
-                            if(lrA.sourceReg == null)
+                            if(lrA != null && lrA.sourceReg == null)
                                 addRelease(ra);
                             return;
                         }
@@ -545,7 +545,7 @@ public class LineAction extends ComplexAction {
                         case 2 -> addDirect("STORE SHORT %s %s", rg, ra);
                         default -> addDirect("STORE %s %s", rg, ra);
                     }
-                    if(lrA.sourceReg == null)
+                    if(lrA != null && lrA.sourceReg == null)
                         addRelease(ra);
                 }
                 if (rv != null) {

@@ -2,32 +2,120 @@ import SysD;
 
 namespace Kernal {
 
-    protected static ProcessFiles[32] _pool;
-    protected static ProcessFiles* firstFree; 
-
-    public static void setupFS() {
-        firstFree = &_pool;
-        for(int32 i = 0; i < _pool.length; i++) {
-            _pool[i].numOpen = cast<int32>(&_pool[i+1]);
-        }
-        _pool[_pool.length - 1].numOpen = 0;
-    }
-
-    public static ProcessFiles* getNew() {
-        if(firstFree == nullptr) {
-            return nullptr;
-        }
-        ProcessFiles* next = firstFree;
-        firstFree = force_cast<ProcessFiles*>(firstFree.numOpen);
-        return next;
-    }
-    public static void release(ProcessFiles* files) {
-        // TODO probably should close any active file handles first...
-        files.numOpen = cast<int32>(firstFree);
-        firstFree = files;
-    }
-
     struct ProcessFiles {
         public int32 numOpen;
+        public FileHandle*[16] handles;
+        
+        public int32 open(char* path, bool read, bool write) {
+            if(numOpen == handles.length) {
+                return -1;
+            }
+            int32 outHandle = 0;
+            for(; outHandle < handles.length; outHandle++) {
+                if(handles[outHandle] == nullptr) {
+                    break;
+                }
+            }
+            FileHandle* ptr = FileHandle.new();
+            if(ptr == nullptr) {
+                return -1;
+            }
+            handles[outHandle] = ptr;
+            ptr.setup(path, read, write);
+            numOpen++;
+            return outHandle;
+        }
+
+        public void close() {
+            if(numOpen == 0) {
+                return;
+            }
+            for(int32 i = 0; i < handles.length; i++) {
+                if(handles[i] != nullptr) {
+                    handles[i].close();
+                    handles[i] = nullptr;
+                }
+            }
+            numOpen = 0;
+        }
+
+        protected static ProcessFiles[128] pool;
+        protected static ProcessFiles* nextFree = 0xffff_ffff;
+
+        private void reset() {
+            for(int32 i = 0; i < handles.length; i++) {
+                handles[i] = nullptr;
+            }
+            numOpen = 0;
+        }
+
+        public static FileHandle* new() {
+            if(nextFree == 0xffff_ffff) {
+                nextFree = &pool;
+                for(int32 i = 0; i < pool.length - 1; i++) {
+                    pool[i].numOpen = cast<int32>(&pool[i+1]);
+                }
+                pool[pool.length - 1].numOpen = 0;
+            }
+            if(nextFree == nullptr) {
+                return nullptr;
+            }
+            ProcessFiles* next = nextFree;
+            nextFree = force_cast<ProcessFiles*>(next.numOpen);
+            next.reset();
+            return next;
+        }
+
+        protected void release() {
+            numOpen = cast<int32>(nextFree);
+            nextFree = &this;
+        }
+    }
+
+    struct FileHandle {
+        public int32 rawHandle;
+        public bool readOpen;
+        public bool writeOpen;
+        public char* path;
+        
+        private int32 readLen;
+
+        public void setup(char* path, bool read, bool write) {
+            this.path = path;
+            readOpen = read;
+            writeOpen = write;
+        }
+
+        public void close() {
+            if(writeOpen) {
+                // flush?
+            }
+            release();
+        }
+
+
+        protected static FileHandle[128] pool;
+        protected static FileHandle* nextFree = 0xffff_ffff;
+
+        public static FileHandle* new() {
+            if(nextFree == 0xffff_ffff) {
+                nextFree = &pool;
+                for(int32 i = 0; i < pool.length - 1; i++) {
+                    pool[i].rawHandle = cast<int32>(&pool[i+1]);
+                }
+                pool[pool.length - 1].rawHandle = 0;
+            }
+            if(nextFree == nullptr) {
+                return nullptr;
+            }
+            FileHandle* next = nextFree;
+            nextFree = force_cast<FileHandle*>(next.rawHandle);
+            return next;
+        }
+
+        protected void release() {
+            rawHandle = cast<int32>(nextFree);
+            nextFree = &this;
+        }
     }
 }

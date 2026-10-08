@@ -148,6 +148,9 @@ public class Namespace {
         if (allowNamespace && namespaces.containsKey(id)) {
             return ResolveResult.of(namespaces.get(id));
         }
+        if (namespace != null) {
+            return namespace.resolveIdentifier(id, allowNamespace);
+        }
         return null;
     }
 
@@ -251,23 +254,23 @@ public class Namespace {
 
     public boolean hasType(ELType base, int lvl) {
         // System.out.println("- Looking for type "+base.typeString() + " (in NS "+cName+")");
-        String n = base.baseClass.last();
-        boolean f = base.baseClass.numParts() == lvl+1;
+        String name = base.baseClass.last();
+        boolean lastStep = base.baseClass.numParts() == lvl+1;
         if (base.baseClass.numParts() > 1 && lvl != 0) {
             // System.err.println("- - had no parents, and was searching for lvl "+lvl);
             return false;
         }
-        if (f) {
+        if (lastStep) {
             // the last step on the chain
         } else if(base.baseClass.numParts() >= lvl) {
-            n = base.baseClass.get(lvl);
+            name = base.baseClass.get(lvl);
         } else {
             // System.out.println("- - Ran out of parents");
             return false;
         }
-        if (namespaces.containsKey(n)) {
-            Namespace ns = namespaces.get(n);
-            if (!f) {
+        if (namespaces.containsKey(name)) {
+            Namespace ns = namespaces.get(name);
+            if (!lastStep) {
                 // System.out.println("- - checking sub ns");
                 return ns.hasType(base, lvl + 1);
             }
@@ -277,7 +280,10 @@ public class Namespace {
             }
             return true;
         }
-        return false;
+        if (namespace != null && lvl == 0 && namespace.hasType(base, 0)) {
+            return true;
+        }
+        return lastStep && this instanceof ELClass && name.equals(cName);
     }
 
     public ELClass getType(ELType base, Namespace srcNs, ProgramUnit unit) {

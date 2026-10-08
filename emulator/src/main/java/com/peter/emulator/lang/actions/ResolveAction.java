@@ -184,6 +184,7 @@ public class ResolveAction extends ComplexAction {
                     if (sourceReg != null) {
                         addDirect("LOAD MEM %s %s", reg, sourceReg);
                         sourceReg = null;
+                        regIsValue = false;
                     } else if (constAddr != null) {
                         addDirect("LOAD MEM %s &%s", reg, constAddr);
                         constAddr = null;
@@ -222,9 +223,10 @@ public class ResolveAction extends ComplexAction {
                     v = clazz.memberVariables.get(it.value);
                     if (v.offset != 0) {
                         if (sourceReg != null) {
+                            regIsValue = false;
                             if (v.offset > 0 && v.offset <= 255) {
                                 addDirect("ADD %s %s %d", reg, sourceReg, v.offset);
-                            } else if(v.offset < 0 && v.offset >= -255) {
+                            } else if (v.offset < 0 && v.offset >= -255) {
                                 addDirect("SUB %s %s %d", reg, sourceReg, -v.offset);
                             } else {
                                 addDirect("COPY %s %s", sourceReg, reg);
@@ -265,7 +267,7 @@ public class ResolveAction extends ComplexAction {
             }
         }
         if (sourceReg != null && !byValue && regIsValue && !forAssign) {
-            throw ELAnalysisError.errorF("Can not get register based variable %s by address", it.value, it.span());
+            throw ELAnalysisError.errorF("Can not get register based variable `%s` by address (%s)", it.value, it.span());
         }
         if (sourceReg != null) {
             addDirect("COPY %s %s", sourceReg, reg);

@@ -322,6 +322,9 @@ public class FunctionAction extends ComplexAction {
         if (f.type == FunctionType.INSTANCE) {
             Register r0T = (rT != null) ? rT : newRegister();
             ResolveAction rA = scope.loadVarF(it, r0T, false);
+            if (rA == null) {
+                return;
+            }
             if (rA.constantValue != null) {
                 if (rT == null)
                     rT = new Register(scope, 0);
