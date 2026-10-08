@@ -74,8 +74,8 @@ namespace TestD {
 
 
         // asm("#breakpoint");
-        int32 fh;
-        int32 rstat;
+        int32 fh = 0;
+        int32 rstat = 0;
         FS.openFile("test.txt\0", &rstat, &fh);
         if(fh == 0) {
             Console.printStr("ERROR\n\0");
@@ -84,8 +84,8 @@ namespace TestD {
         } else {
             Console.printStr("Opened\n\0");
             char[32] buffer;
-            int32 read;
-            int32 state;
+            int32 read = 0;
+            int32 state = 0;
             FS.readFileSync(fh, &buffer, 32, 0, &read, &state);
             // asm("#breakpoint");
             Console.intToHex(state, &str2);

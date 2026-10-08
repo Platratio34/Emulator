@@ -1,9 +1,8 @@
 #bash
-if [ -c "$1" ]; then
+if [ " $@ " == " -c " ]; then
     cd .vscode/extensions/emulatorAsm/server
     npm run compile; cd ..
     cd client; npm run compile; cd ..
-    rm emulator-1.0-SNAPSHOT-jar-with-dependencies.jar
     cd ../../../emulator
 else
     cd emulator

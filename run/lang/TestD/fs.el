@@ -5,6 +5,34 @@ namespace FS {
     protected static int32 deviceId = 0;
 
     protected static bool setup() {
+        asm{
+            LOAD r2 &FS.deviceId
+            #alias r1 deviceId
+            LOAD deviceId 1
+            STORE deviceId r2
+
+            #alias r2 typePtr
+            LOAD typePtr Peripheral.TABLE
+            #alias type
+            LOAD type Peripheral.TYPE_STORAGE_VIRTUAL
+            :FS.setup_loop
+                INC typePtr 4
+                LOAD MEM r3 typePtr
+                SUB r3 r3 type
+                GOTO EQ r3 :FS.setup_found
+                INC deviceId 1
+                SUB r3 deviceId 64
+                GOTO NEQ r3 :FS.setup_loop
+            LOAD deviceId 0
+
+            :FS.setup_found
+            LOAD r2 &FS.deviceId
+            STORE deviceId r2
+
+            SUB r2 r15 12
+            STORE BYTE deviceId r2
+            GOTO :func_exit_FS.setup
+        }
         deviceId = 1;
         while((deviceId < 64) && (Peripheral.TABLE[deviceId] != Peripheral.TYPE_STORAGE_VIRTUAL)) {
             deviceId++;

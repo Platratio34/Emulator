@@ -42,7 +42,8 @@ function activate(context) {
     const elServerExecutable = context.asAbsolutePath('emulator-1.0-SNAPSHOT-jar-with-dependencies.jar');
     const elServerExecutableNewPath = context.asAbsolutePath('emulator-1.0-SNAPSHOT-jar-with-dependencies.jar.new');
     if ((0, fs_1.existsSync)(elServerExecutableNewPath)) {
-        (0, fs_1.rmSync)(elServerExecutable);
+        if ((0, fs_1.existsSync)(elServerExecutable))
+            (0, fs_1.rmSync)(elServerExecutable);
         (0, fs_1.cpSync)(elServerExecutableNewPath, elServerExecutable);
         (0, fs_1.rmSync)(elServerExecutableNewPath);
     }

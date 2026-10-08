@@ -6,7 +6,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.lsp4j.*;
@@ -17,9 +16,9 @@ import com.peter.emulator.assembly.ASMParser;
 import com.peter.emulator.assembly.AsmError;
 import com.peter.emulator.lang.ELAnalysisError;
 import com.peter.emulator.lang.ELSymbol;
-import com.peter.emulator.lang.FileProvider;
 import com.peter.emulator.lang.ELSymbol.ELVarSymbol;
 import com.peter.emulator.lang.ELSymbol.Modifier;
+import com.peter.emulator.lang.FileProvider;
 import com.peter.emulator.lang.ProgramUnit;
 
 public class ELTextDocumentService implements TextDocumentService {

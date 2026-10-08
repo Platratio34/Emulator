@@ -1,7 +1,5 @@
 package com.peter.emulator.lang;
 
-import java.net.URI;
-
 import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -56,7 +54,13 @@ public record Span(Location start, Location end) {
     }
 
     public String getURI() {
-        return "file:///" + start.file().replace(":", "%3A").replace("\\", "/");
+        String fileName = start.file().replace(":", "%3A").replace("\\","/");
+        if(fileName.startsWith("/")) {
+            fileName = "file://" + fileName;
+        } else {
+            fileName = "file:///" + fileName;
+        }
+        return fileName;
     }
 
     public LocationLink locationLink() {

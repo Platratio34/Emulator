@@ -54,7 +54,8 @@ export function activate(context: ExtensionContext) {
     const elServerExecutable = context.asAbsolutePath('emulator-1.0-SNAPSHOT-jar-with-dependencies.jar');
     const elServerExecutableNewPath = context.asAbsolutePath('emulator-1.0-SNAPSHOT-jar-with-dependencies.jar.new');
     if (existsSync(elServerExecutableNewPath)) {
-        rmSync(elServerExecutable)
+        if(existsSync(elServerExecutable))
+            rmSync(elServerExecutable)
         cpSync(elServerExecutableNewPath, elServerExecutable)
         rmSync(elServerExecutableNewPath)
     }

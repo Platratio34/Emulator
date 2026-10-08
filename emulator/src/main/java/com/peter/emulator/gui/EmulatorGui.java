@@ -52,6 +52,7 @@ public class EmulatorGui {
             pauseBtn = new JButton("Pause");
             pauseBtn.addActionListener((event) -> {
                 emulator.setWait(true);
+                update();
             });
             buttonGrid.add(pauseBtn);
 
@@ -64,12 +65,14 @@ public class EmulatorGui {
             tickBtn = new JButton("Tick");
             tickBtn.addActionListener((event) -> {
                 emulator.stopWaiting();
+                update();
             });
             buttonGrid.add(tickBtn);
             
             resetBtn = new JButton("Reset");
             resetBtn.addActionListener((event) -> {
                 emulator.reset();
+                update();
             });
             buttonGrid.add(resetBtn);
 

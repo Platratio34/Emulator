@@ -6,11 +6,7 @@ import com.peter.emulator.components.MMU;
 import com.peter.emulator.components.RAM;
 import com.peter.emulator.components.TimerUnit;
 import com.peter.emulator.gui.EmulatorGui;
-import com.peter.emulator.peripherals.CharacterDisplay;
-import com.peter.emulator.peripherals.ConsolePeripheral;
-import com.peter.emulator.peripherals.KeyboardPeripheral;
-import com.peter.emulator.peripherals.PeripheralManager;
-import com.peter.emulator.peripherals.StoragePeripheral;
+import com.peter.emulator.peripherals.*;
 
 public class Emulator {
 
@@ -87,8 +83,8 @@ public class Emulator {
                     if (lastTime != 0) {
                         long t = System.nanoTime() - lastTime;
                         if (t > maxRunTime) {
-                            System.out.println("Took " + t + "ns (" + (((t - maxRunTime) / 1e6) + "ms over)"));
-                            System.out.println(cores[0].lastInstruction.toString());
+                            // System.out.println("Took " + t + "ns (" + (((t - maxRunTime) / 1e6) + "ms over)"));
+                            // System.out.println(cores[0].lastInstruction.toString());
                         } else {
                             long ms = (long)((maxRunTime - t) / 1e6);
                             try {

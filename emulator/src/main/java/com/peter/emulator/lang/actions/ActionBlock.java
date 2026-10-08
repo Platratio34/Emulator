@@ -6,15 +6,12 @@ import com.peter.emulator.assembly.ASMParser;
 import com.peter.emulator.assembly.AsmError;
 import com.peter.emulator.lang.ELSymbol.ELVarSymbol;
 import com.peter.emulator.lang.ELValue.ELStringValue;
-import com.peter.emulator.lang.annotations.ELBreakpointAnnotation;
 import com.peter.emulator.lang.*;
+import com.peter.emulator.lang.annotations.ELBreakpointAnnotation;
 import com.peter.emulator.lang.base.ELPrimitives;
 import com.peter.emulator.lang.expresion.Expression;
-import com.peter.emulator.lang.expresion.OperatorType;
 import com.peter.emulator.lang.symbols.ELAnnotationSymbol;
 import com.peter.emulator.lang.symbols.ELStringSymbol;
-import com.peter.emulator.lang.tokens.OperatorToken.Type;
-import com.peter.emulator.machinecode.Reg;
 import com.peter.emulator.lang.tokens.*;
 
 public class ActionBlock extends ComplexAction {
@@ -112,7 +109,7 @@ public class ActionBlock extends ComplexAction {
                             }
                         }
                         if (line.length() > 0) {
-                            if(withDebug)
+                            if(withDebug && !line.startsWith("#"))
                                 addDirect("#line %s %d:%d", file, lineN, col);
                             addDirect(line);
                         } else if (!first) {

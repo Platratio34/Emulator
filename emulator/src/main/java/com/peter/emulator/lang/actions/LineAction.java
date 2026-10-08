@@ -79,7 +79,6 @@ public class LineAction extends ComplexAction {
                         }
                     } else {
                         Register reg = newRegister();
-                        addReserve(reg);
                         Expression exp = new Expression(scope, new ArrayList<>(tokens.subList(1, tokens.size())), reg);
                         if (!exp.validate(scope.unit.errors)) {
                             return;
@@ -89,7 +88,10 @@ public class LineAction extends ComplexAction {
                                     exp.getType().typeString());
                             return;
                         }
-                        add(exp);
+                        if(!exp.isConstant()) {
+                            addReserve(reg);
+                            add(exp);
+                        }
                         int retOffset = scope.getReturnOffset();
                         Register ra = newRegister();
                         addReserve(ra);
@@ -103,8 +105,12 @@ public class LineAction extends ComplexAction {
                             case 2 -> " SHORT";
                             default -> "";
                         };
-                        addDirect("STORE%s %s %s", sizeStr, reg, ra);
-                        addRelease(reg);
+                        if(!exp.isConstant()) {
+                            addDirect("STORE%s %s %s", sizeStr, reg, ra);
+                            addRelease(reg);
+                        } else {
+                            addDirect("STORE%s %s %s", sizeStr, exp.getConstant(), ra);
+                        }
                         addRelease(ra);
                     }
                     addDirect("GOTO :func_exit_%s", scope.getFunction().getQualifiedName(true));
