@@ -13,7 +13,7 @@ namespace FS {
 
             #alias r2 typePtr
             LOAD typePtr Peripheral.TABLE
-            #alias type
+            #alias r4 type
             LOAD type Peripheral.TYPE_STORAGE_VIRTUAL
             :FS.setup_loop
                 INC typePtr 4

@@ -7,6 +7,8 @@ import com.peter.emulator.lang.ELSymbol.ELVarSymbol;
 import com.peter.emulator.lang.annotations.ELAnnotation;
 import com.peter.emulator.lang.annotations.ELEntrypointAnnotation;
 import com.peter.emulator.lang.doc.DocComment;
+import com.peter.emulator.lang.symbols.ELFuncDefSymbol;
+import com.peter.emulator.lang.symbols.ELNamespaceSymbol;
 import com.peter.emulator.lang.tokens.OperatorToken.Type;
 import com.peter.emulator.lang.tokens.*;
 
@@ -62,15 +64,15 @@ public class Parser {
                 }
                 if (t instanceof AnnotationToken) {
                     annotations = new ArrayList<>();
-                    while (tokens.get(workingI) instanceof AnnotationToken at2) {
+                    while (t instanceof AnnotationToken at2) {
                         workingI++;
                         annotations.add(ELAnnotation.create(at2));
                         if (workingI >= tokens.size()) {
                             errors.error("Found annotation at end of tokens", at2.span());
                             break;
                         }
+                        t = tokens.get(workingI);
                     }
-                    t = tokens.get(workingI);
                 }
                 if (t instanceof IdentifierToken idt) {
                     if (idt.value.equals("import")) {
@@ -207,9 +209,10 @@ public class Parser {
                             }
                             ELFunction function = new ELFunction(level, extern, currentClass,
                                     currentClass.cName, destructor ? ELFunction.FunctionType.DESTRUCTOR : ELFunction.FunctionType.CONSTRUCTOR, InlineType.OUTLINE, unit, loc);
-                            function.defSymbol = unit.addSymbol(new ELSymbol.ELFuncDefSymbol(function, it.spanFirst()));
+                            function.defSymbol = unit.addSymbol(new ELFuncDefSymbol(function, it.spanFirst()));
                             if (docCommentToken != null) {
                                 function.doc = new DocComment(docCommentToken);
+                                function.doc.function = function;
                             }
                             function.ret = currentClass.getType();
                             function.ingestParams(it.params);
@@ -287,9 +290,10 @@ public class Parser {
                                 }
                             }
                             ELFunction function = new ELFunction(level, extern, currentNamespace, name, funcType, inline != null ? InlineType.INLINE : InlineType.OUTLINE, unit, loc);
-                            unit.addSymbol(new ELSymbol.ELFuncDefSymbol(function, nameToken.spanFirst()));
+                            unit.addSymbol(new ELFuncDefSymbol(function, nameToken.spanFirst()));
                             if (docCommentToken != null) {
                                 function.doc = new DocComment(docCommentToken);
+                                function.doc.function = function;
                             }
                             if (annotations != null)
                                 function.annotations = annotations;
@@ -305,7 +309,7 @@ public class Parser {
                             }
                             function.abstractFunction = abs != null;
                             function.ingestParams(nameToken.params);
-                            function.defSymbol = unit.addSymbol(new ELSymbol.ELFuncDefSymbol(function, nameToken.spanFirst()));
+                            function.defSymbol = unit.addSymbol(new ELFuncDefSymbol(function, nameToken.spanFirst()));
                             
                             if (stat) {
                                 currentNamespace.addStaticFunction(function);
@@ -423,7 +427,9 @@ public class Parser {
                                     break;
                                 }
                             }
-                            unit.addSymbol(new ELSymbol.ELNamespaceSymbol(namespace, it.span()));
+                            if (docCommentToken != null)
+                                namespace.docComment = new DocComment(docCommentToken);
+                            unit.addSymbol(new ELNamespaceSymbol(namespace, it.span()));
                             if(err)
                                 continue;
                             namespaces.add(namespace);
@@ -465,13 +471,16 @@ public class Parser {
                             else
                                 clazz = new ELClass(it.value, it.span(), currentNamespace, unit);
                             namespaces.add(clazz);
-                            clazz.defSymbol = unit.addSymbol(new ELSymbol.ELNamespaceSymbol(clazz, it.span()));
+                            clazz.defSymbol = unit.addSymbol(new ELNamespaceSymbol(clazz, it.span()));
                         } else {
                             errors.error("Unknown token found (expected identifier)", tokens.get(workingI));
                             continue;
                         }
                         if (annotations != null)
                             clazz.annotations = annotations;
+                        if (docCommentToken != null) {
+                            clazz.docComment = new DocComment(docCommentToken);
+                        }
                         clazz.abstractClass = abs;
                         workingI++;
                         if (tokens.get(workingI) instanceof OperatorToken ot
@@ -541,8 +550,8 @@ public class Parser {
                                 unit.addSymbol(ELSymbol.Type.KEYWORD, tit.span());
                                 ELType.Builder builder = new ELType.Builder();
                                 workingI++;
-                                
-                                while(builder.ingest(tokens.get(workingI)))
+
+                                while (builder.ingest(tokens.get(workingI)))
                                     workingI++;
                                 ELType pt = builder.build();
                                 pt.addSymbol(unit);
@@ -562,13 +571,15 @@ public class Parser {
                         if (tokens.get(workingI) instanceof IdentifierToken it) {
                             clazz = new ELEnum(it.value, it.span(), currentNamespace, unit);
                             namespaces.add(clazz);
-                            clazz.defSymbol = unit.addSymbol(new ELSymbol.ELNamespaceSymbol(clazz, it.span()));
+                            clazz.defSymbol = unit.addSymbol(new ELNamespaceSymbol(clazz, it.span()));
                         } else {
                             errors.error("Unknown token found (expected identifier)", tokens.get(workingI));
                             continue;
                         }
                         if (annotations != null)
                             clazz.annotations = annotations;
+                        if (docCommentToken != null)
+                            clazz.docComment = new DocComment(docCommentToken);
                         workingI++;
                         if (tokens.get(workingI) instanceof BlockToken bt) {
                             clazz.parse(bt);

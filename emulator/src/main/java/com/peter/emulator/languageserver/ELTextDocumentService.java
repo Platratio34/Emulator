@@ -154,6 +154,7 @@ public class ELTextDocumentService implements TextDocumentService {
                 lspServer.logDebug("Async diagnostics for %s", uri);
 
                 ArrayList<Diagnostic> diagnostics = new ArrayList<>();
+                lspServer.lsLock.lock();
                 lspServer.addFile(uri);
                 if (lspServer.errors == null) {
                     lspServer.triggerDiagnostics();
@@ -166,6 +167,7 @@ public class ELTextDocumentService implements TextDocumentService {
                         continue;
                     diagnostics.add(new Diagnostic(err.span.toRange(), err.reason, err.severity.severity, "emulatorlang"));
                 }
+                lspServer.lsLock.unlock();
                 return new DocumentDiagnosticReport(new RelatedFullDocumentDiagnosticReport(diagnostics));
             });
         }
@@ -284,6 +286,7 @@ public class ELTextDocumentService implements TextDocumentService {
         URI uri = URI.create(params.getTextDocument().getUri());
 
         return CompletableFuture.supplyAsync(() -> {
+            lspServer.logDebug("Searching for semantic tokens for %s", uri);
             ArrayList<ELSymbol> symbols = getSymbols(uri);
             if (symbols == null) {
                 lspServer.logError("Semantic tokens were requested for %s, but no symbols could be found",

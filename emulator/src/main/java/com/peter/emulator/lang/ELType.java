@@ -2,9 +2,9 @@ package com.peter.emulator.lang;
 
 import java.util.ArrayList;
 
-import com.peter.emulator.lang.ELSymbol.ELTypeSymbol;
 import com.peter.emulator.lang.base.ELPrimitives;
 import com.peter.emulator.lang.base.Method;
+import com.peter.emulator.lang.symbols.ELTypeSymbol;
 import com.peter.emulator.lang.tokens.IdentifierToken;
 import com.peter.emulator.lang.tokens.NumberToken;
 import com.peter.emulator.lang.tokens.OperatorToken;
@@ -718,7 +718,7 @@ public class ELType {
             return arraySize * subType.sizeof();
         }
         if (subType != null) {
-            System.out.println("sub");
+            // System.out.println("sub");
             return subType.sizeof();
         }
         if (clazz != null)

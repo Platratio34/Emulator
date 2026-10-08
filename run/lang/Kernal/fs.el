@@ -6,6 +6,15 @@ namespace Kernal {
         public int32 numOpen;
         public FileHandle*[16] handles;
         
+        @/
+            Open a new file handled in the set.
+
+            @param path The path to the file to open
+            @param read If the file should be opened for read access
+            @param write If the file should be opened for write access
+            @returns `-1` on a failure.
+            @returns Else returns the file handle
+        /@
         public int32 open(char* path, bool read, bool write) {
             if(numOpen == handles.length) {
                 return -1;
@@ -72,13 +81,19 @@ namespace Kernal {
         }
     }
 
+    @/
+        Kernal level file handle.
+    /@
     struct FileHandle {
+        @/ Peripheral level file handle. Doubles as next free pointer when un-allocated /@
         public int32 rawHandle;
+        @/ If the handle is open for read access /@
         public bool readOpen;
+        @/ If the handle is open for write access /@
         public bool writeOpen;
+
+        @/ The path to the file opened /@
         public char* path;
-        
-        private int32 readLen;
 
         public void setup(char* path, bool read, bool write) {
             this.path = path;
@@ -86,6 +101,9 @@ namespace Kernal {
             writeOpen = write;
         }
 
+        @/
+            Close the file handle, flushing any remaining input if open for write access;
+        /@
         public void close() {
             if(writeOpen) {
                 // flush?

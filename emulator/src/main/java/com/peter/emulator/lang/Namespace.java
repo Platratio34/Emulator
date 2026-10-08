@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
+import com.peter.emulator.lang.doc.DocComment;
 import com.peter.emulator.lang.tokens.IdentifierToken;
 
 public class Namespace {
@@ -14,6 +15,8 @@ public class Namespace {
     public HashMap<String, ELVariable> staticVariables = new HashMap<>();
     public HashMap<String, ELFunction> staticFunctions = new HashMap<>();
     public HashMap<String, Namespace> namespaces = new HashMap<>();
+
+    public DocComment docComment = null;
 
     public Namespace(String name) {
         cName = name;
