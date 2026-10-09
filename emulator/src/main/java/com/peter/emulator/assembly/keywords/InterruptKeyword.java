@@ -3,7 +3,7 @@ package com.peter.emulator.assembly.keywords;
 import com.peter.emulator.assembly.AsmError;
 import com.peter.emulator.assembly.Define;
 import com.peter.emulator.assembly.ASMParser.ASMLine;
-import com.peter.emulator.lang.ELSymbol.Type;
+import com.peter.emulator.lang.symbols.SymbolType;
 import com.peter.emulator.machinecode.Instruction;
 import com.peter.emulator.machinecode.Reg;
 import com.peter.emulator.machinecode.Syscall;
@@ -17,7 +17,7 @@ public class InterruptKeyword extends ASMKeyword {
     @Override
     public Instruction add(ASMLine line) {
         if (line.hasNext("RET")) {
-            line.symbolLast(Type.KEYWORD);
+            line.symbolLast(SymbolType.KEYWORD);
             return Syscall.InterruptReturn();
         }
         Reg rg = line.nextReg();

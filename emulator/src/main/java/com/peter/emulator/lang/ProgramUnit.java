@@ -3,7 +3,8 @@ package com.peter.emulator.lang;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import com.peter.emulator.lang.ELSymbol.Type;
+import com.peter.emulator.lang.symbols.ELSymbol;
+import com.peter.emulator.lang.symbols.SymbolType;
 import com.peter.emulator.lang.tokens.IdentifierToken;
 
 public class ProgramUnit {
@@ -87,7 +88,7 @@ public class ProgramUnit {
         return null;
     }
 
-    public ELSymbol addSymbol(Type type, Span span) {
+    public ELSymbol addSymbol(SymbolType type, Span span) {
         ELSymbol symbol = new ELSymbol(type, span);
         symbols.add(symbol);
         return symbol;

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import com.peter.emulator.lang.annotations.ELAnnotation;
 import com.peter.emulator.lang.doc.DocComment;
+import com.peter.emulator.lang.symbols.ELSymbol;
 import com.peter.emulator.lang.tokens.OperatorToken;
 import com.peter.emulator.lang.tokens.Token;
 

@@ -1,9 +1,9 @@
 package com.peter.emulator.lang.tokens;
 
-import com.peter.emulator.lang.ELSymbol;
 import com.peter.emulator.lang.Location;
 import com.peter.emulator.lang.ProgramUnit;
-import com.peter.emulator.lang.ELSymbol.Type;
+import com.peter.emulator.lang.symbols.ELSymbol;
+import com.peter.emulator.lang.symbols.SymbolType;
 
 public class DocCommentToken extends Token {
 
@@ -53,7 +53,7 @@ public class DocCommentToken extends Token {
     }
 
     public void addSymbols(ProgramUnit unit) {
-        unit.addSymbol(new ELSymbol(Type.COMMENT_DOC, span()));
+        unit.addSymbol(new ELSymbol(SymbolType.COMMENT_DOC, span()));
     }
 
 }

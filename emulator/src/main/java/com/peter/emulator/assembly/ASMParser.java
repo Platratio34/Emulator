@@ -18,8 +18,8 @@ import com.peter.emulator.assembly.symbols.AliasSymbol;
 import com.peter.emulator.assembly.symbols.DefinitionSymbol;
 import com.peter.emulator.assembly.symbols.RegisterSymbol;
 import com.peter.emulator.lang.ELAnalysisError.Severity;
-import com.peter.emulator.lang.ELSymbol;
-import com.peter.emulator.lang.ELSymbol.Type;
+import com.peter.emulator.lang.symbols.ELSymbol;
+import com.peter.emulator.lang.symbols.SymbolType;
 import com.peter.emulator.lang.FileProvider;
 import com.peter.emulator.lang.Location;
 import com.peter.emulator.lang.Span;
@@ -190,15 +190,15 @@ public class ASMParser {
                 if (line.endsWith("*/")) {
                     mlc = false;
                 }
-                line.symbolAll(Type.COMMENT_BLOCK);
+                line.symbolAll(SymbolType.COMMENT_BLOCK);
                 continue;
             } else if (line.startsWith("/*")) {
                 mlc = true;
-                line.symbolAll(Type.COMMENT_BLOCK);
+                line.symbolAll(SymbolType.COMMENT_BLOCK);
                 continue;
             }
             if (line.startsWith("//")) {
-                line.symbolAll(Type.COMMENT_LINE);
+                line.symbolAll(SymbolType.COMMENT_LINE);
                 continue;
             } else if (line.startsWith(":")) {
                 if(defOnly) continue;
@@ -210,14 +210,14 @@ public class ASMParser {
                     lbl.isLabel = true;
                     labels.put(name, lbl);
                 }
-                line.symbolLast(Type.NAMESPACE_NAME);
-                line.symbolRest(Type.COMMENT_LINE);
+                line.symbolLast(SymbolType.NAMESPACE_NAME);
+                line.symbolRest(SymbolType.COMMENT_LINE);
                 continue;
             } else if (line.startsWith("#")) {
                 String keyword = line.nextString().substring(1);
                 switch (keyword) {
                     case "define" -> {
-                        symbols.add(new ELSymbol(Type.KEYWORD, line.lastSpan, "## `#define`\n\nCreate a new define.\n\nUsage: `#define [name] <[value]|\"[str]\"> ([type])`"));
+                        symbols.add(new ELSymbol(SymbolType.KEYWORD, line.lastSpan, "## `#define`\n\nCreate a new define.\n\nUsage: `#define [name] <[value]|\"[str]\"> ([type])`"));
                         String name = line.nextString(AsmError.error("Expected define name"));
                         Span defSpan = line.lastSpan;
                         if (defines.containsKey(name)) {
@@ -247,7 +247,7 @@ public class ASMParser {
                         }
                         String type = line.nextString();
                         if (type != null) {
-                            line.symbolLast(Type.CLASS_NAME);
+                            line.symbolLast(SymbolType.CLASS_NAME);
                         }
 
                         
@@ -255,10 +255,10 @@ public class ASMParser {
 
 
                         // TODO add symbol file
-                        line.symbolRest(Type.COMMENT_LINE);
+                        line.symbolRest(SymbolType.COMMENT_LINE);
                     }
                     case "var" -> {
-                        symbols.add(new ELSymbol(Type.KEYWORD, line.lastSpan, "## `#var`\n\nCreate a new variable.\n\nUsage: `#var [name] <[value]|\"[str]\"|\\[ [val](, ...) \\]|\\( [size] \\)> ([type])`"));
+                        symbols.add(new ELSymbol(SymbolType.KEYWORD, line.lastSpan, "## `#var`\n\nCreate a new variable.\n\nUsage: `#var [name] <[value]|\"[str]\"|\\[ [val](, ...) \\]|\\( [size] \\)> ([type])`"));
                         String name = line.nextString(AsmError.error("Expected variable name"));
                         Span defSpan = line.lastSpan;
                         if (defines.containsKey(name)) {
@@ -300,7 +300,7 @@ public class ASMParser {
                                     def = new Define(name).withSize(Math.ceilDiv(size, 4) * 4);
                                     def.defSymbol = new DefinitionSymbol(defSpan, def);
                                     def.isZero = true;
-                                    line.symbolLast(Type.NUMERIC_LITERAL);
+                                    line.symbolLast(SymbolType.NUMERIC_LITERAL);
                                     valueStr = valSize;
                                     defType = "uint8["+(valSize)+"]";
                                 } catch (NumberFormatException e) {
@@ -323,38 +323,38 @@ public class ASMParser {
 
                         String type = line.nextString();
                         if (type != null) {
-                            line.symbolLast(Type.CLASS_NAME);
+                            line.symbolLast(SymbolType.CLASS_NAME);
                         }
                         // TODO add symbol file
 
                         symbolFile.addVariable(new VariableSymbol(name, -1, -1, type == null ? defType : type, valueStr), line.location.line());
                         
-                        line.symbolRest(Type.COMMENT_LINE);
+                        line.symbolRest(SymbolType.COMMENT_LINE);
                     }
                     case "stackVar" -> {
-                        symbols.add(new ELSymbol(Type.KEYWORD, line.lastSpan, "## `#stackVar`\n\nDefine a new stack variable.\n\nUsage: `#stackVar [type] [name] ([offset])`"));
+                        symbols.add(new ELSymbol(SymbolType.KEYWORD, line.lastSpan, "## `#stackVar`\n\nDefine a new stack variable.\n\nUsage: `#stackVar [type] [name] ([offset])`"));
                         
                     }
                     case "stackVarClear" -> {
-                        symbols.add(new ELSymbol(Type.KEYWORD, line.lastSpan, "## `#stackVarClear`\n\nClear a stack variable. It will clear the last stack variable with that name.\n\nUsage: `#stackVarClear [name]`"));
+                        symbols.add(new ELSymbol(SymbolType.KEYWORD, line.lastSpan, "## `#stackVarClear`\n\nClear a stack variable. It will clear the last stack variable with that name.\n\nUsage: `#stackVarClear [name]`"));
                         
                     }
                     case "line" -> {
-                        symbols.add(new ELSymbol(Type.KEYWORD, line.lastSpan, "## `#line`\n\nMarks the source line for a section of assembly.\n\nUsage: `#line [file] [line]:[col]`"));
+                        symbols.add(new ELSymbol(SymbolType.KEYWORD, line.lastSpan, "## `#line`\n\nMarks the source line for a section of assembly.\n\nUsage: `#line [file] [line]:[col]`"));
                     }
                     case "lineend" -> {
-                        symbols.add(new ELSymbol(Type.KEYWORD, line.lastSpan, "## `#lineend`\n\nMarks the end of a source line.\n\nUsage: `#lineend"));
+                        symbols.add(new ELSymbol(SymbolType.KEYWORD, line.lastSpan, "## `#lineend`\n\nMarks the end of a source line.\n\nUsage: `#lineend"));
                     }
                     case "breakpoint" -> {
-                        symbols.add(new ELSymbol(Type.KEYWORD, line.lastSpan, "## `#breakpoint`\n\nMarks a debugger breakpoint.\n\nUsage: `#breakpoint"));
+                        symbols.add(new ELSymbol(SymbolType.KEYWORD, line.lastSpan, "## `#breakpoint`\n\nMarks a debugger breakpoint.\n\nUsage: `#breakpoint"));
                     }
                     case "function" -> {
-                        symbols.add(new ELSymbol(Type.KEYWORD, line.lastSpan, "## `#function`\n\nMarks a function. Also creates a label with the name of the function\n\nUsage: `#function (syscall::)[name] ([param] [type](, ...))`"));
+                        symbols.add(new ELSymbol(SymbolType.KEYWORD, line.lastSpan, "## `#function`\n\nMarks a function. Also creates a label with the name of the function\n\nUsage: `#function (syscall::)[name] ([param] [type](, ...))`"));
                         if(defOnly) continue;
                         String name = line.nextString(AsmError.error("Expected function name"));
                         if (name == null)
                             continue;
-                        line.symbolLast(Type.FUNCTION_NAME);
+                        line.symbolLast(SymbolType.FUNCTION_NAME);
                         if (labels.containsKey(name)) {
                             line.errorLast(AsmError.error("Duplicate function/label name"));
                         } else {
@@ -362,21 +362,21 @@ public class ASMParser {
                         }
                     }
                     case "endfunction" -> {
-                        symbols.add(new ELSymbol(Type.KEYWORD, line.lastSpan, "## `#endfunction`\n\nMarks the end of the function.\n\nUsage: `#endfunction ([return type])"));
+                        symbols.add(new ELSymbol(SymbolType.KEYWORD, line.lastSpan, "## `#endfunction`\n\nMarks the end of the function.\n\nUsage: `#endfunction ([return type])"));
                         if(defOnly) continue;
                         String retType = line.nextString();
                         if (retType != null) {
-                            line.symbolLast(Type.CLASS_NAME);
+                            line.symbolLast(SymbolType.CLASS_NAME);
                         }
 
-                        line.symbolRest(Type.COMMENT_LINE);
+                        line.symbolRest(SymbolType.COMMENT_LINE);
                     }
                     case "include" -> {
-                        symbols.add(new ELSymbol(Type.KEYWORD, line.lastSpan, "## `#include`\n\nIncludes another assembly file at this location. Locations in `<>`s are internal includes. If marked `defOnly`, only the definitions will be pulled from the included file.\n\nUsage: `#include [path] (defOnly)`"));
+                        symbols.add(new ELSymbol(SymbolType.KEYWORD, line.lastSpan, "## `#include`\n\nIncludes another assembly file at this location. Locations in `<>`s are internal includes. If marked `defOnly`, only the definitions will be pulled from the included file.\n\nUsage: `#include [path] (defOnly)`"));
                         String path = line.nextString(AsmError.error("Expected include path"));
                         if (path == null)
                             continue;
-                        line.symbolLast(Type.NAMESPACE_NAME);
+                        line.symbolLast(SymbolType.NAMESPACE_NAME);
 
                         if (includes.containsKey(path)) { // ignore it to prevent re-entering
                             continue;
@@ -399,7 +399,7 @@ public class ASMParser {
                                 line.errorLast(AsmError.error("Unknown internal include <%s>", path));
                                 continue;
                             }
-                            line.symbolRest(Type.COMMENT_LINE);
+                            line.symbolRest(SymbolType.COMMENT_LINE);
                             if (limitedLintOnly) {
                                 continue;
                             }
@@ -411,7 +411,7 @@ public class ASMParser {
                                 continue;
                             }
                         } else {
-                            line.symbolRest(Type.COMMENT_LINE);
+                            line.symbolRest(SymbolType.COMMENT_LINE);
                             if (limitedLintOnly) {
                                 continue;
                             }
@@ -421,7 +421,7 @@ public class ASMParser {
                         }
                         if (line.hasNext("defOnly")) {
                             parser.defOnly = true;
-                            line.symbolLast(Type.KEYWORD);
+                            line.symbolLast(SymbolType.KEYWORD);
                         }
                         includes.put(path, parser);
                         parser.prepass();
@@ -429,7 +429,7 @@ public class ASMParser {
                     }
                     
                     case "syscall" -> {
-                        symbols.add(new ELSymbol(Type.KEYWORD, line.lastSpan,
+                        symbols.add(new ELSymbol(SymbolType.KEYWORD, line.lastSpan,
                                 "## `#syscall`\n\nMaps a syscall name to index.\n\nUsage: `#syscall [index] [name]`"));
                         Define index = line.nextConst(AsmError.error("Expected syscall index"));
                         if (index == null)
@@ -443,13 +443,13 @@ public class ASMParser {
                         String name = line.nextString(AsmError.error("Expected syscall name"));
                         if (name == null)
                             return;
-                        line.symbolLast(Type.FUNCTION_NAME);
+                        line.symbolLast(SymbolType.FUNCTION_NAME);
 
                         symbolFile.mapSyscall(name, index.value);
                     }
                     
                     case "alias" -> {
-                        symbols.add(new ELSymbol(Type.KEYWORD, line.lastSpan,
+                        symbols.add(new ELSymbol(SymbolType.KEYWORD, line.lastSpan,
                                 "## `#alias`\n\nAlias a register.\n\nUsage: `#alias [register] [name]` or `#alias clear [name]`"));
                     }
                     
@@ -501,11 +501,11 @@ public class ASMParser {
                             String typeStr = line.nextString(AsmError.error("Expected type"));
                             if (typeStr == null)
                                 continue;
-                            line.symbolLast(Type.CLASS_NAME);
+                            line.symbolLast(SymbolType.CLASS_NAME);
                             String name = line.nextString(AsmError.error("Expected name"));
                             if(name == null)
                                 continue;
-                            line.symbolLast(Type.PARAMETER);
+                            line.symbolLast(SymbolType.PARAMETER);
                             Define offDef = line.nextConst();
                             int offset = 0;
                             if (offDef != null) {
@@ -519,10 +519,10 @@ public class ASMParser {
                             String name = line.nextString(AsmError.error("Expected name"));
                             if (name == null)
                                 continue;
-                            line.symbolLast(Type.PARAMETER);
+                            line.symbolLast(SymbolType.PARAMETER);
 
                             symbolFile.endStackVar(name, address);
-                            line.symbolRest(Type.COMMENT_LINE);
+                            line.symbolRest(SymbolType.COMMENT_LINE);
                         }
                         
                         case "function" -> {
@@ -535,7 +535,7 @@ public class ASMParser {
                             String varName = line.nextString();
                             ArrayList<String> params = new ArrayList<>();
                             while (varName != null) {
-                                line.symbolLast(Type.PARAMETER);
+                                line.symbolLast(SymbolType.PARAMETER);
                                 String varType = line.nextString(AsmError.error("Expected parameter type"));
                                 if (varType == null) {
                                     break;
@@ -545,7 +545,7 @@ public class ASMParser {
                                 while (varType != null && !varType.endsWith(",")) {
                                     switch (varType) {
                                         case "out", "const" -> {
-                                            line.symbolLast(Type.KEYWORD);
+                                            line.symbolLast(SymbolType.KEYWORD);
                                         }
                                         default -> {
 
@@ -562,10 +562,10 @@ public class ASMParser {
                                 }
                                 if (type.endsWith(",")) {
                                     type = type.substring(0, type.length() - 1);
-                                    symbols.add(new ELSymbol(Type.KEYWORD, line.lastSpan.end().span()));
+                                    symbols.add(new ELSymbol(SymbolType.KEYWORD, line.lastSpan.end().span()));
                                     line.lastSpan = line.lastSpan.shorten(1);
                                 }
-                                line.symbolLast(Type.CLASS_NAME);
+                                line.symbolLast(SymbolType.CLASS_NAME);
                                 varName = line.nextString();
                             }
                             if (varName != null) {
@@ -580,7 +580,7 @@ public class ASMParser {
                             cFunc = new FunctionSymbol(name, address, -1, params.toArray(new String[0]), "void");
                             symbolFile.addFunction(cFunc, location.line());
 
-                            line.symbolRest(Type.COMMENT_LINE);
+                            line.symbolRest(SymbolType.COMMENT_LINE);
                         }
                         
                         case "endfunction" -> {
@@ -613,7 +613,7 @@ public class ASMParser {
                             String filename = line.nextString(AsmError.error("Expected filename"));
                             if (filename == null)
                                 continue;
-                            line.symbolLast(Type.STRING_LITERAL);
+                            line.symbolLast(SymbolType.STRING_LITERAL);
 
                             String pos = line.nextString(AsmError.error("Expected line:col"));
                             if (pos == null)
@@ -627,17 +627,17 @@ public class ASMParser {
                             Span lineNSpan = line.lastSpan.start().span(parts[0].length()-1);
                             try {
                                 lineN = Integer.parseInt(parts[0]);
-                                symbols.add(new ELSymbol(Type.NUMERIC_LITERAL, lineNSpan));
+                                symbols.add(new ELSymbol(SymbolType.NUMERIC_LITERAL, lineNSpan));
                             } catch (NumberFormatException e) {
                                 errors.add(AsmError.error(lineNSpan, "Malformed line number"));
                                 continue;
                             }
-                            symbols.add(new ELSymbol(Type.KEYWORD, lineNSpan.end().add(1).span()));
+                            symbols.add(new ELSymbol(SymbolType.KEYWORD, lineNSpan.end().add(1).span()));
                             int col;
                             Span colSpan = lineNSpan.end().add(2).span(parts[1].length()-1);
                             try {
                                 col = Integer.parseInt(parts[1]);
-                                symbols.add(new ELSymbol(Type.NUMERIC_LITERAL, colSpan));
+                                symbols.add(new ELSymbol(SymbolType.NUMERIC_LITERAL, colSpan));
                             } catch (NumberFormatException e) {
                                 errors.add(AsmError.error(colSpan, "Malformed column number"));
                                 continue;
@@ -645,7 +645,7 @@ public class ASMParser {
                             
                             symbolFile.startLine(filename, String.format("%d:%d", lineN, col), address);
                             
-                            line.symbolRest(Type.COMMENT_LINE);
+                            line.symbolRest(SymbolType.COMMENT_LINE);
                         }
 
                         case "lineend" -> {
@@ -658,7 +658,7 @@ public class ASMParser {
                         }
                         case "alias" -> {
                             if (line.hasNext("clear")) {
-                                line.symbolLast(Type.KEYWORD);
+                                line.symbolLast(SymbolType.KEYWORD);
                                 String name = line.nextString(AsmError.error("Expected alias name"));
                                 if (name == null)
                                     continue;
@@ -666,7 +666,7 @@ public class ASMParser {
                                     symbols.add(aliases.get(name).use(line.lastSpan));
                                     aliases.remove(name);
                                 } else {
-                                    line.symbolLast(Type.PARAMETER);
+                                    line.symbolLast(SymbolType.PARAMETER);
                                     line.errorLast(AsmError.warning("Unknown alias"));
                                 }
                                 continue;
@@ -690,7 +690,7 @@ public class ASMParser {
                                 aliases.put(name, symbol);
                                 symbols.add(symbol);
                             } else {
-                                line.symbolLast(Type.PARAMETER);
+                                line.symbolLast(SymbolType.PARAMETER);
                             }
                             continue;
                         }
@@ -707,7 +707,7 @@ public class ASMParser {
                 // System.out.println(keyword);
                 if (keywords.containsKey(keyword)) {
                     ASMKeyword kWrd = keywords.get(keyword);
-                    symbols.add(new ELSymbol(Type.KEYWORD, line.lastSpan, String.format("`%s`\n\n%s\n\n**Usage**: %s", keyword, kWrd.getDef(), kWrd.getUsage())));
+                    symbols.add(new ELSymbol(SymbolType.KEYWORD, line.lastSpan, String.format("`%s`\n\n%s\n\n**Usage**: %s", keyword, kWrd.getDef(), kWrd.getUsage())));
                     Instruction instr = kWrd.add(line);
                     if (instr == null || limitedLintOnly) {
                         // if(instr == null)
@@ -721,7 +721,7 @@ public class ASMParser {
                     if (instr instanceof TempGoto tg) {
                         tg.setAddress(address);
                     }
-                    line.symbolRest(Type.COMMENT_LINE);
+                    line.symbolRest(SymbolType.COMMENT_LINE);
                     continue;
                 } else {
                     line.errorLast(AsmError.error("Unknown keyword `%s`", keyword));
@@ -975,18 +975,18 @@ public class ASMParser {
         
         private Define getDefine(String t) {
             if (t.equals("true")) {
-                symbolLast(Type.VARIABLE_CONSTANT);
+                symbolLast(SymbolType.VARIABLE_CONSTANT);
                 return TRUE; 
             } else if (t.equals("false")) {
-                symbolLast(Type.VARIABLE_CONSTANT);
+                symbolLast(SymbolType.VARIABLE_CONSTANT);
                 return FALSE;
             } else if (t.startsWith("&")) { // address of
                 if (limitedLintOnly) {
                     if (t.charAt(1) == ':') {
-                        symbolLast(Type.FUNCTION_NAME);
+                        symbolLast(SymbolType.FUNCTION_NAME);
                         return new Define(t.substring(2));
                     }
-                    symbolLast(Type.VARIABLE_NAME);
+                    symbolLast(SymbolType.VARIABLE_NAME);
                     return new Define(t.substring(1));
                 }
                 if (t.charAt(1) == ':') {
@@ -995,7 +995,7 @@ public class ASMParser {
                     if (def == null) {
                         errors.add(AsmError.error(lastSpan, "Unknown label `:%s`", lblName));
                     }
-                    symbolLast(Type.FUNCTION_NAME);
+                    symbolLast(SymbolType.FUNCTION_NAME);
                     return def;
                 }
                 String defName = t.substring(1);
@@ -1017,15 +1017,15 @@ public class ASMParser {
                 symbols.add(new DefinitionSymbol(lastSpan, def));
                 return def;
             } else if (t.startsWith("'")) {
-                symbolLast(Type.STRING_LITERAL);
+                symbolLast(SymbolType.STRING_LITERAL);
                 if (t.length() < 3)
                     return null;
                 if (t.charAt(1) == '\\') {
                     if (t.length() != 4 || t.charAt(3) != '\'')
                         return null;
-                    symbols.add(new ELSymbol(Type.STRING_LITERAL, lastSpan.start().span()));
-                    symbols.add(new ELSymbol(Type.STRING_LITERAL_ESCAPE, lastSpan.start().add(1).span(1)));
-                    symbols.add(new ELSymbol(Type.STRING_LITERAL, lastSpan.start().add(3).span()));
+                    symbols.add(new ELSymbol(SymbolType.STRING_LITERAL, lastSpan.start().span()));
+                    symbols.add(new ELSymbol(SymbolType.STRING_LITERAL_ESCAPE, lastSpan.start().add(1).span(1)));
+                    symbols.add(new ELSymbol(SymbolType.STRING_LITERAL, lastSpan.start().add(3).span()));
                     return new Define("_", switch (t.charAt(2)) {
                         case 'n' -> '\n';
                         case 't' -> '\t';
@@ -1034,19 +1034,19 @@ public class ASMParser {
                         default -> t.charAt(2);
                     });
                 }
-                symbolLast(Type.STRING_LITERAL);
+                symbolLast(SymbolType.STRING_LITERAL);
                 if (t.length() != 3 || t.charAt(2) != '\'')
                     return null;
                 return new Define("_", t.charAt(1));
             } else if (t.startsWith("0x")) {
-                symbolLast(Type.NUMERIC_LITERAL);
+                symbolLast(SymbolType.NUMERIC_LITERAL);
                 try {
                     return new Define("_", Integer.parseUnsignedInt(t.substring(2).replaceAll("_",""), 16));
                 } catch (NumberFormatException e) {
                     errors.add(AsmError.error(lastSpan, "Malformed hex `%s`", t));
                 }
             } else if (t.startsWith("0b")) {
-                symbolLast(Type.NUMERIC_LITERAL);
+                symbolLast(SymbolType.NUMERIC_LITERAL);
                 try {
                     return new Define("_", Integer.parseUnsignedInt(t.substring(2).replaceAll("_",""), 2));
                 } catch (NumberFormatException e) {
@@ -1055,11 +1055,11 @@ public class ASMParser {
             } else {
                 try {
                     int val = Integer.parseInt(t.replaceAll("_",""));
-                    symbolLast(Type.NUMERIC_LITERAL);
+                    symbolLast(SymbolType.NUMERIC_LITERAL);
                     return new Define("_", val);
                 } catch (NumberFormatException e) {
                     if (limitedLintOnly) {
-                        symbolLast(Type.VARIABLE_CONSTANT);
+                        symbolLast(SymbolType.VARIABLE_CONSTANT);
                         return new Define(t);
                     }
                 }
@@ -1133,7 +1133,7 @@ public class ASMParser {
                     closed = true;
                     break;
                 } else if (c == ',') {
-                    symbols.add(new ELSymbol(Type.KEYWORD, cLoc.span()));
+                    symbols.add(new ELSymbol(SymbolType.KEYWORD, cLoc.span()));
                     lastSpan = tStartLoc.span(cLoc.add(-1));
                     if (!wasString) {
                         Define def = getDefine(t);
@@ -1189,7 +1189,7 @@ public class ASMParser {
                     errors.add(error.at(lastSpan));
                 return null;
             }
-            symbols.add(new ELSymbol(Type.STRING_LITERAL, startLoc.span()));
+            symbols.add(new ELSymbol(SymbolType.STRING_LITERAL, startLoc.span()));
             Location lastLocation = startLoc.add(1);
             col++;
             while (col < lineLen) {
@@ -1205,12 +1205,12 @@ public class ASMParser {
                         default -> c;
                     };
                     if(lastLocation.col() == col-3) {
-                        symbols.add(new ELSymbol(Type.STRING_LITERAL_ESCAPE, lastLocation.span(1)));
+                        symbols.add(new ELSymbol(SymbolType.STRING_LITERAL_ESCAPE, lastLocation.span(1)));
                         lastLocation = lastLocation.add(2);
                     } else {
                         Location newLoc = location.add(col-3);
-                        symbols.add(new ELSymbol(Type.STRING_LITERAL, lastLocation.span(newLoc)));
-                        symbols.add(new ELSymbol(Type.STRING_LITERAL_ESCAPE, newLoc.add(1).span(1)));
+                        symbols.add(new ELSymbol(SymbolType.STRING_LITERAL, lastLocation.span(newLoc)));
+                        symbols.add(new ELSymbol(SymbolType.STRING_LITERAL_ESCAPE, newLoc.add(1).span(1)));
                         lastLocation = location.add(col);
                     }
                     continue;
@@ -1224,7 +1224,7 @@ public class ASMParser {
                 t += c;
             }
             Location newLoc = location.add(col - 1);
-            symbols.add(new ELSymbol(Type.STRING_LITERAL, lastLocation.span(newLoc)));
+            symbols.add(new ELSymbol(SymbolType.STRING_LITERAL, lastLocation.span(newLoc)));
             lastSpan = startLoc.span(newLoc);
             return t;
         }
@@ -1237,15 +1237,15 @@ public class ASMParser {
             errors.add(error.at(startLoc.span(lineLen - 1)));
         }
 
-        public void symbolLast(ELSymbol.Type type) {
+        public void symbolLast(SymbolType type) {
             symbols.add(new ELSymbol(type, lastSpan));
         }
 
-        public void symbolAll(ELSymbol.Type type) {
+        public void symbolAll(SymbolType type) {
             symbols.add(new ELSymbol(type, startLoc.span(startLoc.add(lineLen))));
         }
 
-        public void symbolRest(ELSymbol.Type type) {
+        public void symbolRest(SymbolType type) {
             if (col == lineLen - 1)
                 return;
             symbols.add(new ELSymbol(type, lastSpan.end().add(1).span(startLoc.add(lineLen))));

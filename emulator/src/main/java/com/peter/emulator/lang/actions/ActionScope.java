@@ -6,6 +6,8 @@ import java.util.HashMap;
 import com.peter.emulator.lang.ELFunction.FunctionType;
 import com.peter.emulator.lang.*;
 import com.peter.emulator.lang.base.ELPrimitives;
+import com.peter.emulator.lang.symbols.ELSymbol;
+import com.peter.emulator.lang.symbols.SymbolType;
 import com.peter.emulator.lang.tokens.IdentifierToken;
 
 public class ActionScope {
@@ -296,13 +298,13 @@ public class ActionScope {
         return symbol;
     }
 
-    public ELSymbol addSymbol(ELSymbol.Type type, Span span, String text) {
+    public ELSymbol addSymbol(SymbolType type, Span span, String text) {
         ELSymbol symbol = new ELSymbol(type, span, text);
         unit.addSymbol(symbol);
         return symbol;
     }
 
-    public ELSymbol addSymbol(ELSymbol.Type type, Span span) {
+    public ELSymbol addSymbol(SymbolType type, Span span) {
         ELSymbol symbol = new ELSymbol(type, span);
         unit.addSymbol(symbol);
         return symbol;

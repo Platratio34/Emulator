@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.TextDocumentService;
@@ -16,11 +15,12 @@ import org.eclipse.lsp4j.services.TextDocumentService;
 import com.peter.emulator.assembly.ASMParser;
 import com.peter.emulator.assembly.AsmError;
 import com.peter.emulator.lang.ELAnalysisError;
-import com.peter.emulator.lang.ELSymbol;
-import com.peter.emulator.lang.ELSymbol.Modifier;
 import com.peter.emulator.lang.FileProvider;
 import com.peter.emulator.lang.ProgramUnit;
+import com.peter.emulator.lang.symbols.ELSymbol;
 import com.peter.emulator.lang.symbols.ELVarSymbol;
+import com.peter.emulator.lang.symbols.SymbolType;
+import com.peter.emulator.lang.symbols.ELSymbol.Modifier;
 
 public class ELTextDocumentService implements TextDocumentService {
 
@@ -155,11 +155,13 @@ public class ELTextDocumentService implements TextDocumentService {
                 lspServer.logDebug("Async diagnostics for %s", uri);
 
                 ArrayList<Diagnostic> diagnostics = new ArrayList<>();
-                lspServer.lsLock.lock();
-                lspServer.addFile(uri);
+                if (lspServer.getUnit(uri) == null) {
+                    lspServer.addFile(uri);
+                }
                 if (lspServer.errors == null) {
                     lspServer.triggerDiagnostics();
                 }
+                lspServer.lsLock.readLock().lock();
                 for (ELAnalysisError err : lspServer.errors) {
                     if (err.span == null) {
                         continue;
@@ -168,7 +170,8 @@ public class ELTextDocumentService implements TextDocumentService {
                         continue;
                     diagnostics.add(new Diagnostic(err.span.toRange(), err.reason, err.severity.severity, "emulatorlang"));
                 }
-                lspServer.lsLock.unlock();
+                lspServer.lsLock.readLock().unlock();
+                // lspServer.logDebug("Async diagnostics for %s complete", uri);
                 return new DocumentDiagnosticReport(new RelatedFullDocumentDiagnosticReport(diagnostics));
             });
         }
@@ -184,9 +187,9 @@ public class ELTextDocumentService implements TextDocumentService {
                     return null;
             return parser.symbols;
         } else if (uri.getPath().endsWith(".el")) {
-            lspServer.lsLock.lock();
+            lspServer.lsLock.readLock().lock();
             ProgramUnit unit = lspServer.getUnit(uri);
-            lspServer.lsLock.unlock();
+            lspServer.lsLock.readLock().unlock();
             if (unit == null) {
                 return null;
             }
@@ -243,11 +246,11 @@ public class ELTextDocumentService implements TextDocumentService {
                             case STATIC -> modifier |= Modifier.STATIC.value;
                             case SCOPE -> {
                                 if (vs.var.offset < 0) {
-                                    type = ELSymbol.Type.PARAMETER.semanticTypeIndex();
+                                    type = SymbolType.PARAMETER.semanticTypeIndex();
                                 }
                             }
                             case MEMBER -> {
-                                type = ELSymbol.Type.PROPERTY.semanticTypeIndex();
+                                type = SymbolType.PROPERTY.semanticTypeIndex();
                             }
 
                             default -> {
@@ -287,7 +290,7 @@ public class ELTextDocumentService implements TextDocumentService {
         URI uri = URI.create(params.getTextDocument().getUri());
 
         return CompletableFuture.supplyAsync(() -> {
-            lspServer.logDebug("Searching for semantic tokens for %s", uri);
+            // lspServer.logDebug("Searching for semantic tokens for %s", uri);
             ArrayList<ELSymbol> symbols = getSymbols(uri);
             if (symbols == null) {
                 lspServer.logError("Semantic tokens were requested for %s, but no symbols could be found",

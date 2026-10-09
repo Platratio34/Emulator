@@ -1,8 +1,8 @@
 package com.peter.emulator.assembly.keywords;
 
 import com.peter.emulator.assembly.AsmError;
-import com.peter.emulator.lang.ELSymbol.Type;
 import com.peter.emulator.assembly.ASMParser.ASMLine;
+import com.peter.emulator.lang.symbols.SymbolType;
 import com.peter.emulator.machinecode.ConditionalOperator;
 import com.peter.emulator.machinecode.Instruction;
 import com.peter.emulator.machinecode.Reg;
@@ -20,7 +20,7 @@ public class SetKeyword extends ASMKeyword {
 
         boolean forced = line.hasNext("FORCE");
         if(forced)
-            line.symbolLast(Type.KEYWORD);
+            line.symbolLast(SymbolType.KEYWORD);
         String ineq = line.nextString(AsmError.error("Expected conditional"));
         if(ineq == null)
             return null;
@@ -40,7 +40,7 @@ public class SetKeyword extends ASMKeyword {
             line.errorLast(AsmError.error("Unknown conditional"));
             return null;
         }
-        line.symbolLast(Type.KEYWORD);
+        line.symbolLast(SymbolType.KEYWORD);
         Reg rg = line.nextReg(AsmError.error("Expected rg register"));
         if(rg == null)
             return null;

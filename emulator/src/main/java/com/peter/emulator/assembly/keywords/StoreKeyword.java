@@ -1,10 +1,10 @@
 package com.peter.emulator.assembly.keywords;
 
 import com.peter.emulator.assembly.ASMParser.ASMLine;
+import com.peter.emulator.lang.symbols.SymbolType;
 import com.peter.emulator.assembly.AsmError;
 import com.peter.emulator.assembly.Define;
 import com.peter.emulator.assembly.TempStore;
-import com.peter.emulator.lang.ELSymbol.Type;
 import com.peter.emulator.machinecode.Instruction;
 import com.peter.emulator.machinecode.MemorySize;
 import com.peter.emulator.machinecode.Reg;
@@ -25,15 +25,15 @@ public class StoreKeyword extends ASMKeyword {
         Reg rg;
         MemorySize size = MemorySize.WORD;
         if (line.hasNext("WORD")) {
-            line.symbolLast(Type.KEYWORD);
+            line.symbolLast(SymbolType.KEYWORD);
             rg = line.nextReg();
         } else if (line.hasNext("SHORT")) {
             size = MemorySize.SHORT;
-            line.symbolLast(Type.KEYWORD);
+            line.symbolLast(SymbolType.KEYWORD);
             rg = line.nextReg();
         } else if (line.hasNext("BYTE")) {
             size = MemorySize.BYTE;
-            line.symbolLast(Type.KEYWORD);
+            line.symbolLast(SymbolType.KEYWORD);
             rg = line.nextReg();
         } else {
             rg = line.nextReg();
@@ -45,7 +45,7 @@ public class StoreKeyword extends ASMKeyword {
             Reg ra = line.nextReg(AsmError.error("Expected ra register"));
             boolean incRA = line.hasNext("INC_RA");
             if (incRA)
-                line.symbolLast(Type.KEYWORD);
+                line.symbolLast(SymbolType.KEYWORD);
             return new TempStore(size, def, ra, incRA);
         }
         // STORE (<WORD|SHORT|BYTE>) rg <[const]|[ra]>
@@ -59,7 +59,7 @@ public class StoreKeyword extends ASMKeyword {
         // STORE (<WORD|SHORT|BYTE>) rg ra (INC_RA)
         boolean incRA = line.hasNext("INC_RA");
         if (incRA)
-            line.symbolLast(Type.KEYWORD);
+            line.symbolLast(SymbolType.KEYWORD);
         return StoreInstruction.StoreReg(size, rg, ra, incRA);
     }
     

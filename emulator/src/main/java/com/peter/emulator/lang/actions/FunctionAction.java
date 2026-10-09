@@ -8,7 +8,9 @@ import com.peter.emulator.lang.base.ELPrimitives;
 import com.peter.emulator.lang.expresion.Expression;
 import com.peter.emulator.lang.symbols.ELFuncCallSymbol;
 import com.peter.emulator.lang.symbols.ELNamespaceSymbol;
+import com.peter.emulator.lang.symbols.ELSymbol;
 import com.peter.emulator.lang.symbols.ELVarSymbol;
+import com.peter.emulator.lang.symbols.SymbolType;
 import com.peter.emulator.lang.tokens.IdentifierToken;
 import com.peter.emulator.lang.tokens.OperatorToken;
 import com.peter.emulator.lang.tokens.SetToken;
@@ -41,9 +43,9 @@ public class FunctionAction extends ComplexAction {
         boolean forceCast = it.value.equals("force_cast");
         if (it.value.equals("cast") || forceCast) {
             if (forceCast) {
-                scope.addSymbol(ELSymbol.Type.KEYWORD, it.nameSpan(), "`force_cast<type>(value)`\n\nTells the compiler to treat the value to a particular type, ignoring safety. **NO CONVERSION APPLIED**");
+                scope.addSymbol(SymbolType.KEYWORD, it.nameSpan(), "`force_cast<type>(value)`\n\nTells the compiler to treat the value to a particular type, ignoring safety. **NO CONVERSION APPLIED**");
             } else {
-                scope.addSymbol(ELSymbol.Type.KEYWORD, it.nameSpan(), "`cast<type>(value)`\n\nTells the compiler to treat the value to a particular type. **NO CONVERSION APPLIED**");
+                scope.addSymbol(SymbolType.KEYWORD, it.nameSpan(), "`cast<type>(value)`\n\nTells the compiler to treat the value to a particular type. **NO CONVERSION APPLIED**");
             }
             if (it.types == null) {
                 throw ELAnalysisError.error("Must specify target type for cast", it);
@@ -66,7 +68,7 @@ public class FunctionAction extends ComplexAction {
             isStaticCast = true;
             return;
         } else if (it.value.equals("sizeof")) {
-            scope.addSymbol(ELSymbol.Type.KEYWORD, it.nameSpan(), "`sizeof<type?>(variable?)`\n\nReturns the size of a given type. Only type or variable may be provided");
+            scope.addSymbol(SymbolType.KEYWORD, it.nameSpan(), "`sizeof<type?>(variable?)`\n\nReturns the size of a given type. Only type or variable may be provided");
             ELType type;
             if (it.types != null) {
                 if (!it.params.subTokens.isEmpty()) {
@@ -106,13 +108,13 @@ public class FunctionAction extends ComplexAction {
                 }
                 case "interruptReturn" -> {
                     actions.add(new DirectAction("INTERRUPT RET"));
-                    scope.addSymbol(ELSymbol.Type.NAMESPACE_NAME, it.span(),
+                    scope.addSymbol(SymbolType.NAMESPACE_NAME, it.span(),
                             "### `SysD.interruptReturn()`\n\nReturn from an interrupt, resuming execution at the memory address popped to the stack when the interrupt was triggered.\n\n**ONLY USE IN LOW-LEVEL PROGRAMMING**. *Privileged Mode only*");
                     return;
                 }
                 case "halt" -> {
                     actions.add(new DirectAction("HALT"));
-                    scope.addSymbol(ELSymbol.Type.NAMESPACE_NAME, it.span(),
+                    scope.addSymbol(SymbolType.NAMESPACE_NAME, it.span(),
                             "### `SysD.halt()`\n\nHalt the CPU.\n\n**ONLY USE IN LOW-LEVEL PROGRAMMING**. *Privileged Mode only*");
                     return;
                 }
@@ -250,7 +252,7 @@ public class FunctionAction extends ComplexAction {
             switch (id.parts[1]) {
                 case "halt" -> {
                     scope.addSymbol(new ELNamespaceSymbol("SysD", it.spanFirst()));
-                    scope.addSymbol(new ELSymbol(ELSymbol.Type.FUNCTION_NAME, it.next().spanFirst(),
+                    scope.addSymbol(new ELSymbol(SymbolType.FUNCTION_NAME, it.next().spanFirst(),
                             "`inline void SysD.halt()`\n\nHalts execution of the CPU. **MUST BE IN PRIVILEGED MODE TO WORK**"));
                     actions.add(new DirectAction("HALT"));
                     return;

@@ -2,7 +2,7 @@ package com.peter.emulator.lang.tokens;
 
 import com.peter.emulator.lang.Location;
 import com.peter.emulator.lang.ProgramUnit;
-import com.peter.emulator.lang.ELSymbol.Type;
+import com.peter.emulator.lang.symbols.SymbolType;
 
 public class ASMToken extends Token {
     public boolean closed = false;
@@ -53,8 +53,8 @@ public class ASMToken extends Token {
     }
 
     public void addSymbols(ProgramUnit unit) {
-        unit.addSymbol(Type.KEYWORD, startLocation.span(bodyStart.add(-1)));
-        unit.addSymbol(Type.STRING_LITERAL, bodyStart.span(endLocation));
+        unit.addSymbol(SymbolType.KEYWORD, startLocation.span(bodyStart.add(-1)));
+        unit.addSymbol(SymbolType.STRING_LITERAL, bodyStart.span(endLocation));
     }
 
 }

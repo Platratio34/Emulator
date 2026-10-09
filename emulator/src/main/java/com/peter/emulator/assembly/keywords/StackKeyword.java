@@ -3,7 +3,7 @@ package com.peter.emulator.assembly.keywords;
 import com.peter.emulator.assembly.AsmError;
 import com.peter.emulator.assembly.Define;
 import com.peter.emulator.assembly.ASMParser.ASMLine;
-import com.peter.emulator.lang.ELSymbol.Type;
+import com.peter.emulator.lang.symbols.SymbolType;
 import com.peter.emulator.machinecode.Instruction;
 import com.peter.emulator.machinecode.MemorySize;
 import com.peter.emulator.machinecode.Reg;
@@ -24,7 +24,7 @@ public class StackKeyword extends ASMKeyword {
             return null;
         switch (op) {
             case "INC", "DEC" -> {
-                line.symbolLast(Type.KEYWORD);
+                line.symbolLast(SymbolType.KEYWORD);
                 Define def = line.nextConst(AsmError.error("Expected constant amount"));
                 if (def == null)
                     return null;
@@ -39,15 +39,15 @@ public class StackKeyword extends ASMKeyword {
                 }
             }
             case "PUSH", "POP" -> {
-                line.symbolLast(Type.KEYWORD);
+                line.symbolLast(SymbolType.KEYWORD);
                 MemorySize size = MemorySize.WORD;
                 if(line.hasNext("WORD")) {
-                    line.symbolLast(Type.KEYWORD);
+                    line.symbolLast(SymbolType.KEYWORD);
                 } else if(line.hasNext("SHORT")) {
-                    line.symbolLast(Type.KEYWORD);
+                    line.symbolLast(SymbolType.KEYWORD);
                     size = MemorySize.SHORT;
                 } else if(line.hasNext("BYTE")) {
-                    line.symbolLast(Type.KEYWORD);
+                    line.symbolLast(SymbolType.KEYWORD);
                     size = MemorySize.BYTE;
                 }
                 Reg rg = line.nextReg(AsmError.error("Expected register"));

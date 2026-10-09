@@ -3,8 +3,8 @@ package com.peter.emulator.assembly.keywords;
 import com.peter.emulator.assembly.AsmError;
 import com.peter.emulator.assembly.Define;
 import com.peter.emulator.assembly.TempTestAndSet;
-import com.peter.emulator.lang.ELSymbol.Type;
 import com.peter.emulator.assembly.ASMParser.ASMLine;
+import com.peter.emulator.lang.symbols.SymbolType;
 import com.peter.emulator.machinecode.Instruction;
 import com.peter.emulator.machinecode.Reg;
 import com.peter.emulator.machinecode.TestAndSet;
@@ -20,10 +20,10 @@ public class TestNSetKeyword extends ASMKeyword {
         // TEST AND SET [rg] <[ra]|[address]>
         if (!line.hasNext("AND", AsmError.error("Unknown keyword")))
             return null;
-        line.symbolLast(Type.KEYWORD);
+        line.symbolLast(SymbolType.KEYWORD);
         if (!line.hasNext("SET", AsmError.error("Unknown keyword")))
             return null;
-        line.symbolLast(Type.KEYWORD);
+        line.symbolLast(SymbolType.KEYWORD);
         Reg rg = line.nextReg(AsmError.error("Expected rg register"));
         if(rg == null)
             return null;

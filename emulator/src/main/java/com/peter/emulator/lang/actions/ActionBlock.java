@@ -12,6 +12,7 @@ import com.peter.emulator.lang.expresion.Expression;
 import com.peter.emulator.lang.symbols.ELAnnotationSymbol;
 import com.peter.emulator.lang.symbols.ELStringSymbol;
 import com.peter.emulator.lang.symbols.ELVarSymbol;
+import com.peter.emulator.lang.symbols.SymbolType;
 import com.peter.emulator.lang.tokens.*;
 
 public class ActionBlock extends ComplexAction {
@@ -93,7 +94,7 @@ public class ActionBlock extends ComplexAction {
                         }
                     }
                     boolean asmError = asmParser.parse();
-                    scope.addSymbol(ELSymbol.Type.KEYWORD, asmT.startLocation.span(2));
+                    scope.addSymbol(SymbolType.KEYWORD, asmT.startLocation.span(2));
                     scope.unit.symbols.addAll(asmParser.getSymbols());
                     // System.out.println("Adding "+asmParser.getSymbols().size()+" symbols from ASM");
                     for (AsmError error : asmParser.errors) {
@@ -139,7 +140,7 @@ public class ActionBlock extends ComplexAction {
                     if (it.hasParamsSub()) {
                         switch (it.value) {
                             case "if" -> {
-                                scope.unit.addSymbol(ELSymbol.Type.KEYWORD, it.spanFirst());
+                                scope.unit.addSymbol(SymbolType.KEYWORD, it.spanFirst());
                                 wI += 1;
                                 // set is the condition
                                 // also block
@@ -157,7 +158,7 @@ public class ActionBlock extends ComplexAction {
                                 // actions.add(new ConditionalAction(scope, ":if_true_" + index, elsePresent ? (":if_false_" + index) : (":if_end_" + index),
                                 //         it.params.subTokens));
                                 if (elsePresent) {
-                                    scope.addSymbol(ELSymbol.Type.KEYWORD, tokens.get(wI).span());
+                                    scope.addSymbol(SymbolType.KEYWORD, tokens.get(wI).span());
                                 }
 
                                 Register r = newRegister();
@@ -192,7 +193,7 @@ public class ActionBlock extends ComplexAction {
                                 continue;
                             }
                             case "for" -> {
-                                scope.unit.addSymbol(ELSymbol.Type.KEYWORD, it.spanFirst());
+                                scope.unit.addSymbol(SymbolType.KEYWORD, it.spanFirst());
                                 wI += 1;
                                 // set is (initializer; condition; incrementor)
 
@@ -281,7 +282,7 @@ public class ActionBlock extends ComplexAction {
                                 continue;
                             }
                             case "while" -> {
-                                scope.unit.addSymbol(ELSymbol.Type.KEYWORD, it.spanFirst());
+                                scope.unit.addSymbol(SymbolType.KEYWORD, it.spanFirst());
                                 wI += 1;
                                 //set is condition
                                 // also block
@@ -316,7 +317,7 @@ public class ActionBlock extends ComplexAction {
                                 continue;
                             }
                             case "asm" -> {
-                                scope.unit.addSymbol(ELSymbol.Type.KEYWORD, it.spanFirst());
+                                scope.unit.addSymbol(SymbolType.KEYWORD, it.spanFirst());
                                 wI += 1;
                                 Token t = it.params.get(0);
                                 switch (t) {
@@ -359,7 +360,7 @@ public class ActionBlock extends ComplexAction {
                                                 .error("Unexpected token after asm macro, expected ';'",
                                                         tkn.endLocation.span());
                                     }
-                                    scope.addSymbol(ELSymbol.Type.SEMICOLON, tokens.get(wI).span());
+                                    scope.addSymbol(SymbolType.SEMICOLON, tokens.get(wI).span());
                                     wI++;
                                 } else {
                                     throw ELAnalysisError.error("Unexpected end of block after asm macro",
@@ -390,7 +391,7 @@ public class ActionBlock extends ComplexAction {
                     tkn = tokens.get(wI);
                 }
                 if(tkn instanceof OperatorToken ot && ot.type == OperatorToken.Type.SEMICOLON) {
-                    scope.addSymbol(ELSymbol.Type.SEMICOLON, tkn.span());
+                    scope.addSymbol(SymbolType.SEMICOLON, tkn.span());
                     wI++;
                     if (!line.isEmpty()) {
                         LineAction lineAction = new LineAction(scope);
@@ -410,7 +411,7 @@ public class ActionBlock extends ComplexAction {
                     tkn = tokens.get(wI);
                 }
                 scope.freeScopeHandles(errors, tkn.endLocation.span());
-                scope.addSymbol(ELSymbol.Type.SEMICOLON, tkn.span());
+                scope.addSymbol(SymbolType.SEMICOLON, tkn.span());
             }
             wI++;
         }

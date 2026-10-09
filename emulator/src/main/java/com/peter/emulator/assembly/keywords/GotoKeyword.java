@@ -4,7 +4,7 @@ import com.peter.emulator.assembly.AsmError;
 import com.peter.emulator.assembly.Define;
 import com.peter.emulator.assembly.TempGoto;
 import com.peter.emulator.assembly.ASMParser.ASMLine;
-import com.peter.emulator.lang.ELSymbol.Type;
+import com.peter.emulator.lang.symbols.SymbolType;
 import com.peter.emulator.machinecode.ConditionalOperator;
 import com.peter.emulator.machinecode.Goto;
 import com.peter.emulator.machinecode.Instruction;
@@ -22,7 +22,7 @@ public class GotoKeyword extends ASMKeyword {
         // GOTO (PUSH) (<EQ|LEQ|GT|NEQ|LT|GEQ> rg) <[:label]|ra>
         // GOTO POP (<EQ|LEQ|GT|NEQ|LT|GEQ> rg)
         if (line.hasNext("POP")) { // GOTO POP (<EQ|LEQ|GT|NEQ|LT|GEQ> rg)
-            line.symbolLast(Type.KEYWORD);
+            line.symbolLast(SymbolType.KEYWORD);
             String ineq = line.nextString();
             if (ineq == null) {
                 return Goto.Pop(ConditionalOperator.UNCONDITIONAL, Reg.R0);
@@ -43,7 +43,7 @@ public class GotoKeyword extends ASMKeyword {
                 line.errorLast(AsmError.error("Unknown conditional"));
                 return null;
             }
-            line.symbolLast(Type.KEYWORD);
+            line.symbolLast(SymbolType.KEYWORD);
             Reg rg = line.nextReg(AsmError.error("Expected rg register"));
             return Goto.Pop(op, rg);
         }
@@ -52,7 +52,7 @@ public class GotoKeyword extends ASMKeyword {
 
         boolean push = line.hasNext("PUSH");
         if(push)
-            line.symbolLast(Type.KEYWORD);
+            line.symbolLast(SymbolType.KEYWORD);
 
         ConditionalOperator op = ConditionalOperator.UNCONDITIONAL;
         Reg rg = Reg.R0;
@@ -70,7 +70,7 @@ public class GotoKeyword extends ASMKeyword {
             op = ConditionalOperator.GEQ_ZERO;
         }
         if (op != ConditionalOperator.UNCONDITIONAL) {
-            line.symbolLast(Type.KEYWORD);
+            line.symbolLast(SymbolType.KEYWORD);
             rg = line.nextReg(AsmError.error("Expected rg register"));
         }
 
@@ -88,7 +88,7 @@ public class GotoKeyword extends ASMKeyword {
                 line.errorLast(AsmError.error("Unknown label"));
                 return null;
             }
-            line.symbolLast(Type.FUNCTION_NAME);
+            line.symbolLast(SymbolType.FUNCTION_NAME);
             return new TempGoto(op, push ? Mode.PUSH : Mode.NONE, rg, lbl);
         }
         return new Goto(op, push ? Mode.PUSH : Mode.NONE, ra, rg);

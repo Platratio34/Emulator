@@ -2,10 +2,10 @@ package com.peter.emulator.lang.actions;
 
 import com.peter.emulator.lang.ELAnalysisError;
 import com.peter.emulator.lang.ELClass;
-import com.peter.emulator.lang.ELSymbol;
 import com.peter.emulator.lang.ELType;
 import com.peter.emulator.lang.base.ELPrimitives;
 import com.peter.emulator.lang.expresion.Expression;
+import com.peter.emulator.lang.symbols.SymbolType;
 import com.peter.emulator.lang.tokens.IdentifierToken;
 import com.peter.emulator.lang.tokens.SetToken;
 
@@ -31,10 +31,10 @@ public class NewAction extends ComplexAction {
         }
         IdentifierToken it2 = it;
         while (it2.hasSub()) {
-            scope.addSymbol(ELSymbol.Type.NAMESPACE_NAME, it2.spanFirst());
+            scope.addSymbol(SymbolType.NAMESPACE_NAME, it2.spanFirst());
             it2 = it2.next();
         }
-        scope.addSymbol(ELSymbol.Type.CLASS_NAME, it2.spanFirst());
+        scope.addSymbol(SymbolType.CLASS_NAME, it2.spanFirst());
 
         int classSize = clazz.getSize();
         if(it.hasParams()) { // constructer

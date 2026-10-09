@@ -9,14 +9,14 @@ import com.peter.emulator.lang.tokens.IdentifierToken;
 import com.peter.emulator.lang.tokens.OperatorToken;
 import com.peter.emulator.lang.tokens.SetToken;
 import com.peter.emulator.lang.tokens.Token;
-import com.peter.emulator.lang.ELSymbol.Modifier;
-import com.peter.emulator.lang.actions.Action;
 import com.peter.emulator.lang.actions.ActionBlock;
 import com.peter.emulator.lang.actions.ActionScope;
 import com.peter.emulator.lang.actions.ComplexAction;
 import com.peter.emulator.lang.annotations.ELAnnotation;
 import com.peter.emulator.lang.doc.DocComment;
 import com.peter.emulator.lang.symbols.ELFuncDefSymbol;
+import com.peter.emulator.lang.symbols.SymbolType;
+import com.peter.emulator.lang.symbols.ELSymbol.Modifier;
 
 public class ELFunction {
 
@@ -257,7 +257,7 @@ public class ELFunction {
                     continue;
                 if (t instanceof IdentifierToken it) {
                     addParameter(typeBuilder.build(), it.value);
-                    unit.addSymbol(ELSymbol.Type.PARAMETER, it.span()).withModifiers(Modifier.DECLARATION);
+                    unit.addSymbol(SymbolType.PARAMETER, it.span()).withModifiers(Modifier.DECLARATION);
                     typeBuilder = null;
                     continue;
                 }

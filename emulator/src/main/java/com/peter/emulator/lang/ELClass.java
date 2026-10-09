@@ -10,6 +10,7 @@ import com.peter.emulator.lang.annotations.ELAnnotation;
 import com.peter.emulator.lang.annotations.ELOperatorAnnotation;
 import com.peter.emulator.lang.annotations.ELOverrideAnnotation;
 import com.peter.emulator.lang.base.ELPrimitives;
+import com.peter.emulator.lang.symbols.ELSymbol;
 import com.peter.emulator.lang.tokens.OperatorToken;
 import com.peter.emulator.machinecode.Reg;
 

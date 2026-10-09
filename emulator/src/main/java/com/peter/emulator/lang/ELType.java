@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import com.peter.emulator.lang.base.ELPrimitives;
 import com.peter.emulator.lang.base.Method;
 import com.peter.emulator.lang.symbols.ELTypeSymbol;
+import com.peter.emulator.lang.symbols.SymbolType;
 import com.peter.emulator.lang.tokens.IdentifierToken;
 import com.peter.emulator.lang.tokens.NumberToken;
 import com.peter.emulator.lang.tokens.OperatorToken;
@@ -551,8 +552,8 @@ public class ELType {
         if(baseRef().nameSpan != null)
             unit.symbols.add(new ELTypeSymbol(this, pointer || address));
         if(hasGenerics()) {
-            unit.addSymbol(ELSymbol.Type.KEYWORD, genericLocation.span(genericLocation));
-            unit.addSymbol(ELSymbol.Type.KEYWORD, endLocation.span(endLocation));
+            unit.addSymbol(SymbolType.KEYWORD, genericLocation.span(genericLocation));
+            unit.addSymbol(SymbolType.KEYWORD, endLocation.span(endLocation));
             for(ELType type : genericTypes) {
                 type.addSymbol(unit);
             }
@@ -560,7 +561,7 @@ public class ELType {
         if(array) {
             switch(arraySizeValue) {
                 case ELValue.ELNumberValue nv -> {
-                    unit.addSymbol(ELSymbol.Type.NUMERIC_LITERAL, nv.span);
+                    unit.addSymbol(SymbolType.NUMERIC_LITERAL, nv.span);
                 }
                 default -> {}
             }

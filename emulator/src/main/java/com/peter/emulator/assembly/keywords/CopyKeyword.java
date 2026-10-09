@@ -1,8 +1,8 @@
 package com.peter.emulator.assembly.keywords;
 
 import com.peter.emulator.assembly.ASMParser.ASMLine;
+import com.peter.emulator.lang.symbols.SymbolType;
 import com.peter.emulator.assembly.AsmError;
-import com.peter.emulator.lang.ELSymbol.Type;
 import com.peter.emulator.machinecode.Instruction;
 import com.peter.emulator.machinecode.Load;
 import com.peter.emulator.machinecode.MemorySize;
@@ -21,7 +21,7 @@ public class CopyKeyword extends ASMKeyword {
         // COPY MEM (<WORD|SHORT|BYTE>) rs rd (INC_RS) (INC_RD)
 
         if (line.hasNext("MEM")) { // COPY MEM (<WORD|SHORT|BYTE>) rs rd (INC_RS) (INC_RD)
-            line.symbolLast(Type.KEYWORD);
+            line.symbolLast(SymbolType.KEYWORD);
             Reg rs = line.nextReg();
             MemorySize size = MemorySize.WORD;
             if (rs == null) { // COPY MEM <WORD|SHORT|BYTE> rs rd (INC_RS) (INC_RD)
@@ -37,7 +37,7 @@ public class CopyKeyword extends ASMKeyword {
                     line.errorLast(AsmError.error("Unknown memory size `%s`", str));
                     return null;
                 }
-                line.symbolLast(Type.KEYWORD);
+                line.symbolLast(SymbolType.KEYWORD);
                 rs = line.nextReg(AsmError.error("Expected rs register"));
                 if (rs == null)
                     return null;
@@ -50,12 +50,12 @@ public class CopyKeyword extends ASMKeyword {
             StoreInstruction instr = StoreInstruction.CopyMem(size, rs, ra);
             boolean incRS = line.hasNext("INC_RS");
             if (incRS) {
-                line.symbolLast(Type.KEYWORD);
+                line.symbolLast(SymbolType.KEYWORD);
                 instr.withIncRG();
             }
             boolean incRD = line.hasNext("INC_RD");
             if (incRD) {
-                line.symbolLast(Type.KEYWORD);
+                line.symbolLast(SymbolType.KEYWORD);
                 instr.withIncRA();
             }
             return instr;

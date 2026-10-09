@@ -1,19 +1,17 @@
 package com.peter.emulator.lang.symbols;
 
 import com.peter.emulator.lang.ELFunction;
-import com.peter.emulator.lang.ELSymbol;
 import com.peter.emulator.lang.ELType;
 import com.peter.emulator.lang.InlineType;
 import com.peter.emulator.lang.Span;
 import com.peter.emulator.lang.ELFunction.FunctionType;
-import com.peter.emulator.lang.ELSymbol.Type;
 
 public class ELFuncCallSymbol extends ELSymbol {
 
     public final ELFunction func;
 
     public ELFuncCallSymbol(ELFunction func, Span span) {
-        super(Type.FUNCTION_NAME, span);
+        super(SymbolType.FUNCTION_NAME, span);
         this.func = func;
         this.definition = func.defSymbol;
     }

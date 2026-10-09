@@ -8,7 +8,9 @@ import com.peter.emulator.lang.annotations.ELEntrypointAnnotation;
 import com.peter.emulator.lang.doc.DocComment;
 import com.peter.emulator.lang.symbols.ELFuncDefSymbol;
 import com.peter.emulator.lang.symbols.ELNamespaceSymbol;
+import com.peter.emulator.lang.symbols.ELSymbol;
 import com.peter.emulator.lang.symbols.ELVarSymbol;
+import com.peter.emulator.lang.symbols.SymbolType;
 import com.peter.emulator.lang.tokens.OperatorToken.Type;
 import com.peter.emulator.lang.tokens.*;
 
@@ -77,7 +79,7 @@ public class Parser {
                 if (t instanceof IdentifierToken idt) {
                     if (idt.value.equals("import")) {
                         workingI++;
-                        unit.symbols.add(new ELSymbol(ELSymbol.Type.KEYWORD, idt.span()));
+                        unit.symbols.add(new ELSymbol(SymbolType.KEYWORD, idt.span()));
                         String imp;
                         String name;
                         IdentifierToken nameToken = null;
@@ -85,12 +87,12 @@ public class Parser {
                             imp = idt2.value;
                             name = imp;
                             nameToken = idt2;
-                            unit.symbols.add(new ELSymbol(ELSymbol.Type.NAMESPACE_NAME, idt2.spanFirst()));
+                            unit.symbols.add(new ELSymbol(SymbolType.NAMESPACE_NAME, idt2.spanFirst()));
                             while (idt2.hasSub()) {
                                 idt2 = (IdentifierToken) idt2.subTokens.get(0);
                                 imp += "." + idt2.value;
                                 name = idt2.value;
-                                unit.symbols.add(new ELSymbol(ELSymbol.Type.NAMESPACE_NAME, idt2.spanFirst()));
+                                unit.symbols.add(new ELSymbol(SymbolType.NAMESPACE_NAME, idt2.spanFirst()));
                             }
                         } else {
                             errors.error("Unexpected token found in import (expected identifier)", tokens.get(workingI).span());
@@ -99,7 +101,7 @@ public class Parser {
                         workingI++;
                         if (tokens.get(workingI) instanceof IdentifierToken idt3 && idt3.value.equals("as")) {
                             workingI++;
-                            unit.symbols.add(new ELSymbol(ELSymbol.Type.KEYWORD, idt3.span()));
+                            unit.symbols.add(new ELSymbol(SymbolType.KEYWORD, idt3.span()));
                             if (tokens.get(workingI) instanceof IdentifierToken idt4) {
                                 workingI++;
                                 name = idt4.value;
@@ -107,7 +109,7 @@ public class Parser {
                                     errors.error("Import must be outside of namespace", idt);
                                     continue;
                                 }
-                                unit.symbols.add(new ELSymbol(ELSymbol.Type.NAMESPACE_NAME, idt2.span(), "`%s` as `%s`", name, imp));
+                                unit.symbols.add(new ELSymbol(SymbolType.NAMESPACE_NAME, idt2.span(), "`%s` as `%s`", name, imp));
                                 unit.addImport(name, imp, nameToken);
                             } else {
                                 errors.error("Unexpected token found in import (expected alias)", tokens.get(workingI).span());
@@ -118,15 +120,15 @@ public class Parser {
                                 errors.error("Unexpected token found in import (expected `;`)", tokens.get(workingI).span());
                                 continue;
                             }
-                            unit.addSymbol(ELSymbol.Type.SEMICOLON, tokens.get(workingI).span());
+                            unit.addSymbol(SymbolType.SEMICOLON, tokens.get(workingI).span());
                         } else if (tokens.get(workingI) instanceof OperatorToken ot
                                 && ot.type == OperatorToken.Type.SEMICOLON) {
-                            unit.addSymbol(ELSymbol.Type.SEMICOLON, tokens.get(workingI).span());
+                            unit.addSymbol(SymbolType.SEMICOLON, tokens.get(workingI).span());
                             if (currentNamespace != null) {
                                 errors.error("Import must be outside of namespace", idt);
                                 continue;
                             }
-                            unit.symbols.add(new ELSymbol(ELSymbol.Type.NAMESPACE_NAME, idt2.span(), "`%s`", name));
+                            unit.symbols.add(new ELSymbol(SymbolType.NAMESPACE_NAME, idt2.span(), "`%s`", name));
                             unit.addImport(name, imp, nameToken);
                         } else {
                             errors.error("Unexpected token found in import (expected `as` or `;`)", tokens.get(workingI).span());
@@ -143,7 +145,7 @@ public class Parser {
                         Location loc = idt.startLocation;
                         workingI++;
                         ELProtectionLevel level = ELProtectionLevel.get(idt.value, ELProtectionLevel.PROTECTED);
-                        unit.addSymbol(ELSymbol.Type.KEYWORD, idt.span());
+                        unit.addSymbol(SymbolType.KEYWORD, idt.span());
                         boolean stat = idt.value.equals("static");
                         boolean extern = idt.value.equals("extern");
                         Span operator = idt.value.equals("operator") ? idt.span() : null;
@@ -154,49 +156,49 @@ public class Parser {
                             if (tokens.get(workingI) instanceof IdentifierToken it && it.value.equals("static")) {
                                 stat = true;
                                 workingI++;
-                                unit.addSymbol(ELSymbol.Type.KEYWORD, it.span());
+                                unit.addSymbol(SymbolType.KEYWORD, it.span());
                             }
                         if (const_ == null)
                             if (tokens.get(workingI) instanceof IdentifierToken it && it.value.equals("const")) {
                                 const_ = tokens.get(workingI).span();
                                 workingI++;
-                                unit.addSymbol(ELSymbol.Type.KEYWORD, it.span());
+                                unit.addSymbol(SymbolType.KEYWORD, it.span());
                             }
                         if (!extern)
                             if (tokens.get(workingI) instanceof IdentifierToken it && it.value.equals("extern")) {
                                 extern = true;
                                 workingI++;
-                                unit.addSymbol(ELSymbol.Type.KEYWORD, it.span());
+                                unit.addSymbol(SymbolType.KEYWORD, it.span());
                             }
                         if (final_ == null)
                             if (tokens.get(workingI) instanceof IdentifierToken it && it.value.equals("final")) {
                                 final_ = tokens.get(workingI).span();
                                 workingI++;
-                                unit.addSymbol(ELSymbol.Type.KEYWORD, it.span());
+                                unit.addSymbol(SymbolType.KEYWORD, it.span());
                             }
                         if (tokens.get(workingI) instanceof IdentifierToken it && it.value.equals("inline")) {
                             inline = tokens.get(workingI).span();
                             workingI++;
-                            unit.addSymbol(ELSymbol.Type.KEYWORD, it.span());
+                            unit.addSymbol(SymbolType.KEYWORD, it.span());
                         }
                         if (operator == null)
                             if (tokens.get(workingI) instanceof IdentifierToken it && it.value.equals("operator")) {
                                 operator = tokens.get(workingI).span();
                                 workingI++;
-                                unit.addSymbol(ELSymbol.Type.KEYWORD, it.span());
+                                unit.addSymbol(SymbolType.KEYWORD, it.span());
                             }
                         Span abs = null;
                         if (tokens.get(workingI) instanceof IdentifierToken it2 && it2.value.equals("abstract")) {
                             abs = tokens.get(workingI).span();
                             workingI++;
-                            unit.addSymbol(ELSymbol.Type.KEYWORD, it2.span());
+                            unit.addSymbol(SymbolType.KEYWORD, it2.span());
                         }
                         boolean destructor = false;
                         if (tokens.get(workingI) instanceof OperatorToken o2
                                 && o2.type == OperatorToken.Type.DESTRUCTOR) {
                             destructor = true;
                             workingI++;
-                            unit.addSymbol(ELSymbol.Type.OPERATOR, o2.span());
+                            unit.addSymbol(SymbolType.OPERATOR, o2.span());
                         }
                         if (tokens.get(workingI) instanceof IdentifierToken it && it.hasParams()) {
                             // Constructor/destructor
@@ -236,7 +238,7 @@ public class Parser {
                                 function.ingestBody(bt);
                             } else if (tokens.get(workingI) instanceof OperatorToken ot
                                     && ot.type == OperatorToken.Type.SEMICOLON) {
-                                unit.addSymbol(ELSymbol.Type.SEMICOLON, ot.span());
+                                unit.addSymbol(SymbolType.SEMICOLON, ot.span());
                                 // no body;
                             } else {
                                 errors.error("Unexpected token found, expected function body or `;`", tokens.get(workingI).span());
@@ -305,7 +307,7 @@ public class Parser {
                             if (!type.isVoid())
                                 function.ret = type;
                             else {
-                                unit.addSymbol(ELSymbol.Type.KEYWORD, type.span());
+                                unit.addSymbol(SymbolType.KEYWORD, type.span());
                             }
                             function.abstractFunction = abs != null;
                             function.ingestParams(nameToken.params);
@@ -325,7 +327,7 @@ public class Parser {
                                     && ot.type == OperatorToken.Type.SEMICOLON) {
                                 // no body;
                                 function.bodyLocation = ot.startLocation;
-                                unit.addSymbol(ELSymbol.Type.SEMICOLON, ot.span());
+                                unit.addSymbol(SymbolType.SEMICOLON, ot.span());
                             } else {
                                 errors.error("Unexpected token found, expected function body or `;`: "+tokens.get(workingI), tokens.get(workingI));
                                 continue;
@@ -374,12 +376,12 @@ public class Parser {
                             if (tokens.get(workingI) instanceof OperatorToken ot) {
                                 switch (ot.type) {
                                     case SEMICOLON -> {
-                                        unit.addSymbol(ELSymbol.Type.SEMICOLON, ot.span());
+                                        unit.addSymbol(SymbolType.SEMICOLON, ot.span());
                                         workingI++;
                                         continue;
                                     }
                                     case ASSIGN -> {
-                                        unit.addSymbol(ELSymbol.Type.OPERATOR, ot.span());
+                                        unit.addSymbol(SymbolType.OPERATOR, ot.span());
                                         workingI++;
                                     }
                                     default -> {
@@ -399,12 +401,12 @@ public class Parser {
                                 errors.error("Unexpected token found, expected `;`", tokens.get(workingI));
                                 continue;
                             }
-                            unit.addSymbol(ELSymbol.Type.SEMICOLON, tokens.get(workingI).span());
+                            unit.addSymbol(SymbolType.SEMICOLON, tokens.get(workingI).span());
                         }
                     } else if (idt.value.equals("namespace")) {
                         // namespace [name];
                         // namespace [name] {...}
-                        unit.symbols.add(new ELSymbol(ELSymbol.Type.KEYWORD, idt.span()));
+                        unit.symbols.add(new ELSymbol(SymbolType.KEYWORD, idt.span()));
                         workingI++;
                         Namespace namespace = null;
                         if (tokens.get(workingI) instanceof IdentifierToken it) {
@@ -445,7 +447,7 @@ public class Parser {
                             new Parser(unit, namespace).parse(bt.subTokens, errors);
                         } else if (tokens.get(workingI) instanceof OperatorToken ot
                                 && ot.type == OperatorToken.Type.SEMICOLON) {
-                            unit.addSymbol(ELSymbol.Type.SEMICOLON, ot.span());
+                            unit.addSymbol(SymbolType.SEMICOLON, ot.span());
                             currentNamespace = namespace;
                         } else {
                             errors.error("Unexpected token found, expected block or `;`", tokens.get(workingI));
@@ -454,7 +456,7 @@ public class Parser {
                     } else if (idt.value.equals("abstract") || idt.value.equals("class") || idt.value.equals("struct")) {
                         // <struct|(abstract) class> [name] {...}
                         boolean abs = idt.value.equals("abstract");
-                        unit.addSymbol(ELSymbol.Type.KEYWORD, idt.span());
+                        unit.addSymbol(SymbolType.KEYWORD, idt.span());
                         if (abs) {
                             workingI++;
                             idt = (IdentifierToken) tokens.get(workingI);
@@ -462,7 +464,7 @@ public class Parser {
                                 continue;
                         }
                         boolean struct = idt.value.equals("struct");
-                        unit.addSymbol(ELSymbol.Type.KEYWORD, idt.span());
+                        unit.addSymbol(SymbolType.KEYWORD, idt.span());
                         workingI++;
                         ELClass clazz;
                         if (tokens.get(workingI) instanceof IdentifierToken it) {
@@ -486,7 +488,7 @@ public class Parser {
                         if (tokens.get(workingI) instanceof OperatorToken ot
                                 && ot.type == OperatorToken.Type.ANGLE_LEFT) {
                             workingI++;
-                            unit.addSymbol(ELSymbol.Type.KEYWORD, ot.span());
+                            unit.addSymbol(SymbolType.KEYWORD, ot.span());
                             ELType.Builder builder = null;
                             boolean r = true;
                             String tName = null;
@@ -497,7 +499,7 @@ public class Parser {
                                         tName = tit.value;
                                         clazz.genericsOrder.add(tName);
                                         clazz.generics.put(tName, null);
-                                        unit.addSymbol(ELSymbol.Type.CLASS_NAME, tit.span());
+                                        unit.addSymbol(SymbolType.CLASS_NAME, tit.span());
                                         workingI++;
                                     } else {
                                         errors.error("Unexpected token found in type (expected operator)", tkn);
@@ -506,7 +508,7 @@ public class Parser {
                                 } else if (builder != null) {
                                     if (!builder.ingest(tkn)) {
                                         if (tkn instanceof OperatorToken ot2 && ot2.type == OperatorToken.Type.COMMA) {
-                                            unit.addSymbol(ELSymbol.Type.KEYWORD, ot2.span());
+                                            unit.addSymbol(SymbolType.KEYWORD, ot2.span());
                                             ELType gt = builder.build();
                                             gt.addSymbol(unit);
                                             clazz.generics.put(tName, gt);
@@ -515,7 +517,7 @@ public class Parser {
                                             workingI++;
                                         } else if (tkn instanceof OperatorToken ot2
                                                 && ot2.type == OperatorToken.Type.ANGLE_RIGHT) {
-                                            unit.addSymbol(ELSymbol.Type.KEYWORD, ot2.span());
+                                            unit.addSymbol(SymbolType.KEYWORD, ot2.span());
                                             ELType gt = builder.build();
                                             gt.addSymbol(unit);
                                             clazz.generics.put(tName, gt);
@@ -530,12 +532,12 @@ public class Parser {
                                     }
                                 } else {
                                     if (tkn instanceof OperatorToken ot2 && ot2.type == OperatorToken.Type.COMMA) {
-                                        unit.addSymbol(ELSymbol.Type.KEYWORD, ot2.span());
+                                        unit.addSymbol(SymbolType.KEYWORD, ot2.span());
                                         tName = null;
                                         workingI++;
                                     } else if (tkn instanceof OperatorToken ot2
                                             && ot2.type == OperatorToken.Type.ANGLE_RIGHT) {
-                                        unit.addSymbol(ELSymbol.Type.KEYWORD, ot2.span());
+                                        unit.addSymbol(SymbolType.KEYWORD, ot2.span());
                                         r = false;
                                         workingI++;
                                     } else {
@@ -547,7 +549,7 @@ public class Parser {
                         }
                         if (tokens.get(workingI) instanceof IdentifierToken tit) {
                             if (tit.value.equals("extends")) {
-                                unit.addSymbol(ELSymbol.Type.KEYWORD, tit.span());
+                                unit.addSymbol(SymbolType.KEYWORD, tit.span());
                                 ELType.Builder builder = new ELType.Builder();
                                 workingI++;
 
@@ -565,7 +567,7 @@ public class Parser {
                             continue;
                         }
                     } else if (idt.value.equals("enum")) {
-                        unit.addSymbol(ELSymbol.Type.KEYWORD, idt.span());
+                        unit.addSymbol(SymbolType.KEYWORD, idt.span());
                         workingI++;
                         ELEnum clazz;
                         if (tokens.get(workingI) instanceof IdentifierToken it) {

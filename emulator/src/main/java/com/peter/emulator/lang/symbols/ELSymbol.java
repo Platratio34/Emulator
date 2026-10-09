@@ -1,0 +1,128 @@
+package com.peter.emulator.lang.symbols;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.eclipse.lsp4j.Position;
+
+import com.peter.emulator.lang.ProgramUnit;
+import com.peter.emulator.lang.Span;
+import com.peter.emulator.languageserver.ELLanguageServer;
+
+public class ELSymbol {
+
+    public final SymbolType type;
+    public final Span span;
+    public final String text;
+    protected int modifier = 0;
+
+    public ELSymbol definition = null;
+
+    public ELSymbol(SymbolType type, Span span) {
+        this.type = type;
+        this.span = span;
+        if(span == null) {
+            throw new IllegalArgumentException("Span must be non-null");
+        }
+        this.text = null;
+    }
+    public ELSymbol(SymbolType type, Span span, String text) {
+        this.type = type;
+        this.span = span;
+        if(span == null) {
+            throw new IllegalArgumentException("Span must be non-null");
+        }
+        this.text = text;
+    }
+
+    public ELSymbol(SymbolType type, Span span, String text, Object... args) {
+        this.type = type;
+        this.span = span;
+        if(span == null) {
+            throw new IllegalArgumentException("Span must be non-null");
+        }
+        this.text = String.format(text, args);
+    }
+
+    public ELSymbol withModifiers(Modifier... modifiers) {
+        for (Modifier m : modifiers) {
+            modifier |= m.value;
+        }
+        return this;
+    }
+    
+    public boolean contains(Position position, ELLanguageServer lServer) {
+        return span.contains(position, lServer);
+    }
+
+    public String getText() {
+        return text;
+    }
+
+    public boolean hasText() {
+        return text != null;
+    }
+
+    public SymbolType getType() {
+        return type;
+    }
+    
+    public int getModifier() {
+        return modifier | type.modifier;
+    }
+
+    public boolean onAdd(ProgramUnit unit) {
+        return false;
+    }
+
+    public enum Modifier {
+        NONE("", 0x0),
+        DECLARATION("declaration", 0b1),
+        DEFINITION("definition", 0b10),
+        READ_ONLY("readonly", 0b100),
+        STATIC("static", 0b1000),
+        DOCUMENTATION("documentation", 0b10000),
+        LANGUAGE("defaultLibrary", 0b100000)
+        ;
+
+        public final String name;
+        public final int value;
+
+        public static List<String> MODIFIERS;
+
+        private Modifier(String name, int value) {
+            this.name = name;
+            this.value = value;
+
+            setup();
+        }
+        
+        private void setup() {
+            if(MODIFIERS == null)
+                MODIFIERS = new ArrayList<>();
+            if (value > 0) {
+                MODIFIERS.add(name);
+            }
+        }
+    }
+
+    private final ArrayList<ELSymbol> symbols = new ArrayList<>();
+
+    public boolean isWrapper() {
+        return false;
+    }
+
+    public ArrayList<ELSymbol> getSub() {
+        return symbols;
+    }
+
+    protected ELSymbol addSymbol(SymbolType type, Span span) {
+        ELSymbol symbol = new ELSymbol(type, span);
+        symbols.add(symbol);
+        return symbol;
+    }
+    protected ELSymbol addSymbol(ELSymbol symbol) {
+        symbols.add(symbol);
+        return symbol;
+    }
+}

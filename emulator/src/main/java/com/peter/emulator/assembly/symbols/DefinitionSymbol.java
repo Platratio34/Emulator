@@ -1,8 +1,9 @@
 package com.peter.emulator.assembly.symbols;
 
 import com.peter.emulator.assembly.Define;
-import com.peter.emulator.lang.ELSymbol;
 import com.peter.emulator.lang.Span;
+import com.peter.emulator.lang.symbols.ELSymbol;
+import com.peter.emulator.lang.symbols.SymbolType;
 import com.peter.emulator.machinecode.Instruction;
 
 public class DefinitionSymbol extends ELSymbol {
@@ -10,7 +11,7 @@ public class DefinitionSymbol extends ELSymbol {
     public final Define def;
 
     public DefinitionSymbol(Span span, Define def) {
-        super(def.isAddress ? Type.VARIABLE_NAME : Type.VARIABLE_CONSTANT, span);
+        super(def.isAddress ? SymbolType.VARIABLE_NAME : SymbolType.VARIABLE_CONSTANT, span);
         this.def = def;
         definition = def.defSymbol;
     }

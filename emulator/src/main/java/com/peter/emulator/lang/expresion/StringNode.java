@@ -1,12 +1,12 @@
 package com.peter.emulator.lang.expresion;
 
-import com.peter.emulator.lang.ELSymbol;
 import com.peter.emulator.lang.ELType;
 import com.peter.emulator.lang.ErrorSet;
 import com.peter.emulator.lang.Span;
 import com.peter.emulator.lang.actions.ActionScope;
 import com.peter.emulator.lang.base.ELPrimitives;
 import com.peter.emulator.lang.symbols.ELStringSymbol;
+import com.peter.emulator.lang.symbols.ELSymbol;
 import com.peter.emulator.lang.tokens.StringToken;
 
 public class StringNode extends ExpressionNode {

@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import com.peter.emulator.lang.ELSymbol;
 import com.peter.emulator.lang.Location;
 import com.peter.emulator.lang.ProgramUnit;
+import com.peter.emulator.lang.symbols.SymbolType;
 
 public class Tokenizer {
 
@@ -89,7 +89,7 @@ public class Tokenizer {
             // else
                 // System.out.print("c"+((int)c));
             if (c == '\n') {
-                unit.addSymbol(ELSymbol.Type.COMMENT_LINE, slc.span(location));
+                unit.addSymbol(SymbolType.COMMENT_LINE, slc.span(location));
                 slc = null;
                 // System.out.println("\nEnd of SLC");
             }
@@ -102,7 +102,7 @@ public class Tokenizer {
                 mlcEnd = 1;
                 return true;
             } else if (mlcEnd == 1 && c == '/') {
-                unit.addSymbol(ELSymbol.Type.COMMENT_BLOCK, mlc.span(location));
+                unit.addSymbol(SymbolType.COMMENT_BLOCK, mlc.span(location));
                 mlc = null;
                 mlcEnd = 0;
                 // System.out.println("\nEnd of MLC");

@@ -5,17 +5,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.services.*;
 
 import com.peter.emulator.lang.ELAnalysisError;
-import com.peter.emulator.lang.ELSymbol;
 import com.peter.emulator.lang.ErrorSet;
 import com.peter.emulator.lang.FileProvider;
 import com.peter.emulator.lang.ProgramUnit;
+import com.peter.emulator.lang.symbols.ELSymbol;
+import com.peter.emulator.lang.symbols.SymbolType;
 
 public class ELLanguageServer extends LSPServer implements LanguageServer, LanguageClientAware {
 
@@ -26,7 +26,7 @@ public class ELLanguageServer extends LSPServer implements LanguageServer, Langu
     private ELWorkspaceService workspaceService;
     protected ErrorSet errors = null;
     
-    protected Lock lsLock = new ReentrantLock();
+    protected ReentrantReadWriteLock lsLock = new ReentrantReadWriteLock();
 
     @Override
     public void connect(LanguageClient client) {
@@ -81,7 +81,7 @@ public class ELLanguageServer extends LSPServer implements LanguageServer, Langu
         SemanticTokensWithRegistrationOptions semanticOptions = new SemanticTokensWithRegistrationOptions();
         semanticOptions.setFull(true);
         semanticOptions.setRange(false);
-        SemanticTokensLegend legend = new SemanticTokensLegend(ELSymbol.Type.TYPE_NAMES, ELSymbol.Modifier.MODIFIERS);
+        SemanticTokensLegend legend = new SemanticTokensLegend(SymbolType.TYPE_NAMES, ELSymbol.Modifier.MODIFIERS);
         semanticOptions.setLegend(legend);
         semanticOptions.setId(LANGUAGE_ID);
         // semanticOptions.set

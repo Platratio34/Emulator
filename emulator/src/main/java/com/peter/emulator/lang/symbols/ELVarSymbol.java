@@ -1,7 +1,5 @@
 package com.peter.emulator.lang.symbols;
 
-import com.peter.emulator.lang.ELSymbol;
-import com.peter.emulator.lang.ELSymbol.Type;
 import com.peter.emulator.lang.ELVariable;
 import com.peter.emulator.lang.Span;
 
@@ -10,7 +8,7 @@ public class ELVarSymbol extends ELSymbol {
     public final ELVariable var;
 
     public ELVarSymbol(ELVariable var, Span span) {
-        super((var.finalVal ? Type.VARIABLE_FINAL : Type.VARIABLE_NAME), span);
+        super((var.finalVal ? SymbolType.VARIABLE_FINAL : SymbolType.VARIABLE_NAME), span);
         this.var = var;
         this.definition = var.defSymbol;
     }

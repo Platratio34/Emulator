@@ -1,6 +1,5 @@
 package com.peter.emulator.lang.symbols;
 
-import com.peter.emulator.lang.ELSymbol;
 import com.peter.emulator.lang.ELValue.ELStringValue;
 import com.peter.emulator.lang.Location;
 import com.peter.emulator.lang.Span;
@@ -12,7 +11,7 @@ public class ELStringSymbol extends ELSymbol {
     public final boolean block;
 
     public ELStringSymbol(StringToken token) {
-        super(Type.STRING_LITERAL, token.span());
+        super(SymbolType.STRING_LITERAL, token.span());
         this.value = token.raw;
         // System.out.println(value);
         block = token.block;
@@ -24,7 +23,7 @@ public class ELStringSymbol extends ELSymbol {
     }
 
     public ELStringSymbol(String raw, Span span) {
-        super(Type.STRING_LITERAL, span);
+        super(SymbolType.STRING_LITERAL, span);
         this.value = raw;
         block = false;
         setup();
@@ -36,7 +35,7 @@ public class ELStringSymbol extends ELSymbol {
         Location current = span.start();
         if (block) {
             current = current.add(2);
-            addSymbol(Type.KEYWORD, lastStart.span(current));
+            addSymbol(SymbolType.KEYWORD, lastStart.span(current));
             current = current.add(1);
             lastStart = current;
         }
@@ -59,14 +58,14 @@ public class ELStringSymbol extends ELSymbol {
                         }
                     }
                 }
-                addSymbol(Type.STRING_LITERAL, lastStart.span(current));
-                addSymbol(Type.STRING_LITERAL_ESCAPE,
+                addSymbol(SymbolType.STRING_LITERAL, lastStart.span(current));
+                addSymbol(SymbolType.STRING_LITERAL_ESCAPE,
                         current.add(1).span(current.add(2)));
                 i++;
                 current = current.add(2);
                 lastStart = current.add(1);
             } else if (c == '\n') {
-                addSymbol(Type.STRING_LITERAL, lastStart.span(current));
+                addSymbol(SymbolType.STRING_LITERAL, lastStart.span(current));
                 current = new Location(current.file(), current.line() + 1, 1);
                 lastStart = current.add(1);
             } else {
@@ -74,10 +73,10 @@ public class ELStringSymbol extends ELSymbol {
             }
         }
         if (block) {
-            addSymbol(Type.STRING_LITERAL, lastStart.span(span.end().add(-3)));
-            addSymbol(Type.KEYWORD, span.end().add(-2).span(span.end()));
+            addSymbol(SymbolType.STRING_LITERAL, lastStart.span(span.end().add(-3)));
+            addSymbol(SymbolType.KEYWORD, span.end().add(-2).span(span.end()));
         } else {
-            addSymbol(Type.STRING_LITERAL, lastStart.span(span.end()));
+            addSymbol(SymbolType.STRING_LITERAL, lastStart.span(span.end()));
         }
     }
     

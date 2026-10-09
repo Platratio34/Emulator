@@ -52,12 +52,12 @@ public class ELWorkspaceService implements WorkspaceService {
             for (File f2 : f.listFiles()) {
                 if (f2.isFile() && f2.getName().equals("module-info.json")) {
                     found = true;
-                    lspServer.lsLock.lock();
+                    lspServer.lsLock.writeLock().lock();
                     if (!moduleRoots.contains(f)) {
                         lspServer.logInfo("Added new module %s to diagnostics", f.getAbsolutePath());
                         moduleRoots.add(f);
                     }
-                    lspServer.lsLock.unlock();
+                    lspServer.lsLock.writeLock().unlock();
                     break;
                 }
             }
@@ -69,7 +69,10 @@ public class ELWorkspaceService implements WorkspaceService {
     }
 
     public void triggerRecompile() {
-        lspServer.lsLock.lock();
+        if (lspServer.lsLock.getReadHoldCount() > 0) {
+            lspServer.logDebug("... Waiting to recompile modules . . .");
+        }
+        lspServer.lsLock.writeLock().lock();
         lspServer.logDebug("Recompiling modules ...");
         // ls = new LanguageServer();
         for (File f : moduleRoots) {
@@ -90,16 +93,16 @@ public class ELWorkspaceService implements WorkspaceService {
         }
         lspServer.errors = ls.recompile();
         lspServer.logDebug("Modules recompiled");
-        lspServer.lsLock.unlock();
+        lspServer.lsLock.writeLock().unlock();
         lspServer.pushDiagnostics();
     }
 
     public ProgramUnit getUnit(URI uri) {
-        lspServer.lsLock.lock();
+        lspServer.lsLock.readLock().lock();
         if(ls == null)
             return null;
         ProgramUnit unit = ls.getUnit(Path.of(uri).toAbsolutePath().toString());
-        lspServer.lsLock.unlock();
+        lspServer.lsLock.readLock().unlock();
         return unit;
     }
 

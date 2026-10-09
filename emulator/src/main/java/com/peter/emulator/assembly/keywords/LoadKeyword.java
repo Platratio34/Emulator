@@ -1,10 +1,10 @@
 package com.peter.emulator.assembly.keywords;
 
 import com.peter.emulator.assembly.ASMParser.ASMLine;
+import com.peter.emulator.lang.symbols.SymbolType;
 import com.peter.emulator.assembly.AsmError;
 import com.peter.emulator.assembly.Define;
 import com.peter.emulator.assembly.TempLoad;
-import com.peter.emulator.lang.ELSymbol.Type;
 import com.peter.emulator.machinecode.Instruction;
 import com.peter.emulator.machinecode.Load;
 import com.peter.emulator.machinecode.MemorySize;
@@ -19,7 +19,7 @@ public class LoadKeyword extends ASMKeyword {
     @Override
     public Instruction add(ASMLine line) {
         if (line.hasNext("MEM")) { // LOAD MEM (<WORD|SHORT|BYTE>) rg <ra|[const]> (INC_RA)
-            line.symbolLast(Type.KEYWORD);
+            line.symbolLast(SymbolType.KEYWORD);
             Reg rg = line.nextReg();
             MemorySize size = MemorySize.WORD;
             if (rg == null) { // LOAD MEM <WORD|SHORT|BYTE> rg <ra|[const]> (INC_RA)
@@ -35,7 +35,7 @@ public class LoadKeyword extends ASMKeyword {
                     line.errorLast(AsmError.error("Unknown memory size `%s`", str));
                     return null;
                 }
-                line.symbolLast(Type.KEYWORD);
+                line.symbolLast(SymbolType.KEYWORD);
                 rg = line.nextReg(AsmError.error("Expected rg register"));
                 if (rg == null)
                     return null;
@@ -50,7 +50,7 @@ public class LoadKeyword extends ASMKeyword {
             // LOAD MEM (<WORD|SHORT|BYTE>) rg ra (INC_RA)
             boolean incRA = line.hasNext("INC_RA");
             if (incRA)
-                line.symbolLast(Type.KEYWORD);
+                line.symbolLast(SymbolType.KEYWORD);
             return Load.Mem(size, rg, ra, incRA);
         } else { // LOAD rg [const]
             Reg rg = line.nextReg(AsmError.error("Expected rg register"));

@@ -1,7 +1,6 @@
 package com.peter.emulator.lang.symbols;
 
 import com.peter.emulator.lang.ELClass;
-import com.peter.emulator.lang.ELSymbol;
 import com.peter.emulator.lang.ELType;
 
 public class ELTypeSymbol extends ELSymbol {
@@ -10,7 +9,7 @@ public class ELTypeSymbol extends ELSymbol {
     public final boolean operator;
 
     public ELTypeSymbol(ELType type) {
-        super(Type.CLASS_NAME, type.span());
+        super(SymbolType.CLASS_NAME, type.span());
         elType = type;
         operator = false;
         ELClass clazz = type.getELClass();
@@ -19,7 +18,7 @@ public class ELTypeSymbol extends ELSymbol {
     }
 
     public ELTypeSymbol(ELType type, boolean operator) {
-        super(operator ? Type.OPERATOR : Type.CLASS_NAME, type.baseRef().nameSpan);
+        super(operator ? SymbolType.OPERATOR : SymbolType.CLASS_NAME, type.baseRef().nameSpan);
         elType = type;
         this.operator = operator;
         if (!operator) {

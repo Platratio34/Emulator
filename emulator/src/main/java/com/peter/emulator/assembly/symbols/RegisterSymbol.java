@@ -1,7 +1,8 @@
 package com.peter.emulator.assembly.symbols;
 
-import com.peter.emulator.lang.ELSymbol;
 import com.peter.emulator.lang.Span;
+import com.peter.emulator.lang.symbols.ELSymbol;
+import com.peter.emulator.lang.symbols.SymbolType;
 import com.peter.emulator.machinecode.Reg;
 
 public class RegisterSymbol extends ELSymbol {
@@ -9,7 +10,7 @@ public class RegisterSymbol extends ELSymbol {
     public final Reg reg;
 
     public RegisterSymbol(Span span, Reg reg) {
-        super(Type.PARAMETER, span);
+        super(SymbolType.PARAMETER, span);
         this.reg = reg;
     }
 

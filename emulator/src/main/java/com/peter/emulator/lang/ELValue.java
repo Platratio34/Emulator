@@ -10,6 +10,7 @@ import com.peter.emulator.lang.tokens.StringToken;
 import com.peter.emulator.lang.tokens.Token;
 import com.peter.emulator.lang.base.ELPrimitives;
 import com.peter.emulator.lang.symbols.ELStringSymbol;
+import com.peter.emulator.lang.symbols.SymbolType;
 
 public abstract class ELValue {
     public final ELType type;
@@ -79,7 +80,7 @@ public abstract class ELValue {
 
         @Override
         public void resolve(ErrorSet errors, ProgramUnit unit) {
-            unit.addSymbol(ELSymbol.Type.NUMERIC_LITERAL, span);
+            unit.addSymbol(SymbolType.NUMERIC_LITERAL, span);
         }
     }
 

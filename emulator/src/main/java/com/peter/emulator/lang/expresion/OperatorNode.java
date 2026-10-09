@@ -4,6 +4,7 @@ import com.peter.emulator.lang.*;
 import com.peter.emulator.lang.actions.ActionScope;
 import com.peter.emulator.lang.actions.Register;
 import com.peter.emulator.lang.base.ELPrimitives;
+import com.peter.emulator.lang.symbols.SymbolType;
 import com.peter.emulator.lang.tokens.OperatorToken;
 import com.peter.emulator.machinecode.MathInstruction;
 
@@ -21,7 +22,7 @@ public class OperatorNode extends ExpressionNode {
         this.type = type;
         this.token = token;
         if(scope.unit != null)
-            scope.unit.addSymbol(ELSymbol.Type.OPERATOR, token.span());
+            scope.unit.addSymbol(SymbolType.OPERATOR, token.span());
         after = false;
     }
     public OperatorNode(ActionScope scope, OperatorType type, boolean single, OperatorToken token) {
@@ -30,7 +31,7 @@ public class OperatorNode extends ExpressionNode {
         this.single = single;
         this.token = token;
         if(scope.unit != null)
-            scope.unit.addSymbol(ELSymbol.Type.OPERATOR, token.span());
+            scope.unit.addSymbol(SymbolType.OPERATOR, token.span());
         after = type == OperatorType.INC || type == OperatorType.DEC;
     }
     public OperatorNode single(OperatorType type) {

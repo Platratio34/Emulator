@@ -2,11 +2,11 @@ package com.peter.emulator.lang.actions;
 
 import java.util.ArrayList;
 
-import com.peter.emulator.lang.ELSymbol.Type;
 import com.peter.emulator.lang.*;
 import com.peter.emulator.lang.base.ELPrimitives;
 import com.peter.emulator.lang.expresion.Expression;
 import com.peter.emulator.lang.symbols.ELVarSymbol;
+import com.peter.emulator.lang.symbols.SymbolType;
 import com.peter.emulator.lang.tokens.BlockToken;
 import com.peter.emulator.lang.tokens.IdentifierToken;
 import com.peter.emulator.lang.tokens.OperatorToken;
@@ -27,12 +27,12 @@ public class LineAction extends ComplexAction {
         if (tokens.getFirst() instanceof IdentifierToken it) {
             switch (it.value) {
                 case "new" -> {
-                    scope.unit.addSymbol(ELSymbol.Type.KEYWORD, it.spanFirst());
+                    scope.unit.addSymbol(SymbolType.KEYWORD, it.spanFirst());
                     scope.unit.errors.error("New not allowed outside of expression", it);
                     return;
                 }
                 case "delete" -> {
-                    scope.unit.addSymbol(ELSymbol.Type.KEYWORD, it.spanFirst());
+                    scope.unit.addSymbol(SymbolType.KEYWORD, it.spanFirst());
                     if (tokens.size() == 1) {
                         scope.unit.errors.errorF(it, "Delete requires target");
                         return;
@@ -64,7 +64,7 @@ public class LineAction extends ComplexAction {
                     return;
                 }
                 case "return" -> {
-                    scope.unit.addSymbol(ELSymbol.Type.KEYWORD, it.spanFirst());
+                    scope.unit.addSymbol(SymbolType.KEYWORD, it.spanFirst());
                     ELType ret = scope.getRetType();
                     if (tokens.size() == 1) {
                         if (ret != null) {
@@ -111,7 +111,7 @@ public class LineAction extends ComplexAction {
                     return;
                 }
                 case "continue" -> {
-                    scope.unit.addSymbol(ELSymbol.Type.KEYWORD, it.spanFirst());
+                    scope.unit.addSymbol(SymbolType.KEYWORD, it.spanFirst());
                     if (tokens.size() > 1) {
                         scope.unit.errors.errorF(tokens.get(1).startLocation.span(tokens.getLast().endLocation),
                                 "Expected end of line after `continue`");
@@ -126,7 +126,7 @@ public class LineAction extends ComplexAction {
                     return;
                 }
                 case "break" -> {
-                    scope.unit.addSymbol(ELSymbol.Type.KEYWORD, it.spanFirst());
+                    scope.unit.addSymbol(SymbolType.KEYWORD, it.spanFirst());
                     if (tokens.size() > 1) {
                         scope.unit.errors.errorF(tokens.get(1).startLocation.span(tokens.getLast().endLocation),
                                 "Expected end of line after `break`");
@@ -188,7 +188,7 @@ public class LineAction extends ComplexAction {
                     scope.unit.errors.errorF(token, "Expected `=` or end of line");
                     return;
                 }
-                scope.addSymbol(Type.OPERATOR, token.span());
+                scope.addSymbol(SymbolType.OPERATOR, token.span());
                 if (i2 >= tokens.size()) {
                     scope.unit.errors.errorF(token, "Empty assignment expression");
                     return;
