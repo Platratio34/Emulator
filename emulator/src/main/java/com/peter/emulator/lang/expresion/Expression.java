@@ -162,7 +162,7 @@ public class Expression extends Action {
             }
         }
         if(!validate(scope.unit.errors)) {
-            throw ELAnalysisError.error("Invalid expression", span());
+            // throw ELAnalysisError.error("Invalid expression");
         }
     }
 

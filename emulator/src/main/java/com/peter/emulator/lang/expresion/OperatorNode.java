@@ -1,11 +1,6 @@
 package com.peter.emulator.lang.expresion;
 
-import com.peter.emulator.MachineCode;
-import com.peter.emulator.lang.ELSymbol;
-import com.peter.emulator.lang.ELType;
-import com.peter.emulator.lang.ErrorSet;
-import com.peter.emulator.lang.PseudoVariable;
-import com.peter.emulator.lang.Span;
+import com.peter.emulator.lang.*;
 import com.peter.emulator.lang.actions.ActionScope;
 import com.peter.emulator.lang.actions.Register;
 import com.peter.emulator.lang.base.ELPrimitives;
@@ -290,7 +285,7 @@ public class OperatorNode extends ExpressionNode {
     @Override
     public ELType getType() {
         return switch (type) {
-            case AND, OR, LEQ, GEQ, LT, GT, NEQ -> ELPrimitives.BOOL;
+            case AND, OR, EQUALS, LEQ, GEQ, LT, GT, NEQ -> ELPrimitives.BOOL;
             case ADDRESS -> child1.getType().addressOf();
             case DEREF -> child1.getType().resolve(span());
             default -> child1.getType();

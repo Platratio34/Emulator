@@ -38,6 +38,12 @@ namespace Kernal {
         }
     }
 
+    @/
+        Write a string to the termanial.
+
+        @param str The character buffer to write.
+        @param len The number of characters to write
+    /@
     public static void printStr(char* str, int32 len) {
         asm{
             #alias r14 len
