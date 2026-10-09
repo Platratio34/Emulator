@@ -3,12 +3,12 @@ package com.peter.emulator.lang;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import com.peter.emulator.lang.ELSymbol.ELVarSymbol;
 import com.peter.emulator.lang.annotations.ELAnnotation;
 import com.peter.emulator.lang.annotations.ELEntrypointAnnotation;
 import com.peter.emulator.lang.doc.DocComment;
 import com.peter.emulator.lang.symbols.ELFuncDefSymbol;
 import com.peter.emulator.lang.symbols.ELNamespaceSymbol;
+import com.peter.emulator.lang.symbols.ELVarSymbol;
 import com.peter.emulator.lang.tokens.OperatorToken.Type;
 import com.peter.emulator.lang.tokens.*;
 

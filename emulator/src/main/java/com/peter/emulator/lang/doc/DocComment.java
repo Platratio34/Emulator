@@ -85,6 +85,7 @@ public class DocComment {
                             desc += "\n";
                         }
                     }
+                    continue;
                 }
                 case '\n' -> {
                     while (i + 1 < temp.length()) {

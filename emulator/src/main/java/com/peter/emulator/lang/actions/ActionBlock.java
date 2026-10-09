@@ -4,7 +4,6 @@ import java.util.ArrayList;
 
 import com.peter.emulator.assembly.ASMParser;
 import com.peter.emulator.assembly.AsmError;
-import com.peter.emulator.lang.ELSymbol.ELVarSymbol;
 import com.peter.emulator.lang.ELValue.ELStringValue;
 import com.peter.emulator.lang.*;
 import com.peter.emulator.lang.annotations.ELBreakpointAnnotation;
@@ -12,6 +11,7 @@ import com.peter.emulator.lang.base.ELPrimitives;
 import com.peter.emulator.lang.expresion.Expression;
 import com.peter.emulator.lang.symbols.ELAnnotationSymbol;
 import com.peter.emulator.lang.symbols.ELStringSymbol;
+import com.peter.emulator.lang.symbols.ELVarSymbol;
 import com.peter.emulator.lang.tokens.*;
 
 public class ActionBlock extends ComplexAction {
@@ -80,6 +80,18 @@ public class ActionBlock extends ComplexAction {
                 if (tkn instanceof ASMToken asmT) {
                     wI++;
                     ASMParser asmParser = new ASMParser(scope.unit.module.languageServer.fileProvider, asmT.raw, asmT.startLocation.add(4), true);
+                    ELFunction func = scope.getFunction();
+                    if(func != null && func.inline != InlineType.OUTLINE) {
+                        for(String pName : func.paramOrder) {
+                            asmParser.addLintAlias(pName);
+                        }
+                        if(func.type != ELFunction.FunctionType.STATIC) {
+                            asmParser.addLintAlias("this");
+                        }
+                        if(func.ret != null) {
+                            asmParser.addLintAlias("ret");
+                        }
+                    }
                     boolean asmError = asmParser.parse();
                     scope.addSymbol(ELSymbol.Type.KEYWORD, asmT.startLocation.span(2));
                     scope.unit.symbols.addAll(asmParser.getSymbols());
@@ -122,15 +134,6 @@ public class ActionBlock extends ComplexAction {
                     // asmT.addSymbols(scope.unit);
                     continue;
                 }
-                // boolean dma = false;
-                // if (tkn instanceof OperatorToken ot && ot.type == OperatorToken.Type.POINTER) {
-                //     dma = true;
-                //     wI++;
-                //     if (wI >= tokens.size()) {
-                //         throw ELAnalysisError.error("Unexpected '*'", tkn);
-                //     }
-                //     tkn = tokens.get(wI);
-                // }
                 if (tkn instanceof IdentifierToken it) {
                     Identifier id = it.asId();
                     if (it.hasParamsSub()) {
@@ -364,422 +367,8 @@ public class ActionBlock extends ComplexAction {
                                 }
                                 continue;
                             }
-                            /*default -> { // function call
-                                actions.add(new FunctionAction(scope, null, it));
-                                wI += 1;
-                                if (wI < tokens.size()) {
-                                    if (!(tokens.get(wI) instanceof OperatorToken ot && ot.type == OperatorToken.Type.SEMICOLON)) {
-                                        throw ELAnalysisError
-                                                .error("Unexpected token after function call, expected ';'", tkn.endLocation.span());
-                                    }
-                                    scope.addSymbol(ELSymbol.Type.SEMICOLON, tokens.get(wI).span());
-                                    wI++;
-                                } else {
-                                    throw ELAnalysisError.error("Unexpected end of block after function call", tkn.endLocation.span());
-                                }
-                                continue;
-                            }*/
                         }
                     }
-                    /*
-                    switch (id.fullName) {
-                        case "new" -> {
-                            scope.unit.addSymbol(ELSymbol.Type.KEYWORD, it.spanFirst());
-                            wI++;
-                            errors.error("new not allowed outside of epxresion", tkn);
-                            tkn = tokens.get(wI);
-                            while(!(tkn instanceof OperatorToken ot && ot.type == OperatorToken.Type.SEMICOLON)) {
-                                tkn = tokens.get(wI++);
-                            }
-                            scope.addSymbol(ELSymbol.Type.SEMICOLON, tkn.span());
-                            continue;
-                        }
-                        case "delete" -> {
-                            scope.unit.addSymbol(ELSymbol.Type.KEYWORD, it.spanFirst());
-                            wI++;
-                            tkn = tokens.get(wI);
-                            while(!(tkn instanceof OperatorToken ot && ot.type == OperatorToken.Type.SEMICOLON)) {
-                                tkn = tokens.get(wI++);
-                            }
-                            scope.addSymbol(ELSymbol.Type.SEMICOLON, tkn.span());
-                            continue;
-                        }
-                        case "return" -> {
-                            scope.unit.addSymbol(ELSymbol.Type.KEYWORD, it.spanFirst());
-                            wI++;
-                            tkn = tokens.get(wI);
-                            ArrayList<Token> exp = new ArrayList<>();
-                            while (!(tkn instanceof OperatorToken ot && ot.type == OperatorToken.Type.SEMICOLON)) {
-                                if (wI == tokens.size())
-                                    throw ELAnalysisError.error("Expected semicolon",
-                                            tokens.get(wI - 1).endLocation.span());
-                                exp.add(tkn);
-                                wI++;
-                                if (wI == tokens.size())
-                                    throw ELAnalysisError.error("Unexpected end of block in expression", tkn);
-                                tkn = tokens.get(wI);
-                            }
-                            scope.addSymbol(ELSymbol.Type.SEMICOLON, tkn.span());
-                            wI++;
-                            ELFunction func = scope.getFunction();
-                            ELType funcRet = func.ret;
-                            if (funcRet == null) {
-                                if(!exp.isEmpty())
-                                    throw ELAnalysisError.error("Function returns void",
-                                            exp.getFirst().startLocation.span(exp.getLast().endLocation));
-                                actions.add(new DirectAction("GOTO :func_exit_"+func.getQualifiedName(true)));
-                                continue;
-                            }
-                            Register r = newRegister();
-                            addReserve(r);
-                            Expression eA = new Expression(scope, exp, r);
-                            if (!eA.getType().canCastTo(funcRet)) {
-                                throw ELAnalysisError.error(String.format("Invalid return type. Can not cast %s to %s", eA.getType().typeString(), funcRet.typeString()), it);
-                            }
-                            eA.validate(errors);
-                            actions.add(eA);
-                            Register r2 = newRegister();
-                            addReserve(r2);
-                            String sizeStr = switch(scope.getRetType().sizeof()) {
-                                case 1 -> " BYTE";
-                                case 2 -> " SHORT";
-                                default -> "";
-                            };
-                            int retOffset = scope.getReturnOffset();
-                            if (retOffset >= -255) {
-                                addDirect("SUB %s r15 %d", r2, -retOffset);
-                            } else {
-                                addDirect("COPY r15 %s\nINC %s %d", r2, r2, retOffset);
-                            }
-                            actions.add(new DirectAction("STORE%s %s %s", sizeStr, r, r2));
-                            actions.add(new DirectAction("GOTO :func_exit_" + func.getQualifiedName(true)));
-                            addRelease(r);
-                            addRelease(r2);
-                            continue;
-                        }
-                        case "continue" -> {
-                            scope.unit.addSymbol(ELSymbol.Type.KEYWORD, it.spanFirst());
-                            wI++;
-                            tkn = tokens.get(wI);
-                            if(!(tkn instanceof OperatorToken ot && ot.type == OperatorToken.Type.SEMICOLON))
-                                throw ELAnalysisError.error("Expected semicolon", tkn);
-                            scope.addSymbol(ELSymbol.Type.SEMICOLON, tkn.span());
-                            continue;
-                        }
-                        case "break" -> {
-                            scope.unit.addSymbol(ELSymbol.Type.KEYWORD, it.spanFirst());
-                            wI++;
-                            tkn = tokens.get(wI);
-                            if(!(tkn instanceof OperatorToken ot && ot.type == OperatorToken.Type.SEMICOLON))
-                                throw ELAnalysisError.error("Expected semicolon", tkn);
-                            scope.addSymbol(ELSymbol.Type.SEMICOLON, tkn.span());
-                            continue;
-                        }
-                    }
-
-                    if (scope.hasType(it)) {
-                        ELType.Builder b = new ELType.Builder();
-                        tkn = tokens.get(wI++);
-                        while (b.ingest(tkn)) {
-                            if (tokens.size() == wI) {
-                                throw ELAnalysisError.error("Unexpected end of block", tkn);
-                            }
-                            tkn = tokens.get(wI++);
-                        }
-                        ELType type = b.build();
-                        String name;
-                        if (tkn instanceof IdentifierToken it2) {
-                            name = it2.value;
-                        } else {
-                            throw ELAnalysisError
-                                    .error("Expected variable name identifier (found " + tkn.debugString() + ")", tkn);
-                        }
-                        ELVariable var = scope.addStackVar(name, type, tokens.get(wI - 1).endLocation, errors);
-                        var.analyze(errors, scope.namespace);
-                        scope.unit.symbols.add(new ELVarSymbol(var, tkn.span()));
-
-                        tkn = tokens.get(wI);
-                        if (tkn instanceof OperatorToken ot) {
-                            switch (ot.type) {
-                                case SEMICOLON -> {
-                                    scope.addSymbol(ELSymbol.Type.SEMICOLON, tkn.span());
-                                    wI++;
-                                    actions.add(new StackAllocAction(scope, var, null));
-                                }
-                                case ASSIGN -> {
-                                    wI++;
-                                    tkn = tokens.get(wI++);
-                                    if (tkn instanceof BlockToken bt) {
-                                        if(!type.isArray())
-                                            throw ELAnalysisError.error("Block only allowed for array declaration", bt);
-                                        if(!(tokens.get(wI) instanceof OperatorToken ot2 && ot2.type == OperatorToken.Type.SEMICOLON)) {
-                                            throw ELAnalysisError.error("Expected `;` after array declaration", tkn);
-                                        }
-                                        scope.addSymbol(ELSymbol.Type.SEMICOLON, tokens.get(wI).span());
-                                        ArrayList<Token> expTkns = new ArrayList<>();
-                                        int n = 0;
-                                        for (int i = 0; i < bt.subSize(); i++) {
-                                            Token t = bt.subTokens.get(i);
-                                            if (t instanceof OperatorToken ot3
-                                                    && ot3.type == OperatorToken.Type.COMMA) {
-                                                if (expTkns.isEmpty())
-                                                    throw ELAnalysisError.error("Empty expression", t);
-                                                Register r = newRegister();
-                                                addReserve(r);
-                                                actions.add(new Expression(scope, expTkns, r));
-                                                actions.add(new DirectAction("STACK PUSH %s", r));
-                                                addRelease(r);
-                                                expTkns = new ArrayList<>();
-                                                n++;
-                                            } else {
-                                                expTkns.add(t);
-                                            }
-                                        }
-                                        if(expTkns.isEmpty())
-                                            throw ELAnalysisError.error("Empty expression", bt);
-                                        Register r = newRegister();
-                                        addReserve(r);
-                                        actions.add(new Expression(scope, expTkns, r));
-                                        // addDirect(String.format("#stackVar %s %s", type.typeString(), var.name));
-                                        actions.add(new DirectAction("STACK PUSH %s", r));
-                                        addDirect(String.format("#stackVar %s %s %d", type.typeString(), var.name, -var.sizeof()));
-                                        addRelease(r);
-                                        n++;
-                                        if (n != type.arraySize()) {
-                                            throw ELAnalysisError.error("Array size mismatch; (Declared as "+type.arraySize()+" elements, but "+n+" initialized)", bt);
-                                        }
-                                    } else {
-                                        ArrayList<Token> exp = new ArrayList<>();
-                                        while (!(tkn instanceof OperatorToken ot2
-                                                && ot2.type == OperatorToken.Type.SEMICOLON)) {
-                                            exp.add(tkn);
-                                            if (wI == tokens.size())
-                                                throw ELAnalysisError.error("Unexpected end of block in expression. Expected `;`",
-                                                        tkn);
-                                            tkn = tokens.get(wI++);
-                                        }
-                                        scope.addSymbol(ELSymbol.Type.SEMICOLON, tkn.span());
-                                        if (exp.isEmpty())
-                                            throw ELAnalysisError.error("Empty expression", tkn);
-                                        Register r = newRegister();
-                                        addReserve(r);
-                                        actions.add(new Expression(scope, exp, r));
-                                        actions.add(new StackAllocAction(scope, var, r));
-                                        addRelease(r);
-                                    }
-                                }
-                                default ->
-                                    throw ELAnalysisError.error("Expected `;` or `=` (found `" + ot.type + "`)", tkn);
-                            }
-                        } else {
-                            throw ELAnalysisError.error("Expected `;` or `=` (found " + tkn + ")", tkn);
-                        }
-                        continue;
-                    }
-                    
-                    
-
-                    IdentifierToken targetVal = it;
-                    wI++;
-                    tkn = tokens.get(wI);
-
-                    if (tkn instanceof OperatorToken ot && (ot.type == OperatorToken.Type.ASSIGN || ot.type == OperatorToken.Type.ADD_ASSIGN || ot.type == OperatorToken.Type.SUB_ASSIGN || ot.type == OperatorToken.Type.BITWISE_OR_ASSIGN
-                            || ot.type == OperatorToken.Type.INC || ot.type == OperatorToken.Type.DEC)) {
-                        scope.addSymbol(ELSymbol.Type.OPERATOR, ot.span());
-                        Span actionSpan = tkn.span();
-                        Register rT = null;
-                        final Register r = newRegister();
-                        addReserve(r);
-                        boolean regTarget = false;
-                        ELType t;
-                        Action assignAction = null;
-                        boolean opAssign = ot.type == OperatorToken.Type.ADD_ASSIGN
-                                || ot.type == OperatorToken.Type.SUB_ASSIGN
-                                || ot.type == OperatorToken.Type.BITWISE_OR_ASSIGN
-                                || ot.type == OperatorToken.Type.INC || ot.type == OperatorToken.Type.DEC;
-
-                        String size;
-                        if (targetVal.value.equals("SysD")) { // if lh is SysD
-                            if (dma)
-                                throw ELAnalysisError.error("DMA is not allowed with SysD pseudo-variables", tkn);
-                            scope.addSymbol(new ELSymbol(ELSymbol.Type.NAMESPACE_NAME, it.spanFirst(),
-                                    "### `SysD`\nSystem Direct Low-level module"));
-                            if (!targetVal.hasSub() || targetVal.subTokens.size() != 1)
-                                throw ELAnalysisError.error("Unable to resolve variable `" + it.debugString() + "`",
-                                        it);
-                            String vN = targetVal.sub(0).value;
-                            if (vN.startsWith("r")) {
-                                regTarget = true;
-                                r.fistFree();
-                                Reg reg = Reg.from(vN);
-                                switch (reg) {
-                                    case PRIVILEGE, PRIVILEGE_I -> {
-                                        assignAction = new DirectAction("COPY %s %s", vN, r);
-                                        t = ELPrimitives.BOOL;
-                                    }
-                                    case STACK, STACK_I, SYS_TABLE, MEM_TABLE, MEM_TABLE_I -> {
-                                        assignAction = new DirectAction("COPY %s %s", vN, r);
-                                        t = ELPrimitives.VOID_PTR;
-                                    }
-                                    case CPU_ID -> {
-                                        throw ELAnalysisError.error("Register `rID` is read-only", targetVal.span());
-                                    }
-                                    default -> {
-                                        assignAction = new DirectAction("COPY %s %s", vN, r);
-                                        t = ELPrimitives.INT32;
-                                    }
-                                }
-                                rT = Register.of(scope, vN);
-                                scope.addSymbol(new ELSymbol(ELSymbol.Type.VARIABLE_NAME, it.sub(0).span(),
-                                        "### `%s %s`\nCPU register `%s`\n\n" + reg.description, t.typeString(), vN,
-                                        vN));
-                            } else {
-                                throw ELAnalysisError.error("Unknown SysD variable `" + vN + "`", it);
-                            }
-                            size = "";
-                        } else {
-                            rT = newRegister();
-                            addReserve(rT);
-                            ResolveAction rA = scope.loadVar(targetVal, rT, dma);
-                            if (rA == null) // block stack var
-                                throw ELAnalysisError.error(
-                                        "Unable to resolve variable `" + targetVal.debugString() + "`", it.span());
-                            t = rA.returnType;
-                            if (dma) {
-                                if (!(t.isPointer() || t.isAddress()))
-                                    throw ELAnalysisError.error("DMA only allowed with pointers");
-                                t = t.resolve(it.span());
-                            }
-                            if (rA.returnVar != null && (!dma && (rA.returnVar.finalVal || t.isConstant())))
-                                throw ELAnalysisError.error(
-                                        "Cannot assign to " + (rA.returnVar.finalVal ? "final variable" : "constant"),
-                                        it.startLocation.span(actionSpan.end()));
-                            size = switch (t.sizeof()) {
-                                case 1 -> " BYTE";
-                                case 2 -> " SHORT";
-                                default -> "";
-                            };
-                            actions.add(rA);
-                            if (!opAssign)
-                                addRelease(r);
-                            // if (!r.fistFree())
-                            //     throw ELAnalysisError.error("No free register", targetVal);
-                            assignAction = new DirectAction("STORE%s %s %s", size, r, rT);
-                        }
-
-                        if (ot.type == OperatorToken.Type.INC) {
-                            int incSize = t.isPointer() ? t.stepSize() : 1;
-                            if (!(t.isPointer() || t.equals(ELPrimitives.INT32)))
-                                throw ELAnalysisError.error("Unable to increment type " + t.typeString(), it.span());
-                            if (regTarget) {
-                                if (rT.reg < 0x10) {
-                                    actions.add(new DirectAction("INC %s %d", rT, incSize));
-                                } else {
-                                    actions.add(new DirectAction("COPY %s %s", rT, r));
-                                    actions.add(new DirectAction("INC %s %d", r, incSize));
-                                    actions.add(new DirectAction("COPY %s %s", r, rT));
-                                }
-                            } else {
-                                actions.add(new DirectAction("LOAD MEM%s %s %s", size, r, rT));
-                                actions.add(new DirectAction("INC %s %d", r, incSize));
-                                actions.add(new DirectAction("STORE%s %s %s", size, r, rT));
-                            }
-                            addRelease(rT);
-                            addRelease(r);
-                            wI++;
-                            if (!(tokens.get(wI) instanceof OperatorToken ot2 && ot2.type == Type.SEMICOLON)) {
-                                throw ELAnalysisError.error("Expected `;` after incrementor", ot.endLocation.span());
-                            }
-                            scope.addSymbol(ELSymbol.Type.SEMICOLON, tokens.get(wI).span());
-                            wI++;
-                            continue;
-                        } else if (ot.type == OperatorToken.Type.DEC) {
-                            int incSize = t.isPointer() ? t.stepSize() : 1;
-                            if (!(t.isPointer() || t.equals(ELPrimitives.INT32)))
-                                throw ELAnalysisError.error("Unable to decrement type " + t.typeString(), it.span());
-                            if (regTarget) {
-                                if (rT.reg < 0x10) {
-                                    actions.add(new DirectAction("INC %s -%d", rT, incSize));
-                                } else {
-                                    Register r2 = newRegister();
-                                    addFind(r2);
-                                    actions.add(new DirectAction("COPY %s %s", rT, r2));
-                                    actions.add(new DirectAction("INC %s -%d", r2, incSize));
-                                    actions.add(new DirectAction("COPY %s %s", r2, rT));
-
-                                }
-                            } else {
-                                Register r2 = newRegister();
-                                addFind(r2);
-                                actions.add(new DirectAction("LOAD MEM%s %s %s", size, r2, rT));
-                                actions.add(new DirectAction("INC %s -%d", r2, incSize));
-                                actions.add(new DirectAction("STORE%s %s %s", size, r2, rT));
-                            }
-                            addRelease(rT);
-                            addRelease(r);
-                            wI++;
-                            if (!(tokens.get(wI) instanceof OperatorToken ot2 && ot2.type == Type.SEMICOLON)) {
-                                throw ELAnalysisError.error("Expected `;` after decrementor", ot.endLocation.span());
-                            }
-                            scope.addSymbol(ELSymbol.Type.SEMICOLON, tokens.get(wI).span());
-                            wI++;
-                            continue;
-                        }
-
-                        if (t.isAddress()) {
-                            actions.add(new DirectAction("LOAD MEM %s %s", rT, rT)); // resolve the address
-                            t = t.resolve(targetVal.span());
-                        }
-
-                        ArrayList<Token> exp = new ArrayList<>();
-                        wI++;
-                        tkn = tokens.get(wI++);
-                        while (!(tkn instanceof OperatorToken ot2 && ot2.type == OperatorToken.Type.SEMICOLON)) {
-                            exp.add(tkn);
-                            if (wI == tokens.size())
-                                throw ELAnalysisError.error("Unexpected end of block. Expected `;` " + tkn, tkn);
-                            tkn = tokens.get(wI++);
-                        }
-                        scope.addSymbol(ELSymbol.Type.SEMICOLON, tkn.span());
-                        wI--;
-                        if (exp.isEmpty())
-                            throw ELAnalysisError.error("Empty expression", tkn);
-
-                        // addReserve(r);
-                        Expression expA = new Expression(scope, exp, r);
-                        actions.add(expA);
-
-                        ELType expType = expA.getType();
-                        if (expType != null && !expType.canCastTo(t)) {
-                            addRelease(r);
-                            addRelease(rT);
-                            throw ELAnalysisError.error("Invalid assign, can not cast " + expType.typeString()
-                                    + " to " + t.typeString(), it.startLocation.span(actionSpan.end()));
-                        }
-
-                        if (ot.type == OperatorToken.Type.ADD_ASSIGN) {
-                            Register r2 = newRegister();
-                            addFind(r2);
-                            actions.add(new DirectAction("LOAD MEM%s %s %s", size, r2, rT));
-                            actions.add(new DirectAction("ADD %s %s %s", r, r2, r));
-                        } else if (ot.type == OperatorToken.Type.SUB_ASSIGN) {
-                            Register r2 = newRegister();
-                            addFind(r2);
-                            actions.add(new DirectAction("LOAD MEM%s %s %s", size, r2, rT));
-                            actions.add(new DirectAction("SUB %s %s %s", r, r2, r));
-                        } else if (ot.type == OperatorToken.Type.BITWISE_OR_ASSIGN) {
-                            Register r2 = newRegister();
-                            addFind(r2);
-                            actions.add(new DirectAction("LOAD MEM%s %s %s", size, r2, rT));
-                            actions.add(new DirectAction("OR %s %s %s", r, r2, r));
-                        }
-                        actions.add(assignAction);
-                        // actions.add(new DirectAction("STORE %s %s", r, rT));
-                        addRelease(rT);
-                        addRelease(r);
-
-                    }
-                    */
                 } else if (tkn instanceof AnnotationToken at) {
                     if (at.name.equals("Breakpoint")) {
                         ELBreakpointAnnotation bpa = new ELBreakpointAnnotation(at);

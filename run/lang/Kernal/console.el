@@ -6,25 +6,33 @@ namespace Kernal {
     public static const char* CONSOLE_IN = 0x1_0301;
     public static const uint8* CONSOLE_IN_COUNT = 0x1_0302;
 
-    public static void printChar(char c) {
+    @/
+        Print a character to the terminal
+    
+        @param c The character to print
+    /@
+    public static inline void printChar(char c) {
         asm{
-            SUB r2 r15 12
-            LOAD MEM BYTE r2 r2 // c
-
-            STORE BYTE r2 Kernal.CONSOLE_OUT
+            STORE BYTE c Kernal.CONSOLE_OUT
         }
     }
     
+    @/
+        Print a null-terminated string to the terminal
+
+        @param str Null-terminated character buffer
+    /@
     public static void printStr(char* str) {
         asm{
-            SUB r1 r15 12
-            LOAD MEM r1 r1 // str
+            #alias r1 str
+            SUB str r15 12
+            LOAD MEM str str // str
+            #alias r2 c
             :printStr_l1
-                LOAD MEM BYTE r2 r1
-                GOTO EQ r2 :printStr_l1_exit
+                LOAD MEM BYTE c str INC_RA
+                GOTO EQ c :printStr_l1_exit
 
-                STORE BYTE r2 Kernal.CONSOLE_OUT
-                INC r1 1
+                STORE BYTE c Kernal.CONSOLE_OUT
                 GOTO :printStr_l1
             :printStr_l1_exit
         }
@@ -32,18 +40,27 @@ namespace Kernal {
 
     public static void printStr(char* str, int32 len) {
         asm{
-            SUB r14 r15 12
-            LOAD MEM r14 r14 // len
-            LOAD r1 Kernal.CONSOLE_OUT // consolePntr
-            SUB r2 r15 16
-            LOAD MEM r2 r2 // str
+            #alias r14 len
+            SUB len r15 12
+            LOAD MEM len len
+            #alias r1 consolePntr
+            LOAD consolePntr Kernal.CONSOLE_OUT
+            #alias r2 str
+            SUB str r15 16
+            LOAD MEM str str
             :printStr_len
-                COPY MEM BYTE r2 r1 INC_RS
-                INC r14 -1
-                GOTO GT r14 :printStr_len
+                COPY MEM BYTE str consolePntr INC_RS
+                INC len -1
+                GOTO GT len :printStr_len
         }
     }
 
+    @/
+        Convets an int32 to hex string.
+
+        @param value The value to convert
+        @param str A character buffer of at least 8
+    /@
     public static void intToHex(int32 value, char* str) {
         asm{
             LOAD r14 7
@@ -69,6 +86,12 @@ namespace Kernal {
         }
     }
     
+    @/
+        Converts an int32 to decimal string
+        
+        @param value The value to convert
+        @param str A character buffer, recomended to be at least 16 characters
+    /@
     public static void intToDec(int32 value, char* str) {
         asm{
             SUB r1 r15 16
@@ -98,6 +121,13 @@ namespace Kernal {
         }
     }
 
+    @/
+        Read the next up to `bufferSize` from the terminal input.
+        If there are not enough characters to fill the buffer a `\0` will be placed after the last read character.
+        
+        @param buffer The character to read into
+        @param bufferSize the maximum number of characters that can be read into the buffer.
+    /@
     public static void read(char* buffer, int32 bufferSize) {
         asm{
             LOAD r1 Kernal.CONSOLE_IN_COUNT

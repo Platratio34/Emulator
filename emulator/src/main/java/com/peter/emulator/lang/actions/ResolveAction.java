@@ -1,9 +1,9 @@
 package com.peter.emulator.lang.actions;
 
-import com.peter.emulator.lang.ELSymbol.ELVarSymbol;
 import com.peter.emulator.lang.*;
 import com.peter.emulator.lang.base.ELPrimitives;
 import com.peter.emulator.lang.expresion.Expression;
+import com.peter.emulator.lang.symbols.ELVarSymbol;
 import com.peter.emulator.lang.tokens.IdentifierToken;
 
 public class ResolveAction extends ComplexAction {
@@ -207,7 +207,7 @@ public class ResolveAction extends ComplexAction {
                 if (clazz == null)
                     throw ELAnalysisError.fatal("Type was missing class (type was `" + t.typeString()+"`; "+t.toString()+")", it);
                 if (it.value.equals("length") && t.isArray()) {
-                    scope.addSymbol(ELSymbol.Type.VARIABLE_FINAL, it.span());
+                    scope.addSymbol(ELSymbol.Type.VARIABLE_FINAL, it.span(), "`int32 length`\n\nThe length of the array.");
                     constantValue = new ConstantValue(t.arraySize());
                     wasConst = true;
                     if (!byValue)

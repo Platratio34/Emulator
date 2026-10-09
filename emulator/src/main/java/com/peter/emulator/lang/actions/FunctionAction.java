@@ -2,18 +2,17 @@ package com.peter.emulator.lang.actions;
 
 import java.util.ArrayList;
 
-import com.peter.emulator.MachineCode;
 import com.peter.emulator.lang.ELFunction.FunctionType;
 import com.peter.emulator.lang.*;
 import com.peter.emulator.lang.base.ELPrimitives;
 import com.peter.emulator.lang.expresion.Expression;
 import com.peter.emulator.lang.symbols.ELFuncCallSymbol;
 import com.peter.emulator.lang.symbols.ELNamespaceSymbol;
+import com.peter.emulator.lang.symbols.ELVarSymbol;
 import com.peter.emulator.lang.tokens.IdentifierToken;
 import com.peter.emulator.lang.tokens.OperatorToken;
 import com.peter.emulator.lang.tokens.SetToken;
 import com.peter.emulator.lang.tokens.Token;
-import com.peter.emulator.machinecode.Reg;
 
 public class FunctionAction extends ComplexAction {
 
@@ -133,7 +132,7 @@ public class FunctionAction extends ComplexAction {
                 scope.addSymbol(new ELNamespaceSymbol(rr.namespace, itt.spanFirst()));
                 rr = rr.namespace.resolveIdentifier(it2.value);
             } else if (rr.variable != null) {
-                scope.addSymbol(new ELSymbol.ELVarSymbol(rr.variable, itt.spanFirst()));
+                scope.addSymbol(new ELVarSymbol(rr.variable, itt.spanFirst()));
                 ELClass clazz = rr.variable.type.getELClass();
                 if (clazz == null) {
                     throw ELAnalysisError.errorF(it2.spanFirst(), "Encountered variable without class (Type was `%s`)",
@@ -284,7 +283,7 @@ public class FunctionAction extends ComplexAction {
         }
         
         if (isMethodType) {
-            scope.unit.symbols.add(new ELSymbol.ELVarSymbol(rr.variable, it2.spanFirst()));
+            scope.unit.symbols.add(new ELVarSymbol(rr.variable, it2.spanFirst()));
         } else {
             scope.unit.symbols.add(new ELFuncCallSymbol(f, it2.spanFirst()));
         }

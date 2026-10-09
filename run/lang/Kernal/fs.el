@@ -92,6 +92,9 @@ namespace Kernal {
         @/ If the handle is open for write access /@
         public bool writeOpen;
 
+        @/ If the file handle represents the console /@
+        public bool isConsole;
+
         @/ The path to the file opened /@
         public char* path;
 
@@ -111,10 +114,52 @@ namespace Kernal {
             release();
         }
 
+        @/
+            Write a byte buffer to the file
 
+            @param buffer The buffer to write
+            @param len The number of bytes to write from the buffer
+        /@
+        public void write(uint8* buffer, int32 len) {
+            if(!writeOpen) {
+                return;
+            }
+            if(isConsole) {
+                Kernal.printStr(cast<char*>(buffer), len);
+                return;
+            }
+            // TODO something here?
+        }
+        @/
+            Write a buffer to the file.
+
+            **IF handle represents a console stream the write will be ignored**
+
+            @param buffer The buffer to write
+            @param len The number of words to write from the buffer
+        /@
+        public void write(void* buffer, int32 len) {
+            if(!writeOpen) {
+                return;
+            }
+            if(isConsole) {
+                return;
+            }
+            // TODO something here?
+        }
+
+
+        @/ Pool of file handles for allocation /@
         protected static FileHandle[128] pool;
+        @/ Pointer to the next un-aoocated file handle /@ 
         protected static FileHandle* nextFree = 0xffff_ffff;
 
+        @/
+            Get a new file handle.
+
+            @returns `nullptr` if there are no avalible file handles
+            @returns Otherwise returns a pointer to the allocated handle
+        /@
         public static FileHandle* new() {
             if(nextFree == 0xffff_ffff) {
                 nextFree = &pool;
@@ -131,6 +176,11 @@ namespace Kernal {
             return next;
         }
 
+        @/
+            Releases the file handle for re-allocation.
+
+            Use after calling this is equal to a use after free.
+        /@
         protected void release() {
             rawHandle = cast<int32>(nextFree);
             nextFree = &this;

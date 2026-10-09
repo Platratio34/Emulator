@@ -16,17 +16,18 @@ import com.peter.emulator.assembly.SymbolFile.VariableSymbol;
 import com.peter.emulator.assembly.keywords.*;
 import com.peter.emulator.assembly.symbols.AliasSymbol;
 import com.peter.emulator.assembly.symbols.DefinitionSymbol;
-import com.peter.emulator.lang.ELSymbol;
-import com.peter.emulator.lang.Location;
-import com.peter.emulator.lang.Span;
+import com.peter.emulator.assembly.symbols.RegisterSymbol;
 import com.peter.emulator.lang.ELAnalysisError.Severity;
+import com.peter.emulator.lang.ELSymbol;
 import com.peter.emulator.lang.ELSymbol.Type;
 import com.peter.emulator.lang.FileProvider;
+import com.peter.emulator.lang.Location;
+import com.peter.emulator.lang.Span;
 import com.peter.emulator.machinecode.ConditionalOperator;
+import com.peter.emulator.machinecode.Goto.Mode;
 import com.peter.emulator.machinecode.Instruction;
 import com.peter.emulator.machinecode.MathInstruction;
 import com.peter.emulator.machinecode.Reg;
-import com.peter.emulator.machinecode.Goto.Mode;
 
 public class ASMParser {
 
@@ -167,6 +168,12 @@ public class ASMParser {
         this.instructions = parent.instructions;
         
         parseLock.lock();
+    }
+
+    public void addLintAlias(String alias) {
+        if(!limitedLintOnly)
+            throw new IllegalStateException("Adding lint alias is only allowed in limited lint mode");
+        aliases.put(alias, new AliasSymbol(startLoc.span(), Reg.R0));
     }
     
     protected HashMap<String, ASMParser> includes = new HashMap<>();
@@ -669,7 +676,7 @@ public class ASMParser {
                             if (reg == Reg.UNKNOWN) {
                                 line.errorLast(AsmError.error("Unknown register"));
                             } else {
-                                line.symbolLast(Type.PARAMETER);
+                                symbols.add(new RegisterSymbol(line.lastSpan, reg));
                             }
                             String name = line.nextString(AsmError.error("Expected alias name"));
                             if (name == null)
@@ -950,7 +957,8 @@ public class ASMParser {
                 symbols.add(alias.use(lastSpan));
             } else {
                 reg = Reg.from(t);
-                symbolLast(Type.PARAMETER);
+                if(reg != Reg.UNKNOWN)
+                    symbols.add(new RegisterSymbol(lastSpan, reg));
             }
             if (reg == Reg.UNKNOWN) {
                 if (error != null)

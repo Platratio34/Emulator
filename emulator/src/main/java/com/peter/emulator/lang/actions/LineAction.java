@@ -2,21 +2,15 @@ package com.peter.emulator.lang.actions;
 
 import java.util.ArrayList;
 
-import com.peter.emulator.lang.ELClass;
-import com.peter.emulator.lang.ELSymbol;
-import com.peter.emulator.lang.ELSymbol.ELVarSymbol;
 import com.peter.emulator.lang.ELSymbol.Type;
+import com.peter.emulator.lang.*;
 import com.peter.emulator.lang.base.ELPrimitives;
-import com.peter.emulator.lang.ELType;
-import com.peter.emulator.lang.ELVariable;
-import com.peter.emulator.lang.PseudoVariable;
-import com.peter.emulator.lang.Span;
 import com.peter.emulator.lang.expresion.Expression;
+import com.peter.emulator.lang.symbols.ELVarSymbol;
 import com.peter.emulator.lang.tokens.BlockToken;
 import com.peter.emulator.lang.tokens.IdentifierToken;
 import com.peter.emulator.lang.tokens.OperatorToken;
 import com.peter.emulator.lang.tokens.Token;
-import com.peter.emulator.machinecode.MathInstruction;
 import com.peter.emulator.machinecode.MathInstruction;
 
 public class LineAction extends ComplexAction {
@@ -172,7 +166,7 @@ public class LineAction extends ComplexAction {
                 if (usePseudo && type.sizeof() <= 4 && !type.isArray()) {
                     Register reg = newRegister();
                     addReserve(reg);
-                    var = new PseudoVariable(type, name, scope.namespace, scope.unit,
+                    var = new PseudoVariable(ELVariable.Type.SCOPE, type, name, false, scope.namespace, scope.unit,
                             token.startLocation, reg);
                     scope.addVariable(var, scope.unit.errors);
                     scope.unit.symbols.add(new ELVarSymbol(var, token.span()));

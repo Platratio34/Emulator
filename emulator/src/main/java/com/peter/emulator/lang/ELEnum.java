@@ -6,6 +6,7 @@ import com.peter.emulator.lang.ELValue.ELNumberValue;
 import com.peter.emulator.lang.actions.ActionScope;
 import com.peter.emulator.lang.base.ELPrimitives;
 import com.peter.emulator.lang.expresion.Expression;
+import com.peter.emulator.lang.symbols.ELVarSymbol;
 import com.peter.emulator.lang.tokens.BlockToken;
 import com.peter.emulator.lang.tokens.IdentifierToken;
 import com.peter.emulator.lang.tokens.OperatorToken;
@@ -120,7 +121,7 @@ public class ELEnum extends ELClass {
             if (token instanceof IdentifierToken it) {
                 try {
                     add(it);
-                    unit.addSymbol(new ELSymbol.ELVarSymbol(staticVariables.get(it.value), it.nameSpan()));
+                    unit.addSymbol(new ELVarSymbol(staticVariables.get(it.value), it.nameSpan()));
                 } catch (ELAnalysisError err) {
                     unit.errors.add(err);
                 }

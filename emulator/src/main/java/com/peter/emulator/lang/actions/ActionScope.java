@@ -43,6 +43,10 @@ public class ActionScope {
                     unit.errors.warning("Duplicate variable name `" + name + "`");
                     continue;
                 }
+                if(function.doc != null) {
+                    if(function.doc.paramDesc.containsKey(name))
+                        var.doc = function.doc.paramDesc.get(name);
+                }
                 int pSize = type.sizeof();
                 o -= Math.ceilDiv(pSize, 4) * 4;
                 if (pSize % 4 != 0) {

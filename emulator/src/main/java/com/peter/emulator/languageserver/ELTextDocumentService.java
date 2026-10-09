@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.TextDocumentService;
@@ -16,10 +17,10 @@ import com.peter.emulator.assembly.ASMParser;
 import com.peter.emulator.assembly.AsmError;
 import com.peter.emulator.lang.ELAnalysisError;
 import com.peter.emulator.lang.ELSymbol;
-import com.peter.emulator.lang.ELSymbol.ELVarSymbol;
 import com.peter.emulator.lang.ELSymbol.Modifier;
 import com.peter.emulator.lang.FileProvider;
 import com.peter.emulator.lang.ProgramUnit;
+import com.peter.emulator.lang.symbols.ELVarSymbol;
 
 public class ELTextDocumentService implements TextDocumentService {
 
