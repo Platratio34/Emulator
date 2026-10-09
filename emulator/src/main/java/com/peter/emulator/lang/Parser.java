@@ -152,6 +152,7 @@ public class Parser {
                         Span final_ = idt.value.equals("final") ? idt.span() : null;
                         Span const_ = idt.value.equals("const") ? idt.span() : null;
                         Span inline = null;
+                        InlineType inlineType = InlineType.OUTLINE;
                         if (!stat)
                             if (tokens.get(workingI) instanceof IdentifierToken it && it.value.equals("static")) {
                                 stat = true;
@@ -178,6 +179,12 @@ public class Parser {
                             }
                         if (tokens.get(workingI) instanceof IdentifierToken it && it.value.equals("inline")) {
                             inline = tokens.get(workingI).span();
+                            inlineType = InlineType.INLINE;
+                            workingI++;
+                            unit.addSymbol(SymbolType.KEYWORD, it.span());
+                        } else if (tokens.get(workingI) instanceof IdentifierToken it && it.value.equals("inline_raw")) {
+                            inline = tokens.get(workingI).span();
+                            inlineType = InlineType.INLINE_RAW;
                             workingI++;
                             unit.addSymbol(SymbolType.KEYWORD, it.span());
                         }
@@ -291,7 +298,7 @@ public class Parser {
                                     errors.error("Functions outside of a class may not be operator functions.", const_);
                                 }
                             }
-                            ELFunction function = new ELFunction(level, extern, currentNamespace, name, funcType, inline != null ? InlineType.INLINE : InlineType.OUTLINE, unit, loc);
+                            ELFunction function = new ELFunction(level, extern, currentNamespace, name, funcType, inlineType, unit, loc);
                             unit.addSymbol(new ELFuncDefSymbol(function, nameToken.spanFirst()));
                             if (docCommentToken != null) {
                                 function.doc = new DocComment(docCommentToken);

@@ -212,8 +212,11 @@ public class ELFunction {
             out += "operator ";
         else
             out += protection.value + " ";
-        if (inline != InlineType.OUTLINE)
-            out += "inline ";
+        switch (inline) {
+            case OUTLINE -> {}
+            case INLINE -> out += "inline ";
+            case INLINE_RAW -> out += "inline_raw ";
+        }
         switch (type) {
             case CONSTRUCTOR -> out += ret.typeString() + "(";
             case DESTRUCTOR -> out += "~" + ret.typeString() + "(";

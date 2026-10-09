@@ -4,11 +4,16 @@ import Peripheral;
 namespace Kernal.FS {
 
     enum OpenMode {
+        @/ Read Only /@
         READ(0b0_0000),
+        @/ Write (overwrite) /@
         WRITE(0b1_0000),
+        @/ Write append /@
         APPEND(0b1_0001),
 
+        @/ Stream read only /@
         STREAM_READ(0b0_1000),
+        @/ Stream write only /@
         STREAM_WRITE(0b1_1000);
     }
 
@@ -230,7 +235,7 @@ namespace Kernal.FS {
                 }
             }
             numOpen = cast<int32>(nextFree);
-            nextFree = &this;
+            nextFree = this;
         }
     }
 
@@ -257,15 +262,23 @@ namespace Kernal.FS {
         @/ The path to the file opened /@
         public char* path;
 
+        @/ Internal write buffer /@
         public void* intBuffer = 0;
+        @/ Internal buffer capacity /@
         public uint16 bufferCapacity = 0;
+        @/ Internal buffer current fill size /@
         public uint16 bufferSize = 0;
+        @/ Read/Write Offset /@
         public int32 offset = 0;
 
         public bool open(char* path, OpenMode mode) {
             this.path = path;
             this.mode = mode;
 
+            if(mode & OpenMode.STREAM_READ != 0) {
+                // stream handle
+                return true;
+            }
             FileOpenCommand cmd = {,path};
             Peripheral.command(fsDeviceId, sizeof(cmd) / 4, &cmd);
             rawHandle = Peripheral.RSP_DATA[1];
@@ -320,7 +333,7 @@ namespace Kernal.FS {
                 return;
             }
             if(mode == OpenMode.STREAM_WRITE) {
-                if(path == nullptr) {
+                if(path == nullptr) { // terminal out stream
                     Kernal.printStr(buffer, len);
                 }
                 return;
@@ -341,6 +354,15 @@ namespace Kernal.FS {
         }
 
         public void read(void* buffer, int32 len, int32& count) {
+            if(mode == OpenMode.STREAM_READ) {
+                if(path == nullptr) { // terminal in stream
+
+                }
+                return;
+            }
+            if(mode != OpenMode.READ) {
+                return;
+            }
             count = 0;
             FileReadCommand cmd = {,rawHandle,buffer,len,offset,count};
             Peripheral.command(fsDeviceId, sizeof(cmd) / 4, &cmd);
@@ -386,7 +408,7 @@ namespace Kernal.FS {
         /@
         protected void release() {
             rawHandle = cast<int32>(nextFree);
-            nextFree = &this;
+            nextFree = this;
         }
     }
 

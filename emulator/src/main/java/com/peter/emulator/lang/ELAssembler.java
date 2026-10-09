@@ -20,26 +20,18 @@ public class ELAssembler {
     private String assembleFunction(ELFunction f) {
         String out = "";
         out += "\n";
+        ELSyscallAnnotation syscall = null;
         if (f.hasAnnotation(ELSyscallAnnotation.class)) {
-            ELSyscallAnnotation syscall = f.getAnnotation(ELSyscallAnnotation.class);
-            String syscallName = f.getQualifiedName().replaceAll("\\.", "_");
-            out += "\n#syscall " + syscall.index + " " + syscallName;
-            out += "\n#function syscall::" + syscallName;
-            boolean first = true;
-            for (String p : f.paramOrder) {
-                if (!first)
-                    out += ",";
-                out += String.format(" %s %s", p, f.params.get(p).typeString());
-                first = false;
-            }
-            out += "\nGOTO PUSH :" + f.getQualifiedName(true);
-            out += "\nSYSRETURN";
-            out += "\n#endfunction " + (f.ret == null ? "void" : f.ret.typeString());
-            out += "\n";
+            syscall = f.getAnnotation(ELSyscallAnnotation.class);
+            out += "\n#syscall " + syscall.index + " " + f.getQualifiedName(true);
         }
         if (module.entrypoint == f)
             out += "\n:__start";
-        out += "\n#function " + f.getQualifiedName(true);
+        if (syscall != null) {
+            out += "\n#function syscall::" + f.getQualifiedName(true);
+        } else {
+            out += "\n#function " + f.getQualifiedName(true);
+        }
         boolean first = true;
         for (String p : f.paramOrder) {
             if (!first)
@@ -52,6 +44,8 @@ public class ELAssembler {
             out += "\nHALT";
         else if (f.hasAnnotation(ELInterruptHandlerAnnotation.class))
             out += "\nINTERRUPT RET";
+        else if (syscall != null)
+            out += "\nSYSRETURN";
         else
             out += "\nGOTO POP";
         out += "\n#endfunction " + (f.ret == null ? "void" : f.ret.typeString());

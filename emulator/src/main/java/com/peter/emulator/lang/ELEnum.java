@@ -5,9 +5,11 @@ import java.util.HashMap;
 import com.peter.emulator.lang.ELValue.ELNumberValue;
 import com.peter.emulator.lang.actions.ActionScope;
 import com.peter.emulator.lang.base.ELPrimitives;
+import com.peter.emulator.lang.doc.DocComment;
 import com.peter.emulator.lang.expresion.Expression;
 import com.peter.emulator.lang.symbols.ELVarSymbol;
 import com.peter.emulator.lang.tokens.BlockToken;
+import com.peter.emulator.lang.tokens.DocCommentToken;
 import com.peter.emulator.lang.tokens.IdentifierToken;
 import com.peter.emulator.lang.tokens.OperatorToken;
 import com.peter.emulator.lang.tokens.Token;
@@ -54,7 +56,7 @@ public class ELEnum extends ELClass {
         var.startingValue = ELNumberValue.number(getType(), i, location.span());
     }
 
-    public void add(IdentifierToken it) {
+    public void add(IdentifierToken it, DocCommentToken dct) {
         if (values.containsKey(it.value)) {
             throw ELAnalysisError.errorF("Duplicate name in enum: %s", it.value);
         }
@@ -87,6 +89,8 @@ public class ELEnum extends ELClass {
         ELVariable var = addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, ELVariable.Type.CONST, getType(),
                 it.value, true, this, unit, it.startLocation));
         var.startingValue = ELNumberValue.number(getType(), i, indexSpan);
+        if(dct != null)
+            var.doc = new DocComment(dct);
     }
 
     @Override
@@ -116,11 +120,15 @@ public class ELEnum extends ELClass {
         }
         int tI = 0;
         int numTokens = body.subTokens.size();
+        DocCommentToken dct = null;
         while (tI < numTokens) {
             Token token = body.subTokens.get(tI++);
-            if (token instanceof IdentifierToken it) {
+            if (token instanceof DocCommentToken dct2) {
+                dct = dct2;
+            } else if (token instanceof IdentifierToken it) {
                 try {
-                    add(it);
+                    add(it, dct);
+                    dct = null;
                     unit.addSymbol(new ELVarSymbol(staticVariables.get(it.value), it.nameSpan()));
                 } catch (ELAnalysisError err) {
                     unit.errors.add(err);
@@ -138,6 +146,8 @@ public class ELEnum extends ELClass {
                     }
                 }
                 unit.errors.errorF(token, "Unexpected token in enum, expected `,` or `;`");
+            } else {
+                unit.errors.errorF(token, "Unexpected token in enum");
             }
         }
     }

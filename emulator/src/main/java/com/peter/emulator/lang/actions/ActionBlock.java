@@ -26,11 +26,15 @@ public class ActionBlock extends ComplexAction {
     public void parse(ArrayList<Token> tokens, ErrorSet errors, boolean withDebug) {
         int wI = 0;
         int l = 0;
-        if(scope.function != null) {
-            addDirect("STACK PUSH r15");
-            addDirect("COPY rStack r15");
-            for (ELVariable var : scope.stackVars.values()) {
-                addDirect("#stackVar %s %s %d", var.type.typeString(), var.name, var.offset);
+        if (scope.function != null) {
+            if (scope.function.inline != InlineType.INLINE_RAW) {
+                addDirect("STACK PUSH r15");
+                addDirect("COPY rStack r15");
+            }
+            if (scope.function.inline == InlineType.OUTLINE) {
+                for (ELVariable var : scope.stackVars.values()) {
+                    addDirect("#stackVar %s %s %d", var.type.typeString(), var.name, var.offset);
+                }
             }
         }
         int last = -1;
@@ -447,8 +451,10 @@ public class ActionBlock extends ComplexAction {
         // TODO desconstructors here
 
         if (scope.function != null) {
-            actions.add(new DirectAction("COPY r15 rStack"));
-            actions.add(new DirectAction("STACK POP r15"));
+            if (scope.function.inline != InlineType.INLINE_RAW) {
+                actions.add(new DirectAction("COPY r15 rStack"));
+                actions.add(new DirectAction("STACK POP r15"));
+            }
         } else if (scope.getStackOffDif() > 0) {
             actions.add(scope.getStackResetAction());
         }

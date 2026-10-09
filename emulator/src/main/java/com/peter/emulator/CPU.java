@@ -623,9 +623,9 @@ public class CPU {
                         if (!privilegeMode) {
                             return;
                         }
-                        int ptr = readMem(sysTablePtr);
-                        pgmPtr = ptr;
-                        privilegeMode = false;
+                        int ptr = stackPop();
+                        pgmPtr = ptr & 0xffff_fffe;
+                        privilegeMode = (ptr & 0x1) == 1;
                     }
                     case GOTO -> {
                         // SYSGOTO
@@ -675,7 +675,8 @@ public class CPU {
                             interrupt(0x8000_0001);
                             return;
                         }
-                        writeMem(sysTablePtr, pgmPtr);
+                        // writeMem(sysTablePtr, pgmPtr);
+                        stackPush((pgmPtr & 0xffff_fffe) | (privilegeMode ? 1 : 0));
                         pgmPtr = ptr;
                     }
                     case TRANSLATE -> {

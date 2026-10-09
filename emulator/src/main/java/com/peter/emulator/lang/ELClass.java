@@ -459,7 +459,7 @@ public class ELClass extends Namespace {
     }
 
     public ELVariable getThis(ActionScope scope) {
-        return new PseudoVariable(ELVariable.Type.SCOPE, getType(), "this", true, this, unit,
+        return new PseudoVariable(ELVariable.Type.SCOPE, getType().addressOf(), "this", true, this, unit,
                 new Location("<" + cName + ">", 0, 0), new Register(scope, 0));
     }
     

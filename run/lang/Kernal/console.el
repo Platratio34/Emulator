@@ -11,7 +11,7 @@ namespace Kernal {
     
         @param c The character to print
     /@
-    public static inline void printChar(char c) {
+    public static inline_raw void printChar(char c) {
         asm{
             STORE BYTE c Kernal.CONSOLE_OUT
         }

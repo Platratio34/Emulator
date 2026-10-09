@@ -40,8 +40,12 @@ public class ELFuncDefSymbol extends ELSymbol {
             out += "static ";
         if (func.extern)
             out += "extern ";
-        if (func.inline != InlineType.OUTLINE)
-            out += "inline ";
+        switch (func.inline) {
+            case OUTLINE -> {
+            }
+            case INLINE -> out += "inline ";
+            case INLINE_RAW -> out += "inline_raw ";
+        }
         if (func.ret != null)
             out += func.ret.typeString() + " ";
         else
