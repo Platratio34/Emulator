@@ -38,6 +38,7 @@ public class Mutex extends ELClass {
         // tryFunction.actions.addDirect("STORE r1 r2");
         // tryFunction.actions.addDirect("#lineend");
         tryFunction.doc = new DocComment("Attempts to acquire the mutex. Returns `true` if acquisition was successful otherwise returns `false`");
+        tryFunction.doc.retDesc.add("If acquisition was successful");
 
         ELFunction releaseFunction = new ELFunction(ELProtectionLevel.PUBLIC, false, this, "release",
                 FunctionType.INSTANCE,

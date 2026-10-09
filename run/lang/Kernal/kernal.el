@@ -195,7 +195,7 @@ namespace Kernal {
         public method<int32> interruptHandler;
         public int32 parent;
 
-        public ProcessFiles* files;
+        public FS.ProcessFiles* files;
 
         public int32[7] _padding;
 

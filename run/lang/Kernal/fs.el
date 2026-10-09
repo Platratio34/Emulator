@@ -1,6 +1,7 @@
 import SysD;
+import Peripheral;
 
-namespace Kernal {
+namespace Kernal.FS {
 
     enum OpenMode {
         READ(0b0_0000),
@@ -20,7 +21,12 @@ namespace Kernal {
         @returns Else returns the file handle
     /@
     @Syscall(0x10)
-    public static int32 fopen(char* path, OpenMode mode) {
+    public static int32 open(char* path, OpenMode mode) {
+        if(fsDeviceId == 0) {
+            if(!setupFS()) {
+                return -1;
+            }
+        }
         ProcessState& proc = &processStates[SysD.rPID];
         if(proc.files == nullptr) {
             proc.files = ProcessFiles.new();
@@ -34,14 +40,14 @@ namespace Kernal {
     @/
         Write to a file under the currently active process
 
-        @param handle The file handle from `fopen`
+        @param handle The file handle from `open`
         @param buffer The data to write to the file
         @param len The number of words of data to write
 
-        @returns If write was successfull
+        @returns If write was successful
     /@
     @Syscall(0x11)
-    public static bool fwrite(int32 handle, void* buffer, int32 len) {
+    public static bool write(int32 handle, void* buffer, int32 len) {
         ProcessState& proc = &processStates[SysD.rPID];
         if(proc.files == nullptr) {
             proc.files = ProcessFiles.new();
@@ -63,14 +69,14 @@ namespace Kernal {
 
         This will write directly from the source buffer without flushing anything currently in the file handle buffer.
 
-        @param handle The file handle from `fopen`
+        @param handle The file handle from `open`
         @param buffer The data to write to the file
         @param len The number of words of data to write
 
-        @returns If write was successfull
+        @returns If write was successful
     /@
-    @Syscall(0x11)
-    public static bool fwriteD(int32 handle, void* buffer, int32 len) {
+    @Syscall(0x12)
+    public static bool writeD(int32 handle, void* buffer, int32 len) {
         ProcessState& proc = &processStates[SysD.rPID];
         if(proc.files == nullptr) {
             proc.files = ProcessFiles.new();
@@ -90,12 +96,38 @@ namespace Kernal {
     @/
         Flush a file handle under the currently active process
 
-        @param handle The file handle from `fopen`
+        @param handle The file handle from `open`
 
         @returns If the handle existed
     /@
     @Syscall(0x13)
-    public static bool fflush(int32 handle) {
+    public static bool flush(int32 handle) {
+        ProcessState& proc = &processStates[SysD.rPID];
+        if(proc.files == nullptr) {
+            proc.files = ProcessFiles.new();
+            if(proc.files == nullptr) {
+                return false;
+            }
+        }
+        if(handle < 0 || handle > proc.files.handles.length) {
+            return false;
+        }
+        if(proc.files.handles[handle] == nullptr) {
+            return false;
+        }
+        proc.files.handles[handle].flush();
+        return true;
+    }
+
+    @/
+        Flush a file handle under the currently active process
+
+        @param handle The file handle from `open`
+
+        @returns If the handle existed
+    /@
+    @Syscall(0x13)
+    public static bool read(int32 handle, void* buffer, int32 capacity) {
         ProcessState& proc = &processStates[SysD.rPID];
         if(proc.files == nullptr) {
             proc.files = ProcessFiles.new();
@@ -139,8 +171,11 @@ namespace Kernal {
             if(ptr == nullptr) {
                 return -1;
             }
+            if(!ptr.open(path, mode)) {
+                ptr.release();
+                return -1;
+            }
             handles[outHandle] = ptr;
-            ptr.setup(path, mode);
             numOpen++;
             return outHandle;
         }
@@ -186,9 +221,28 @@ namespace Kernal {
         }
 
         protected void release() {
+            if(numOpen > 0) {
+                for(int32 i = 0; i < handles.length; i++) {
+                    if(handles[i] != nullptr) {
+                        handles[i].close();
+                        handles[i] = nullptr;
+                    }
+                }
+            }
             numOpen = cast<int32>(nextFree);
             nextFree = &this;
         }
+    }
+
+    private static int32 fsDeviceId = 0;
+    public static bool setupFS() {
+        for(int32 i = 1; i < 64; i++) {
+            if(Peripheral.TABLE[i] == Peripheral.TYPE_STORAGE_VIRTUAL) {
+                fsDeviceId = i;
+                break;
+            }
+        }
+        return fsDeviceId != 0;
     }
 
     @/
@@ -206,10 +260,16 @@ namespace Kernal {
         public void* intBuffer = 0;
         public uint16 bufferCapacity = 0;
         public uint16 bufferSize = 0;
+        public int32 offset = 0;
 
-        public void setup(char* path, OpenMode mode) {
+        public bool open(char* path, OpenMode mode) {
             this.path = path;
             this.mode = mode;
+
+            FileOpenCommand cmd = {,path};
+            Peripheral.command(fsDeviceId, sizeof(cmd) / 4, &cmd);
+            rawHandle = Peripheral.RSP_DATA[1];
+            return rawHandle == 0;
         }
 
         @/
@@ -224,7 +284,7 @@ namespace Kernal {
         @/
             Write a buffer to the file.
 
-            If the write operation would exceed the avalible remaning space in the internal buffer, the buffer will be flushed prior to the write.
+            If the write operation would exceed the available remaining space in the internal buffer, the buffer will be flushed prior to the write.
 
             @param buffer The buffer to write
             @param len The number of words to write from the buffer
@@ -240,7 +300,7 @@ namespace Kernal {
                 writeDirect(buffer, len);
                 return true;
             }
-            ...
+            // ...
             bufferSize += len;
             // TODO something here?
             return true;
@@ -249,7 +309,7 @@ namespace Kernal {
         @/
             Write a buffer directly to the target.
 
-            This bypasses the internal buffer and will be written **befre** anything still in it.
+            This bypasses the internal buffer and will be written **before** anything still in it.
             It is recommend to make a call to `flush` before if any data has been written
 
             @param buffer The buffer to write
@@ -268,6 +328,7 @@ namespace Kernal {
             if(mode & OpenMode.WRITE == 0) {
                 return;
             }
+            offset += len;
 
         }
 
@@ -279,16 +340,27 @@ namespace Kernal {
             bufferSize = 0;
         }
 
+        public void read(void* buffer, int32 len, int32& count) {
+            count = 0;
+            FileReadCommand cmd = {,rawHandle,buffer,len,offset,count};
+            Peripheral.command(fsDeviceId, sizeof(cmd) / 4, &cmd);
+            offset += len;
+        }
+
+        public void seek(int32 newOffset) {
+            offset = newOffset;
+        }
+
 
         @/ Pool of file handles for allocation /@
         protected static FileHandle[128] pool;
-        @/ Pointer to the next un-aoocated file handle /@ 
+        @/ Pointer to the next un-allocated file handle /@ 
         protected static FileHandle* nextFree = 0xffff_ffff;
 
         @/
             Get a new file handle.
 
-            @returns `nullptr` if there are no avalible file handles
+            @returns `nullptr` if there are no available file handles
             @returns Otherwise returns a pointer to the allocated handle
         /@
         public static FileHandle* new() {
@@ -318,7 +390,17 @@ namespace Kernal {
         }
     }
 
-    namespace FS {
-        // struct FileWriteCommand
+    struct FileOpenCommand {
+        public final int32 cmd = 0x10;
+        public char* path;
+    }
+    
+    struct FileReadCommand {
+        public final int32 cmd = 0x11;
+        public int32 handle;
+        public void* buffer;
+        public int32 bufferCapacity;
+        public int32 offset;
+        public int32& readPtr;
     }
 }

@@ -195,91 +195,177 @@ public class LineAction extends ComplexAction {
                 }
                 token = tokens.get(i2);
                 if (token instanceof BlockToken bt) { // array assign
-                    if (!type.isArray()) {
+                    if (type.isArray()) {
+                        ELType innerType = type.resolve(bt.startLocation.span());
+                        Register rg = newRegister();
+                        addReserve(rg);
+                        addDirect(String.format("#stackVar %s %s", type.typeString(), var.name));
+                        ArrayList<Token> expArr = new ArrayList<>();
+                        int c = 0;
+                        for (Token tk : bt.subTokens) {
+                            if (tk instanceof OperatorToken ot2 && ot2.type == OperatorToken.Type.COMMA) {
+                                c++;
+                                if (expArr.isEmpty()) {
+                                    scope.unit.errors.errorF(ot2, "Empty expression");
+                                    continue;
+                                }
+                                Expression exp = new Expression(scope, expArr, rg);
+                                expArr.clear();
+                                if (!exp.validate(scope.unit.errors))
+                                    continue;
+                                if (!exp.getType().canCastTo(innerType)) {
+                                    scope.unit.errors.errorF(exp.span(), "Can not cast %s to %s",
+                                            exp.getType().typeString(), innerType.typeString());
+                                    continue;
+                                }
+                                add(exp);
+                                switch (innerType.sizeof()) {
+                                    case 1 -> {
+                                        addDirect("STORE BYTE %s rStack INC_RA", rg);
+                                    }
+                                    case 2 -> {
+                                        addDirect("STORE SHORT %s rStack INC_RA", rg);
+
+                                    }
+                                    case 4 -> addDirect("STACK PUSH %s", rg);
+                                }
+                            } else {
+                                expArr.add(tk);
+                            }
+                        }
+                        c++;
+                        if (expArr.isEmpty()) {
+                            scope.unit.errors.errorF(bt.endLocation.span(), "Empty expression");
+                            return;
+                        }
+                        Expression exp = new Expression(scope, expArr, rg);
+                        expArr.clear();
+                        if (!exp.validate(scope.unit.errors))
+                            return;
+                        if (!exp.getType().canCastTo(innerType)) {
+                            scope.unit.errors.errorF(exp.span(), "Can not cast %s to %s",
+                                    exp.getType().typeString(), innerType.typeString());
+                        }
+                        if (c != type.arraySize()) {
+                            scope.unit.errors.errorF(bt.endLocation.span(),
+                                    "Invalid number of elements in array; Expected %d, found %d", type.arraySize(), c);
+                        }
+                        add(exp);
+                        switch (innerType.sizeof()) {
+                            case 1 -> {
+                                addDirect("STORE BYTE %s rStack", rg);
+                                if (c % 4 == 0) {
+                                    addDirect("INC rStack 1");
+                                } else {
+                                    addDirect("INC rStack %d", 5 - (c % 4));
+                                }
+                            }
+                            case 2 -> {
+                                addDirect("STORE SHORT %s rStack", rg);
+                                addDirect("INC rStack 2");
+                                if (c % 4 == 0) {
+                                    addDirect("INC rStack 2");
+                                } else {
+                                    addDirect("INC rStack 4");
+                                }
+
+                            }
+                            case 4 -> addDirect("STACK PUSH %s", rg);
+                        }
+
+                        addRelease(rg);
+                        return;
+                    } else if (type.isSimple() && type.getELClass() instanceof ELStruct struct) {
+                        Register rg = newRegister();
+                        addReserve(rg);
+                        addDirect(String.format("#stackVar %s %s", type.typeString(), var.name));
+
+                        int i = 0;
+                        ArrayList<Token> exp = new ArrayList<>();
+                        int s = 0;
+                        for (String vName : struct.getOrder()) {
+                            ELVariable v = struct.memberVariables.get(vName);
+                            if (s != v.offset) {
+                                addDirect("INC rStack %d", v.offset - s);
+                                s = v.offset;
+                            }
+                            exp.clear();
+                            while (i < bt.subSize()) {
+                                Token t = bt.sub(i++);
+                                if (t instanceof OperatorToken ot2 && ot2.type == OperatorToken.Type.COMMA) {
+                                    break;
+                                }
+                                exp.add(t);
+                            }
+                            String val = null;
+                            if (exp.size() == 0) {
+                                if (v.startingValue != null) {
+                                    val = v.startingValue.valueString();
+                                } else {
+                                    val = "0";
+                                }
+                            } else {
+                                Expression expA = new Expression(scope, exp, rg);
+                                ELType eType = expA.getType();
+                                if (expA.isConstant()) {
+                                    val = expA.getConstant() + "";
+                                } else {
+                                    add(expA);
+                                }
+                                if (!eType.canCastTo(v.type)) {
+                                    scope.unit.errors.errorF(expA.span(), "Can not cast %s to %s", eType.typeString(),
+                                            v.type.typeString());
+                                }
+                            }
+                            if (val != null) {
+                                switch (v.type.sizeof()) {
+                                    case 1 -> {
+                                        addDirect("STORE BYTE %s rStack INC_RA", val);
+                                        s += 1;
+                                    }
+                                    case 2 -> {
+                                        addDirect("STORE SHORT %s rStack INC_RA", val);
+                                        s += 2;
+                                    }
+                                    case 4 -> {
+                                        addDirect("STORE %s rStack INC_RA", val);
+                                        s += 4;
+                                    }
+                                    default -> {
+                                    }
+                                }
+                            } else {
+                                switch (v.type.sizeof()) {
+                                    case 1 -> {
+                                        addDirect("STORE BYTE %s rStack INC_RA", rg);
+                                        s += 1;
+                                    }
+                                    case 2 -> {
+                                        addDirect("STORE SHORT %s rStack INC_RA", rg);
+                                        s += 2;
+                                    }
+                                    case 4 -> {
+                                        addDirect("STORE %s rStack INC_RA", rg);
+                                        s += 4;
+                                    }
+                                    default -> {
+                                    }
+                                }
+                            }
+                        }
+                        s -= struct.getSize();
+                        if (s != 0) {
+                            addDirect("INC rStack %d", s);
+                        }
+                        if (i < bt.subSize()) {
+                            scope.unit.errors.error("Too many parameters for ordered struct constructor", bt.sub(i).startLocation.span(bt.subLast().endLocation));
+                        }
+                        addRelease(rg);
+                        return;
+                    } else {
                         scope.unit.errors.errorF(bt, "Can not assign array to non-array type");
                         return;
                     }
-                    ELType innerType = type.resolve(bt.startLocation.span());
-                    Register rg = newRegister();
-                    addReserve(rg);
-                    addDirect(String.format("#stackVar %s %s", type.typeString(), var.name));
-                    ArrayList<Token> expArr = new ArrayList<>();
-                    int c = 0;
-                    for (Token tk : bt.subTokens) {
-                        if (tk instanceof OperatorToken ot2 && ot2.type == OperatorToken.Type.COMMA) {
-                            c++;
-                            if (expArr.isEmpty()) {
-                                scope.unit.errors.errorF(ot2, "Empty expression");
-                                continue;
-                            }
-                            Expression exp = new Expression(scope, expArr, rg);
-                            expArr.clear();
-                            if (!exp.validate(scope.unit.errors))
-                                continue;
-                            if (!exp.getType().canCastTo(innerType)) {
-                                scope.unit.errors.errorF(exp.span(), "Can not cast %s to %s",
-                                        exp.getType().typeString(), innerType.typeString());
-                                continue;
-                            }
-                            add(exp);
-                            switch (innerType.sizeof()) {
-                                case 1 -> {
-                                    addDirect("STORE BYTE %s rStack", rg);
-                                    addDirect("INC rStack 1");
-                                }
-                                case 2 -> {
-                                    addDirect("STORE SHORT %s rStack", rg);
-                                    addDirect("INC rStack 2");
-
-                                }
-                                case 4 -> addDirect("STACK PUSH %s", rg);
-                            }
-                        } else {
-                            expArr.add(tk);
-                        }
-                    }
-                    c++;
-                    if (expArr.isEmpty()) {
-                        scope.unit.errors.errorF(bt.endLocation.span(), "Empty expression");
-                        return;
-                    }
-                    Expression exp = new Expression(scope, expArr, rg);
-                    expArr.clear();
-                    if (!exp.validate(scope.unit.errors))
-                        return;
-                    if (!exp.getType().canCastTo(innerType)) {
-                        scope.unit.errors.errorF(exp.span(), "Can not cast %s to %s",
-                                exp.getType().typeString(), innerType.typeString());
-                    }
-                    if (c != type.arraySize()) {
-                        scope.unit.errors.errorF(bt.endLocation.span(),
-                                "Invalid number of elements in array; Expected %d, found %d", type.arraySize(), c);
-                    }
-                    add(exp);
-                    switch (innerType.sizeof()) {
-                        case 1 -> {
-                            addDirect("STORE BYTE %s rStack", rg);
-                            if (c % 4 == 0) {
-                                addDirect("INC rStack 1");
-                            } else {
-                                addDirect("INC rStack %d", 5 - (c % 4));
-                            }
-                        }
-                        case 2 -> {
-                            addDirect("STORE SHORT %s rStack", rg);
-                            addDirect("INC rStack 2");
-                            if (c % 4 == 0) {
-                                addDirect("INC rStack 2");
-                            } else {
-                                addDirect("INC rStack 4");
-                            }
-
-                        }
-                        case 4 -> addDirect("STACK PUSH %s", rg);
-                    }
-
-                    addRelease(rg);
-                    return;
                 } else if (!(type.isAddress() || type.isAddress() || type.isPointer())) {
                     if (token instanceof IdentifierToken it3 && it3.typeString().equals(type.typeString()) && it3.hasParamsSub()) {
                         // constructor

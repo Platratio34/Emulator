@@ -30,31 +30,45 @@ public class Peripheral extends Namespace {
         super("Peripheral");
         unit = new ProgramUnit(module, "<Peripheral>");
         
-        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.INT32.pointerTo(), "CMD_ADDR", false, this, unit, PERIPHERAL_LOCATION).setValue(PeripheralManager.PERIPHERAL_START));
-        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.INT32.pointerTo(), "CMD_SIZE", false, this, unit, PERIPHERAL_LOCATION).setValue(PeripheralManager.PERIPHERAL_CMD_SIZE));
-        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.INT32.pointerTo(), "CMD_DATA", false, this, unit, PERIPHERAL_LOCATION).setValue(PeripheralManager.PERIPHERAL_CMD_MSG));
+        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.INT32.pointerTo(),
+                "CMD_ADDR", false, this, unit, PERIPHERAL_LOCATION).setValue(PeripheralManager.PERIPHERAL_START))
+                .doc = new DocComment("The address of the peripheral command bus");
+        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.INT32.pointerTo(), "CMD_SIZE", false, this, unit, PERIPHERAL_LOCATION).setValue(PeripheralManager.PERIPHERAL_CMD_SIZE))
+                .doc = new DocComment("Peripheral command size address");
+        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.INT32.pointerTo(), "CMD_DATA", false, this, unit, PERIPHERAL_LOCATION).setValue(PeripheralManager.PERIPHERAL_CMD_MSG))
+                .doc = new DocComment("Peripheral command data start address");
         
-        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.UINT8.pointerTo(), "RSP_STATUS", false, this, unit, PERIPHERAL_LOCATION).setValue(PeripheralManager.PERIPHERAL_RSP_STATUS));
-        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.UINT8.pointerTo(), "RSP_DEVICE", false, this, unit, PERIPHERAL_LOCATION).setValue(PeripheralManager.PERIPHERAL_RSP_DEVICE));
-        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.INT32.pointerTo(), "RSP_DATA", false, this, unit, PERIPHERAL_LOCATION).setValue(PeripheralManager.PERIPHERAL_RSP_DATA));
+        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.UINT8.pointerTo(), "RSP_STATUS", false, this, unit, PERIPHERAL_LOCATION).setValue(PeripheralManager.PERIPHERAL_RSP_STATUS))
+                .doc = new DocComment("Peripheral reply status address");
+        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.UINT8.pointerTo(), "RSP_DEVICE", false, this, unit, PERIPHERAL_LOCATION).setValue(PeripheralManager.PERIPHERAL_RSP_DEVICE))
+                .doc = new DocComment("Peripheral reply device ID address");
+        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.INT32.pointerTo(), "RSP_DATA", false, this, unit, PERIPHERAL_LOCATION).setValue(PeripheralManager.PERIPHERAL_RSP_DATA))
+                .doc = new DocComment("Peripheral reply data start address");
         
         addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.INT32.pointerTo(), "TABLE",
-                false, this, unit, PERIPHERAL_LOCATION).setValue(PeripheralManager.PERIPHERAL_TABLE)).doc = new DocComment("Table of peripheral types");
+                false, this, unit, PERIPHERAL_LOCATION)
+                .setValue(PeripheralManager.PERIPHERAL_TABLE))
+                .doc = new DocComment("Table of peripheral types");
                 
         addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.INT32.pointerTo(), "TIMERS",
-                false, this, unit, PERIPHERAL_LOCATION).setValue(PeripheralManager.PERIPHERAL_START + 0x200)).doc = new DocComment("The system timers. Timer `0` is the current cycle count.");
+                false, this, unit, PERIPHERAL_LOCATION)
+                .setValue(PeripheralManager.PERIPHERAL_START
+                        + 0x200))
+                .doc = new DocComment("The system timers. Timer `0` is the current cycle count.");
         
-        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.INT32.pointerTo(), "TYPE_DISPLAY_CHARACTER", true, this, unit, PERIPHERAL_LOCATION).setValue(TYPE_DISPLAY_CHARACTER));
-        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.INT32.pointerTo(), "TYPE_STORAGE_VIRTUAL", true, this, unit, PERIPHERAL_LOCATION).setValue(TYPE_STORAGE_VIRTUAL));
-        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.INT32.pointerTo(), "TYPE_STORAGE_BLOCK", true, this, unit, PERIPHERAL_LOCATION).setValue(TYPE_STORAGE_BLOCK));
+        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.INT32.pointerTo(),
+                "TYPE_DISPLAY_CHARACTER", true, this, unit, PERIPHERAL_LOCATION).setValue(TYPE_DISPLAY_CHARACTER))
+                    .doc = new DocComment("Peripheral type for character display");
+        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.INT32.pointerTo(), "TYPE_STORAGE_VIRTUAL", true, this, unit, PERIPHERAL_LOCATION).setValue(TYPE_STORAGE_VIRTUAL))
+                    .doc = new DocComment("Peripheral type for virtual storage");
+        addStaticVariable(new ELVariable(ELProtectionLevel.PUBLIC, Type.CONST, ELPrimitives.INT32.pointerTo(), "TYPE_STORAGE_BLOCK", true, this, unit, PERIPHERAL_LOCATION).setValue(TYPE_STORAGE_BLOCK))
+                    .doc = new DocComment("Peripheral type for block storage");
 
         ELFunction command = new ELFunction(ELProtectionLevel.PUBLIC, false, this, "command", FunctionType.STATIC,
                 InlineType.OUTLINE, unit, PERIPHERAL_LOCATION);
         command.addParameter(ELPrimitives.INT32, "deviceId");
         command.addParameter(ELPrimitives.INT32, "cmdSize");
-        command.addParameter(ELPrimitives.INT32.pointerTo(), "cmd");
-        // ComplexAction commandBody = new ComplexAction(new ActionScope(this, unit, command));
-        // command.setBody(commandBody);
+        command.addParameter(ELPrimitives.VOID_PTR, "cmd");
         command.actions.add(new DirectAction("#line <Peripheral> 1:1"));
         command.actions.add(new DirectAction("STACK PUSH r15"));
         command.actions.add(new DirectAction("COPY rStack r15"));
@@ -94,6 +108,9 @@ public class Peripheral extends Namespace {
         command.actions.add(new DirectAction("#lineend"));
         addStaticFunction(command);
         command.doc = new DocComment("Execute a peripheral command");
+        command.doc.paramDesc.put("deviceId", new DocComment("The target peripheral device ID"));
+        command.doc.paramDesc.put("cmdSize", new DocComment("The size of the command in words"));
+        command.doc.paramDesc.put("cmd", new DocComment("The command to execute"));
 
         /*
         struct PeripheralDescriptor {

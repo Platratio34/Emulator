@@ -297,7 +297,7 @@ public class Namespace {
         // System.out.println("- Looking for type "+base.typeString() + " (in NS "+cName+")");
         String n = base.baseClass.last();
         boolean f = base.baseClass.numParts() == lvl+1;
-        if (base.baseClass.numParts() > 1 && lvl != 0) {
+        if (base.baseClass.numParts() == 1 && lvl != 0) {
             // System.err.println("- - had no parents, and was searching for lvl "+lvl);
             return null;
         }
