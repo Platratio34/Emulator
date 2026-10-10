@@ -308,6 +308,10 @@ namespace Kernal.FS {
             FileOpenCommand cmd = {,path};
             Peripheral.command(fsDeviceId, sizeof(cmd) / 4, &cmd);
             rawHandle = Peripheral.RSP_DATA[1];
+            if(mode & OpenMode.WRITE != 0) {
+                intBuffer = new int32[128];
+                bufferCapacity = 128;
+            }
             return rawHandle == 0;
         }
 

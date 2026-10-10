@@ -2022,7 +2022,7 @@ SYSRETURN
 #function Kernal.FS.setupFS
 STACK PUSH r15
 COPY rStack r15
-#line run\lang\Kernal\fs.el 244:10
+#line run\lang\Kernal\fs.el 270:10
 // For Loop:
 // Initializer
 // Reserving r1
@@ -2039,7 +2039,7 @@ COPY r1 r3
 INC r3 -64
 GOTO GEQ r3 :for_end_30 // i < 64
 // Releasing r2
-#line run\lang\Kernal\fs.el 245:14
+#line run\lang\Kernal\fs.el 271:14
 // Still reserved: r1
 // Reserving r2
 LOAD r2 Peripheral.TABLE
@@ -2055,7 +2055,7 @@ LOAD r3 16777217
 SUB r2 r2 r3
 GOTO NEQ r2 :if_end_31 // Peripheral.TABLE[i] == Peripheral.TYPE_STORAGE_VIRTUAL
 // Releasing r2
-#line run\lang\Kernal\fs.el 246:18
+#line run\lang\Kernal\fs.el 272:18
 // Reserving r2
 // Register r2 already reserved
 LOAD r2 &Kernal.FS.fsDeviceId
@@ -2067,7 +2067,7 @@ STORE r3 r2
 // Releasing r3
 //  fsDeviceId = i;
 
-#line run\lang\Kernal\fs.el 247:18
+#line run\lang\Kernal\fs.el 273:18
 GOTO :for_end_30
 //  break;
 
@@ -2085,7 +2085,7 @@ GOTO :for_condition_30
 // Releasing r1
 //  for(int32 i = 1; i < 64; i++) {if(Peripheral.TABLE[i] == Peripheral.TYPE_STORAGE_VIRTUAL) {fsDeviceId = i; break;}}
 
-#line run\lang\Kernal\fs.el 250:10
+#line run\lang\Kernal\fs.el 276:10
 // Reserving r1
 // Register r1 already reserved
 LOAD MEM r1 &Kernal.FS.fsDeviceId // fsDeviceId != 0
@@ -2456,6 +2456,171 @@ STACK POP r15
 SYSRETURN
 #endfunction bool
 
+#syscall 31 Kernal.FS.close_int32
+#function syscall::Kernal.FS.close_int32 handle int32
+STACK PUSH r15
+COPY rStack r15
+#stackVar int32 handle -12
+#line run\lang\Kernal\fs.el 161:10
+// Reserving r1
+// Releasing r1
+// Reserving r1
+LOAD r1 &Kernal.processStates
+// Reserving r2
+// Register r2 already reserved
+COPY rPID r2 // SysD.rPID
+LSH r2 r2 7
+ADD r1 r1 r2
+// Releasing r2 // &processStates[SysD.rPID]
+#stackVar ProcessState& proc
+STACK PUSH r1
+// Releasing r1
+//  ProcessState & proc = & processStates[SysD.rPID];
+
+#line run\lang\Kernal\fs.el 162:10
+// Reserving r1
+// Register r1 already reserved
+LOAD MEM r1 r15
+INC r1 96
+LOAD MEM r1 r1
+GOTO NEQ r1 :if_end_40 // proc.files == nullptr
+// Releasing r1
+#line run\lang\Kernal\fs.el 163:14
+// Reserving r1
+// Register r1 already reserved
+LOAD MEM r1 r15
+INC r1 96
+// Reserving r2
+STACK INC 4
+STACK PUSH r1
+// Reserving r3
+GOTO PUSH :Kernal.FS.ProcessFiles.new
+STACK POP r2
+STACK POP r1
+// Releasing r3 // ProcessFiles.new()
+STORE r2 r1
+// Releasing r1
+// Releasing r2
+//  proc.files = ProcessFiles.new();
+
+#line run\lang\Kernal\fs.el 164:14
+// Reserving r1
+// Register r1 already reserved
+LOAD MEM r1 r15
+INC r1 96
+LOAD MEM r1 r1
+GOTO NEQ r1 :if_end_41 // proc.files == nullptr
+// Releasing r1
+#line run\lang\Kernal\fs.el 165:18
+GOTO :func_exit_Kernal.FS.close_int32
+//  return;
+
+#lineend
+:if_end_41
+//  if(proc.files == nullptr) {return;}
+
+#lineend
+:if_end_40
+//  if(proc.files == nullptr) {proc.files = ProcessFiles.new(); if(proc.files == nullptr) {return;}}
+
+#line run\lang\Kernal\fs.el 168:10
+// Reserving r1
+SUB r1 r15 12
+// Register r1 already reserved
+LOAD MEM r1 r1
+GOTO LT r1 :exp_ee_5
+SUB r1 r15 12
+// Register r1 already reserved
+LOAD MEM r1 r1
+INC r1 -16
+GOTO LEQ r1 :if_end_42
+:exp_ee_5 // handle < 0 || handle > proc.files.handles.length
+// Releasing r1
+#line run\lang\Kernal\fs.el 169:14
+GOTO :func_exit_Kernal.FS.close_int32
+//  return;
+
+#lineend
+:if_end_42
+//  if(handle < 0 || handle > proc.files.handles.length) {return;}
+
+#line run\lang\Kernal\fs.el 171:10
+// Reserving r1
+// Register r1 already reserved
+LOAD MEM r1 r15
+INC r1 96
+LOAD MEM r1 r1
+INC r1 4
+// Reserving r2
+SUB r2 r15 12
+// Register r2 already reserved
+LOAD MEM r2 r2 // handle
+LSH r2 r2 2
+ADD r1 r1 r2
+// Releasing r2
+LOAD MEM r1 r1
+GOTO NEQ r1 :if_end_43 // proc.files.handles[handle] == nullptr
+// Releasing r1
+#line run\lang\Kernal\fs.el 172:14
+GOTO :func_exit_Kernal.FS.close_int32
+//  return;
+
+#lineend
+:if_end_43
+//  if(proc.files.handles[handle] == nullptr) {return;}
+
+#line run\lang\Kernal\fs.el 174:10
+STACK PUSH r0
+// Reserving r1
+// Reserving r2
+// Register r2 already reserved
+LOAD MEM r2 r15
+INC r2 96
+LOAD MEM r2 r2
+INC r2 4
+// Reserving r3
+SUB r3 r15 12
+// Register r3 already reserved
+LOAD MEM r3 r3 // handle
+LSH r3 r3 2
+ADD r2 r2 r3
+// Releasing r3
+COPY r0 r2
+// Releasing r2
+GOTO PUSH :Kernal.FS.FileHandle.close
+STACK POP r0
+// Releasing r1 // proc.files.handles[handle].close()
+//  proc.files.handles[handle].close();
+
+#line run\lang\Kernal\fs.el 175:10
+// Reserving r1
+// Register r1 already reserved
+LOAD MEM r1 r15
+INC r1 96
+LOAD MEM r1 r1
+INC r1 4
+// Reserving r2
+SUB r2 r15 12
+// Register r2 already reserved
+LOAD MEM r2 r2 // handle
+LSH r2 r2 2
+ADD r1 r1 r2
+// Releasing r2
+STORE 0 r1
+// Releasing r1
+//  proc.files.handles[handle] = nullptr;
+
+#line run\lang\Kernal\fs.el 176:10
+GOTO :func_exit_Kernal.FS.close_int32
+//  return;
+
+#lineend
+:func_exit_Kernal.FS.close_int32
+COPY r15 rStack
+STACK POP r15
+SYSRETURN
+#endfunction void
+
 #syscall 16 Kernal.FS.open_char*_OpenMode
 #function syscall::Kernal.FS.open_char*_OpenMode path char*, mode OpenMode
 STACK PUSH r15
@@ -2466,7 +2631,7 @@ COPY rStack r15
 // Reserving r1
 // Register r1 already reserved
 LOAD MEM r1 &Kernal.FS.fsDeviceId
-GOTO NEQ r1 :if_end_40 // fsDeviceId == 0
+GOTO NEQ r1 :if_end_44 // fsDeviceId == 0
 // Releasing r1
 #line run\lang\Kernal\fs.el 31:14
 // Reserving r1
@@ -2475,7 +2640,7 @@ STACK INC 4
 GOTO PUSH :Kernal.FS.setupFS
 STACK POP BYTE r1
 // Releasing r2
-GOTO NEQ r1 :if_end_41 // !setupFS()
+GOTO NEQ r1 :if_end_45 // !setupFS()
 // Releasing r1
 #line run\lang\Kernal\fs.el 32:18
 // Reserving r1
@@ -2486,11 +2651,11 @@ GOTO :func_exit_Kernal.FS.open_char*_OpenMode
 //  return - 1;
 
 #lineend
-:if_end_41
+:if_end_45
 //  if(! setupFS()) {return - 1;}
 
 #lineend
-:if_end_40
+:if_end_44
 //  if(fsDeviceId == 0) {if(! setupFS()) {return - 1;}}
 
 #line run\lang\Kernal\fs.el 35:10
@@ -2515,7 +2680,7 @@ STACK PUSH r1
 LOAD MEM r1 r15
 INC r1 96
 LOAD MEM r1 r1
-GOTO NEQ r1 :if_end_42 // proc.files == nullptr
+GOTO NEQ r1 :if_end_46 // proc.files == nullptr
 // Releasing r1
 #line run\lang\Kernal\fs.el 37:14
 // Reserving r1
@@ -2541,7 +2706,7 @@ STORE r2 r1
 LOAD MEM r1 r15
 INC r1 96
 LOAD MEM r1 r1
-GOTO NEQ r1 :if_end_43 // proc.files == nullptr
+GOTO NEQ r1 :if_end_47 // proc.files == nullptr
 // Releasing r1
 #line run\lang\Kernal\fs.el 39:18
 // Reserving r1
@@ -2552,11 +2717,11 @@ GOTO :func_exit_Kernal.FS.open_char*_OpenMode
 //  return - 1;
 
 #lineend
-:if_end_43
+:if_end_47
 //  if(proc.files == nullptr) {return - 1;}
 
 #lineend
-:if_end_42
+:if_end_46
 //  if(proc.files == nullptr) {proc.files = ProcessFiles.new(); if(proc.files == nullptr) {return - 1;}}
 
 #line run\lang\Kernal\fs.el 42:10
@@ -2606,14 +2771,14 @@ SYSRETURN
 #function Kernal.FS.FileHandle.new
 STACK PUSH r15
 COPY rStack r15
-#line run\lang\Kernal\fs.el 389:14
+#line run\lang\Kernal\fs.el 413:14
 // Reserving r1
 // Register r1 already reserved
 LOAD MEM r1 &Kernal.FS.FileHandle.nextFree
 INC r1 1
-GOTO NEQ r1 :if_end_44 // nextFree == 0xffff_ffff
+GOTO NEQ r1 :if_end_48 // nextFree == 0xffff_ffff
 // Releasing r1
-#line run\lang\Kernal\fs.el 390:18
+#line run\lang\Kernal\fs.el 414:18
 // Reserving r1
 // Register r1 already reserved
 LOAD r1 &Kernal.FS.FileHandle.nextFree
@@ -2625,7 +2790,7 @@ STORE r2 r1
 // Releasing r2
 //  nextFree = & pool;
 
-#line run\lang\Kernal\fs.el 391:18
+#line run\lang\Kernal\fs.el 415:18
 // For Loop:
 // Initializer
 // Reserving r1
@@ -2635,14 +2800,14 @@ LOAD r2 0 // 0
 #stackVar int32 i
 STACK PUSH r2
 // Releasing r2
-:for_condition_45
+:for_condition_49
 // Reserving r2
 // Register r3 already reserved
 COPY r1 r3
 INC r3 -127
-GOTO GEQ r3 :for_end_45 // i < pool.length - 1
+GOTO GEQ r3 :for_end_49 // i < pool.length - 1
 // Releasing r2
-#line run\lang\Kernal\fs.el 392:22
+#line run\lang\Kernal\fs.el 416:22
 // Still reserved: r1
 // Reserving r2
 // Register r2 already reserved
@@ -2676,13 +2841,13 @@ STORE r3 r2
 // Reserved: r1
 // Iterator
 INC r1 1 // i++
-GOTO :for_condition_45
-:for_end_45
+GOTO :for_condition_49
+:for_end_49
 // End of scope
 // Releasing r1
 //  for(int32 i = 0; i < pool.length - 1; i++) {pool[i].rawHandle = cast<int32>(& pool[i + 1]);}
 
-#line run\lang\Kernal\fs.el 394:18
+#line run\lang\Kernal\fs.el 418:18
 // Reserving r1
 // Register r1 already reserved
 LOAD r1 &Kernal.FS.FileHandle.pool
@@ -2694,16 +2859,16 @@ STORE 0 r1
 //  pool[pool.length - 1].rawHandle = 0;
 
 #lineend
-:if_end_44
+:if_end_48
 //  if(nextFree == 0xffff_ffff) {nextFree = & pool; for(int32 i = 0; i < pool.length - 1; i++) {pool[i].rawHandle = cast<int32>(& pool[i + 1]);} pool[pool.length - 1].rawHandle = 0;}
 
-#line run\lang\Kernal\fs.el 396:14
+#line run\lang\Kernal\fs.el 420:14
 // Reserving r1
 // Register r1 already reserved
 LOAD MEM r1 &Kernal.FS.FileHandle.nextFree
-GOTO NEQ r1 :if_end_46 // nextFree == nullptr
+GOTO NEQ r1 :if_end_50 // nextFree == nullptr
 // Releasing r1
-#line run\lang\Kernal\fs.el 397:18
+#line run\lang\Kernal\fs.el 421:18
 // Reserving r1
 SUB r1 r15 12
 STORE 0 r1
@@ -2712,10 +2877,10 @@ GOTO :func_exit_Kernal.FS.FileHandle.new
 //  return nullptr;
 
 #lineend
-:if_end_46
+:if_end_50
 //  if(nextFree == nullptr) {return nullptr;}
 
-#line run\lang\Kernal\fs.el 399:14
+#line run\lang\Kernal\fs.el 423:14
 // Reserving r1
 // Releasing r1
 // Reserving r1
@@ -2725,7 +2890,7 @@ STACK PUSH r1
 // Releasing r1
 //  FileHandle* next = nextFree;
 
-#line run\lang\Kernal\fs.el 400:14
+#line run\lang\Kernal\fs.el 424:14
 // Reserving r1
 // Register r1 already reserved
 LOAD r1 &Kernal.FS.FileHandle.nextFree
@@ -2738,7 +2903,7 @@ STORE r2 r1
 // Releasing r2
 //  nextFree = force_cast<FileHandle*>(next.rawHandle);
 
-#line run\lang\Kernal\fs.el 401:14
+#line run\lang\Kernal\fs.el 425:14
 // Reserving r1
 // Register r1 already reserved
 LOAD MEM r1 r15 // next
@@ -2762,42 +2927,22 @@ STACK PUSH r15
 COPY rStack r15
 #stackVar int32 len -12
 #stackVar void* buffer -16
-#line run\lang\Kernal\fs.el 332:14
-// Reserving r1
-SUB r1 r15 16
-// Register r1 already reserved
-LOAD MEM r1 r1
-GOTO EQ r1 :exp_ee_5
-SUB r1 r15 12
-// Register r1 already reserved
-LOAD MEM r1 r1
-GOTO NEQ r1 :if_end_47
-:exp_ee_5 // buffer == nullptr || len == 0
-// Releasing r1
-#line run\lang\Kernal\fs.el 333:18
-GOTO :func_exit_Kernal.FS.FileHandle.writeDirect_void*_int32
-//  return;
-
-#lineend
-:if_end_47
-//  if(buffer == nullptr || len == 0) {return;}
-
-#line run\lang\Kernal\fs.el 335:14
+#line run\lang\Kernal\fs.el 359:14
 // Reserving r1
 ADD r1 r0 4
 // Register r1 already reserved
 LOAD MEM BYTE r1 r1
 INC r1 -24
-GOTO NEQ r1 :if_end_48 // mode == OpenMode.STREAM_WRITE
+GOTO NEQ r1 :if_end_51 // mode == OpenMode.STREAM_WRITE
 // Releasing r1
-#line run\lang\Kernal\fs.el 336:18
+#line run\lang\Kernal\fs.el 360:18
 // Reserving r1
 ADD r1 r0 8
 // Register r1 already reserved
 LOAD MEM r1 r1
-GOTO NEQ r1 :if_end_49 // path == nullptr
+GOTO NEQ r1 :if_end_52 // path == nullptr
 // Releasing r1
-#line run\lang\Kernal\fs.el 337:22
+#line run\lang\Kernal\fs.el 361:22
 // Reserving r1
 SUB r1 r15 16
 // Register r1 already reserved
@@ -2814,18 +2959,18 @@ STACK DEC 8
 //  Kernal.printStr(buffer, len);
 
 #lineend
-:if_end_49
+:if_end_52
 //  if(path == nullptr) {Kernal.printStr(buffer, len);}
 
-#line run\lang\Kernal\fs.el 339:18
+#line run\lang\Kernal\fs.el 363:18
 GOTO :func_exit_Kernal.FS.FileHandle.writeDirect_void*_int32
 //  return;
 
 #lineend
-:if_end_48
+:if_end_51
 //  if(mode == OpenMode.STREAM_WRITE) {if(path == nullptr) {Kernal.printStr(buffer, len);} return;}
 
-#line run\lang\Kernal\fs.el 341:14
+#line run\lang\Kernal\fs.el 365:14
 // Reserving r1
 ADD r1 r0 4
 // Register r1 already reserved
@@ -2833,17 +2978,26 @@ LOAD MEM BYTE r1 r1
 LOAD r2 Kernal.FS.OpenMode.WRITE
 // Register r2 already reserved
 AND r1 r1 r2
-GOTO NEQ r1 :if_end_50 // mode & OpenMode.WRITE == 0
+GOTO EQ r1 :exp_ee_6 // mode & OpenMode.WRITE == 0
+SUB r1 r15 16
+// Register r1 already reserved
+LOAD MEM r1 r1
+GOTO EQ r1 :exp_ee_6
+SUB r1 r15 12
+// Register r1 already reserved
+LOAD MEM r1 r1
+GOTO NEQ r1 :if_end_53
+:exp_ee_6 // ( mode & OpenMode.WRITE == 0 ) || buffer == nullptr || len == 0
 // Releasing r1
-#line run\lang\Kernal\fs.el 342:18
+#line run\lang\Kernal\fs.el 366:18
 GOTO :func_exit_Kernal.FS.FileHandle.writeDirect_void*_int32
 //  return;
 
 #lineend
-:if_end_50
-//  if(mode & OpenMode.WRITE == 0) {return;}
+:if_end_53
+//  if((mode & OpenMode.WRITE == 0) || buffer == nullptr || len == 0) {return;}
 
-#line run\lang\Kernal\fs.el 344:14
+#line run\lang\Kernal\fs.el 368:14
 // Reserving r1
 // Reserving r2
 ADD r2 r0 20
@@ -2874,51 +3028,51 @@ COPY rStack r15
 #stackVar int32 len -16
 #stackVar int32& count -12
 #stackVar void* buffer -20
-#line run\lang\Kernal\fs.el 357:14
+#line run\lang\Kernal\fs.el 381:14
 // Reserving r1
 ADD r1 r0 4
 // Register r1 already reserved
 LOAD MEM BYTE r1 r1
 INC r1 -8
-GOTO NEQ r1 :if_end_51 // mode == OpenMode.STREAM_READ
+GOTO NEQ r1 :if_end_54 // mode == OpenMode.STREAM_READ
 // Releasing r1
-#line run\lang\Kernal\fs.el 358:18
+#line run\lang\Kernal\fs.el 382:18
 // Reserving r1
 ADD r1 r0 8
 // Register r1 already reserved
 LOAD MEM r1 r1
-GOTO NEQ r1 :if_end_52 // path == nullptr
+GOTO NEQ r1 :if_end_55 // path == nullptr
 // Releasing r1
 // 
 
 #lineend
-:if_end_52
+:if_end_55
 //  if(path == nullptr) {}
 
-#line run\lang\Kernal\fs.el 361:18
+#line run\lang\Kernal\fs.el 385:18
 GOTO :func_exit_Kernal.FS.FileHandle.read_void*_int32_int32&
 //  return;
 
 #lineend
-:if_end_51
+:if_end_54
 //  if(mode == OpenMode.STREAM_READ) {if(path == nullptr) {} return;}
 
-#line run\lang\Kernal\fs.el 363:14
+#line run\lang\Kernal\fs.el 387:14
 // Reserving r1
 ADD r1 r0 4
 // Register r1 already reserved
 LOAD MEM BYTE r1 r1 // mode != OpenMode.READ
-GOTO EQ r1 :if_end_53
+GOTO EQ r1 :if_end_56
 // Releasing r1
-#line run\lang\Kernal\fs.el 364:18
+#line run\lang\Kernal\fs.el 388:18
 GOTO :func_exit_Kernal.FS.FileHandle.read_void*_int32_int32&
 //  return;
 
 #lineend
-:if_end_53
+:if_end_56
 //  if(mode != OpenMode.READ) {return;}
 
-#line run\lang\Kernal\fs.el 366:14
+#line run\lang\Kernal\fs.el 390:14
 // Reserving r1
 SUB r1 r15 12
 // Register r1 already reserved
@@ -2926,7 +3080,7 @@ STORE 0 r1
 // Releasing r1
 //  count = 0;
 
-#line run\lang\Kernal\fs.el 367:14
+#line run\lang\Kernal\fs.el 391:14
 // Reserving r1
 #stackVar FileReadCommand cmd
 STORE 0x0011 rStack INC_RA
@@ -2952,7 +3106,7 @@ STORE r1 rStack INC_RA
 // Releasing r1
 //  FileReadCommand cmd = {, rawHandle, buffer, len, offset, count};
 
-#line run\lang\Kernal\fs.el 368:14
+#line run\lang\Kernal\fs.el 392:14
 // Reserving r1
 // Register r1 already reserved
 LOAD MEM r1 &Kernal.FS.fsDeviceId // fsDeviceId
@@ -2970,7 +3124,7 @@ STACK DEC 12
 // Releasing r1 // Peripheral.command(fsDeviceId, sizeof(cmd) / 4, & cmd)
 //  Peripheral.command(fsDeviceId, sizeof(cmd) / 4, & cmd);
 
-#line run\lang\Kernal\fs.el 369:14
+#line run\lang\Kernal\fs.el 393:14
 // Reserving r1
 // Reserving r2
 ADD r2 r0 20
@@ -2998,7 +3152,7 @@ GOTO POP
 #function Kernal.FS.FileHandle.flush
 STACK PUSH r15
 COPY rStack r15
-#line run\lang\Kernal\fs.el 352:14
+#line run\lang\Kernal\fs.el 376:14
 STACK PUSH r0
 // Reserving r1
 ADD r1 r0 12
@@ -3009,10 +3163,14 @@ ADD r1 r0 18
 // Register r1 already reserved
 LOAD MEM SHORT r1 r1 // bufferSize
 STACK PUSH SHORT r1
+// Releasing r1
+GOTO PUSH :Kernal.FS.FileHandle.writeDirect_void*_int32
+STACK DEC 8
+STACK POP r0
 // Releasing r1 // writeDirect(intBuffer, bufferSize)
 //  writeDirect(intBuffer, bufferSize);
 
-#line run\lang\Kernal\fs.el 353:14
+#line run\lang\Kernal\fs.el 377:14
 // Reserving r1
 ADD r1 r0 18
 // Register r1 already reserved
@@ -3030,7 +3188,7 @@ GOTO POP
 #function Kernal.FS.FileHandle.release
 STACK PUSH r15
 COPY rStack r15
-#line run\lang\Kernal\fs.el 410:14
+#line run\lang\Kernal\fs.el 434:14
 // Reserving r1
 // Register r1 already reserved
 LOAD MEM r1 &Kernal.FS.FileHandle.nextFree // nextFree // cast<int32>(nextFree)
@@ -3038,7 +3196,7 @@ STORE r1 r0
 // Releasing r1
 //  rawHandle = cast<int32>(nextFree);
 
-#line run\lang\Kernal\fs.el 411:14
+#line run\lang\Kernal\fs.el 435:14
 // Reserving r1
 // Register r1 already reserved
 LOAD r1 &Kernal.FS.FileHandle.nextFree
@@ -3060,7 +3218,7 @@ GOTO POP
 #function Kernal.FS.FileHandle.close
 STACK PUSH r15
 COPY rStack r15
-#line run\lang\Kernal\fs.el 292:14
+#line run\lang\Kernal\fs.el 318:14
 // Reserving r1
 ADD r1 r0 4
 // Register r1 already reserved
@@ -3068,21 +3226,29 @@ LOAD MEM BYTE r1 r1
 LOAD r2 Kernal.FS.OpenMode.WRITE
 // Register r2 already reserved
 AND r1 r1 r2 // mode & OpenMode.WRITE != 0
-GOTO EQ r1 :if_end_54
+GOTO EQ r1 :if_end_57
 // Releasing r1
-// 
+#line run\lang\Kernal\fs.el 320:18
+STACK PUSH r0
+// Reserving r1
+GOTO PUSH :Kernal.FS.FileHandle.flush
+STACK POP r0
+// Releasing r1 // flush()
+//  flush();
 
 #lineend
-:if_end_54
-//  if(mode & OpenMode.WRITE != 0) {}
+:if_end_57
+//  if(mode & OpenMode.WRITE != 0) {flush();}
 
-#line run\lang\Kernal\fs.el 295:14
+#line run\lang\Kernal\fs.el 322:14
 STACK PUSH r0
-// Reserving r1 // release()
+// Reserving r1
+GOTO PUSH :Kernal.FS.FileHandle.release
+STACK POP r0
+// Releasing r1 // release()
 //  release();
 
 #lineend
-// Reserved: r1
 :func_exit_Kernal.FS.FileHandle.close
 COPY r15 rStack
 STACK POP r15
@@ -3094,7 +3260,7 @@ STACK PUSH r15
 COPY rStack r15
 #stackVar int32 len -12
 #stackVar void* buffer -16
-#line run\lang\Kernal\fs.el 306:14
+#line run\lang\Kernal\fs.el 333:14
 // Reserving r1
 ADD r1 r0 4
 // Register r1 already reserved
@@ -3102,14 +3268,14 @@ LOAD MEM BYTE r1 r1
 LOAD r2 Kernal.FS.OpenMode.WRITE
 // Register r2 already reserved
 AND r1 r1 r2
-GOTO EQ r1 :exp_ee_6
+GOTO EQ r1 :exp_ee_7
 ADD r1 r0 12
 // Register r1 already reserved
 LOAD MEM r1 r1
-GOTO NEQ r1 :if_end_55
-:exp_ee_6 // mode & OpenMode.WRITE == 0 || intBuffer == nullptr
+GOTO NEQ r1 :if_end_58
+:exp_ee_7 // mode & OpenMode.WRITE == 0 || intBuffer == nullptr
 // Releasing r1
-#line run\lang\Kernal\fs.el 307:18
+#line run\lang\Kernal\fs.el 334:18
 // Reserving r1
 SUB r1 r15 20
 STORE BYTE 0 r1
@@ -3118,10 +3284,10 @@ GOTO :func_exit_Kernal.FS.FileHandle.write_void*_int32
 //  return false;
 
 #lineend
-:if_end_55
+:if_end_58
 //  if(mode & OpenMode.WRITE == 0 || intBuffer == nullptr) {return false;}
 
-#line run\lang\Kernal\fs.el 309:14
+#line run\lang\Kernal\fs.el 336:14
 // Reserving r1
 ADD r1 r0 18
 // Register r1 already reserved
@@ -3135,87 +3301,88 @@ ADD r2 r0 16
 // Register r2 already reserved
 LOAD MEM SHORT r2 r2
 SUB r1 r1 r2
-GOTO LEQ r1 :if_end_56 // bufferSize + len > bufferCapacity
+GOTO LEQ r1 :if_end_59 // bufferSize + len > bufferCapacity
 // Releasing r1
-#line run\lang\Kernal\fs.el 310:18
+#line run\lang\Kernal\fs.el 337:18
 STACK PUSH r0
-// Reserving r1 // flush()
+// Reserving r1
+GOTO PUSH :Kernal.FS.FileHandle.flush
+STACK POP r0
+// Releasing r1 // flush()
 //  flush();
 
 #lineend
-// Reserved: r1
-:if_end_56
+:if_end_59
 //  if(bufferSize + len > bufferCapacity) {flush();}
 
-#line run\lang\Kernal\fs.el 312:14
-// Still reserved: r1
-// Reserving r2
-SUB r2 r15 12
+#line run\lang\Kernal\fs.el 339:14
+// Reserving r1
+SUB r1 r15 12
+// Register r1 already reserved
+LOAD MEM r1 r1
+ADD r2 r0 16
 // Register r2 already reserved
-LOAD MEM r2 r2
-ADD r3 r0 16
-// Register r3 already reserved
-LOAD MEM SHORT r3 r3
-SUB r2 r2 r3
-GOTO LEQ r2 :if_end_57 // len > bufferCapacity
-// Releasing r2
-#line run\lang\Kernal\fs.el 313:18
+LOAD MEM SHORT r2 r2
+SUB r1 r1 r2
+GOTO LEQ r1 :if_end_60 // len > bufferCapacity
+// Releasing r1
+#line run\lang\Kernal\fs.el 340:18
 STACK PUSH r0
+// Reserving r1
+SUB r1 r15 16
+// Register r1 already reserved
+LOAD MEM r1 r1 // buffer
 STACK PUSH r1
-// Reserving r2
-SUB r2 r15 16
-// Register r2 already reserved
-LOAD MEM r2 r2 // buffer
-STACK PUSH r2
-SUB r2 r15 12
-// Register r2 already reserved
-LOAD MEM r2 r2 // len
-STACK PUSH r2
-// Releasing r2 // writeDirect(buffer, len)
+SUB r1 r15 12
+// Register r1 already reserved
+LOAD MEM r1 r1 // len
+STACK PUSH r1
+// Releasing r1
+GOTO PUSH :Kernal.FS.FileHandle.writeDirect_void*_int32
+STACK DEC 8
+STACK POP r0
+// Releasing r1 // writeDirect(buffer, len)
 //  writeDirect(buffer, len);
 
-#line run\lang\Kernal\fs.el 314:18
-// Reserving r2
-SUB r2 r15 20
-STORE BYTE 1 r2
-// Releasing r2
+#line run\lang\Kernal\fs.el 341:18
+// Reserving r1
+SUB r1 r15 20
+STORE BYTE 1 r1
+// Releasing r1
 GOTO :func_exit_Kernal.FS.FileHandle.write_void*_int32
 //  return true;
 
 #lineend
-:if_end_57
+:if_end_60
 //  if(len > bufferCapacity) {writeDirect(buffer, len); return true;}
 
-#line run\lang\Kernal\fs.el 317:14
-// Still reserved: r1
+#line run\lang\Kernal\fs.el 344:14
+// Reserving r1
 // Reserving r2
-// Reserving r3
-ADD r3 r0 18
-// Register r3 already reserved
+ADD r2 r0 18
 // Register r2 already reserved
-LOAD MEM SHORT r2 r3
-// Reserving r4
-SUB r4 r15 12
-// Register r4 already reserved
-LOAD MEM r4 r4 // len
-ADD r4 r2 r4
-STORE SHORT r4 r3
-// Releasing r3
+// Register r1 already reserved
+LOAD MEM SHORT r1 r2
+// Reserving r3
+SUB r3 r15 12
+// Register r3 already reserved
+LOAD MEM r3 r3 // len
+ADD r3 r1 r3
+STORE SHORT r3 r2
 // Releasing r2
-// Releasing r4
+// Releasing r1
+// Releasing r3
 //  bufferSize += len;
 
-#line run\lang\Kernal\fs.el 319:14
-// Still reserved: r1
-// Reserving r2
-SUB r2 r15 20
-STORE BYTE 1 r2
-// Releasing r2
+#line run\lang\Kernal\fs.el 346:14
+// Reserving r1
+SUB r1 r15 20
+STORE BYTE 1 r1
+// Releasing r1
 GOTO :func_exit_Kernal.FS.FileHandle.write_void*_int32
 //  return true;
 
 #lineend
-// Reserved: r1
 :func_exit_Kernal.FS.FileHandle.write_void*_int32
 COPY r15 rStack
 STACK POP r15
@@ -3226,7 +3393,7 @@ GOTO POP
 STACK PUSH r15
 COPY rStack r15
 #stackVar int32 newOffset -12
-#line run\lang\Kernal\fs.el 373:14
+#line run\lang\Kernal\fs.el 397:14
 // Reserving r1
 ADD r1 r0 20
 // Register r1 already reserved
@@ -3251,7 +3418,7 @@ STACK PUSH r15
 COPY rStack r15
 #stackVar OpenMode mode -9
 #stackVar char* path -16
-#line run\lang\Kernal\fs.el 275:14
+#line run\lang\Kernal\fs.el 301:14
 // Reserving r1
 // Register r1 already reserved
 LOAD MEM r1 r0
@@ -3265,7 +3432,7 @@ STORE r2 r1
 // Releasing r2
 //  this.path = path;
 
-#line run\lang\Kernal\fs.el 276:14
+#line run\lang\Kernal\fs.el 302:14
 // Reserving r1
 // Register r1 already reserved
 LOAD MEM r1 r0
@@ -3279,7 +3446,7 @@ STORE BYTE r2 r1
 // Releasing r2
 //  this.mode = mode;
 
-#line run\lang\Kernal\fs.el 278:14
+#line run\lang\Kernal\fs.el 304:14
 // Reserving r1
 SUB r1 r15 9
 // Register r1 already reserved
@@ -3287,9 +3454,9 @@ LOAD MEM BYTE r1 r1
 LOAD r2 Kernal.FS.OpenMode.STREAM_READ
 // Register r2 already reserved
 AND r1 r1 r2 // mode & OpenMode.STREAM_READ != 0
-GOTO EQ r1 :if_end_58
+GOTO EQ r1 :if_end_61
 // Releasing r1
-#line run\lang\Kernal\fs.el 280:18
+#line run\lang\Kernal\fs.el 306:18
 // Reserving r1
 SUB r1 r15 20
 STORE BYTE 1 r1
@@ -3298,10 +3465,10 @@ GOTO :func_exit_Kernal.FS.FileHandle.open_char*_OpenMode
 //  return true;
 
 #lineend
-:if_end_58
+:if_end_61
 //  if(mode & OpenMode.STREAM_READ != 0) {return true;}
 
-#line run\lang\Kernal\fs.el 282:14
+#line run\lang\Kernal\fs.el 308:14
 // Reserving r1
 #stackVar FileOpenCommand cmd
 STORE 0x0010 rStack INC_RA
@@ -3312,7 +3479,7 @@ STORE r1 rStack INC_RA
 // Releasing r1
 //  FileOpenCommand cmd = {, path};
 
-#line run\lang\Kernal\fs.el 283:14
+#line run\lang\Kernal\fs.el 309:14
 // Reserving r1
 // Register r1 already reserved
 LOAD MEM r1 &Kernal.FS.fsDeviceId // fsDeviceId
@@ -3330,7 +3497,7 @@ STACK DEC 12
 // Releasing r1 // Peripheral.command(fsDeviceId, sizeof(cmd) / 4, & cmd)
 //  Peripheral.command(fsDeviceId, sizeof(cmd) / 4, & cmd);
 
-#line run\lang\Kernal\fs.el 284:14
+#line run\lang\Kernal\fs.el 310:14
 // Reserving r1
 LOAD r1 Peripheral.RSP_DATA
 // Register r1 already reserved
@@ -3342,7 +3509,7 @@ STORE r1 r0
 // Releasing r1
 //  rawHandle = Peripheral.RSP_DATA[1];
 
-#line run\lang\Kernal\fs.el 285:14
+#line run\lang\Kernal\fs.el 311:14
 // Reserving r1
 // Register r1 already reserved
 LOAD MEM r1 r0
@@ -3371,14 +3538,14 @@ GOTO POP
 #function Kernal.FS.ProcessFiles.new
 STACK PUSH r15
 COPY rStack r15
-#line run\lang\Kernal\fs.el 212:14
+#line run\lang\Kernal\fs.el 238:14
 // Reserving r1
 // Register r1 already reserved
 LOAD MEM r1 &Kernal.FS.ProcessFiles.nextFree
 INC r1 1
-GOTO NEQ r1 :if_end_59 // nextFree == 0xffff_ffff
+GOTO NEQ r1 :if_end_62 // nextFree == 0xffff_ffff
 // Releasing r1
-#line run\lang\Kernal\fs.el 213:18
+#line run\lang\Kernal\fs.el 239:18
 // Reserving r1
 // Register r1 already reserved
 LOAD r1 &Kernal.FS.ProcessFiles.nextFree
@@ -3390,7 +3557,7 @@ STORE r2 r1
 // Releasing r2
 //  nextFree = & pool;
 
-#line run\lang\Kernal\fs.el 214:18
+#line run\lang\Kernal\fs.el 240:18
 // For Loop:
 // Initializer
 // Reserving r1
@@ -3400,14 +3567,14 @@ LOAD r2 0 // 0
 #stackVar int32 i
 STACK PUSH r2
 // Releasing r2
-:for_condition_60
+:for_condition_63
 // Reserving r2
 // Register r3 already reserved
 COPY r1 r3
 INC r3 -127
-GOTO GEQ r3 :for_end_60 // i < pool.length - 1
+GOTO GEQ r3 :for_end_63 // i < pool.length - 1
 // Releasing r2
-#line run\lang\Kernal\fs.el 215:22
+#line run\lang\Kernal\fs.el 241:22
 // Still reserved: r1
 // Reserving r2
 // Register r2 already reserved
@@ -3441,13 +3608,13 @@ STORE r3 r2
 // Reserved: r1
 // Iterator
 INC r1 1 // i++
-GOTO :for_condition_60
-:for_end_60
+GOTO :for_condition_63
+:for_end_63
 // End of scope
 // Releasing r1
 //  for(int32 i = 0; i < pool.length - 1; i++) {pool[i].numOpen = cast<int32>(& pool[i + 1]);}
 
-#line run\lang\Kernal\fs.el 217:18
+#line run\lang\Kernal\fs.el 243:18
 // Reserving r1
 // Register r1 already reserved
 LOAD r1 &Kernal.FS.ProcessFiles.pool
@@ -3459,16 +3626,16 @@ STORE 0 r1
 //  pool[pool.length - 1].numOpen = 0;
 
 #lineend
-:if_end_59
+:if_end_62
 //  if(nextFree == 0xffff_ffff) {nextFree = & pool; for(int32 i = 0; i < pool.length - 1; i++) {pool[i].numOpen = cast<int32>(& pool[i + 1]);} pool[pool.length - 1].numOpen = 0;}
 
-#line run\lang\Kernal\fs.el 219:14
+#line run\lang\Kernal\fs.el 245:14
 // Reserving r1
 // Register r1 already reserved
 LOAD MEM r1 &Kernal.FS.ProcessFiles.nextFree
-GOTO NEQ r1 :if_end_61 // nextFree == nullptr
+GOTO NEQ r1 :if_end_64 // nextFree == nullptr
 // Releasing r1
-#line run\lang\Kernal\fs.el 220:18
+#line run\lang\Kernal\fs.el 246:18
 // Reserving r1
 SUB r1 r15 12
 STORE 0 r1
@@ -3477,10 +3644,10 @@ GOTO :func_exit_Kernal.FS.ProcessFiles.new
 //  return nullptr;
 
 #lineend
-:if_end_61
+:if_end_64
 //  if(nextFree == nullptr) {return nullptr;}
 
-#line run\lang\Kernal\fs.el 222:14
+#line run\lang\Kernal\fs.el 248:14
 // Reserving r1
 // Releasing r1
 // Reserving r1
@@ -3490,7 +3657,7 @@ STACK PUSH r1
 // Releasing r1
 //  ProcessFiles* next = nextFree;
 
-#line run\lang\Kernal\fs.el 223:14
+#line run\lang\Kernal\fs.el 249:14
 // Reserving r1
 // Register r1 already reserved
 LOAD r1 &Kernal.FS.ProcessFiles.nextFree
@@ -3503,7 +3670,7 @@ STORE r2 r1
 // Releasing r2
 //  nextFree = force_cast<ProcessFiles*>(next.numOpen);
 
-#line run\lang\Kernal\fs.el 224:14
+#line run\lang\Kernal\fs.el 250:14
 STACK PUSH r0
 // Reserving r1
 // Reserving r2
@@ -3516,7 +3683,7 @@ STACK POP r0
 // Releasing r1 // next.reset()
 //  next.reset();
 
-#line run\lang\Kernal\fs.el 225:14
+#line run\lang\Kernal\fs.el 251:14
 // Reserving r1
 // Register r1 already reserved
 LOAD MEM r1 r15 // next
@@ -3538,13 +3705,13 @@ GOTO POP
 #function Kernal.FS.ProcessFiles.release
 STACK PUSH r15
 COPY rStack r15
-#line run\lang\Kernal\fs.el 229:14
+#line run\lang\Kernal\fs.el 255:14
 // Reserving r1
 // Register r1 already reserved
 LOAD MEM r1 r0
-GOTO LEQ r1 :if_end_62 // numOpen > 0
+GOTO LEQ r1 :if_end_65 // numOpen > 0
 // Releasing r1
-#line run\lang\Kernal\fs.el 230:18
+#line run\lang\Kernal\fs.el 256:18
 // For Loop:
 // Initializer
 // Reserving r1
@@ -3554,14 +3721,14 @@ LOAD r2 0 // 0
 #stackVar int32 i
 STACK PUSH r2
 // Releasing r2
-:for_condition_63
+:for_condition_66
 // Reserving r2
 // Register r3 already reserved
 COPY r1 r3
 INC r3 -16
-GOTO GEQ r3 :for_end_63 // i < handles.length
+GOTO GEQ r3 :for_end_66 // i < handles.length
 // Releasing r2
-#line run\lang\Kernal\fs.el 231:22
+#line run\lang\Kernal\fs.el 257:22
 // Still reserved: r1
 // Reserving r2
 ADD r2 r0 4
@@ -3573,9 +3740,9 @@ LSH r3 r3 2
 ADD r2 r2 r3
 // Releasing r3
 LOAD MEM r2 r2 // handles[i] != nullptr
-GOTO EQ r2 :if_end_64
+GOTO EQ r2 :if_end_67
 // Releasing r2
-#line run\lang\Kernal\fs.el 232:26
+#line run\lang\Kernal\fs.el 258:26
 STACK PUSH r0
 STACK PUSH r1
 // Reserving r2
@@ -3596,7 +3763,7 @@ STACK POP r1
 // Releasing r2 // handles[i].close()
 //  handles[i].close();
 
-#line run\lang\Kernal\fs.el 233:26
+#line run\lang\Kernal\fs.el 259:26
 // Reserving r2
 ADD r2 r0 4
 // Register r2 already reserved
@@ -3611,24 +3778,24 @@ STORE 0 r2
 //  handles[i] = nullptr;
 
 #lineend
-:if_end_64
+:if_end_67
 //  if(handles[i] != nullptr) {handles[i].close(); handles[i] = nullptr;}
 
 #lineend
 // Reserved: r1
 // Iterator
 INC r1 1 // i++
-GOTO :for_condition_63
-:for_end_63
+GOTO :for_condition_66
+:for_end_66
 // End of scope
 // Releasing r1
 //  for(int32 i = 0; i < handles.length; i++) {if(handles[i] != nullptr) {handles[i].close(); handles[i] = nullptr;}}
 
 #lineend
-:if_end_62
+:if_end_65
 //  if(numOpen > 0) {for(int32 i = 0; i < handles.length; i++) {if(handles[i] != nullptr) {handles[i].close(); handles[i] = nullptr;}}}
 
-#line run\lang\Kernal\fs.el 237:14
+#line run\lang\Kernal\fs.el 263:14
 // Reserving r1
 // Register r1 already reserved
 LOAD MEM r1 &Kernal.FS.ProcessFiles.nextFree // nextFree // cast<int32>(nextFree)
@@ -3636,7 +3803,7 @@ STORE r1 r0
 // Releasing r1
 //  numOpen = cast<int32>(nextFree);
 
-#line run\lang\Kernal\fs.el 238:14
+#line run\lang\Kernal\fs.el 264:14
 // Reserving r1
 // Register r1 already reserved
 LOAD r1 &Kernal.FS.ProcessFiles.nextFree
@@ -3658,7 +3825,7 @@ GOTO POP
 #function Kernal.FS.ProcessFiles.reset
 STACK PUSH r15
 COPY rStack r15
-#line run\lang\Kernal\fs.el 205:14
+#line run\lang\Kernal\fs.el 231:14
 // For Loop:
 // Initializer
 // Reserving r1
@@ -3668,14 +3835,14 @@ LOAD r2 0 // 0
 #stackVar int32 i
 STACK PUSH r2
 // Releasing r2
-:for_condition_65
+:for_condition_68
 // Reserving r2
 // Register r3 already reserved
 COPY r1 r3
 INC r3 -16
-GOTO GEQ r3 :for_end_65 // i < handles.length
+GOTO GEQ r3 :for_end_68 // i < handles.length
 // Releasing r2
-#line run\lang\Kernal\fs.el 206:18
+#line run\lang\Kernal\fs.el 232:18
 // Still reserved: r1
 // Reserving r2
 ADD r2 r0 4
@@ -3694,13 +3861,13 @@ STORE 0 r2
 // Reserved: r1
 // Iterator
 INC r1 1 // i++
-GOTO :for_condition_65
-:for_end_65
+GOTO :for_condition_68
+:for_end_68
 // End of scope
 // Releasing r1
 //  for(int32 i = 0; i < handles.length; i++) {handles[i] = nullptr;}
 
-#line run\lang\Kernal\fs.el 208:14
+#line run\lang\Kernal\fs.el 234:14
 STORE 0 r0
 //  numOpen = 0;
 
@@ -3714,21 +3881,21 @@ GOTO POP
 #function Kernal.FS.ProcessFiles.close
 STACK PUSH r15
 COPY rStack r15
-#line run\lang\Kernal\fs.el 189:14
+#line run\lang\Kernal\fs.el 215:14
 // Reserving r1
 // Register r1 already reserved
 LOAD MEM r1 r0
-GOTO NEQ r1 :if_end_66 // numOpen == 0
+GOTO NEQ r1 :if_end_69 // numOpen == 0
 // Releasing r1
-#line run\lang\Kernal\fs.el 190:18
+#line run\lang\Kernal\fs.el 216:18
 GOTO :func_exit_Kernal.FS.ProcessFiles.close
 //  return;
 
 #lineend
-:if_end_66
+:if_end_69
 //  if(numOpen == 0) {return;}
 
-#line run\lang\Kernal\fs.el 192:14
+#line run\lang\Kernal\fs.el 218:14
 // For Loop:
 // Initializer
 // Reserving r1
@@ -3738,14 +3905,14 @@ LOAD r2 0 // 0
 #stackVar int32 i
 STACK PUSH r2
 // Releasing r2
-:for_condition_67
+:for_condition_70
 // Reserving r2
 // Register r3 already reserved
 COPY r1 r3
 INC r3 -16
-GOTO GEQ r3 :for_end_67 // i < handles.length
+GOTO GEQ r3 :for_end_70 // i < handles.length
 // Releasing r2
-#line run\lang\Kernal\fs.el 193:18
+#line run\lang\Kernal\fs.el 219:18
 // Still reserved: r1
 // Reserving r2
 ADD r2 r0 4
@@ -3757,9 +3924,9 @@ LSH r3 r3 2
 ADD r2 r2 r3
 // Releasing r3
 LOAD MEM r2 r2 // handles[i] != nullptr
-GOTO EQ r2 :if_end_68
+GOTO EQ r2 :if_end_71
 // Releasing r2
-#line run\lang\Kernal\fs.el 194:22
+#line run\lang\Kernal\fs.el 220:22
 STACK PUSH r0
 STACK PUSH r1
 // Reserving r2
@@ -3780,7 +3947,7 @@ STACK POP r1
 // Releasing r2 // handles[i].close()
 //  handles[i].close();
 
-#line run\lang\Kernal\fs.el 195:22
+#line run\lang\Kernal\fs.el 221:22
 // Reserving r2
 ADD r2 r0 4
 // Register r2 already reserved
@@ -3795,20 +3962,20 @@ STORE 0 r2
 //  handles[i] = nullptr;
 
 #lineend
-:if_end_68
+:if_end_71
 //  if(handles[i] != nullptr) {handles[i].close(); handles[i] = nullptr;}
 
 #lineend
 // Reserved: r1
 // Iterator
 INC r1 1 // i++
-GOTO :for_condition_67
-:for_end_67
+GOTO :for_condition_70
+:for_end_70
 // End of scope
 // Releasing r1
 //  for(int32 i = 0; i < handles.length; i++) {if(handles[i] != nullptr) {handles[i].close(); handles[i] = nullptr;}}
 
-#line run\lang\Kernal\fs.el 198:14
+#line run\lang\Kernal\fs.el 224:14
 STORE 0 r0
 //  numOpen = 0;
 
@@ -3824,14 +3991,14 @@ STACK PUSH r15
 COPY rStack r15
 #stackVar OpenMode mode -9
 #stackVar char* path -16
-#line run\lang\Kernal\fs.el 166:14
+#line run\lang\Kernal\fs.el 192:14
 // Reserving r1
 // Register r1 already reserved
 LOAD MEM r1 r0
 INC r1 -16
-GOTO NEQ r1 :if_end_69 // numOpen == handles.length
+GOTO NEQ r1 :if_end_72 // numOpen == handles.length
 // Releasing r1
-#line run\lang\Kernal\fs.el 167:18
+#line run\lang\Kernal\fs.el 193:18
 // Reserving r1
 SUB r1 r15 20
 STORE -1 r1
@@ -3840,10 +4007,10 @@ GOTO :func_exit_Kernal.FS.ProcessFiles.open_char*_OpenMode
 //  return - 1;
 
 #lineend
-:if_end_69
+:if_end_72
 //  if(numOpen == handles.length) {return - 1;}
 
-#line run\lang\Kernal\fs.el 169:14
+#line run\lang\Kernal\fs.el 195:14
 // Reserving r1
 // Releasing r1
 LOAD r1 0 // 0
@@ -3852,17 +4019,17 @@ STACK PUSH r1
 // Releasing r1
 //  int32 outHandle = 0;
 
-#line run\lang\Kernal\fs.el 170:14
+#line run\lang\Kernal\fs.el 196:14
 // For Loop:
 // Initializer
-:for_condition_70
+:for_condition_73
 // Reserving r1
 // Register r2 already reserved
 LOAD MEM r2 r15
 INC r2 -16
-GOTO GEQ r2 :for_end_70 // outHandle < handles.length
+GOTO GEQ r2 :for_end_73 // outHandle < handles.length
 // Releasing r1
-#line run\lang\Kernal\fs.el 171:18
+#line run\lang\Kernal\fs.el 197:18
 // Reserving r1
 ADD r1 r0 4
 // Register r1 already reserved
@@ -3873,14 +4040,14 @@ LSH r2 r2 2
 ADD r1 r1 r2
 // Releasing r2
 LOAD MEM r1 r1
-GOTO NEQ r1 :if_end_71 // handles[outHandle] == nullptr
+GOTO NEQ r1 :if_end_74 // handles[outHandle] == nullptr
 // Releasing r1
-#line run\lang\Kernal\fs.el 172:22
-GOTO :for_end_70
+#line run\lang\Kernal\fs.el 198:22
+GOTO :for_end_73
 //  break;
 
 #lineend
-:if_end_71
+:if_end_74
 //  if(handles[outHandle] == nullptr) {break;}
 
 #lineend
@@ -3890,12 +4057,12 @@ COPY r15 r2
 LOAD MEM r1 r2
 ADD r3 r1 1
 STORE r3 r2 // outHandle++
-GOTO :for_condition_70
-:for_end_70
+GOTO :for_condition_73
+:for_end_73
 // End of scope
 //  for(; outHandle < handles.length; outHandle++) {if(handles[outHandle] == nullptr) {break;}}
 
-#line run\lang\Kernal\fs.el 175:14
+#line run\lang\Kernal\fs.el 201:14
 // Reserving r1
 // Releasing r1
 STACK INC 4
@@ -3908,14 +4075,14 @@ STACK PUSH r1
 // Releasing r1
 //  FileHandle* ptr = FileHandle.new();
 
-#line run\lang\Kernal\fs.el 176:14
+#line run\lang\Kernal\fs.el 202:14
 // Reserving r1
 ADD r1 r15 4
 // Register r1 already reserved
 LOAD MEM r1 r1
-GOTO NEQ r1 :if_end_72 // ptr == nullptr
+GOTO NEQ r1 :if_end_75 // ptr == nullptr
 // Releasing r1
-#line run\lang\Kernal\fs.el 177:18
+#line run\lang\Kernal\fs.el 203:18
 // Reserving r1
 SUB r1 r15 20
 STORE -1 r1
@@ -3924,10 +4091,10 @@ GOTO :func_exit_Kernal.FS.ProcessFiles.open_char*_OpenMode
 //  return - 1;
 
 #lineend
-:if_end_72
+:if_end_75
 //  if(ptr == nullptr) {return - 1;}
 
-#line run\lang\Kernal\fs.el 179:14
+#line run\lang\Kernal\fs.el 205:14
 // Reserving r1
 STACK PUSH r0
 STACK INC 4
@@ -3951,9 +4118,9 @@ STACK DEC 8
 STACK POP BYTE r1
 STACK POP r0
 // Releasing r2
-GOTO NEQ r1 :if_end_73 // !ptr.open(path, mode)
+GOTO NEQ r1 :if_end_76 // !ptr.open(path, mode)
 // Releasing r1
-#line run\lang\Kernal\fs.el 180:18
+#line run\lang\Kernal\fs.el 206:18
 STACK PUSH r0
 // Reserving r1
 // Reserving r2
@@ -3966,7 +4133,7 @@ STACK POP r0
 // Releasing r1 // ptr.release()
 //  ptr.release();
 
-#line run\lang\Kernal\fs.el 181:18
+#line run\lang\Kernal\fs.el 207:18
 // Reserving r1
 SUB r1 r15 20
 STORE -1 r1
@@ -3975,10 +4142,10 @@ GOTO :func_exit_Kernal.FS.ProcessFiles.open_char*_OpenMode
 //  return - 1;
 
 #lineend
-:if_end_73
+:if_end_76
 //  if(! ptr.open(path, mode)) {ptr.release(); return - 1;}
 
-#line run\lang\Kernal\fs.el 183:14
+#line run\lang\Kernal\fs.el 209:14
 // Reserving r1
 ADD r1 r0 4
 // Register r1 already reserved
@@ -3997,7 +4164,7 @@ STORE r2 r1
 // Releasing r2
 //  handles[outHandle] = ptr;
 
-#line run\lang\Kernal\fs.el 184:14
+#line run\lang\Kernal\fs.el 210:14
 // Register r2 already reserved
 COPY r0 r2
 LOAD MEM r1 r2
@@ -4005,7 +4172,7 @@ ADD r3 r1 1
 STORE r3 r2 // numOpen++
 //  numOpen++;
 
-#line run\lang\Kernal\fs.el 185:14
+#line run\lang\Kernal\fs.el 211:14
 // Reserving r1
 // Register r1 already reserved
 LOAD MEM r1 r15 // outHandle

@@ -98,7 +98,7 @@ LOAD MEM r1 r1
 // Register r2 already reserved
 LOAD MEM r2 r15
 SUB r1 r1 r2
-GOTO LEQ r1 :if_end_74 // num > cPages
+GOTO LEQ r1 :if_end_77 // num > cPages
 // Releasing r1
 #line run\lang\TestD\kalloc.el 48:14
 // Reserving r1
@@ -113,16 +113,16 @@ STORE r2 r1
 //  num = cPages;
 
 #lineend
-:if_end_74
+:if_end_77
 //  if(num > cPages) {num = cPages;}
 
 #line run\lang\TestD\kalloc.el 50:10
-:while_condition_75
+:while_condition_78
 // Reserving r1
 SUB r1 r15 12
 // Register r1 already reserved
 LOAD MEM r1 r1
-GOTO LEQ r1 :while_end_75 // num > 0
+GOTO LEQ r1 :while_end_78 // num > 0
 // Releasing r1
 #line run\lang\TestD\kalloc.el 51:14
 // Register r2 already reserved
@@ -163,8 +163,8 @@ STORE r3 r2 // num--
 //  num--;
 
 #lineend
-GOTO :while_condition_75
-:while_end_75
+GOTO :while_condition_78
+:while_end_78
 //  while(num > 0) {cPages--; pageFreeTable[(cast<int32>(SysD.rMemTbl[cPages]) & 0x7fff_ffff) >> 12] = false; num--;}
 
 #line run\lang\TestD\kalloc.el 55:10
@@ -226,7 +226,7 @@ STACK PUSH r1
 // Register r1 already reserved
 LOAD MEM r1 r15
 INC r1 -32
-GOTO LT r1 :if_end_76 // cPages >= MAX_BLOCKS
+GOTO LT r1 :if_end_79 // cPages >= MAX_BLOCKS
 // Releasing r1
 #line run\lang\TestD\kalloc.el 21:14
 #alias r1 this // Reserving r1
@@ -247,7 +247,7 @@ GOTO :func_exit_Kernal.kalloc
 //  return nullptr;
 
 #lineend
-:if_end_76
+:if_end_79
 //  if(cPages >= MAX_BLOCKS) {kallocMutex.release(); return nullptr;}
 
 #line run\lang\TestD\kalloc.el 24:10
@@ -260,7 +260,7 @@ STACK PUSH r1
 //  int32 i = 0;
 
 #line run\lang\TestD\kalloc.el 25:10
-:while_condition_77
+:while_condition_80
 // Reserving r1
 LOAD r1 Kernal.pageFreeTable
 // Register r1 already reserved
@@ -271,12 +271,12 @@ LOAD MEM r2 r2 // i
 ADD r1 r1 r2
 // Releasing r2
 LOAD MEM BYTE r1 r1
-GOTO EQ r1 :while_end_77
+GOTO EQ r1 :while_end_80
 ADD r1 r15 4
 // Register r1 already reserved
 LOAD MEM r1 r1
 INC r1 -4096
-GOTO GEQ r1 :while_end_77 // i < 0x1000 // pageFreeTable[i] && ( i < 0x1000 )
+GOTO GEQ r1 :while_end_80 // i < 0x1000 // pageFreeTable[i] && ( i < 0x1000 )
 // Releasing r1
 #line run\lang\TestD\kalloc.el 26:14
 ADD r2 r15 4
@@ -287,8 +287,8 @@ STORE r3 r2 // i++
 //  i++;
 
 #lineend
-GOTO :while_condition_77
-:while_end_77
+GOTO :while_condition_80
+:while_end_80
 //  while(pageFreeTable[i] && (i < 0x1000)) {i++;}
 
 #line run\lang\TestD\kalloc.el 28:10
@@ -297,7 +297,7 @@ ADD r1 r15 4
 // Register r1 already reserved
 LOAD MEM r1 r1
 INC r1 -4096
-GOTO NEQ r1 :if_end_78 // i == 0x1000
+GOTO NEQ r1 :if_end_81 // i == 0x1000
 // Releasing r1
 #line run\lang\TestD\kalloc.el 29:14
 #alias r1 this // Reserving r1
@@ -318,7 +318,7 @@ GOTO :func_exit_Kernal.kalloc
 //  return nullptr;
 
 #lineend
-:if_end_78
+:if_end_81
 //  if(i == 0x1000) {kallocMutex.release(); return nullptr;}
 
 #line run\lang\TestD\kalloc.el 32:10
@@ -428,7 +428,7 @@ SUB r1 r15 12
 // Register r1 already reserved
 LOAD MEM r1 r1
 INC r1 -4096
-GOTO LEQ r1 :if_end_79 // size > 0x1000
+GOTO LEQ r1 :if_end_82 // size > 0x1000
 // Releasing r1
 #line run\lang\TestD\memory.el 19:14
 // Reserving r1
@@ -439,14 +439,14 @@ GOTO :func_exit_Memory.malloc_int32
 //  return nullptr;
 
 #lineend
-:if_end_79
+:if_end_82
 //  if(size > 0x1000) {return nullptr;}
 
 #line run\lang\TestD\memory.el 21:10
 // Reserving r1
 // Register r1 already reserved
 LOAD MEM r1 &Memory.blockFreeList
-GOTO NEQ r1 :if_end_80 // blockFreeList == nullptr
+GOTO NEQ r1 :if_end_83 // blockFreeList == nullptr
 // Releasing r1
 #line run\lang\TestD\memory.el 22:14
 // Reserving r1
@@ -457,7 +457,7 @@ GOTO :func_exit_Memory.malloc_int32
 //  return nullptr;
 
 #lineend
-:if_end_80
+:if_end_83
 //  if(blockFreeList == nullptr) {return nullptr;}
 
 #line run\lang\TestD\memory.el 24:10
@@ -479,7 +479,7 @@ SUB r1 r15 12
 LOAD MEM r1 r1
 LOAD r2 3
 AND r1 r1 r2 // size & 0x3 != 0
-GOTO EQ r1 :if_end_81
+GOTO EQ r1 :if_end_84
 // Releasing r1
 #line run\lang\TestD\memory.el 26:14
 // Register r2 already reserved
@@ -490,7 +490,7 @@ STORE r3 r2 // wordSize++
 //  wordSize++;
 
 #lineend
-:if_end_81
+:if_end_84
 //  if(size & 0x3 != 0) {wordSize++;}
 
 #line run\lang\TestD\memory.el 28:10
@@ -508,7 +508,7 @@ STACK PUSH r1
 ADD r1 r15 4
 // Register r1 already reserved
 LOAD MEM r1 r1
-GOTO NEQ r1 :if_end_82 // block == nullptr
+GOTO NEQ r1 :if_end_85 // block == nullptr
 // Releasing r1
 #line run\lang\TestD\memory.el 30:14
 // Reserving r1
@@ -612,7 +612,7 @@ GOTO :func_exit_Memory.malloc_int32
 STACK DEC 4
 // End of scope
 #stackVarClear next
-:if_end_82
+:if_end_85
 //  if(block == nullptr) {MemoryBlock* next = blockFreeList; blockFreeList = blockFreeList.next; next.start = block.end + 1; next.end = next.start + wordSize - 1; next.next = nullptr; allocatedBlocks = next; return heapStart;}
 
 #line run\lang\TestD\memory.el 38:10
@@ -626,13 +626,13 @@ STACK PUSH r1
 //  void* lastEnd = heapStart;
 
 #line run\lang\TestD\memory.el 39:10
-:while_condition_83
+:while_condition_86
 // Reserving r1
 ADD r1 r15 4
 // Register r1 already reserved
 LOAD MEM r1 r1
 LOAD MEM r1 r1 // block.next != nullptr
-GOTO EQ r1 :while_end_83
+GOTO EQ r1 :while_end_86
 ADD r1 r15 4
 // Register r1 already reserved
 LOAD MEM r1 r1
@@ -646,7 +646,7 @@ SUB r2 r15 12
 // Register r2 already reserved
 LOAD MEM r2 r2
 SUB r1 r1 r2
-GOTO LT r1 :while_end_83 // ( block.start - lastEnd ) >= size // ( block.next != nullptr ) && ( ( block.start - lastEnd ) >= size )
+GOTO LT r1 :while_end_86 // ( block.start - lastEnd ) >= size // ( block.next != nullptr ) && ( ( block.start - lastEnd ) >= size )
 // Releasing r1
 #line run\lang\TestD\memory.el 40:14
 // Reserving r1
@@ -678,8 +678,8 @@ STORE r2 r1
 //  block = block.next;
 
 #lineend
-GOTO :while_condition_83
-:while_end_83
+GOTO :while_condition_86
+:while_end_86
 //  while((block.next != nullptr) && ((block.start - lastEnd) >= size)) {lastEnd = block.end; block = block.next;}
 
 #line run\lang\TestD\memory.el 43:10
@@ -688,7 +688,7 @@ ADD r1 r15 4
 // Register r1 already reserved
 LOAD MEM r1 r1
 LOAD MEM r1 r1
-GOTO NEQ r1 :if_end_84 // block.next == nullptr
+GOTO NEQ r1 :if_end_87 // block.next == nullptr
 // Releasing r1
 #line run\lang\TestD\memory.el 44:14
 // Reserving r1
@@ -706,7 +706,7 @@ ADD r1 r1 r2 // Releasing r2
 INC r1 -4
 LOAD r2 196608
 SUB r1 r1 r2
-GOTO LEQ r1 :if_end_85 // block.end + size - 1 > 0x3_0000
+GOTO LEQ r1 :if_end_88 // block.end + size - 1 > 0x3_0000
 // Releasing r1
 #line run\lang\TestD\memory.el 45:18
 // Reserving r1
@@ -717,7 +717,7 @@ GOTO :func_exit_Memory.malloc_int32
 //  return nullptr;
 
 #lineend
-:if_end_85
+:if_end_88
 //  if(block.end + size - 1 > 0x3_0000) {return nullptr;}
 
 #line run\lang\TestD\memory.el 47:14
@@ -826,7 +826,7 @@ GOTO :func_exit_Memory.malloc_int32
 STACK DEC 4
 // End of scope
 #stackVarClear next
-:if_end_84
+:if_end_87
 //  if(block.next == nullptr) {if(block.end + size - 1 > 0x3_0000) {return nullptr;} MemoryBlock* next = blockFreeList; blockFreeList = blockFreeList.next; next.start = block.end + 1; next.end = next.start + wordSize - 1; next.next = nullptr; block.next = next; return next.start;}
 
 #line run\lang\TestD\memory.el 55:10
@@ -958,7 +958,7 @@ STACK PUSH r1
 //  MemoryBlock* list = blockFreeList;
 
 #line run\lang\TestD\memory.el 10:10
-:while_condition_86
+:while_condition_89
 // Reserving r1
 // Register r1 already reserved
 LOAD MEM r1 r15
@@ -966,7 +966,7 @@ LOAD MEM r1 r15
 LOAD MEM r2 &Memory.heapStart
 INC r2 -12 // heapStart - 3
 SUB r1 r1 r2
-GOTO GEQ r1 :while_end_86 // list < ( heapStart - 3 )
+GOTO GEQ r1 :while_end_89 // list < ( heapStart - 3 )
 // Releasing r1
 #line run\lang\TestD\memory.el 11:14
 // Reserving r1
@@ -990,8 +990,8 @@ STORE r3 r2 // list++
 //  list++;
 
 #lineend
-GOTO :while_condition_86
-:while_end_86
+GOTO :while_condition_89
+:while_end_89
 //  while(list < (heapStart - 3)) {list.next = list + 1; list++;}
 
 #line run\lang\TestD\memory.el 14:10
@@ -1017,14 +1017,14 @@ COPY rStack r15
 // Reserving r1
 // Register r1 already reserved
 LOAD MEM r1 &Memory.allocatedBlocks
-GOTO NEQ r1 :if_end_87 // allocatedBlocks == nullptr
+GOTO NEQ r1 :if_end_90 // allocatedBlocks == nullptr
 // Releasing r1
 #line run\lang\TestD\memory.el 66:14
 GOTO :func_exit_Memory.free_void*
 //  return;
 
 #lineend
-:if_end_87
+:if_end_90
 //  if(allocatedBlocks == nullptr) {return;}
 
 #line run\lang\TestD\memory.el 68:10
@@ -1047,7 +1047,7 @@ STACK PUSH r1
 //  MemoryBlock* last = nullptr;
 
 #line run\lang\TestD\memory.el 70:10
-:while_condition_88
+:while_condition_91
 // Reserving r1
 // Register r1 already reserved
 LOAD MEM r1 r15
@@ -1061,7 +1061,7 @@ SUB r3 r15 12
 LOAD MEM r3 r3
 SUB r2 r2 r3 // block.start != ptr
 AND r1 r1 r2 // ( block.next != nullptr ) & ( block.start != ptr )
-GOTO EQ r1 :while_end_88
+GOTO EQ r1 :while_end_91
 // Releasing r1
 #line run\lang\TestD\memory.el 71:14
 // Reserving r1
@@ -1085,8 +1085,8 @@ STORE r1 r15
 //  block = block.next;
 
 #lineend
-GOTO :while_condition_88
-:while_end_88
+GOTO :while_condition_91
+:while_end_91
 //  while((block.next != nullptr) & (block.start != ptr)) {last = block; block = block.next;}
 
 #line run\lang\TestD\memory.el 74:10
@@ -1099,14 +1099,14 @@ SUB r2 r15 12
 // Register r2 already reserved
 LOAD MEM r2 r2
 SUB r1 r1 r2 // block.start != ptr
-GOTO EQ r1 :if_end_89
+GOTO EQ r1 :if_end_92
 // Releasing r1
 #line run\lang\TestD\memory.el 75:14
 GOTO :func_exit_Memory.free_void*
 //  return;
 
 #lineend
-:if_end_89
+:if_end_92
 //  if(block.start != ptr) {return;}
 
 #line run\lang\TestD\memory.el 77:10
@@ -1114,7 +1114,7 @@ GOTO :func_exit_Memory.free_void*
 ADD r1 r15 4
 // Register r1 already reserved
 LOAD MEM r1 r1
-GOTO NEQ r1 :if_else_90 // last == nullptr
+GOTO NEQ r1 :if_else_93 // last == nullptr
 // Releasing r1
 #line run\lang\TestD\memory.el 78:14
 // Reserving r1
@@ -1125,8 +1125,8 @@ STORE 0 r1
 //  allocatedBlocks = nullptr;
 
 #lineend
-GOTO :if_end_90
-:if_else_90
+GOTO :if_end_93
+:if_else_93
 #line run\lang\TestD\memory.el 80:14
 // Reserving r1
 ADD r1 r15 4
@@ -1142,7 +1142,7 @@ STORE r2 r1
 //  last.next = block.next;
 
 #lineend
-:if_end_90
+:if_end_93
 //  if(last == nullptr) {allocatedBlocks = nullptr;} else {last.next = block.next;}
 
 #line run\lang\TestD\memory.el 82:10
@@ -1192,12 +1192,12 @@ STORE 1 r1
 //  deviceId = 1;
 
 #line run\lang\TestD\CharacterDisplay.el 15:10
-:while_condition_91
+:while_condition_94
 // Reserving r1
 // Register r1 already reserved
 LOAD MEM r1 &CharacterDisplay.deviceId
 INC r1 -64
-GOTO GEQ r1 :while_end_91 // deviceId < 64
+GOTO GEQ r1 :while_end_94 // deviceId < 64
 LOAD r1 Peripheral.TABLE
 // Register r1 already reserved
 // Reserving r2
@@ -1209,7 +1209,7 @@ ADD r1 r1 r2
 LOAD MEM r1 r1
 LOAD r2 16777233
 SUB r1 r1 r2 // Peripheral.TABLE[deviceId] != Peripheral.TYPE_DISPLAY_CHARACTER
-GOTO EQ r1 :while_end_91 // ( deviceId < 64 ) && ( Peripheral.TABLE[deviceId] != Peripheral.TYPE_DISPLAY_CHARACTER )
+GOTO EQ r1 :while_end_94 // ( deviceId < 64 ) && ( Peripheral.TABLE[deviceId] != Peripheral.TYPE_DISPLAY_CHARACTER )
 // Releasing r1
 #line run\lang\TestD\CharacterDisplay.el 16:14
 // Register r2 already reserved
@@ -1220,8 +1220,8 @@ STORE r3 r2 // deviceId++
 //  deviceId++;
 
 #lineend
-GOTO :while_condition_91
-:while_end_91
+GOTO :while_condition_94
+:while_end_94
 //  while((deviceId < 64) && (Peripheral.TABLE[deviceId] != Peripheral.TYPE_DISPLAY_CHARACTER)) {deviceId++;}
 
 #line run\lang\TestD\CharacterDisplay.el 18:10
@@ -1229,7 +1229,7 @@ GOTO :while_condition_91
 // Register r1 already reserved
 LOAD MEM r1 &CharacterDisplay.deviceId
 INC r1 -64
-GOTO NEQ r1 :if_end_92 // deviceId == 64
+GOTO NEQ r1 :if_end_95 // deviceId == 64
 // Releasing r1
 #line run\lang\TestD\CharacterDisplay.el 19:14
 // Reserving r1
@@ -1244,7 +1244,7 @@ GOTO :func_exit_CharacterDisplay.setup
 //  return;
 
 #lineend
-:if_end_92
+:if_end_95
 //  if(deviceId == 64) {deviceId = 0; return;}
 
 #line run\lang\TestD\CharacterDisplay.el 23:10
@@ -1280,14 +1280,14 @@ LOAD r1 Peripheral.RSP_STATUS
 
 LOAD MEM BYTE r1 r1
 INC r1 -1 // *Peripheral.RSP_STATUS != 0x01
-GOTO EQ r1 :if_end_93
+GOTO EQ r1 :if_end_96
 // Releasing r1
 #line run\lang\TestD\CharacterDisplay.el 26:14
 GOTO :func_exit_CharacterDisplay.setup
 //  return;
 
 #lineend
-:if_end_93
+:if_end_96
 //  if(* Peripheral.RSP_STATUS != 0x01) {return;}
 
 #line run\lang\TestD\CharacterDisplay.el 29:10
@@ -1444,7 +1444,7 @@ STACK PUSH r1
 //  int32 i = 0;
 
 #line run\lang\TestD\CharacterDisplay.el 45:10
-:while_condition_94
+:while_condition_97
 // Reserving r1
 SUB r1 r15 12
 // Register r1 already reserved
@@ -1455,14 +1455,14 @@ LOAD MEM r2 r15 // i
 ADD r1 r1 r2
 // Releasing r2
 LOAD MEM BYTE r1 r1
-GOTO EQ r1 :while_end_94
+GOTO EQ r1 :while_end_97
 SUB r1 r15 20
 // Register r1 already reserved
 LOAD MEM r1 r1
 // Register r2 already reserved
 LOAD MEM r2 &CharacterDisplay.width
 SUB r1 r1 r2
-GOTO GEQ r1 :while_end_94 // str[i] != \0 && x < width
+GOTO GEQ r1 :while_end_97 // str[i] != \0 && x < width
 // Releasing r1
 #line run\lang\TestD\CharacterDisplay.el 46:14
 // Reserving r1
@@ -1515,8 +1515,8 @@ STORE r3 r2 // i++
 //  i++;
 
 #lineend
-GOTO :while_condition_94
-:while_end_94
+GOTO :while_condition_97
+:while_end_97
 //  while(str[i] != '\0' && x < width) {charBuffer[x + (y* width)] = str[i]; x++; i++;}
 
 #lineend
@@ -1564,7 +1564,7 @@ LOAD MEM r1 r1
 // Register r2 already reserved
 LOAD MEM r2 r15
 SUB r1 r1 r2
-GOTO GEQ r1 :if_end_95 // bufferSize < inCount
+GOTO GEQ r1 :if_end_98 // bufferSize < inCount
 // Releasing r1
 #line run\lang\TestD\console.el 105:14
 // Reserving r1
@@ -1576,7 +1576,7 @@ STORE r1 r15
 //  inCount = bufferSize;
 
 #lineend
-:if_end_95
+:if_end_98
 //  if(bufferSize < inCount) {inCount = bufferSize;}
 
 #line run\lang\TestD\console.el 107:10
@@ -1589,7 +1589,7 @@ STACK PUSH r1
 //  int32 i = 0;
 
 #line run\lang\TestD\console.el 108:10
-:while_condition_96
+:while_condition_99
 // Reserving r1
 ADD r1 r15 4
 // Register r1 already reserved
@@ -1597,7 +1597,7 @@ LOAD MEM r1 r1
 // Register r2 already reserved
 LOAD MEM r2 r15
 SUB r1 r1 r2
-GOTO GEQ r1 :while_end_96 // i < inCount
+GOTO GEQ r1 :while_end_99 // i < inCount
 // Releasing r1
 #line run\lang\TestD\console.el 109:14
 // Reserving r1
@@ -1629,8 +1629,8 @@ STORE r3 r2 // i++
 //  i++;
 
 #lineend
-GOTO :while_condition_96
-:while_end_96
+GOTO :while_condition_99
+:while_end_99
 //  while(i < inCount) {buffer[i] =* CONSOLE_IN; i++;}
 
 #line run\lang\TestD\console.el 113:10
@@ -1642,7 +1642,7 @@ SUB r2 r15 12
 // Register r2 already reserved
 LOAD MEM r2 r2
 SUB r1 r1 r2
-GOTO GEQ r1 :if_end_97 // i < bufferSize
+GOTO GEQ r1 :if_end_100 // i < bufferSize
 // Releasing r1
 #line run\lang\TestD\console.el 114:14
 // Reserving r1
@@ -1660,7 +1660,7 @@ STORE BYTE 0 r1
 //  buffer[i] = '\0';
 
 #lineend
-:if_end_97
+:if_end_100
 //  if(i < bufferSize) {buffer[i] = '\0';}
 
 #lineend
@@ -1885,7 +1885,7 @@ COPY rStack r15
 // Reserving r1
 // Register r1 already reserved
 LOAD MEM r1 &FS.deviceId
-GOTO NEQ r1 :if_end_98 // deviceId == 0
+GOTO NEQ r1 :if_end_101 // deviceId == 0
 // Releasing r1
 #line run\lang\TestD\fs.el 49:14
 // Reserving r1
@@ -1894,7 +1894,7 @@ STACK INC 4
 GOTO PUSH :FS.setup
 STACK POP BYTE r1
 // Releasing r2
-GOTO NEQ r1 :if_end_99 // !setup()
+GOTO NEQ r1 :if_end_102 // !setup()
 // Releasing r1
 #line run\lang\TestD\fs.el 50:18
 // Reserving r1
@@ -1909,11 +1909,11 @@ GOTO :func_exit_FS.openFile_char*_out_int32&_out_int32&
 //  return;
 
 #lineend
-:if_end_99
+:if_end_102
 //  if(! setup()) {status = 0xff; return;}
 
 #lineend
-:if_end_98
+:if_end_101
 //  if(deviceId == 0) {if(! setup()) {status = 0xff; return;}}
 
 #line run\lang\TestD\fs.el 54:10
@@ -1989,7 +1989,7 @@ COPY rStack r15
 // Reserving r1
 // Register r1 already reserved
 LOAD MEM r1 &FS.deviceId
-GOTO NEQ r1 :if_end_100 // deviceId == 0
+GOTO NEQ r1 :if_end_103 // deviceId == 0
 // Releasing r1
 #line run\lang\TestD\fs.el 104:14
 // Reserving r1
@@ -1998,7 +1998,7 @@ STACK INC 4
 GOTO PUSH :FS.setup
 STACK POP BYTE r1
 // Releasing r2
-GOTO NEQ r1 :if_end_101 // !setup()
+GOTO NEQ r1 :if_end_104 // !setup()
 // Releasing r1
 #line run\lang\TestD\fs.el 105:18
 // Reserving r1
@@ -2013,11 +2013,11 @@ GOTO :func_exit_FS.readFileSync_int32_void*_int32_int32_out_int32&_out_int32&
 //  return;
 
 #lineend
-:if_end_101
+:if_end_104
 //  if(! setup()) {state = 0xff; return;}
 
 #lineend
-:if_end_100
+:if_end_103
 //  if(deviceId == 0) {if(! setup()) {state = 0xff; return;}}
 
 #line run\lang\TestD\fs.el 109:10
@@ -2102,7 +2102,7 @@ COPY rStack r15
 // Reserving r1
 // Register r1 already reserved
 LOAD MEM r1 &FS.deviceId
-GOTO NEQ r1 :if_end_102 // deviceId == 0
+GOTO NEQ r1 :if_end_105 // deviceId == 0
 // Releasing r1
 #line run\lang\TestD\fs.el 74:14
 // Reserving r1
@@ -2111,7 +2111,7 @@ STACK INC 4
 GOTO PUSH :FS.setup
 STACK POP BYTE r1
 // Releasing r2
-GOTO NEQ r1 :if_end_103 // !setup()
+GOTO NEQ r1 :if_end_106 // !setup()
 // Releasing r1
 #line run\lang\TestD\fs.el 75:18
 // Reserving r1
@@ -2126,11 +2126,11 @@ GOTO :func_exit_FS.readFile_int32_void*_int32_int32_int32*_out_int32&
 //  return;
 
 #lineend
-:if_end_103
+:if_end_106
 //  if(! setup()) {state = 0xff; return;}
 
 #lineend
-:if_end_102
+:if_end_105
 //  if(deviceId == 0) {if(! setup()) {state = 0xff; return;}}
 
 #line run\lang\TestD\fs.el 79:10
@@ -2248,12 +2248,12 @@ STORE 1 r1
 //  deviceId = 1;
 
 #line run\lang\TestD\fs.el 37:10
-:while_condition_104
+:while_condition_107
 // Reserving r1
 // Register r1 already reserved
 LOAD MEM r1 &FS.deviceId
 INC r1 -64
-GOTO GEQ r1 :while_end_104 // deviceId < 64
+GOTO GEQ r1 :while_end_107 // deviceId < 64
 LOAD r1 Peripheral.TABLE
 // Register r1 already reserved
 // Reserving r2
@@ -2265,7 +2265,7 @@ ADD r1 r1 r2
 LOAD MEM r1 r1
 LOAD r2 16777217
 SUB r1 r1 r2 // Peripheral.TABLE[deviceId] != Peripheral.TYPE_STORAGE_VIRTUAL
-GOTO EQ r1 :while_end_104 // ( deviceId < 64 ) && ( Peripheral.TABLE[deviceId] != Peripheral.TYPE_STORAGE_VIRTUAL )
+GOTO EQ r1 :while_end_107 // ( deviceId < 64 ) && ( Peripheral.TABLE[deviceId] != Peripheral.TYPE_STORAGE_VIRTUAL )
 // Releasing r1
 #line run\lang\TestD\fs.el 38:14
 // Register r2 already reserved
@@ -2276,8 +2276,8 @@ STORE r3 r2 // deviceId++
 //  deviceId++;
 
 #lineend
-GOTO :while_condition_104
-:while_end_104
+GOTO :while_condition_107
+:while_end_107
 //  while((deviceId < 64) && (Peripheral.TABLE[deviceId] != Peripheral.TYPE_STORAGE_VIRTUAL)) {deviceId++;}
 
 #line run\lang\TestD\fs.el 40:10
@@ -2285,7 +2285,7 @@ GOTO :while_condition_104
 // Register r1 already reserved
 LOAD MEM r1 &FS.deviceId
 INC r1 -64
-GOTO NEQ r1 :if_end_105 // deviceId == 64
+GOTO NEQ r1 :if_end_108 // deviceId == 64
 // Releasing r1
 #line run\lang\TestD\fs.el 41:14
 // Reserving r1
@@ -2304,7 +2304,7 @@ GOTO :func_exit_FS.setup
 //  return false;
 
 #lineend
-:if_end_105
+:if_end_108
 //  if(deviceId == 64) {deviceId = 0; return false;}
 
 #line run\lang\TestD\fs.el 44:10
@@ -2363,7 +2363,7 @@ STORE BYTE 0 r1
 // Register r1 already reserved
 LOAD MEM r1 r15
 INC r1 -255
-GOTO NEQ r1 :if_end_106 // code == 0xff
+GOTO NEQ r1 :if_end_109 // code == 0xff
 // Releasing r1
 #line run\lang\TestD\testd.el 204:14
 // Reserving r1
@@ -2385,7 +2385,7 @@ HALT
 // ;
 
 #lineend
-:if_end_106
+:if_end_109
 //  if(code == 0xff) {Console.printStr("\n\nHalting\0"); asm{HALT};}
 
 #line run\lang\TestD\testd.el 207:10
@@ -2396,7 +2396,7 @@ LOAD r2 -256
 AND r1 r1 r2 // code & 0xffff_ff00
 LOAD r2 -2147483136
 SUB r1 r1 r2
-GOTO NEQ r1 :if_end_107 // ( code & 0xffff_ff00 ) == 0x8000_0200
+GOTO NEQ r1 :if_end_110 // ( code & 0xffff_ff00 ) == 0x8000_0200
 // Releasing r1
 #line run\lang\TestD\testd.el 208:14
 // Reserving r1
@@ -2416,14 +2416,14 @@ ADD r1 r15 16
 // Register r1 already reserved
 LOAD MEM r1 r1
 INC r1 -1
-GOTO NEQ r1 :if_end_108 // i == 1
+GOTO NEQ r1 :if_end_111 // i == 1
 // Releasing r1
 #line run\lang\TestD\testd.el 211:18
 GOTO :func_exit_TestD.onInterrupt
 //  return;
 
 #lineend
-:if_end_108
+:if_end_111
 //  if(i == 1) {return;}
 
 #line run\lang\TestD\testd.el 214:14
@@ -2492,7 +2492,7 @@ STACK DEC 8
 // End of scope
 #stackVarClear str
 #stackVarClear i
-:if_end_107
+:if_end_110
 //  if((code & 0xffff_ff00) == 0x8000_0200) {int32 i = code & 0xff; if(i == 1) {return;} Console.printStr("\nTimer \0"); char[3] str; Console.intToDec(i, & str); Console.printStr(& str); CharacterDisplay.write(0, 23, "Timer\0"); return;}
 
 #line run\lang\TestD\testd.el 221:10
@@ -2503,7 +2503,7 @@ LOAD r2 -256
 AND r1 r1 r2 // code & 0xffff_ff00
 LOAD r2 -2147483392
 SUB r1 r1 r2
-GOTO NEQ r1 :if_end_109 // ( code & 0xffff_ff00 ) == 0x8000_0100
+GOTO NEQ r1 :if_end_112 // ( code & 0xffff_ff00 ) == 0x8000_0100
 // Releasing r1
 #line run\lang\TestD\testd.el 222:14
 // Reserving r1
@@ -2523,7 +2523,7 @@ ADD r1 r15 16
 // Register r1 already reserved
 LOAD MEM BYTE r1 r1
 INC r1 -10
-GOTO NEQ r1 :if_end_110 // c == \n
+GOTO NEQ r1 :if_end_113 // c == \n
 // Releasing r1
 #line run\lang\TestD\testd.el 224:18
 // Reserving r1
@@ -2554,7 +2554,7 @@ STORE r2 r1
 //  inputBufferWrite = (inputBufferWrite + 1) & 0x7f;
 
 #lineend
-:if_end_110
+:if_end_113
 //  if(c == '\n') {inputBuffer[inputBufferWrite] = '\n'; inputBufferWrite = (inputBufferWrite + 1) & 0x7f;}
 
 #line run\lang\TestD\testd.el 227:14
@@ -2568,7 +2568,7 @@ ADD r1 r15 16
 // Register r1 already reserved
 LOAD MEM BYTE r1 r1
 INC r1 -126
-GOTO LEQ r1 :if_end_111
+GOTO LEQ r1 :if_end_114
 :exp_ee_0 // c <   || c > ~
 // Releasing r1
 #line run\lang\TestD\testd.el 228:18
@@ -2576,7 +2576,7 @@ GOTO :func_exit_TestD.onInterrupt
 //  return;
 
 #lineend
-:if_end_111
+:if_end_114
 //  if(c < ' ' || c > '~') {return;}
 
 #line run\lang\TestD\testd.el 230:14
@@ -2620,7 +2620,7 @@ GOTO :func_exit_TestD.onInterrupt
 STACK DEC 4
 // End of scope
 #stackVarClear c
-:if_end_109
+:if_end_112
 //  if((code & 0xffff_ff00) == 0x8000_0100) {char c = code & 0xff; if(c == '\n') {inputBuffer[inputBufferWrite] = '\n'; inputBufferWrite = (inputBufferWrite + 1) & 0x7f;} if(c < ' ' || c > '~') {return;} inputBuffer[inputBufferWrite] = c; inputBufferWrite = (inputBufferWrite + 1) & 0x7f; return;}
 
 #line run\lang\TestD\testd.el 234:10
@@ -2701,7 +2701,7 @@ STACK PUSH r1
 //  int32 end = Peripheral.TIMERS[0] + time;
 
 #line run\lang\TestD\testd.el 245:10
-:while_condition_112
+:while_condition_115
 // Reserving r1
 LOAD r1 Peripheral.TIMERS
 // Register r1 already reserved
@@ -2711,13 +2711,13 @@ LOAD MEM r1 r1
 // Register r2 already reserved
 LOAD MEM r2 r15
 SUB r1 r1 r2
-GOTO GEQ r1 :while_end_112 // Peripheral.TIMERS[0] < end
+GOTO GEQ r1 :while_end_115 // Peripheral.TIMERS[0] < end
 // Releasing r1
 // 
 
 #lineend
-GOTO :while_condition_112
-:while_end_112
+GOTO :while_condition_115
+:while_end_115
 //  while(Peripheral.TIMERS[0] < end) {}
 
 #lineend
@@ -2800,14 +2800,14 @@ GOTO POP
 STACK PUSH r15
 COPY rStack r15
 #line run\lang\TestD\testd.el 129:10
-:while_condition_113
+:while_condition_116
 // Reserving r1
 // Register r1 already reserved
 LOAD MEM r1 &TestD.inputBufferRead
 // Register r2 already reserved
 LOAD MEM r2 &TestD.inputBufferWrite
 SUB r1 r1 r2 // inputBufferRead != inputBufferWrite
-GOTO EQ r1 :while_end_113
+GOTO EQ r1 :while_end_116
 // Releasing r1
 #line run\lang\TestD\testd.el 130:14
 // Reserving r1
@@ -2856,7 +2856,7 @@ STORE r2 r1
 // Register r1 already reserved
 LOAD MEM BYTE r1 r15
 INC r1 -10
-GOTO NEQ r1 :if_else_114 // c == \n
+GOTO NEQ r1 :if_else_117 // c == \n
 // Releasing r1
 #line run\lang\TestD\testd.el 134:18
 // Reserving r1
@@ -2878,7 +2878,7 @@ STACK INC 4
 GOTO PUSH :TestD.processCommand
 STACK POP BYTE r1
 // Releasing r2
-GOTO NEQ r1 :if_end_115 // !processCommand()
+GOTO NEQ r1 :if_end_118 // !processCommand()
 // Releasing r1
 #line run\lang\TestD\testd.el 136:22
 // Reserving r1
@@ -2889,7 +2889,7 @@ GOTO :func_exit_TestD.mainLoop
 //  return false;
 
 #lineend
-:if_end_115
+:if_end_118
 //  if(! processCommand()) {return false;}
 
 #line run\lang\TestD\testd.el 138:18
@@ -2901,8 +2901,8 @@ STORE 0 r1
 //  tempCmdI = 0;
 
 #lineend
-GOTO :if_end_114
-:if_else_114
+GOTO :if_end_117
+:if_else_117
 #line run\lang\TestD\testd.el 140:18
 // Reserving r1
 // Register r1 already reserved
@@ -2936,15 +2936,15 @@ STORE r2 r1
 //  tempCmdI = (tempCmdI + 1) & 63;
 
 #lineend
-:if_end_114
+:if_end_117
 //  if(c == '\n') {tempCmd[tempCmdI] = 0; if(! processCommand()) {return false;} tempCmdI = 0;} else {tempCmd[tempCmdI] = c; tempCmdI = (tempCmdI + 1) & 63;}
 
 #lineend
 STACK DEC 4
 // End of scope
 #stackVarClear c
-GOTO :while_condition_113
-:while_end_113
+GOTO :while_condition_116
+:while_end_116
 //  while(inputBufferRead != inputBufferWrite) {char c = inputBuffer[inputBufferRead]; Console.printChar(c); inputBufferRead = (inputBufferRead + 1) & 127; if(c == '\n') {tempCmd[tempCmdI] = 0; if(! processCommand()) {return false;} tempCmdI = 0;} else {tempCmd[tempCmdI] = c; tempCmdI = (tempCmdI + 1) & 63;}}
 
 #line run\lang\TestD\testd.el 144:10
@@ -3281,7 +3281,7 @@ STACK DEC 12
 ADD r1 r15 36
 // Register r1 already reserved
 LOAD MEM r1 r1
-GOTO NEQ r1 :if_else_116 // fh == 0
+GOTO NEQ r1 :if_else_119 // fh == 0
 // Releasing r1
 #line run\lang\TestD\testd.el 81:14
 // Reserving r1
@@ -3321,8 +3321,8 @@ STACK DEC 4
 //  Console.printStr(& str2);
 
 #lineend
-GOTO :if_end_116
-:if_else_116
+GOTO :if_end_119
+:if_else_119
 #line run\lang\TestD\testd.el 85:14
 // Reserving r1
 #define exp_str_inline_7 "Opened\n\0"
@@ -3465,7 +3465,7 @@ STACK DEC 40
 #stackVarClear read
 #stackVarClear buffer
 #stackVarClear state
-:if_end_116
+:if_end_119
 //  if(fh == 0) {Console.printStr("ERROR\n\0"); Console.intToHex(rstat, & str2); Console.printStr(& str2);} else {Console.printStr("Opened\n\0"); char[32] buffer; int32 read = 0; int32 state = 0; FS.readFileSync(fh, & buffer, 32, 0, & read, & state); Console.intToHex(state, & str2); Console.printStr(& str2); Console.intToHex(read, & str2); Console.printStr(& str2); Console.printChar('\n'); Console.printStr(& buffer, read);}
 
 #line run\lang\TestD\testd.el 109:10
@@ -3525,20 +3525,20 @@ STACK DEC 4
 //  Console.printChar('>');
 
 #line run\lang\TestD\testd.el 118:10
-:while_condition_117
+:while_condition_120
 // Reserving r1
 STACK INC 4
 // Reserving r2
 GOTO PUSH :TestD.mainLoop
 STACK POP BYTE r1
 // Releasing r2 // mainLoop()
-GOTO EQ r1 :while_end_117
+GOTO EQ r1 :while_end_120
 // Releasing r1
 // 
 
 #lineend
-GOTO :while_condition_117
-:while_end_117
+GOTO :while_condition_120
+:while_end_120
 //  while(mainLoop()) {}
 
 #line run\lang\TestD\testd.el 121:10
@@ -3620,7 +3620,7 @@ GOTO PUSH :TestD.stringEquals_char*_char*
 STACK DEC 8
 STACK POP BYTE r1
 // Releasing r2 // stringEquals(& tempCmd, "STOP\0")
-GOTO EQ r1 :if_end_118
+GOTO EQ r1 :if_end_121
 // Releasing r1
 #line run\lang\TestD\testd.el 153:14
 // Reserving r1
@@ -3631,7 +3631,7 @@ GOTO :func_exit_TestD.processCommand
 //  return false;
 
 #lineend
-:if_end_118
+:if_end_121
 //  if(stringEquals(& tempCmd, "STOP\0")) {return false;}
 
 #line run\lang\TestD\testd.el 155:10
