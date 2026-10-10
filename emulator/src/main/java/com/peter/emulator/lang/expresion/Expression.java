@@ -30,6 +30,7 @@ public class Expression extends Action {
         if (tokens.isEmpty()) {
             throw new IllegalArgumentException("Tokens must contain at least 1 token");
         }
+        IdentifierToken newIt = null;
         for (Token token : tokens) {
             switch (token) {
                 case OperatorToken ot -> {
@@ -142,10 +143,16 @@ public class Expression extends Action {
                 case NumberToken nt -> add(new LiteralNode(scope, nt));
                 case StringToken st -> add(new StringNode(scope, st));
                 case IdentifierToken it -> {
+                    if (newIt != null) {
+                        add(new NewNode(scope, newIt, it));
+                        newIt = null;
+                        continue;
+                    }
                     switch (it.value) {
                         case "true" -> add(new LiteralNode(scope, true, it));
                         case "false" -> add(new LiteralNode(scope, false, it));
                         case "nullptr" -> add(new LiteralNode(scope, 0, ELPrimitives.VOID_PTR, it));
+                        case "new" -> newIt = it;
                         default -> {
                             if (it.hasParamsSub()) {
                                 add(new FunctionNode(scope, it));

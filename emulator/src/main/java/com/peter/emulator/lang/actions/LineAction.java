@@ -3,6 +3,8 @@ package com.peter.emulator.lang.actions;
 import java.util.ArrayList;
 
 import com.peter.emulator.lang.*;
+import com.peter.emulator.lang.ELFunction.FunctionType;
+import com.peter.emulator.lang.ELVariable.Type;
 import com.peter.emulator.lang.base.ELPrimitives;
 import com.peter.emulator.lang.expresion.Expression;
 import com.peter.emulator.lang.symbols.ELVarSymbol;
@@ -65,7 +67,10 @@ public class LineAction extends ComplexAction {
                 }
                 case "return" -> {
                     scope.unit.addSymbol(SymbolType.KEYWORD, it.spanFirst());
-                    ELType ret = scope.getRetType();
+                    ELType ret = switch (scope.getFunction().type) {
+                        case CONSTRUCTOR, DESTRUCTOR -> null;
+                        default -> scope.getRetType();
+                    };
                     if (tokens.size() == 1) {
                         if (ret != null) {
                             scope.unit.errors.errorF(it, "Invalid return type; Expected %s", ret.typeString());
@@ -75,6 +80,14 @@ public class LineAction extends ComplexAction {
                         Register reg = newRegister();
                         Expression exp = new Expression(scope, new ArrayList<>(tokens.subList(1, tokens.size())), reg);
                         if (!exp.validate(scope.unit.errors)) {
+                            return;
+                        }
+                        if (exp.getType() == null) {
+                            scope.unit.errors.errorF(exp.span(), "Expression returned null type...");
+                            return;
+                        }
+                        if (ret == null) {
+                            scope.unit.errors.errorF(exp.span(), "Invalid return type; Expected void");
                             return;
                         }
                         if (!exp.getType().canCastTo(ret)) {
@@ -455,8 +468,14 @@ public class LineAction extends ComplexAction {
                         scope.unit.errors.errorF(dma, "Can not use Direct Memory Assign on non-pointer or address");
                     }
                     if (lrA.returnVar != null && (dma == null && (lrA.returnVar.finalVal || lhType.isConstant()))) {
-                        scope.unit.errors.errorF(it, "Can not assign to %s",
-                                lrA.returnVar.finalVal ? "final variable" : "constant");
+                        if (scope.getFunction().type == FunctionType.CONSTRUCTOR && lrA.returnVar.finalVal
+                                && lrA.returnVar.varType == Type.MEMBER
+                                && lrA.returnVar.namespace == scope.getFunction().namespace) {
+                            
+                        } else {
+                            scope.unit.errors.errorF(it, "Can not assign to %s",
+                                    lrA.returnVar.finalVal ? "final variable" : "constant");
+                        }
                     }
                     if (lrA.returnType.isAddress()) {
                         dma = it.span();

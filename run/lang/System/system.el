@@ -79,7 +79,7 @@ namespace System {
         return ptr+1;
     }
 
-    public static void* free(void* ptr) {
+    public static void free(void* ptr) {
         int32 heapEnd = heapStart + heapSize;
         if(ptr < heapStart || ptr > heapEnd) {
             return;

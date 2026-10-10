@@ -20,17 +20,26 @@ public class SysD extends Namespace {
         // void memCopy(void* src, int32 start, int32 end, void* dest, int32 destStart);
         ELFunction memCopy = addStaticFunction(new ELFunction(ELProtectionLevel.PUBLIC, false, this, "memCopy", FunctionType.STATIC, InlineType.INLINE_RAW, unit, SYSD_LOCATION));
         memCopy.addParameter(ELPrimitives.VOID_PTR, "src");
-        memCopy.addParameter(ELPrimitives.INT32, "start");
-        memCopy.addParameter(ELPrimitives.INT32, "end");
         memCopy.addParameter(ELPrimitives.VOID_PTR, "dest");
-        memCopy.addParameter(ELPrimitives.INT32, "destStart");
-        memCopy.actions.addDirect("ADD src src start");
-        memCopy.actions.addDirect("ADD dest dest destStart");
-        memCopy.actions.addDirect("SUB end end start");
+        memCopy.addParameter(ELPrimitives.INT32, "bytes");
+        memCopy.actions.addDirect("#alias $r1 words");
+        memCopy.actions.addDirect("LOAD words 4");
+        memCopy.actions.addDirect("DIV words bytes words");
+        memCopy.actions.addDirect("COPY rAF bytes");
+        
+        memCopy.actions.addDirect("GOTO LEQ words :SysD.memCopy_loop_b_$i1");
         memCopy.actions.addDirect(":SysD.memCopy_loop_$i1");
         memCopy.actions.addDirect("COPY MEM src dest INC_RS INC_RD");
-        memCopy.actions.addDirect("INC end -1");
-        memCopy.actions.addDirect("GOTO GT end :SysD.memCopy_loop_$i1");
+        memCopy.actions.addDirect("INC words -1");
+        memCopy.actions.addDirect("GOTO GT words :SysD.memCopy_loop_$i1");
+
+        memCopy.actions.addDirect("GOTO LEQ bytes :exit_SysD.memCopy_$i1");
+        memCopy.actions.addDirect(":SysD.memCopy_loop_b_$i1");
+        memCopy.actions.addDirect("COPY MEM BYTE src dest INC_RS INC_RD");
+        memCopy.actions.addDirect("INC bytes -1");
+        memCopy.actions.addDirect("GOTO GT bytes :SysD.memCopy_loop_b_$i1");
+
+        memCopy.actions.addDirect(":exit_SysD.memCopy_$i1");
 
         // void <T> memCopy(T* src, int32 start, int32 end, T* dest, int32 start);
         // boolean <T> memEquals(T* a, T* b, int32 length);

@@ -149,6 +149,32 @@ namespace Kernal.FS {
         proc.files.handles[handle].flush();
         return true;
     }
+    
+
+    @/
+        Close a handle under the currently active process
+
+        @param handle The file handle from `open` to close
+    /@
+    @Syscall(0x1f)
+    public static void close(int32 handle) {
+        ProcessState& proc = &processStates[SysD.rPID];
+        if(proc.files == nullptr) {
+            proc.files = ProcessFiles.new();
+            if(proc.files == nullptr) {
+                return;
+            }
+        }
+        if(handle < 0 || handle > proc.files.handles.length) {
+            return;
+        }
+        if(proc.files.handles[handle] == nullptr) {
+            return;
+        }
+        proc.files.handles[handle].close();
+        proc.files.handles[handle] = nullptr;
+        return;
+    }
 
     struct ProcessFiles {
         public int32 numOpen;
@@ -291,6 +317,7 @@ namespace Kernal.FS {
         public void close() {
             if(mode & OpenMode.WRITE != 0) {
                 // flush?
+                flush();
             }
             release();
         }
@@ -329,16 +356,13 @@ namespace Kernal.FS {
             @param len The number of words to write
         /@
         public void writeDirect(void* buffer, int32 len) {
-            if(buffer == nullptr || len == 0) {
-                return;
-            }
             if(mode == OpenMode.STREAM_WRITE) {
                 if(path == nullptr) { // terminal out stream
                     Kernal.printStr(buffer, len);
                 }
                 return;
             }
-            if(mode & OpenMode.WRITE == 0) {
+            if((mode & OpenMode.WRITE == 0) || buffer == nullptr || len == 0) {
                 return;
             }
             offset += len;

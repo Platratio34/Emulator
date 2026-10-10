@@ -153,61 +153,61 @@ public class Parser {
                         Span const_ = idt.value.equals("const") ? idt.span() : null;
                         Span inline = null;
                         InlineType inlineType = InlineType.OUTLINE;
-                        if (!stat)
+                        if (!stat && tokens.size() > workingI)
                             if (tokens.get(workingI) instanceof IdentifierToken it && it.value.equals("static")) {
                                 stat = true;
                                 workingI++;
                                 unit.addSymbol(SymbolType.KEYWORD, it.span());
                             }
-                        if (const_ == null)
+                        if (const_ == null && tokens.size() > workingI)
                             if (tokens.get(workingI) instanceof IdentifierToken it && it.value.equals("const")) {
                                 const_ = tokens.get(workingI).span();
                                 workingI++;
                                 unit.addSymbol(SymbolType.KEYWORD, it.span());
                             }
-                        if (!extern)
+                        if (!extern && tokens.size() > workingI)
                             if (tokens.get(workingI) instanceof IdentifierToken it && it.value.equals("extern")) {
                                 extern = true;
                                 workingI++;
                                 unit.addSymbol(SymbolType.KEYWORD, it.span());
                             }
-                        if (final_ == null)
+                        if (final_ == null && tokens.size() > workingI)
                             if (tokens.get(workingI) instanceof IdentifierToken it && it.value.equals("final")) {
                                 final_ = tokens.get(workingI).span();
                                 workingI++;
                                 unit.addSymbol(SymbolType.KEYWORD, it.span());
                             }
-                        if (tokens.get(workingI) instanceof IdentifierToken it && it.value.equals("inline")) {
+                        if (tokens.size() > workingI && tokens.get(workingI) instanceof IdentifierToken it && it.value.equals("inline")) {
                             inline = tokens.get(workingI).span();
                             inlineType = InlineType.INLINE;
                             workingI++;
                             unit.addSymbol(SymbolType.KEYWORD, it.span());
-                        } else if (tokens.get(workingI) instanceof IdentifierToken it && it.value.equals("inline_raw")) {
+                        } else if (tokens.size() > workingI && tokens.get(workingI) instanceof IdentifierToken it && it.value.equals("inline_raw")) {
                             inline = tokens.get(workingI).span();
                             inlineType = InlineType.INLINE_RAW;
                             workingI++;
                             unit.addSymbol(SymbolType.KEYWORD, it.span());
                         }
-                        if (operator == null)
+                        if (tokens.size() > workingI && operator == null)
                             if (tokens.get(workingI) instanceof IdentifierToken it && it.value.equals("operator")) {
                                 operator = tokens.get(workingI).span();
                                 workingI++;
                                 unit.addSymbol(SymbolType.KEYWORD, it.span());
                             }
                         Span abs = null;
-                        if (tokens.get(workingI) instanceof IdentifierToken it2 && it2.value.equals("abstract")) {
+                        if (tokens.size() > workingI && tokens.get(workingI) instanceof IdentifierToken it2 && it2.value.equals("abstract")) {
                             abs = tokens.get(workingI).span();
                             workingI++;
                             unit.addSymbol(SymbolType.KEYWORD, it2.span());
                         }
                         boolean destructor = false;
-                        if (tokens.get(workingI) instanceof OperatorToken o2
+                        if (tokens.size() > workingI && tokens.get(workingI) instanceof OperatorToken o2
                                 && o2.type == OperatorToken.Type.DESTRUCTOR) {
                             destructor = true;
                             workingI++;
                             unit.addSymbol(SymbolType.OPERATOR, o2.span());
                         }
-                        if (tokens.get(workingI) instanceof IdentifierToken it && it.hasParams()) {
+                        if (tokens.size() > workingI && tokens.get(workingI) instanceof IdentifierToken it && it.hasParams()) {
                             // Constructor/destructor
                             if (!(currentNamespace instanceof ELClass)) {
                                 throw ELAnalysisError.error((destructor?"Destructor":"Constructor")+" only allowed in class", it);
@@ -223,7 +223,7 @@ public class Parser {
                                 function.doc = new DocComment(docCommentToken);
                                 function.doc.function = function;
                             }
-                            function.ret = currentClass.getType();
+                            function.ret = destructor ? null : currentClass.getType();
                             function.ingestParams(it.params);
                             if (annotations != null)
                                 function.annotations = annotations;
@@ -255,7 +255,7 @@ public class Parser {
                         }
                         ELType.Builder typeBuilder = new ELType.Builder();
                         boolean ingestOne = false;
-                        while (typeBuilder.ingest(tokens.get(workingI))) {
+                        while (tokens.size() > workingI && typeBuilder.ingest(tokens.get(workingI))) {
                             ingestOne = true;
                             workingI++;
                         }

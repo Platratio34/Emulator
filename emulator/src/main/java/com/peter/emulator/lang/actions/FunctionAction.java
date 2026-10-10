@@ -19,7 +19,7 @@ import com.peter.emulator.lang.tokens.Token;
 public class FunctionAction extends ComplexAction {
 
     public Register targetReg;
-    public ELType retType = null;
+    public final ELType retType;
     public boolean isConst = false;
     public boolean isStaticCast = false;
     public int constVal = 0;
@@ -101,21 +101,18 @@ public class FunctionAction extends ComplexAction {
         Identifier id = it.asId();
         if (id.starts("SysD")) {
             switch (id.parts[1]) {
-                case "memSet", "memGet", "memCopy" -> {
-                    // SysD.memSet(int32 addr, int32 value);
-                    // errors.warning("SysD.memSet is not currently implemented", it);
-                    onStack = false;
-                }
                 case "interruptReturn" -> {
                     actions.add(new DirectAction("INTERRUPT RET"));
                     scope.addSymbol(SymbolType.NAMESPACE_NAME, it.span(),
                             "### `SysD.interruptReturn()`\n\nReturn from an interrupt, resuming execution at the memory address popped to the stack when the interrupt was triggered.\n\n**ONLY USE IN LOW-LEVEL PROGRAMMING**. *Privileged Mode only*");
+                    retType = null;
                     return;
                 }
                 case "halt" -> {
                     actions.add(new DirectAction("HALT"));
                     scope.addSymbol(SymbolType.NAMESPACE_NAME, it.span(),
                             "### `SysD.halt()`\n\nHalt the CPU.\n\n**ONLY USE IN LOW-LEVEL PROGRAMMING**. *Privileged Mode only*");
+                    retType = null;
                     return;
                 }
             }
@@ -198,7 +195,10 @@ public class FunctionAction extends ComplexAction {
                     if (exp.isEmpty())
                         throw ELAnalysisError.error("Empty expression", t2);
                     if (!onStack) {
-                        r = newRegister(rr.function.paramOrder.get(pI++));
+                        if(pI < rr.function.paramOrder.size())
+                            r = newRegister(rr.function.paramOrder.get(pI++));
+                        else 
+                            r = newRegister(String.format("p%d", pI++));
                         aliasedRegisters.add(r);
                         tempActions.add(r.reserveAction());
                     }
@@ -221,7 +221,10 @@ public class FunctionAction extends ComplexAction {
             }
             if (!exp.isEmpty()) {
                 if (!onStack) {
-                    r = newRegister(rr.function.paramOrder.get(pI++));
+                    if(pI < rr.function.paramOrder.size())
+                        r = newRegister(rr.function.paramOrder.get(pI++));
+                    else 
+                        r = newRegister(String.format("p%d", pI++));
                     aliasedRegisters.add(r);
                     tempActions.add(r.reserveAction());
                 }
@@ -255,6 +258,7 @@ public class FunctionAction extends ComplexAction {
                     scope.addSymbol(new ELSymbol(SymbolType.FUNCTION_NAME, it.next().spanFirst(),
                             "`inline void SysD.halt()`\n\nHalts execution of the CPU. **MUST BE IN PRIVILEGED MODE TO WORK**"));
                     actions.add(new DirectAction("HALT"));
+                    retType = null;
                     return;
                 }
                 // default -> {
@@ -322,10 +326,12 @@ public class FunctionAction extends ComplexAction {
             }
         }
         actions.addAll(tempActions);
-        if (f.type == FunctionType.INSTANCE) {
+        if (f.type == FunctionType.INSTANCE && it.hasSub()) {
             Register r0T = (rT != null) ? rT : newRegister();
             ResolveAction rA = scope.loadVarF(it, r0T, false);
             if (rA == null) {
+                retType = null;
+                scope.unit.errors.errorF(it.spanFirst(), "Unable to resolve variable");
                 return;
             }
             if (rA.constantValue != null) {
@@ -370,9 +376,10 @@ public class FunctionAction extends ComplexAction {
         if (f.ret == null) {
             if (onStack && stackSize > 0)
                 actions.add(new DirectAction("STACK DEC %d", stackSize));
+            retType = null;
         } else {
+            retType = f.ret;
             if (targetReg != null) {
-                retType = f.ret;
                 if (onStack) {
                     if (stackSize > 0)
                         actions.add(new DirectAction("STACK DEC %d", stackSize));

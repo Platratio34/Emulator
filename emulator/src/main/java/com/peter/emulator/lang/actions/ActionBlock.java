@@ -389,7 +389,7 @@ public class ActionBlock extends ComplexAction {
                     }
                 }
                 ArrayList<Token> line = new ArrayList<>();
-                while(!(tkn instanceof OperatorToken ot && ot.type == OperatorToken.Type.SEMICOLON) && wI < tokens.size()) {
+                while(!(tkn instanceof OperatorToken ot && ot.type == OperatorToken.Type.SEMICOLON) && wI+1 < tokens.size()) {
                     line.add(tkn);
                     wI++;
                     tkn = tokens.get(wI);
